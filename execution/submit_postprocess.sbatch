@@ -17,7 +17,7 @@ conda activate meep
 # Force Slurm to run from the repository root directory
 cd /N/project/gorengor_werewolf/FractalCasimir3D
 
-echo "Starting post-processing..."
+echo "Starting post-processing with parameters: nsteps=$1, res=$2, nmax=$3"
 # Run the post-processing and plotting script
-python execution/postprocess_and_plot.py
+python execution/postprocess_and_plot.py --nsteps "$1" --res "$2" --nmax "$3"
 echo "Post-processing complete. Figures and dataset generated."

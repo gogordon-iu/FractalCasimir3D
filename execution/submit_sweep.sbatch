@@ -11,6 +11,11 @@
 #SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 
+# Define sweep parameters
+NSTEPS=50
+RESOLUTION=40
+NMAX=5
+
 # Create logs and cache directories
 mkdir -p logs
 mkdir -p .tmp
@@ -24,7 +29,7 @@ cd /N/project/gorengor_werewolf/FractalCasimir3D
 
 # Queue the post-processing job automatically once all array tasks finish (success or failure)
 if [ "$SLURM_ARRAY_TASK_ID" -eq 0 ]; then
-    sbatch --dependency=afterany:$SLURM_ARRAY_JOB_ID execution/submit_postprocess.sbatch
+    sbatch --dependency=afterany:$SLURM_ARRAY_JOB_ID execution/submit_postprocess.sbatch $NSTEPS $RESOLUTION $NMAX
 fi
 
 # Set OpenMP threads for MEEP's C++ solver
@@ -34,11 +39,8 @@ echo "Running task ID: $SLURM_ARRAY_TASK_ID"
 echo "CPUs allocated: $SLURM_CPUS_PER_TASK"
 
 # Run the task mapping script
-# Customize resolution (--res) and separations (--nsteps) here
-# - res=40 provides double the current resolution (grid volume size reduction of 8x)
-# - nsteps=50 provides a fine-grained sweep of 50 steps along the separation axis
 srun python execution/run_slurm_array_task.py \
     --task-id $SLURM_ARRAY_TASK_ID \
-    --nsteps 50 \
-    --res 40 \
-    --nmax 5
+    --nsteps $NSTEPS \
+    --res $RESOLUTION \
+    --nmax $NMAX

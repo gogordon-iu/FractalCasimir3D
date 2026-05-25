@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import os
 import json
 import hashlib
+import argparse
+import datetime
 from matplotlib.lines import Line2D
 
 # Styling rules for Science/Nature
@@ -78,8 +80,24 @@ def get_eta(d, N):
 def main():
     print("Post-processing Casimir simulation datasets...")
     
+    parser = argparse.ArgumentParser(description="Post-process Casimir FDTD sweep results and plot figures.")
+    parser.add_argument("--nsteps", type=int, default=30, help="Number of separations in sweep.")
+    parser.add_argument("--res", type=int, default=10, help="Resolution of the simulations.")
+    parser.add_argument("--nmax", type=int, default=3, help="Max moments used in the simulations.")
+    args = parser.parse_args()
+    
+    now_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    outdir = f"results_{now_str}"
+    os.makedirs(outdir, exist_ok=True)
+    
+    # Write parameters.txt
+    with open(os.path.join(outdir, "parameters.txt"), "w") as f:
+        f.write(f"--nsteps {args.nsteps}\n")
+        f.write(f"--res {args.res}\n")
+        f.write(f"--nmax {args.nmax}\n")
+        
     # Sweep parameters
-    separations = np.logspace(np.log10(0.02), np.log10(1.0), 30) # 20 nm to 1000 nm in microns
+    separations = np.logspace(np.log10(0.02), np.log10(1.0), args.nsteps)
     generations = [1, 2, 3, 4]
     materials = ["PEC", "Gold", "Silicon"]
     temperatures = [0, 77, 300]
@@ -103,9 +121,10 @@ def main():
                         data = json.load(f)
                         key = (data["d_um"], data["N"], data["material"])
                         res = data.get("resolution", 10)
-                        if key not in meep_data or res >= meep_res[key]:
-                            meep_data[key] = data["force_subtracted"]
-                            meep_res[key] = res
+                        if res == args.res:
+                            if key not in meep_data or res >= meep_res[key]:
+                                meep_data[key] = data["force_subtracted"]
+                                meep_res[key] = res
                     except Exception as e:
                         print(f"Error reading {filename}: {e}")
                     
@@ -250,18 +269,17 @@ def main():
                     })
                     
     # Write compiled dataset to JSON
-    os.makedirs(".tmp", exist_ok=True)
-    dataset_file = ".tmp/compiled_casimir_dataset.json"
+    dataset_file = os.path.join(outdir, "compiled_casimir_dataset.json")
     with open(dataset_file, "w") as f:
         json.dump(compiled_dataset, f, indent=4)
         
     # Generate cryptographic SHA-256 hash for reproducibility log
     dataset_hash = compute_sha256(dataset_file)
-    log_file = "dataset_reproducibility.log"
+    log_file = os.path.join(outdir, "dataset_reproducibility.log")
     with open(log_file, "w") as f:
         f.write(f"Dataset File: compiled_casimir_dataset.json\n")
         f.write(f"SHA-256 Hash: {dataset_hash}\n")
-        f.write(f"Date Logged: 2026-05-24\n")
+        f.write(f"Date Logged: {datetime.date.today().strftime('%Y-%m-%d')}\n")
     print(f"Cryptographic reproducibility log created: {log_file} (Hash: {dataset_hash})")
     
     # ------------------ PLOTTING FIGURES ------------------
@@ -347,8 +365,8 @@ def main():
     ]
     ax1.legend(handles=legend_elements_F1, bbox_to_anchor=(1.05, 1), loc='upper left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
     
-    plt.savefig('figure1_force_vs_distance.pdf', format='pdf', dpi=300, bbox_inches='tight')
-    plt.savefig('figure1_force_vs_distance.svg', format='svg', dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(outdir, 'figure1_force_vs_distance.pdf'), format='pdf', dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(outdir, 'figure1_force_vs_distance.svg'), format='svg', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Figure 2: Fractional PFA Deviation vs. Distance (Gold, T = 0 K)
@@ -495,8 +513,8 @@ def main():
     ]
     ax_zoom.legend(handles=legend_B, bbox_to_anchor=(1.02, 1), loc='upper left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
     
-    plt.savefig('figure2_pfa_deviation.pdf', format='pdf', dpi=300, bbox_inches='tight')
-    plt.savefig('figure2_pfa_deviation.svg', format='svg', dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(outdir, 'figure2_pfa_deviation.pdf'), format='pdf', dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(outdir, 'figure2_pfa_deviation.svg'), format='svg', dpi=300, bbox_inches='tight')
     plt.close()
     
     # Figure 3: Finite-Temperature Matsubara Corrections
@@ -520,16 +538,17 @@ def main():
     plt.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
     plt.legend(loc='upper left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
     plt.tight_layout()
-    plt.savefig('figure3_matsubara_corrections.pdf', format='pdf', dpi=300)
-    plt.savefig('figure3_matsubara_corrections.svg', format='svg', dpi=300)
+    plt.savefig(os.path.join(outdir, 'figure3_matsubara_corrections.pdf'), format='pdf', dpi=300)
+    plt.savefig(os.path.join(outdir, 'figure3_matsubara_corrections.svg'), format='svg', dpi=300)
     plt.close()
     
-    print("Postprocessing complete. Output files generated:")
+    print(f"Postprocessing complete. Output files generated in {outdir}:")
     print("  - compiled_casimir_dataset.json (dataset)")
     print("  - dataset_reproducibility.log (SHA-256 validation log)")
     print("  - figure1_force_vs_distance.pdf / .svg")
     print("  - figure2_pfa_deviation.pdf / .svg")
     print("  - figure3_matsubara_corrections.pdf / .svg")
+    print("  - parameters.txt (run parameters log)")
 
 if __name__ == "__main__":
     main()
