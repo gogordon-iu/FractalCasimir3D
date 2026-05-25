@@ -5,15 +5,15 @@
 #SBATCH -p general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=4
-#SBATCH --time=04:00:00
+#SBATCH --cpus-per-task=1
+#SBATCH --time=48:00:00
 #SBATCH --array=0-599   # 3 materials * 4 generations * 50 separation steps = 600 tasks
 #SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 
 # Define sweep parameters
 NSTEPS=50
-RESOLUTION=40
+RESOLUTION=80
 NMAX=5
 
 # Create logs and cache directories
