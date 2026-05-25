@@ -22,6 +22,11 @@ conda activate meep
 # Force Slurm to run from the repository root directory
 cd /N/project/gorengor_werewolf/FractalCasimir3D
 
+# Queue the post-processing job automatically once all array tasks finish (success or failure)
+if [ "$SLURM_ARRAY_TASK_ID" -eq 0 ]; then
+    sbatch --dependency=afterany:$SLURM_ARRAY_JOB_ID execution/submit_postprocess.sbatch
+fi
+
 # Set OpenMP threads for MEEP's C++ solver
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
