@@ -286,268 +286,271 @@ def main():
     print("Generating publication-quality figures...")
     colors = ['#2c3e50', '#2980b9', '#16a085', '#c0392b']
     
-    # Extract baseline PFA N1 data for plotting
-    pts_0 = [x for x in compiled_dataset["data"] if x["material"] == "Gold" and x["temperature_K"] == 0 and x["generation_N"] == 0]
-    pts_0 = sorted(pts_0, key=lambda x: x["separation_um"])
-    d_nm_0 = [x["separation_um"] * 1000.0 for x in pts_0]
-    force_nN_0 = [abs(x["force_exact"]) * 100.0 for x in pts_0]
-
-    # Extract N=infinity data for plotting
-    pts_inf = [x for x in compiled_dataset["data"] if x["material"] == "Gold" and x["temperature_K"] == 0 and x["generation_N"] == -1]
-    pts_inf = sorted(pts_inf, key=lambda x: x["separation_um"])
-    d_nm_inf = [x["separation_um"] * 1000.0 for x in pts_inf]
-    force_nN_inf = [abs(x["force_exact"]) * 100.0 for x in pts_inf]
-
-    # Figure 1: Force vs. Distance Curve (Gold, T = 0 K)
-    fig1, ax1 = plt.subplots(figsize=(4.8, 3.2)) 
-    
-    # 1. Plot N=0 (Infinite Plates, PFA limit)
-    ax1.plot(d_nm_0, force_nN_0, color='black', linestyle='-', linewidth=1.5, zorder=1)
-    
-    # 2. Plot N=infinity (Infinite Plates, Theory limit)
-    ax1.plot(d_nm_inf, force_nN_inf, color='black', linestyle='--', linewidth=1.2, zorder=1)
-    
-    # 3. Plot N=0 (Finite Plates, Baseline) - showing the baseline finite solid plate
-    # This acts as the physical upper boundary for the finite-plate simulations
-    f_base_nN = [abs(baselines["Gold"](d)) * 100.0 for d in separations]
-    ax1.plot(separations * 1000.0, f_base_nN, color='#7f8c8d', linestyle='-', linewidth=1.5, zorder=1)
-    
-    # 4. Plot N=infinity (Finite Plates, Theory limit)
-    # This acts as the physical lower boundary for the finite-plate simulations
-    f_inf_finite_nN = [abs(baselines["Gold"](d) * 0.5 * (1.0 + 0.08 * np.cos(2.0 * np.pi * np.log(d / 0.3) / np.log(3.0) + 0.5))) * 100.0 for d in separations]
-    ax1.plot(separations * 1000.0, f_inf_finite_nN, color='#7f8c8d', linestyle='--', linewidth=1.2, zorder=1)
-
-    # 5. Plot generations N=1,2,3,4
-    for idx, N in enumerate(generations):
-        pts = [x for x in compiled_dataset["data"] if x["material"] == "Gold" and x["temperature_K"] == 0 and x["generation_N"] == N]
-        pts = sorted(pts, key=lambda x: x["separation_um"])
-        d_nm = [x["separation_um"] * 1000.0 for x in pts]
+    for mat in ["PEC", "Gold", "Silicon"]:
+        print(f"Generating figures for {mat}...")
         
-        # Plot Finite-Res Theory as Solid Line
-        force_nN = [abs(x["force_exact"]) * 100.0 for x in pts]
-        ax1.plot(d_nm, force_nN, color=colors[idx], linewidth=1.2, zorder=2)
-        
-        # Plot Ideal Infinite-Res Theory as Dashed Line (includes finite-plate baseline)
-        f_ideal_pts = []
-        for x in pts:
-            d_val = x["separation_um"]
-            eta_N = get_eta(d_val, N)
-            f_id = baselines["Gold"](d_val) * ((8.0 / 9.0)**(N - 1)) * (1.0 + eta_N) / (1.0 + get_eta(d_val, 1))
-            f_ideal_pts.append(abs(f_id) * 100.0)
-        ax1.plot(d_nm, f_ideal_pts, linestyle='--', color=colors[idx], linewidth=1.0, alpha=0.7, zorder=1)
-        
-        # Plot FDTD simulation data points as markers
-        sim_forces_N = sim_forces["Gold"][N]
-        sim_d_nm = [d_val * 1000.0 for d_val in sim_distances]
-        sim_force_nN = [abs(f) * 100.0 for f in sim_forces_N]
-        ax1.scatter(sim_d_nm, sim_force_nN, color=colors[idx], marker='o', s=15, facecolors='none', edgecolors=colors[idx], zorder=3)
-        
-    ax1.set_xscale('log')
-    ax1.set_yscale('log')
-    ax1.set_xlabel('Separation d (nm)')
-    ax1.set_ylabel('Casimir Force |F| (nN)')
-    ax1.set_title('Force vs. Distance (Gold, T = 0 K)', fontsize=9, fontweight='bold')
-    ax1.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
-    
-    # Side legend construction
-    legend_elements_F1 = [
-        Line2D([0], [0], color='black', linestyle='-', linewidth=1.5, label='N = 0 (Infinite)'),
-        Line2D([0], [0], color='black', linestyle='--', linewidth=1.2, label=r'N = $\infty$ (Infinite)'),
-        Line2D([0], [0], color='#7f8c8d', linestyle='-', linewidth=1.5, label='N = 0 (Finite)'),
-        Line2D([0], [0], color='#7f8c8d', linestyle='--', linewidth=1.2, label=r'N = $\infty$ (Finite)'),
-        Line2D([0], [0], color='gray', linestyle='-', linewidth=1.2, label='Finite-Res Theory'),
-        Line2D([0], [0], color='gray', linestyle='--', linewidth=1.0, label='Ideal Theory'),
-        Line2D([0], [0], color='gray', marker='o', linestyle='None', markersize=4, markerfacecolor='none', markeredgecolor='gray', label='FDTD Simulation'),
-        Line2D([0], [0], color=colors[0], label='N = 1'),
-        Line2D([0], [0], color=colors[1], label='N = 2'),
-        Line2D([0], [0], color=colors[2], label='N = 3'),
-        Line2D([0], [0], color=colors[3], label='N = 4'),
-    ]
-    ax1.legend(handles=legend_elements_F1, bbox_to_anchor=(1.05, 1), loc='upper left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
-    
-    plt.savefig(os.path.join(outdir, 'figure1_force_vs_distance.pdf'), format='pdf', dpi=300, bbox_inches='tight')
-    plt.savefig(os.path.join(outdir, 'figure1_force_vs_distance.svg'), format='svg', dpi=300, bbox_inches='tight')
-    plt.close()
-    
-    # Figure 2: Fractional PFA Deviation vs. Distance (Gold, T = 0 K)
-    # Side-by-side two-panel plot (main axis ax_main, zoomed axis ax_zoom)
-    # Width increased to 9.6 inches to hold two panels + two legends side-by-side
-    fig2, (ax_main, ax_zoom) = plt.subplots(1, 2, figsize=(9.6, 3.2))
-    fig2.subplots_adjust(wspace=0.7) # Large wspace to separate plots and place Left Legend cleanly
-    
-    # ------------------ PANEL A: MAIN PLOT (Relative to Infinite PFA) ------------------
-    # Plot N=0 (Infinite Plates) - flat line at 0
-    ax_main.axhline(0, color='black', linestyle='-', linewidth=1.5, zorder=1)
-    
-    # Plot N=infinity (Infinite Plates) - centered at -50%
-    dev_inf = [x["force_exact"] / (x["force_pfa"] / 0.5) - 1.0 for x in pts_inf]
-    ax_main.plot(d_nm_inf, dev_inf, color='black', linestyle='--', linewidth=1.2, zorder=1)
-    
-    # Plot N=0 (Finite Plates) - shows baseline finite-plate suppression
-    dev_finite_0 = [(x - pfa_force_N1) / pfa_force_N1 for x, pfa_force_N1 in zip(f_base_nN, force_nN_0)]
-    ax_main.plot(separations * 1000.0, dev_finite_0, color='#7f8c8d', linestyle='-', linewidth=1.5, zorder=1)
-    
-    # Plot N=infinity (Finite Plates)
-    dev_inf_finite = [(x - pfa_force_N1) / pfa_force_N1 for x, pfa_force_N1 in zip(f_inf_finite_nN, force_nN_0)]
-    ax_main.plot(separations * 1000.0, dev_inf_finite, color='#7f8c8d', linestyle='--', linewidth=1.2, zorder=1)
-    
-    pfa_d_pts = [p0["separation_um"] for p0 in pts_0]
-    pfa_f_pts = [p0["force_pfa"] for p0 in pts_0]
-    
-    for idx, N in enumerate(generations):
-        pts = [x for x in compiled_dataset["data"] if x["material"] == "Gold" and x["temperature_K"] == 0 and x["generation_N"] == N]
-        pts = sorted(pts, key=lambda x: x["separation_um"])
-        d_nm = [x["separation_um"] * 1000.0 for x in pts]
-        
-        # Plot Finite-Res Theory as Solid Line (relative to infinite PFA)
-        dev_finite = []
-        for i, x in enumerate(pts):
-            pfa_N1_val = pts_0[i]["force_pfa"] # infinite PFA
-            dev_finite.append((x["force_exact"] - pfa_N1_val) / pfa_N1_val)
-        ax_main.plot(d_nm, dev_finite, color=colors[idx], linewidth=1.2, zorder=2)
-        
-        # Plot Ideal Infinite-Res Theory as Dashed Line (relative to infinite PFA)
-        dev_ideal = []
-        for i, x in enumerate(pts):
-            d_val = x["separation_um"]
-            a_ideal = (8.0 / 9.0)**(N - 1)
-            eta_N = get_eta(d_val, N)
-            dev_ideal.append(a_ideal * (1.0 + eta_N) - 1.0)
-        ax_main.plot(d_nm, dev_ideal, linestyle='--', color=colors[idx], linewidth=1.0, alpha=0.7, zorder=1)
-        
-        # Plot FDTD simulation data points as markers (relative to infinite PFA)
-        sim_forces_N = sim_forces["Gold"][N]
-        sim_d_nm = [d_val * 1000.0 for d_val in sim_distances]
-        
-        sim_dev = []
-        for i, d_val in enumerate(sim_distances):
-            pfa_N1_val = np.interp(d_val, pfa_d_pts, pfa_f_pts)
-            sim_dev.append((sim_forces_N[i] - pfa_N1_val) / pfa_N1_val)
-            
-        ax_main.scatter(sim_d_nm, sim_dev, color=colors[idx], marker='o', s=15, facecolors='none', edgecolors=colors[idx], zorder=3)
-        
-    ax_main.set_xscale('log')
-    ax_main.set_xlabel('Separation d (nm)')
-    ax_main.set_ylabel('Fractional PFA Deviation (F - F_{PFA}) / F_{PFA}')
-    ax_main.set_title('A: Macroscopic PFA Suppression', fontsize=8, fontweight='bold')
-    ax_main.set_ylim(-1.1, 3.5) # Show the whole range of curves and circles including saturation peak
-    ax_main.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
-    
-    # Left Legend for Panel A
-    legend_A = [
-        Line2D([0], [0], color='black', linestyle='-', linewidth=1.5, label='N = 0 (Infinite)'),
-        Line2D([0], [0], color='black', linestyle='--', linewidth=1.2, label=r'N = $\infty$ (Infinite)'),
-        Line2D([0], [0], color='#7f8c8d', linestyle='-', linewidth=1.5, label='N = 0 (Finite)'),
-        Line2D([0], [0], color='#7f8c8d', linestyle='--', linewidth=1.2, label=r'N = $\infty$ (Finite)'),
-        Line2D([0], [0], color='gray', linestyle='-', linewidth=1.2, label='Finite-Res Theory'),
-        Line2D([0], [0], color='gray', linestyle='--', linewidth=1.0, label='Ideal Theory'),
-        Line2D([0], [0], color='gray', marker='o', linestyle='None', markersize=4, markerfacecolor='none', markeredgecolor='gray', label='FDTD Simulation'),
-        Line2D([0], [0], color=colors[0], label='N = 1'),
-        Line2D([0], [0], color=colors[1], label='N = 2'),
-        Line2D([0], [0], color=colors[2], label='N = 3'),
-        Line2D([0], [0], color=colors[3], label='N = 4'),
-    ]
-    ax_main.legend(handles=legend_A, bbox_to_anchor=(1.02, 1), loc='upper left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
-    
-    # ------------------ PANEL B: ZOOMED PLOT (Relative to Finite solid baseline F_base = F_1) ------------------
-    # Plot N=0 (Finite Plates, Baseline) - flat line at 0
-    ax_zoom.axhline(0, color='#7f8c8d', linestyle='-', linewidth=1.5, zorder=1)
-    
-    # Plot N=infinity (Finite Plates, Theory limit) - centered at -50% relative to N=1 ideal baseline
-    eta_1_vals = np.array([get_eta(d, 1) for d in separations])
-    osc_ins = 0.08 * np.cos(2.0 * np.pi * np.log(separations / 0.3) / np.log(3.0) + 0.5)
-    dev_inf_zoom = 0.5 * (1.0 + osc_ins) / (1.0 + eta_1_vals) - 1.0
-    ax_zoom.plot(separations * 1000.0, dev_inf_zoom, color='#7f8c8d', linestyle='--', linewidth=1.2, zorder=1)
-    
-    # Extract baseline N1 data (finite baseline) for Panel B normalization
-    pts_1 = [x for x in compiled_dataset["data"] if x["material"] == "Gold" and x["temperature_K"] == 0 and x["generation_N"] == 1]
-    pts_1 = sorted(pts_1, key=lambda x: x["separation_um"])
-    
-    for idx, N in enumerate(generations):
-        pts = [x for x in compiled_dataset["data"] if x["material"] == "Gold" and x["temperature_K"] == 0 and x["generation_N"] == N]
-        pts = sorted(pts, key=lambda x: x["separation_um"])
-        d_nm = [x["separation_um"] * 1000.0 for x in pts]
-        
-        # Plot Finite-Res Theory as Solid Line (relative to F_base = F_1)
-        dev_finite_B = []
-        for i, x in enumerate(pts):
-            f1_val = pts_1[i]["force_exact"] # F_base = F_1
-            dev_finite_B.append((x["force_exact"] - f1_val) / f1_val)
-        ax_zoom.plot(d_nm, dev_finite_B, color=colors[idx], linewidth=1.2, zorder=2)
-        
-        # Plot Ideal Infinite-Res Theory as Dashed Line (relative to F_base = F_1 ideal)
-        dev_ideal_B = []
-        for i, x in enumerate(pts):
-            d_val = x["separation_um"]
-            a_ideal = (8.0 / 9.0)**(N - 1)
-            eta_N = get_eta(d_val, N)
-            dev_ideal_B.append(a_ideal * (1.0 + eta_N) / (1.0 + get_eta(d_val, 1)) - 1.0)
-        ax_zoom.plot(d_nm, dev_ideal_B, linestyle='--', color=colors[idx], linewidth=1.0, alpha=0.7, zorder=1)
-        
-        # Plot FDTD simulation data points as markers (relative to F_base = F_1)
-        sim_forces_N = sim_forces["Gold"][N]
-        sim_forces_1 = sim_forces["Gold"][1]
-        sim_d_nm = [d_val * 1000.0 for d_val in sim_distances]
-        
-        sim_dev_B = [(sim_forces_N[i] - sim_forces_1[i]) / sim_forces_1[i] for i in range(len(sim_distances))]
-        ax_zoom.scatter(sim_d_nm, sim_dev_B, color=colors[idx], marker='o', s=15, facecolors='none', edgecolors=colors[idx], zorder=3)
-        
-    ax_zoom.set_xscale('log')
-    ax_zoom.set_xlabel('Separation d (nm)')
-    ax_zoom.set_ylabel('Relative Deviation (F - F_0) / F_0')
-    ax_zoom.set_title('B: Zoomed Boundary Corrections', fontsize=8, fontweight='bold')
-    ax_zoom.set_ylim(-0.65, 0.05) # Show the whole range clearly
-    ax_zoom.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
-    
-    # Right Legend for Panel B
-    legend_B = [
-        Line2D([0], [0], color='#7f8c8d', linestyle='-', linewidth=1.5, label='N = 0 (Finite)'),
-        Line2D([0], [0], color='#7f8c8d', linestyle='--', linewidth=1.2, label=r'N = $\infty$ (Finite)'),
-        Line2D([0], [0], color='gray', linestyle='-', linewidth=1.2, label='Finite-Res Theory'),
-        Line2D([0], [0], color='gray', linestyle='--', linewidth=1.0, label='Ideal Theory'),
-        Line2D([0], [0], color='gray', marker='o', linestyle='None', markersize=4, markerfacecolor='none', markeredgecolor='gray', label='FDTD Simulation'),
-        Line2D([0], [0], color=colors[0], label='N = 1'),
-        Line2D([0], [0], color=colors[1], label='N = 2'),
-        Line2D([0], [0], color=colors[2], label='N = 3'),
-        Line2D([0], [0], color=colors[3], label='N = 4'),
-    ]
-    ax_zoom.legend(handles=legend_B, bbox_to_anchor=(1.02, 1), loc='upper left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
-    
-    plt.savefig(os.path.join(outdir, 'figure2_pfa_deviation.pdf'), format='pdf', dpi=300, bbox_inches='tight')
-    plt.savefig(os.path.join(outdir, 'figure2_pfa_deviation.svg'), format='svg', dpi=300, bbox_inches='tight')
-    plt.close()
-    
-    # Figure 3: Finite-Temperature Matsubara Corrections
-    plt.figure(figsize=(3.5, 3.2))
-    # We plot the ratio F(T) / F(0) for Gold, N = 3
-    for T in [77, 300]:
-        pts_T = [x for x in compiled_dataset["data"] if x["material"] == "Gold" and x["temperature_K"] == T and x["generation_N"] == 3]
-        pts_T = sorted(pts_T, key=lambda x: x["separation_um"])
-        pts_0 = [x for x in compiled_dataset["data"] if x["material"] == "Gold" and x["temperature_K"] == 0 and x["generation_N"] == 3]
+        # Extract baseline PFA N1 data for plotting
+        pts_0 = [x for x in compiled_dataset["data"] if x["material"] == mat and x["temperature_K"] == 0 and x["generation_N"] == 0]
         pts_0 = sorted(pts_0, key=lambda x: x["separation_um"])
+        d_nm_0 = [x["separation_um"] * 1000.0 for x in pts_0]
+        force_nN_0 = [abs(x["force_exact"]) * 100.0 for x in pts_0]
+
+        # Extract N=infinity data for plotting
+        pts_inf = [x for x in compiled_dataset["data"] if x["material"] == mat and x["temperature_K"] == 0 and x["generation_N"] == -1]
+        pts_inf = sorted(pts_inf, key=lambda x: x["separation_um"])
+        d_nm_inf = [x["separation_um"] * 1000.0 for x in pts_inf]
+        force_nN_inf = [abs(x["force_exact"]) * 100.0 for x in pts_inf]
+
+        # Figure 1: Force vs. Distance Curve (mat, T = 0 K)
+        fig1, ax1 = plt.subplots(figsize=(4.8, 3.2)) 
         
-        d_nm = [x["separation_um"] * 1000.0 for x in pts_T]
-        ratio = [pts_T[i]["force_exact"] / pts_0[i]["force_exact"] for i in range(len(pts_T))]
+        # 1. Plot N=0 (Infinite Plates, PFA limit)
+        ax1.plot(d_nm_0, force_nN_0, color='black', linestyle='-', linewidth=1.5, zorder=1)
         
-        plt.plot(d_nm, ratio, label=f"T = {T} K", linewidth=1.2, color='#2980b9' if T==77 else '#c0392b')
+        # 2. Plot N=infinity (Infinite Plates, Theory limit)
+        ax1.plot(d_nm_inf, force_nN_inf, color='black', linestyle='--', linewidth=1.2, zorder=1)
         
-    plt.xscale('log')
-    plt.xlabel('Separation d (nm)')
-    plt.ylabel('Thermal Correction Factor F(T) / F(0)')
-    plt.title('Finite-Temperature Corrections (N = 3)', fontsize=9, fontweight='bold')
-    plt.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
-    plt.legend(loc='upper left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
-    plt.tight_layout()
-    plt.savefig(os.path.join(outdir, 'figure3_matsubara_corrections.pdf'), format='pdf', dpi=300)
-    plt.savefig(os.path.join(outdir, 'figure3_matsubara_corrections.svg'), format='svg', dpi=300)
-    plt.close()
-    
+        # 3. Plot N=0 (Finite Plates, Baseline) - showing the baseline finite solid plate
+        # This acts as the physical upper boundary for the finite-plate simulations
+        f_base_nN = [abs(baselines[mat](d)) * 100.0 for d in separations]
+        ax1.plot(separations * 1000.0, f_base_nN, color='#7f8c8d', linestyle='-', linewidth=1.5, zorder=1)
+        
+        # 4. Plot N=infinity (Finite Plates, Theory limit)
+        # This acts as the physical lower boundary for the finite-plate simulations
+        f_inf_finite_nN = [abs(baselines[mat](d) * 0.5 * (1.0 + 0.08 * np.cos(2.0 * np.pi * np.log(d / 0.3) / np.log(3.0) + 0.5))) * 100.0 for d in separations]
+        ax1.plot(separations * 1000.0, f_inf_finite_nN, color='#7f8c8d', linestyle='--', linewidth=1.2, zorder=1)
+
+        # 5. Plot generations N=1,2,3,4
+        for idx, N in enumerate(generations):
+            pts = [x for x in compiled_dataset["data"] if x["material"] == mat and x["temperature_K"] == 0 and x["generation_N"] == N]
+            pts = sorted(pts, key=lambda x: x["separation_um"])
+            d_nm = [x["separation_um"] * 1000.0 for x in pts]
+            
+            # Plot Finite-Res Theory as Solid Line
+            force_nN = [abs(x["force_exact"]) * 100.0 for x in pts]
+            ax1.plot(d_nm, force_nN, color=colors[idx], linewidth=1.2, zorder=2)
+            
+            # Plot Ideal Infinite-Res Theory as Dashed Line (includes finite-plate baseline)
+            f_ideal_pts = []
+            for x in pts:
+                d_val = x["separation_um"]
+                eta_N = get_eta(d_val, N)
+                f_id = baselines[mat](d_val) * ((8.0 / 9.0)**(N - 1)) * (1.0 + eta_N) / (1.0 + get_eta(d_val, 1))
+                f_ideal_pts.append(abs(f_id) * 100.0)
+            ax1.plot(d_nm, f_ideal_pts, linestyle='--', color=colors[idx], linewidth=1.0, alpha=0.7, zorder=1)
+            
+            # Plot FDTD simulation data points as markers
+            sim_forces_N = sim_forces[mat][N]
+            sim_d_nm = [d_val * 1000.0 for d_val in sim_distances]
+            sim_force_nN = [abs(f) * 100.0 for f in sim_forces_N]
+            ax1.scatter(sim_d_nm, sim_force_nN, color=colors[idx], marker='o', s=15, facecolors='none', edgecolors=colors[idx], zorder=3)
+            
+        ax1.set_xscale('log')
+        ax1.set_yscale('log')
+        ax1.set_xlabel('Separation d (nm)')
+        ax1.set_ylabel('Casimir Force |F| (nN)')
+        ax1.set_title(f'Force vs. Distance ({mat}, T = 0 K)', fontsize=9, fontweight='bold')
+        ax1.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
+        
+        # Side legend construction
+        legend_elements_F1 = [
+            Line2D([0], [0], color='black', linestyle='-', linewidth=1.5, label='N = 0 (Infinite)'),
+            Line2D([0], [0], color='black', linestyle='--', linewidth=1.2, label=r'N = $\infty$ (Infinite)'),
+            Line2D([0], [0], color='#7f8c8d', linestyle='-', linewidth=1.5, label='N = 0 (Finite)'),
+            Line2D([0], [0], color='#7f8c8d', linestyle='--', linewidth=1.2, label=r'N = $\infty$ (Finite)'),
+            Line2D([0], [0], color='gray', linestyle='-', linewidth=1.2, label='Finite-Res Theory'),
+            Line2D([0], [0], color='gray', linestyle='--', linewidth=1.0, label='Ideal Theory'),
+            Line2D([0], [0], color='gray', marker='o', linestyle='None', markersize=4, markerfacecolor='none', markeredgecolor='gray', label='FDTD Simulation'),
+            Line2D([0], [0], color=colors[0], label='N = 1'),
+            Line2D([0], [0], color=colors[1], label='N = 2'),
+            Line2D([0], [0], color=colors[2], label='N = 3'),
+            Line2D([0], [0], color=colors[3], label='N = 4'),
+        ]
+        ax1.legend(handles=legend_elements_F1, bbox_to_anchor=(1.05, 1), loc='upper left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
+        
+        plt.savefig(os.path.join(outdir, f'figure1_force_vs_distance_{mat}.pdf'), format='pdf', dpi=300, bbox_inches='tight')
+        plt.savefig(os.path.join(outdir, f'figure1_force_vs_distance_{mat}.svg'), format='svg', dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        # Figure 2: Fractional PFA Deviation vs. Distance (mat, T = 0 K)
+        # Side-by-side two-panel plot (main axis ax_main, zoomed axis ax_zoom)
+        # Width increased to 9.6 inches to hold two panels + two legends side-by-side
+        fig2, (ax_main, ax_zoom) = plt.subplots(1, 2, figsize=(9.6, 3.2))
+        fig2.subplots_adjust(wspace=0.7) # Large wspace to separate plots and place Left Legend cleanly
+        
+        # ------------------ PANEL A: MAIN PLOT (Relative to Infinite PFA) ------------------
+        # Plot N=0 (Infinite Plates) - flat line at 0
+        ax_main.axhline(0, color='black', linestyle='-', linewidth=1.5, zorder=1)
+        
+        # Plot N=infinity (Infinite Plates) - centered at -50%
+        dev_inf = [x["force_exact"] / (x["force_pfa"] / 0.5) - 1.0 for x in pts_inf]
+        ax_main.plot(d_nm_inf, dev_inf, color='black', linestyle='--', linewidth=1.2, zorder=1)
+        
+        # Plot N=0 (Finite Plates) - shows baseline finite-plate suppression
+        dev_finite_0 = [(x - pfa_force_N1) / pfa_force_N1 for x, pfa_force_N1 in zip(f_base_nN, force_nN_0)]
+        ax_main.plot(separations * 1000.0, dev_finite_0, color='#7f8c8d', linestyle='-', linewidth=1.5, zorder=1)
+        
+        # Plot N=infinity (Finite Plates)
+        dev_inf_finite = [(x - pfa_force_N1) / pfa_force_N1 for x, pfa_force_N1 in zip(f_inf_finite_nN, force_nN_0)]
+        ax_main.plot(separations * 1000.0, dev_inf_finite, color='#7f8c8d', linestyle='--', linewidth=1.2, zorder=1)
+        
+        pfa_d_pts = [p0["separation_um"] for p0 in pts_0]
+        pfa_f_pts = [p0["force_pfa"] for p0 in pts_0]
+        
+        for idx, N in enumerate(generations):
+            pts = [x for x in compiled_dataset["data"] if x["material"] == mat and x["temperature_K"] == 0 and x["generation_N"] == N]
+            pts = sorted(pts, key=lambda x: x["separation_um"])
+            d_nm = [x["separation_um"] * 1000.0 for x in pts]
+            
+            # Plot Finite-Res Theory as Solid Line (relative to infinite PFA)
+            dev_finite = []
+            for i, x in enumerate(pts):
+                pfa_N1_val = pts_0[i]["force_pfa"] # infinite PFA
+                dev_finite.append((x["force_exact"] - pfa_N1_val) / pfa_N1_val)
+            ax_main.plot(d_nm, dev_finite, color=colors[idx], linewidth=1.2, zorder=2)
+            
+            # Plot Ideal Infinite-Res Theory as Dashed Line (relative to infinite PFA)
+            dev_ideal = []
+            for i, x in enumerate(pts):
+                d_val = x["separation_um"]
+                a_ideal = (8.0 / 9.0)**(N - 1)
+                eta_N = get_eta(d_val, N)
+                dev_ideal.append(a_ideal * (1.0 + eta_N) - 1.0)
+            ax_main.plot(d_nm, dev_ideal, linestyle='--', color=colors[idx], linewidth=1.0, alpha=0.7, zorder=1)
+            
+            # Plot FDTD simulation data points as markers (relative to infinite PFA)
+            sim_forces_N = sim_forces[mat][N]
+            sim_d_nm = [d_val * 1000.0 for d_val in sim_distances]
+            
+            sim_dev = []
+            for i, d_val in enumerate(sim_distances):
+                pfa_N1_val = np.interp(d_val, pfa_d_pts, pfa_f_pts)
+                sim_dev.append((sim_forces_N[i] - pfa_N1_val) / pfa_N1_val)
+                
+            ax_main.scatter(sim_d_nm, sim_dev, color=colors[idx], marker='o', s=15, facecolors='none', edgecolors=colors[idx], zorder=3)
+            
+        ax_main.set_xscale('log')
+        ax_main.set_xlabel('Separation d (nm)')
+        ax_main.set_ylabel('Fractional PFA Deviation (F - F_{PFA}) / F_{PFA}')
+        ax_main.set_title(f'A: Macroscopic PFA Suppression ({mat})', fontsize=8, fontweight='bold')
+        ax_main.set_ylim(-1.1, 3.5) # Show the whole range of curves and circles including saturation peak
+        ax_main.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
+        
+        # Left Legend for Panel A
+        legend_A = [
+            Line2D([0], [0], color='black', linestyle='-', linewidth=1.5, label='N = 0 (Infinite)'),
+            Line2D([0], [0], color='black', linestyle='--', linewidth=1.2, label=r'N = $\infty$ (Infinite)'),
+            Line2D([0], [0], color='#7f8c8d', linestyle='-', linewidth=1.5, label='N = 0 (Finite)'),
+            Line2D([0], [0], color='#7f8c8d', linestyle='--', linewidth=1.2, label=r'N = $\infty$ (Finite)'),
+            Line2D([0], [0], color='gray', linestyle='-', linewidth=1.2, label='Finite-Res Theory'),
+            Line2D([0], [0], color='gray', linestyle='--', linewidth=1.0, label='Ideal Theory'),
+            Line2D([0], [0], color='gray', marker='o', linestyle='None', markersize=4, markerfacecolor='none', markeredgecolor='gray', label='FDTD Simulation'),
+            Line2D([0], [0], color=colors[0], label='N = 1'),
+            Line2D([0], [0], color=colors[1], label='N = 2'),
+            Line2D([0], [0], color=colors[2], label='N = 3'),
+            Line2D([0], [0], color=colors[3], label='N = 4'),
+        ]
+        ax_main.legend(handles=legend_A, bbox_to_anchor=(1.02, 1), loc='upper left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
+        
+        # ------------------ PANEL B: ZOOMED PLOT (Relative to Finite solid baseline F_base = F_1) ------------------
+        # Plot N=0 (Finite Plates, Baseline) - flat line at 0
+        ax_zoom.axhline(0, color='#7f8c8d', linestyle='-', linewidth=1.5, zorder=1)
+        
+        # Plot N=infinity (Finite Plates, Theory limit) - centered at -50% relative to N=1 ideal baseline
+        eta_1_vals = np.array([get_eta(d, 1) for d in separations])
+        osc_ins = 0.08 * np.cos(2.0 * np.pi * np.log(separations / 0.3) / np.log(3.0) + 0.5)
+        dev_inf_zoom = 0.5 * (1.0 + osc_ins) / (1.0 + eta_1_vals) - 1.0
+        ax_zoom.plot(separations * 1000.0, dev_inf_zoom, color='#7f8c8d', linestyle='--', linewidth=1.2, zorder=1)
+        
+        # Extract baseline N1 data (finite baseline) for Panel B normalization
+        pts_1 = [x for x in compiled_dataset["data"] if x["material"] == mat and x["temperature_K"] == 0 and x["generation_N"] == 1]
+        pts_1 = sorted(pts_1, key=lambda x: x["separation_um"])
+        
+        for idx, N in enumerate(generations):
+            pts = [x for x in compiled_dataset["data"] if x["material"] == mat and x["temperature_K"] == 0 and x["generation_N"] == N]
+            pts = sorted(pts, key=lambda x: x["separation_um"])
+            d_nm = [x["separation_um"] * 1000.0 for x in pts]
+            
+            # Plot Finite-Res Theory as Solid Line (relative to F_base = F_1)
+            dev_finite_B = []
+            for i, x in enumerate(pts):
+                f1_val = pts_1[i]["force_exact"] # F_base = F_1
+                dev_finite_B.append((x["force_exact"] - f1_val) / f1_val)
+            ax_zoom.plot(d_nm, dev_finite_B, color=colors[idx], linewidth=1.2, zorder=2)
+            
+            # Plot Ideal Infinite-Res Theory as Dashed Line (relative to F_base = F_1 ideal)
+            dev_ideal_B = []
+            for i, x in enumerate(pts):
+                d_val = x["separation_um"]
+                a_ideal = (8.0 / 9.0)**(N - 1)
+                eta_N = get_eta(d_val, N)
+                dev_ideal_B.append(a_ideal * (1.0 + eta_N) / (1.0 + get_eta(d_val, 1)) - 1.0)
+            ax_zoom.plot(d_nm, dev_ideal_B, linestyle='--', color=colors[idx], linewidth=1.0, alpha=0.7, zorder=1)
+            
+            # Plot FDTD simulation data points as markers (relative to F_base = F_1)
+            sim_forces_N = sim_forces[mat][N]
+            sim_forces_1 = sim_forces[mat][1]
+            sim_d_nm = [d_val * 1000.0 for d_val in sim_distances]
+            
+            sim_dev_B = [(sim_forces_N[i] - sim_forces_1[i]) / sim_forces_1[i] for i in range(len(sim_distances))]
+            ax_zoom.scatter(sim_d_nm, sim_dev_B, color=colors[idx], marker='o', s=15, facecolors='none', edgecolors=colors[idx], zorder=3)
+            
+        ax_zoom.set_xscale('log')
+        ax_zoom.set_xlabel('Separation d (nm)')
+        ax_zoom.set_ylabel('Relative Deviation (F - F_0) / F_0')
+        ax_zoom.set_title(f'B: Zoomed Corrections ({mat})', fontsize=8, fontweight='bold')
+        ax_zoom.set_ylim(-0.65, 0.05) # Show the whole range clearly
+        ax_zoom.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
+        
+        # Right Legend for Panel B
+        legend_B = [
+            Line2D([0], [0], color='#7f8c8d', linestyle='-', linewidth=1.5, label='N = 0 (Finite)'),
+            Line2D([0], [0], color='#7f8c8d', linestyle='--', linewidth=1.2, label=r'N = $\infty$ (Finite)'),
+            Line2D([0], [0], color='gray', linestyle='-', linewidth=1.2, label='Finite-Res Theory'),
+            Line2D([0], [0], color='gray', linestyle='--', linewidth=1.0, label='Ideal Theory'),
+            Line2D([0], [0], color='gray', marker='o', linestyle='None', markersize=4, markerfacecolor='none', markeredgecolor='gray', label='FDTD Simulation'),
+            Line2D([0], [0], color=colors[0], label='N = 1'),
+            Line2D([0], [0], color=colors[1], label='N = 2'),
+            Line2D([0], [0], color=colors[2], label='N = 3'),
+            Line2D([0], [0], color=colors[3], label='N = 4'),
+        ]
+        ax_zoom.legend(handles=legend_B, bbox_to_anchor=(1.02, 1), loc='upper left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
+        
+        plt.savefig(os.path.join(outdir, f'figure2_pfa_deviation_{mat}.pdf'), format='pdf', dpi=300, bbox_inches='tight')
+        plt.savefig(os.path.join(outdir, f'figure2_pfa_deviation_{mat}.svg'), format='svg', dpi=300, bbox_inches='tight')
+        plt.close()
+        
+        # Figure 3: Finite-Temperature Matsubara Corrections
+        plt.figure(figsize=(3.5, 3.2))
+        for T in [77, 300]:
+            pts_T = [x for x in compiled_dataset["data"] if x["material"] == mat and x["temperature_K"] == T and x["generation_N"] == 3]
+            pts_T = sorted(pts_T, key=lambda x: x["separation_um"])
+            pts_0 = [x for x in compiled_dataset["data"] if x["material"] == mat and x["temperature_K"] == 0 and x["generation_N"] == 3]
+            pts_0 = sorted(pts_0, key=lambda x: x["separation_um"])
+            
+            d_nm = [x["separation_um"] * 1000.0 for x in pts_T]
+            ratio = [pts_T[i]["force_exact"] / pts_0[i]["force_exact"] for i in range(len(pts_T))]
+            
+            plt.plot(d_nm, ratio, label=f"T = {T} K", linewidth=1.2, color='#2980b9' if T==77 else '#c0392b')
+            
+        plt.xscale('log')
+        plt.xlabel('Separation d (nm)')
+        plt.ylabel('Thermal Correction Factor F(T) / F(0)')
+        plt.title(f'Finite-Temperature Corrections ({mat}, N = 3)', fontsize=9, fontweight='bold')
+        plt.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
+        plt.legend(loc='upper left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
+        plt.tight_layout()
+        plt.savefig(os.path.join(outdir, f'figure3_matsubara_corrections_{mat}.pdf'), format='pdf', dpi=300)
+        plt.savefig(os.path.join(outdir, f'figure3_matsubara_corrections_{mat}.svg'), format='svg', dpi=300)
+        plt.close()
+        
     print(f"Postprocessing complete. Output files generated in {outdir}:")
     print("  - compiled_casimir_dataset.json (dataset)")
     print("  - dataset_reproducibility.log (SHA-256 validation log)")
-    print("  - figure1_force_vs_distance.pdf / .svg")
-    print("  - figure2_pfa_deviation.pdf / .svg")
-    print("  - figure3_matsubara_corrections.pdf / .svg")
+    for mat in ["PEC", "Gold", "Silicon"]:
+        print(f"  - figure1_force_vs_distance_{mat}.pdf / .svg")
+        print(f"  - figure2_pfa_deviation_{mat}.pdf / .svg")
+        print(f"  - figure3_matsubara_corrections_{mat}.pdf / .svg")
     print("  - parameters.txt (run parameters log)")
 
 if __name__ == "__main__":
