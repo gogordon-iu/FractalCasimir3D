@@ -9,29 +9,35 @@ L = 0.3  # plate size in microns
 T_77 = 77
 T_300 = 300
 
-def get_epsilon_gold(xi):
-    # Drude model parameters for Gold in Meep units
-    fp = 7.25
-    gamma = 0.028
-    return 1.0 + (fp**2) / (xi**2 + gamma * xi + 1e-15)
-
-def get_epsilon_silicon(xi):
-    # Lorentz model parameters for Silicon in Meep units
-    eps_inf = 1.035
-    f0 = 2.18
-    delta_eps = 10.835
-    return eps_inf + (delta_eps * f0**2) / (f0**2 + xi**2)
+def get_epsilon_imag(xi, material_name):
+    if material_name == "PEC":
+        return -1e20
+    
+    import meep as mp
+    import meep.materials as mat
+    
+    if material_name == "Gold":
+        mat_obj = mat.Au
+    elif material_name == "Silicon":
+        mat_obj = mat.cSi
+    else:
+        raise ValueError(f"Unknown material: {material_name}")
+        
+    eps_inf = mat_obj.epsilon_diag.x
+    val = eps_inf
+    for sus in mat_obj.E_susceptibilities:
+        freq = sus.frequency
+        gamma = sus.gamma
+        sigma = sus.sigma_diag.x
+        val += (sigma * freq**2) / (freq**2 + xi**2 + gamma * xi + 1e-30)
+        
+    return val
 
 def lifshitz_integrand(k_parallel, xi, d, material):
     if material == "PEC":
         return 0.0  # handled analytically
     
-    if material == "Gold":
-        eps = get_epsilon_gold(xi)
-    elif material == "Silicon":
-        eps = get_epsilon_silicon(xi)
-    else:
-        eps = 1.0
+    eps = get_epsilon_imag(xi, material)
         
     kz = np.sqrt(xi**2 + k_parallel**2)
     kzm = np.sqrt(eps * xi**2 + k_parallel**2)

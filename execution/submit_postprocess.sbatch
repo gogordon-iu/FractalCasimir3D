@@ -18,6 +18,8 @@ conda activate meep
 cd /N/project/gorengor_werewolf/FractalCasimir3D
 
 echo "Starting post-processing with parameters: nsteps=$1, res=$2, nmax=$3"
+# Run the PFA analytical model baseline calculations first
+python execution/run_pfa_model.py
 # Run the post-processing and plotting script
 python execution/postprocess_and_plot.py --nsteps "$1" --res "$2" --nmax "$3"
 echo "Post-processing complete. Figures and dataset generated."

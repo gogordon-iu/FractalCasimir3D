@@ -18,21 +18,34 @@ def get_src_index(n):
 def get_effective_area(N, L):
     return ((8.0 / 9.0)**(N - 1)) * (L**2)
 
-def generate_carpet_holes(N, L, center_x, center_y, size_z, material):
+def generate_carpet_holes(N, L, center_x, center_y, size_z, material, theta=0.0):
     """
     Generates a list of mp.Block objects representing the air holes
-    in a Sierpinski carpet prefractal plate.
+    in a Sierpinski carpet prefractal plate, rotated by theta degrees in the xy-plane.
     """
     holes = []
+    theta_rad = np.radians(theta)
+    C = np.cos(theta_rad)
+    S = np.sin(theta_rad)
+    e1 = mp.Vector3(C, S, 0.0)
+    e2 = mp.Vector3(-S, C, 0.0)
+    e3 = mp.Vector3(0.0, 0.0, 1.0)
     
     def recurse(x, y, w, level):
         if level > N:
             return
         # Add the center hole for this level
         hole_w = w / 3.0
+        # Rotate the relative center (x, y) by theta
+        rx = x * C - y * S
+        ry = x * S + y * C
+        
         holes.append(mp.Block(
-            center=mp.Vector3(x, y, 0.0) + mp.Vector3(center_x, center_y, 0.0),
+            center=mp.Vector3(rx, ry, 0.0) + mp.Vector3(center_x, center_y, 0.0),
             size=mp.Vector3(hole_w, hole_w, size_z),
+            e1=e1,
+            e2=e2,
+            e3=e3,
             material=mp.vacuum
         ))
         
@@ -50,7 +63,114 @@ def generate_carpet_holes(N, L, center_x, center_y, size_z, material):
         
     return holes
 
-def run_simulation(d, N, material, resolution, n_max=5, config="both"):
+
+def get_casimir_material(material_name, Sigma, ft, theta=0.0):
+    """
+    Constructs the MEEP Medium for the bottom or top plate.
+    If ft == mp.E_stuff: D_conductivity = Sigma, and gamma is shifted by Sigma.
+    If ft == mp.H_stuff: B_conductivity = Sigma, and gamma is unshifted.
+    """
+    if material_name == "PEC":
+        cond_attr = {"D_conductivity" if ft == mp.E_stuff else "B_conductivity": Sigma}
+        return mp.Medium(epsilon=-1e20, **cond_attr)
+        
+    if material_name == "Gold":
+        from meep.materials import Au
+        base_medium = Au
+    elif material_name == "Silicon":
+        from meep.materials import cSi
+        base_medium = cSi
+    elif material_name == "Phosphorene":
+        # Define Phosphorene principal components
+        eps_x, eps_y, eps_z = 2.0, 1.5, 1.2
+        sig_x, sig_y, sig_z = 3.0, 1.0, 2.0
+        f0 = 1.5
+        gamma_p = 0.1
+        
+        # Rotate by theta
+        theta_rad = np.radians(theta)
+        C = np.cos(theta_rad)
+        S = np.sin(theta_rad)
+        
+        # Rotated epsilon
+        eps_xx = eps_x * C**2 + eps_y * S**2
+        eps_yy = eps_x * S**2 + eps_y * C**2
+        eps_zz = eps_z
+        eps_xy = (eps_x - eps_y) * S * C
+        
+        # Rotated susceptibility sigma
+        sig_xx = sig_x * C**2 + sig_y * S**2
+        sig_yy = sig_x * S**2 + sig_y * C**2
+        sig_zz = sig_z
+        sig_xy = (sig_x - sig_y) * S * C
+        
+        gamma_val = gamma_p + Sigma if ft == mp.E_stuff else gamma_p
+        cond_attr = {"D_conductivity" if ft == mp.E_stuff else "B_conductivity": Sigma}
+        
+        return mp.Medium(
+            epsilon_diag=mp.Vector3(eps_xx, eps_yy, eps_zz),
+            epsilon_offdiag=mp.Vector3(eps_xy, 0.0, 0.0),
+            E_susceptibilities=[
+                mp.LorentzianSusceptibility(
+                    frequency=f0,
+                    gamma=gamma_val,
+                    sigma_diag=mp.Vector3(sig_xx, sig_yy, sig_zz),
+                    sigma_offdiag=mp.Vector3(sig_xy, 0.0, 0.0)
+                )
+            ],
+            **cond_attr
+        )
+    else:
+        raise ValueError(f"Unknown material: {material_name}")
+
+    # For Au and cSi:
+    theta_rad = np.radians(theta)
+    C = np.cos(theta_rad)
+    S = np.sin(theta_rad)
+    
+    eps_diag = base_medium.epsilon_diag
+    
+    eps_xx = eps_diag.x * C**2 + eps_diag.y * S**2
+    eps_yy = eps_diag.x * S**2 + eps_diag.y * C**2
+    eps_zz = eps_diag.z
+    eps_xy = (eps_diag.x - eps_diag.y) * S * C
+    
+    new_sus = []
+    for sus in base_medium.E_susceptibilities:
+        freq = sus.frequency
+        gamma = sus.gamma
+        gamma_val = gamma + Sigma if ft == mp.E_stuff else gamma
+        
+        sig_diag = sus.sigma_diag
+        sig_xx = sig_diag.x * C**2 + sig_diag.y * S**2
+        sig_yy = sig_diag.x * S**2 + sig_diag.y * C**2
+        sig_zz = sig_diag.z
+        sig_xy = (sig_diag.x - sig_diag.y) * S * C
+        
+        if isinstance(sus, mp.DrudeSusceptibility):
+            new_sus.append(mp.DrudeSusceptibility(
+                frequency=freq,
+                gamma=gamma_val,
+                sigma_diag=mp.Vector3(sig_xx, sig_yy, sig_zz),
+                sigma_offdiag=mp.Vector3(sig_xy, 0.0, 0.0)
+            ))
+        elif isinstance(sus, mp.LorentzianSusceptibility):
+            new_sus.append(mp.LorentzianSusceptibility(
+                frequency=freq,
+                gamma=gamma_val,
+                sigma_diag=mp.Vector3(sig_xx, sig_yy, sig_zz),
+                sigma_offdiag=mp.Vector3(sig_xy, 0.0, 0.0)
+            ))
+            
+    cond_attr = {"D_conductivity" if ft == mp.E_stuff else "B_conductivity": Sigma}
+    return mp.Medium(
+        epsilon_diag=mp.Vector3(eps_xx, eps_yy, eps_zz),
+        epsilon_offdiag=mp.Vector3(eps_xy, 0.0, 0.0),
+        E_susceptibilities=new_sus,
+        **cond_attr
+    )
+
+def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0):
     """
     Runs a 3D FDTD simulation for a single configuration.
     """
@@ -71,19 +191,6 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both"):
     Sigma = 0.5 / d
     T_run = 30.0  # total runtime in dimensionless time units
     
-    # Material Definitions
-    # Gold Drude parameters
-    fp = 7.25
-    gamma_gold = 0.028
-    
-    # Silicon Lorentz parameters
-    f0_si = 2.18
-    delta_eps_si = 10.835
-    eps_inf_si = 1.035
-    
-    # We will set materials dynamically inside the polarization loop because 
-    # default_material and susdamping depends on whether it's electric (E) or magnetic (H) run.
-    
     pol_list = [mp.Ex, mp.Ey, mp.Ez, mp.Hx, mp.Hy, mp.Hz]
     component_direction = {
         mp.Ex: mp.X, mp.Ey: mp.Y, mp.Ez: mp.Z,
@@ -93,9 +200,6 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both"):
     }
     
     # Integration surface S enclosing the prefractal plate
-    # The prefractal plate is centered at z = d/2 + t_plate/2
-    # So its z-bounds are [d/2, d/2 + t_plate]
-    # S box size:
     delta_s = 0.03
     sx_box = L + 2.0 * delta_s
     sy_box = L + 2.0 * delta_s
@@ -104,17 +208,11 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both"):
     
     # 6 sides of S
     sides_info = [
-        # side 0: x_min
         {"center": mp.Vector3(-sx_box/2.0, 0.0, center_z), "size": mp.Vector3(0.0, sy_box, sz_box), "orientation": -1.0},
-        # side 1: x_max
         {"center": mp.Vector3(sx_box/2.0, 0.0, center_z), "size": mp.Vector3(0.0, sy_box, sz_box), "orientation": 1.0},
-        # side 2: y_min
         {"center": mp.Vector3(0.0, -sy_box/2.0, center_z), "size": mp.Vector3(sx_box, 0.0, sz_box), "orientation": -1.0},
-        # side 3: y_max
         {"center": mp.Vector3(0.0, sy_box/2.0, center_z), "size": mp.Vector3(sx_box, 0.0, sz_box), "orientation": 1.0},
-        # side 4: z_min
         {"center": mp.Vector3(0.0, 0.0, center_z - sz_box/2.0), "size": mp.Vector3(sx_box, sy_box, 0.0), "orientation": -1.0},
-        # side 5: z_max
         {"center": mp.Vector3(0.0, 0.0, center_z + sz_box/2.0), "size": mp.Vector3(sx_box, sy_box, 0.0), "orientation": 1.0}
     ]
     
@@ -125,34 +223,13 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both"):
         ft = mp.E_stuff if curr_pol in [mp.Ex, mp.Ey, mp.Ez] else mp.H_stuff
         
         # Setup materials with appropriate conductivity added
+        bottom_plate_material = get_casimir_material(material, Sigma, ft, theta=0.0)
+        top_plate_material = get_casimir_material(material, Sigma, ft, theta=theta)
+        
         if ft == mp.E_stuff:
-            bg_material = mp.Medium(epsilon=1.0, D_conductivity=Sigma)
-            if material == "PEC":
-                plate_material = mp.Medium(epsilon=-1e20, D_conductivity=Sigma)
-            elif material == "Gold":
-                plate_material = mp.Medium(
-                    epsilon=1.0, D_conductivity=Sigma,
-                    E_susceptibilities=[mp.DrudeSusceptibility(frequency=fp, gamma=gamma_gold + Sigma, sigma=1.0)]
-                )
-            elif material == "Silicon":
-                plate_material = mp.Medium(
-                    epsilon=eps_inf_si, D_conductivity=Sigma,
-                    E_susceptibilities=[mp.LorentzianSusceptibility(frequency=f0_si, gamma=Sigma/(2.0*np.pi), sigma=delta_eps_si)]
-                )
+            bg_material = mp.Medium(epsilon=eps_bg, D_conductivity=Sigma)
         else:
-            bg_material = mp.Medium(epsilon=1.0, B_conductivity=Sigma)
-            if material == "PEC":
-                plate_material = mp.Medium(epsilon=-1e20, B_conductivity=Sigma)
-            elif material == "Gold":
-                plate_material = mp.Medium(
-                    epsilon=1.0, B_conductivity=Sigma,
-                    E_susceptibilities=[mp.DrudeSusceptibility(frequency=fp, gamma=gamma_gold, sigma=1.0)]
-                )
-            elif material == "Silicon":
-                plate_material = mp.Medium(
-                    epsilon=eps_inf_si, B_conductivity=Sigma,
-                    E_susceptibilities=[mp.LorentzianSusceptibility(frequency=f0_si, gamma=0.0, sigma=delta_eps_si)]
-                )
+            bg_material = mp.Medium(epsilon=eps_bg, B_conductivity=Sigma)
                 
         # Geometry list
         geometry = []
@@ -161,19 +238,29 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both"):
             geometry.append(mp.Block(
                 center=mp.Vector3(0.0, 0.0, -d/2.0 - t_plate/2.0),
                 size=mp.Vector3(L, L, t_plate),
-                material=plate_material
+                material=bottom_plate_material
             ))
             
         # Prefractal plate centered at z = d/2 + t_plate/2 (only if not "vacuum")
         if config != "vacuum":
             # Solid block
+            theta_rad = np.radians(theta)
+            C = np.cos(theta_rad)
+            S = np.sin(theta_rad)
+            e1 = mp.Vector3(C, S, 0.0)
+            e2 = mp.Vector3(-S, C, 0.0)
+            e3 = mp.Vector3(0.0, 0.0, 1.0)
+            
             geometry.append(mp.Block(
                 center=mp.Vector3(0.0, 0.0, d/2.0 + t_plate/2.0),
                 size=mp.Vector3(L, L, t_plate),
-                material=plate_material
+                e1=e1,
+                e2=e2,
+                e3=e3,
+                material=top_plate_material
             ))
             # Subtract holes recursively
-            holes = generate_carpet_holes(N, L, 0.0, 0.0, t_plate + 0.01, plate_material)
+            holes = generate_carpet_holes(N, L, 0.0, 0.0, t_plate + 0.01, top_plate_material, theta=theta)
             # Offset hole centers to the prefractal plate center
             for hole in holes:
                 hole.center = mp.Vector3(hole.center.x, hole.center.y, d/2.0 + t_plate/2.0)
@@ -187,8 +274,10 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both"):
             boundary_layers=[mp.PML(dpml)],
             default_material=bg_material,
             k_point=mp.Vector3(0,0,0),  # PBCs to prevent boundary forces
-            Courant=0.3
+            Courant=0.3,
+            eps_averaging=True
         )
+
         
         sim.init_sim()
         dt = sim.Courant / resolution
@@ -277,30 +366,34 @@ def main():
     parser = argparse.ArgumentParser(description="Run 3D MEEP Casimir FDTD simulation.")
     parser.add_argument("--d", type=float, required=True, help="Plate separation in microns.")
     parser.add_argument("--N", type=int, required=True, help="Prefractal generation (1-4).")
-    parser.add_argument("--material", type=str, required=True, choices=["PEC", "Gold", "Silicon"], help="Material configuration.")
+    parser.add_argument("--material", type=str, required=True, choices=["PEC", "Gold", "Silicon", "Phosphorene"], help="Material configuration.")
     parser.add_argument("--res", type=int, default=10, help="Grid resolution.")
     parser.add_argument("--nmax", type=int, default=3, help="Max moments index limit.")
+    parser.add_argument("--theta", type=float, default=0.0, help="Twist angle of top plate in degrees.")
+    parser.add_argument("--eps-bg", type=float, default=1.0, help="Dielectric constant of the background medium.")
     args = parser.parse_args()
     
-    print(f"Starting simulation: d={args.d} um, N={args.N}, material={args.material}, resolution={args.res}, nmax={args.nmax}")
+    print(f"Starting simulation: d={args.d} um, N={args.N}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}")
     
     # We run the two cases for vacuum subtraction:
     # 1. both plates present
-    f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both")
+    f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg)
     # 2. only the prefractal plate present (to subtract the self-force)
-    f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self")
+    f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg)
     
     f_sub = f_both - f_self
     
     # Save output to .tmp folder
     os.makedirs(".tmp", exist_ok=True)
-    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}.json"
+    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}.json"
     
     result = {
         "d_um": args.d,
         "N": args.N,
         "material": args.material,
         "resolution": args.res,
+        "theta_deg": args.theta,
+        "eps_bg": args.eps_bg,
         "force_both": float(f_both),
         "force_self": float(f_self),
         "force_subtracted": float(f_sub)
