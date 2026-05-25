@@ -544,6 +544,97 @@ def main():
         plt.savefig(os.path.join(outdir, f'figure3_matsubara_corrections_{mat}.svg'), format='svg', dpi=300)
         plt.close()
         
+    # Figure 4: Material Comparison (PEC vs. Gold vs. Silicon for N = 3)
+    # Side-by-side two-panel plot (Panel A: Absolute Force at T = 300 K, Panel B: Zoomed Boundary Corrections at T = 0 K)
+    fig4, (ax4_a, ax4_b) = plt.subplots(1, 2, figsize=(9.6, 3.2))
+    fig4.subplots_adjust(wspace=0.7)
+    
+    mat_colors = {'PEC': '#1e3799', 'Gold': '#d35400', 'Silicon': '#27ae60'}
+    
+    # ------------------ PANEL A: ABSOLUTE FORCE AT T = 300 K ------------------
+    for mat in ["PEC", "Gold", "Silicon"]:
+        # Extract N=3 data at T=300 K
+        pts_T300 = [x for x in compiled_dataset["data"] if x["material"] == mat and x["temperature_K"] == 300 and x["generation_N"] == 3]
+        pts_T300 = sorted(pts_T300, key=lambda x: x["separation_um"])
+        d_nm_A = [x["separation_um"] * 1000.0 for x in pts_T300]
+        force_nN_A = [abs(x["force_exact"]) * 100.0 for x in pts_T300]
+        
+        # Plot Finite-Res Theory as Solid Line
+        ax4_a.plot(d_nm_A, force_nN_A, color=mat_colors[mat], linewidth=1.2, zorder=2, label=f'{mat}')
+        
+        # Plot FDTD simulation data points as markers
+        sim_forces_N = sim_forces[mat][3]
+        sim_d_nm = [d_val * 1000.0 for d_val in sim_distances]
+        
+        sim_force_nN_A = []
+        for i, d_val in enumerate(sim_distances):
+            theta_val = get_thermal_factor(d_val, mat, 300)
+            sim_force_nN_A.append(abs(sim_forces_N[i] * theta_val) * 100.0)
+            
+        ax4_a.scatter(sim_d_nm, sim_force_nN_A, color=mat_colors[mat], marker='o', s=15, facecolors='none', edgecolors=mat_colors[mat], zorder=3)
+        
+    ax4_a.set_xscale('log')
+    ax4_a.set_yscale('log')
+    ax4_a.set_xlabel('Separation d (nm)')
+    ax4_a.set_ylabel('Casimir Force |F| (nN)')
+    ax4_a.set_title('A: Absolute Force at Room Temp (T = 300 K, N = 3)', fontsize=8, fontweight='bold')
+    ax4_a.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
+    ax4_a.legend(loc='lower left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
+    
+    # ------------------ PANEL B: RELATIVE BOUNDARY CORRECTIONS AT T = 0 K ------------------
+    for mat in ["PEC", "Gold", "Silicon"]:
+        # Extract N=3 and N=1 baseline data at T=0 K
+        pts_3 = sorted([x for x in compiled_dataset["data"] if x["material"] == mat and x["temperature_K"] == 0 and x["generation_N"] == 3], key=lambda x: x["separation_um"])
+        pts_1 = sorted([x for x in compiled_dataset["data"] if x["material"] == mat and x["temperature_K"] == 0 and x["generation_N"] == 1], key=lambda x: x["separation_um"])
+        
+        d_nm_B = [x["separation_um"] * 1000.0 for x in pts_3]
+        
+        # Plot Finite-Res Theory as Solid Line
+        dev_finite_B = []
+        for i, x in enumerate(pts_3):
+            f1_val = pts_1[i]["force_exact"]
+            dev_finite_B.append((x["force_exact"] - f1_val) / f1_val)
+        ax4_b.plot(d_nm_B, dev_finite_B, color=mat_colors[mat], linewidth=1.2, zorder=2, label=f'{mat}')
+        
+        # Plot Ideal Infinite-Res Theory as Dashed Line
+        dev_ideal_B = []
+        for i, x in enumerate(pts_3):
+            d_val = x["separation_um"]
+            a_ideal = (8.0 / 9.0)**2  # N = 3
+            eta_3 = get_eta(d_val, 3)
+            dev_ideal_B.append(a_ideal * (1.0 + eta_3) / (1.0 + get_eta(d_val, 1)) - 1.0)
+        ax4_b.plot(d_nm_B, dev_ideal_B, linestyle='--', color=mat_colors[mat], linewidth=1.0, alpha=0.7, zorder=1)
+        
+        # Plot FDTD simulation data points as markers
+        sim_forces_3 = sim_forces[mat][3]
+        sim_forces_1 = sim_forces[mat][1]
+        sim_d_nm = [d_val * 1000.0 for d_val in sim_distances]
+        
+        sim_dev_B = [(sim_forces_3[i] - sim_forces_1[i]) / sim_forces_1[i] for i in range(len(sim_distances))]
+        ax4_b.scatter(sim_d_nm, sim_dev_B, color=mat_colors[mat], marker='o', s=15, facecolors='none', edgecolors=mat_colors[mat], zorder=3)
+        
+    ax4_b.set_xscale('log')
+    ax4_b.set_xlabel('Separation d (nm)')
+    ax4_b.set_ylabel('Relative Deviation (F - F_0) / F_0')
+    ax4_b.set_title('B: Material Suppression of Fractal Scaling (T = 0 K, N = 3)', fontsize=8, fontweight='bold')
+    ax4_b.set_ylim(-0.4, 0.05)  # Zoomed to focus on N=3 deviations (around -20%)
+    ax4_b.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
+    
+    # Legend for Panel B
+    legend_elements_B = [
+        Line2D([0], [0], color='gray', linestyle='-', linewidth=1.2, label='Finite-Res Theory'),
+        Line2D([0], [0], color='gray', linestyle='--', linewidth=1.0, label='Ideal Theory'),
+        Line2D([0], [0], color='gray', marker='o', linestyle='None', markersize=4, markerfacecolor='none', markeredgecolor='gray', label='FDTD Simulation'),
+        Line2D([0], [0], color=mat_colors['PEC'], label='PEC'),
+        Line2D([0], [0], color=mat_colors['Gold'], label='Gold'),
+        Line2D([0], [0], color=mat_colors['Silicon'], label='Silicon'),
+    ]
+    ax4_b.legend(handles=legend_elements_B, bbox_to_anchor=(1.02, 1), loc='upper left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
+    
+    plt.savefig(os.path.join(outdir, 'figure4_material_comparison.pdf'), format='pdf', dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(outdir, 'figure4_material_comparison.svg'), format='svg', dpi=300, bbox_inches='tight')
+    plt.close()
+
     print(f"Postprocessing complete. Output files generated in {outdir}:")
     print("  - compiled_casimir_dataset.json (dataset)")
     print("  - dataset_reproducibility.log (SHA-256 validation log)")
@@ -551,6 +642,7 @@ def main():
         print(f"  - figure1_force_vs_distance_{mat}.pdf / .svg")
         print(f"  - figure2_pfa_deviation_{mat}.pdf / .svg")
         print(f"  - figure3_matsubara_corrections_{mat}.pdf / .svg")
+    print("  - figure4_material_comparison.pdf / .svg")
     print("  - parameters.txt (run parameters log)")
 
 if __name__ == "__main__":
