@@ -15,9 +15,12 @@
 mkdir -p logs
 mkdir -p .tmp
 
-# Load modules (adjust based on BigRed200 modules, e.g. python/miniconda)
-# module load python
-# conda activate meep
+# Activate Conda environment
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate meep
+
+# Force Slurm to run from the repository root directory
+cd /N/project/gorengor_werewolf/FractalCasimir3D
 
 # Set OpenMP threads for MEEP's C++ solver
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
