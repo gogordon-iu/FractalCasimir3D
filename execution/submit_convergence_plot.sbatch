@@ -5,8 +5,8 @@
 #SBATCH -e logs/conv_plot.err
 #SBATCH -p general
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=12
+#SBATCH --ntasks-per-node=12
+#SBATCH --cpus-per-task=1
 #SBATCH --time=00:30:00
 #SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
@@ -17,6 +17,9 @@ conda activate meep
 
 # Force Slurm to run from the repository root directory
 cd /N/project/gorengor_werewolf/FractalCasimir3D
+
+# Set OpenMP threads to 1
+export OMP_NUM_THREADS=1
 
 echo "Starting convergence plotting..."
 # Execute the consolidation and plotting script

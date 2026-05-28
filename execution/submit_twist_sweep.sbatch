@@ -5,8 +5,8 @@
 #SBATCH -e logs/twist_%a.err
 #SBATCH -p general
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=12
+#SBATCH --ntasks-per-node=12
+#SBATCH --cpus-per-task=1
 #SBATCH --time=12:00:00
 #SBATCH --array=0-6   # 7 angles: 0, 15, 30, 45, 60, 75, 90
 #SBATCH --mail-type=FAIL,END
@@ -32,8 +32,8 @@ if [ "$SLURM_ARRAY_TASK_ID" -eq 0 ]; then
     sbatch --dependency=afterany:$SLURM_ARRAY_JOB_ID execution/submit_twist_plot.sbatch
 fi
 
-# Set OpenMP threads for MEEP's C++ solver
-export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+# Set OpenMP threads to 1 for parallel MPI execution
+export OMP_NUM_THREADS=1
 
 echo "Running task ID: $SLURM_ARRAY_TASK_ID (theta = $THETA deg)"
 

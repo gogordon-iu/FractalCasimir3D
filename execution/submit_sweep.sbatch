@@ -5,8 +5,8 @@
 #SBATCH -e logs/casimir_%a.err
 #SBATCH -p general
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=12
+#SBATCH --ntasks-per-node=12
+#SBATCH --cpus-per-task=1
 #SBATCH --time=48:00:00
 #SBATCH --array=0-599   # 3 materials * 4 generations * 50 separation steps = 600 tasks
 #SBATCH --mail-type=FAIL,END
@@ -33,11 +33,11 @@ if [ "$SLURM_ARRAY_TASK_ID" -eq 0 ]; then
     sbatch --dependency=afterany:$SLURM_ARRAY_JOB_ID execution/submit_postprocess.sbatch $NSTEPS $RESOLUTION $NMAX
 fi
 
-# Set OpenMP threads for MEEP's C++ solver
-export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+# Set OpenMP threads to 1 for parallel MPI execution
+export OMP_NUM_THREADS=1
 
 echo "Running task ID: $SLURM_ARRAY_TASK_ID"
-echo "CPUs allocated: $SLURM_CPUS_PER_TASK"
+echo "CPUs allocated: 12"
 
 # Run the task mapping script
 python execution/run_slurm_array_task.py \
@@ -45,4 +45,4 @@ python execution/run_slurm_array_task.py \
     --nsteps $NSTEPS \
     --res $RESOLUTION \
     --nmax $NMAX \
-    --cores $SLURM_CPUS_PER_TASK
+    --cores 12
