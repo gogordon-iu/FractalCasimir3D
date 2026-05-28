@@ -27,9 +27,10 @@ def main():
     parser.add_argument("--cores", type=int, default=12, help="Number of MPI cores to use for running simulations.")
     args = parser.parse_args()
     
-    print("==================================================")
-    print("Phosphorene Casimir Twist Sweep and Magic Angle Detection")
-    print("==================================================")
+    import datetime
+    now_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    outdir = f"results_twist_{now_str}"
+    os.makedirs(outdir, exist_ok=True)
     
     # Twist sweep parameters
     theta_list = [0.0, 15.0, 30.0, 45.0, 60.0, 75.0, 90.0]
@@ -38,6 +39,18 @@ def main():
     resolution = 40
     nmax = 3
     eps_bg = 1.6
+    
+    # Save parameters.txt
+    with open(os.path.join(outdir, "parameters.txt"), "w") as f:
+        f.write(f"--cores {args.cores}\n")
+        f.write(f"--res {resolution}\n")
+        f.write(f"--d {d}\n")
+        f.write(f"--N {N}\n")
+        f.write(f"--eps_bg {eps_bg}\n")
+        
+    print("==================================================")
+    print("Phosphorene Casimir Twist Sweep and Magic Angle Detection")
+    print("==================================================")
     
     L = 0.3
     # Effective area A_3 = (8/9)^2 * L^2
@@ -100,7 +113,7 @@ def main():
         print(f"Theta: {theta:.1f} deg -> Force: {f_sub:.6e}, Pressure: {pressure:.6e}")
         
     # Save the consolidated twist sweep results
-    consolidated_file = ".tmp/twist_sweep_results.json"
+    consolidated_file = os.path.join(outdir, "twist_sweep_results.json")
     with open(consolidated_file, "w") as f:
         json.dump(results, f, indent=4)
         
@@ -155,9 +168,11 @@ def main():
     
     plt.tight_layout()
     
-    plt.savefig('figure_twist_angle_comparison.pdf', format='pdf', dpi=300)
-    plt.savefig('figure_twist_angle_comparison.svg', format='svg', dpi=300)
-    print("Plot saved to figure_twist_angle_comparison.pdf / .svg")
+    pdf_path = os.path.join(outdir, 'figure_twist_angle_comparison.pdf')
+    svg_path = os.path.join(outdir, 'figure_twist_angle_comparison.svg')
+    plt.savefig(pdf_path, format='pdf', dpi=300)
+    plt.savefig(svg_path, format='svg', dpi=300)
+    print(f"Plot saved to {pdf_path} / {svg_path}")
     plt.close()
     
 if __name__ == "__main__":

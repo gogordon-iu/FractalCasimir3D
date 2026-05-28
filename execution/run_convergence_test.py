@@ -27,9 +27,10 @@ def main():
     parser.add_argument("--cores", type=int, default=12, help="Number of MPI cores to use for running simulations.")
     args = parser.parse_args()
     
-    print("==================================================")
-    print("Yee Grid Resolution Convergence Test Sweep (Gold)")
-    print("==================================================")
+    import datetime
+    now_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    outdir = f"results_convergence_{now_str}"
+    os.makedirs(outdir, exist_ok=True)
     
     resolutions = [20, 40, 60, 80, 100, 120]
     d = 0.1
@@ -37,6 +38,17 @@ def main():
     material = "Gold"
     nmax = 3
     
+    # Save parameters.txt
+    with open(os.path.join(outdir, "parameters.txt"), "w") as f:
+        f.write(f"--cores {args.cores}\n")
+        f.write(f"--d {d}\n")
+        f.write(f"--N {N}\n")
+        f.write(f"--material {material}\n")
+        f.write(f"--resolutions {','.join(map(str, resolutions))}\n")
+        
+    print("==================================================")
+    print("Yee Grid Resolution Convergence Test Sweep (Gold)")
+    print("==================================================")
     L = 0.3
     # Effective area A_2 = (8/9) * L^2
     area = (8.0 / 9.0) * (L**2)
@@ -102,7 +114,7 @@ def main():
         print(f"Resolution: {res} px/um -> Force: {f_sub:.6e}, Deviation (eta): {eta*100:.4f}%")
         
     # Save the consolidated convergence results
-    consolidated_file = ".tmp/convergence_results.json"
+    consolidated_file = os.path.join(outdir, "convergence_results.json")
     with open(consolidated_file, "w") as f:
         json.dump(results, f, indent=4)
         
@@ -141,9 +153,11 @@ def main():
     ax.text(0.05, 0.15, status_text, transform=ax.transAxes, fontsize=7, verticalalignment='bottom', bbox=box_props)
     
     plt.tight_layout()
-    plt.savefig('figure_convergence_test.pdf', format='pdf', dpi=300)
-    plt.savefig('figure_convergence_test.svg', format='svg', dpi=300)
-    print("Plot saved to figure_convergence_test.pdf / .svg")
+    pdf_path = os.path.join(outdir, 'figure_convergence_test.pdf')
+    svg_path = os.path.join(outdir, 'figure_convergence_test.svg')
+    plt.savefig(pdf_path, format='pdf', dpi=300)
+    plt.savefig(svg_path, format='svg', dpi=300)
+    print(f"Plot saved to {pdf_path} / {svg_path}")
     plt.close()
 
 if __name__ == "__main__":
