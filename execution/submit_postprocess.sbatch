@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH -J casimir_postprocess
+#SBATCH -A r01540
 #SBATCH -o logs/postprocess.out
 #SBATCH -e logs/postprocess.err
 #SBATCH -p general

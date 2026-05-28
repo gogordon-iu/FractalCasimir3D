@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH -J casimir_sweep
+#SBATCH -A r01540
 #SBATCH -o logs/casimir_%a.out
 #SBATCH -e logs/casimir_%a.err
 #SBATCH -p general

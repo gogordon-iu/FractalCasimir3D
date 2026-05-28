@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH -J casimir_conv_plot
+#SBATCH -A r01540
 #SBATCH -o logs/conv_plot.out
 #SBATCH -e logs/conv_plot.err
 #SBATCH -p general

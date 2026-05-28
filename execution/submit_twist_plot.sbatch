@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH -J casimir_twist_plot
+#SBATCH -A r01540
 #SBATCH -o logs/twist_plot.out
 #SBATCH -e logs/twist_plot.err
 #SBATCH -p general

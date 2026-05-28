@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH -J casimir_twist_sweep
+#SBATCH -A r01540
 #SBATCH -o logs/twist_%a.out
 #SBATCH -e logs/twist_%a.err
 #SBATCH -p general

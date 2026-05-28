@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH -J casimir_convergence
+#SBATCH -A r01540
 #SBATCH -o logs/conv_%a.out
 #SBATCH -e logs/conv_%a.err
 #SBATCH -p general
