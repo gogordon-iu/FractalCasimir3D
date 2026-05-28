@@ -5,7 +5,7 @@
 #SBATCH -p general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=12
 #SBATCH --time=48:00:00
 #SBATCH --array=0-599   # 3 materials * 4 generations * 50 separation steps = 600 tasks
 #SBATCH --mail-type=FAIL,END
@@ -39,8 +39,9 @@ echo "Running task ID: $SLURM_ARRAY_TASK_ID"
 echo "CPUs allocated: $SLURM_CPUS_PER_TASK"
 
 # Run the task mapping script
-srun python execution/run_slurm_array_task.py \
+python execution/run_slurm_array_task.py \
     --task-id $SLURM_ARRAY_TASK_ID \
     --nsteps $NSTEPS \
     --res $RESOLUTION \
-    --nmax $NMAX
+    --nmax $NMAX \
+    --cores $SLURM_CPUS_PER_TASK

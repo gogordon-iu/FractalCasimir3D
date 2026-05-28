@@ -9,6 +9,7 @@ def main():
     parser.add_argument("--nsteps", type=int, default=50, help="Number of separations in sweep.")
     parser.add_argument("--res", type=int, default=40, help="MEEP grid resolution.")
     parser.add_argument("--nmax", type=int, default=5, help="Max moments index limit.")
+    parser.add_argument("--cores", type=int, default=12, help="Number of MPI cores to use.")
     args = parser.parse_args()
     
     # Sweep parameters (matches the range of 20 nm to 1000 nm)
@@ -28,10 +29,13 @@ def main():
         sys.exit(1)
         
     d, N, mat = tasks[args.task_id]
-    print(f"Task ID {args.task_id} mapped to: d={d:.4f} um, N={N}, material={mat}, res={args.res}, nmax={args.nmax}")
+    print(f"Task ID {args.task_id} mapped to: d={d:.4f} um, N={N}, material={mat}, res={args.res}, nmax={args.nmax}, cores={args.cores}")
     
     # Execute the simulation script
-    cmd = [
+    import os
+    in_slurm = "SLURM_JOB_ID" in os.environ
+    
+    sim_cmd = [
         sys.executable,
         "execution/run_meep_simulation.py",
         "--d", f"{d:.4f}",
@@ -41,6 +45,19 @@ def main():
         "--nmax", str(args.nmax)
     ]
     
+    if args.cores > 1:
+        if in_slurm:
+            cmd = ["srun", "-n", str(args.cores)] + sim_cmd
+        else:
+            import shutil
+            if shutil.which("mpirun") is not None:
+                cmd = ["mpirun", "-np", str(args.cores)] + sim_cmd
+            else:
+                cmd = sim_cmd
+    else:
+        cmd = sim_cmd
+        
+    print(f"Running command: {' '.join(cmd)}")
     result = subprocess.run(cmd)
     sys.exit(result.returncode)
 

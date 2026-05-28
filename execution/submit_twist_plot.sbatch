@@ -5,7 +5,7 @@
 #SBATCH -p general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=12
 #SBATCH --time=00:30:00
 #SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
@@ -19,5 +19,5 @@ cd /N/project/gorengor_werewolf/FractalCasimir3D
 
 echo "Starting Phosphorene twist plotting..."
 # Execute the consolidation and plotting script
-python execution/run_twist_sweep.py
+python execution/run_twist_sweep.py --cores 12
 echo "Plotting complete."

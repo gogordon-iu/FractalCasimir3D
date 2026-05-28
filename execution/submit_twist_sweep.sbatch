@@ -5,7 +5,7 @@
 #SBATCH -p general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=12
 #SBATCH --time=12:00:00
 #SBATCH --array=0-6   # 7 angles: 0, 15, 30, 45, 60, 75, 90
 #SBATCH --mail-type=FAIL,END
@@ -37,7 +37,7 @@ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 echo "Running task ID: $SLURM_ARRAY_TASK_ID (theta = $THETA deg)"
 
 # Run both cases (both plates present, and self-force subtraction)
-srun python execution/run_meep_simulation.py \
+srun -n 12 python execution/run_meep_simulation.py \
     --d 0.1 \
     --N 3 \
     --material Phosphorene \

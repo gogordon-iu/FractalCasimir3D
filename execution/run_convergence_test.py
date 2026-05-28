@@ -22,6 +22,11 @@ plt.rcParams['pdf.fonttype'] = 42
 plt.rcParams['ps.fonttype'] = 42
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Sweep MEEP resolution and plot convergence.")
+    parser.add_argument("--cores", type=int, default=12, help="Number of MPI cores to use for running simulations.")
+    args = parser.parse_args()
+    
     print("==================================================")
     print("Yee Grid Resolution Convergence Test Sweep (Gold)")
     print("==================================================")
@@ -44,6 +49,9 @@ def main():
     
     results = []
     
+    import subprocess
+    in_slurm = "SLURM_JOB_ID" in os.environ
+    
     # 1. Run or Load simulations
     for res in resolutions:
         json_file = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0.json"
@@ -54,26 +62,35 @@ def main():
                 data = json.load(f)
                 f_sub = data["force_subtracted"]
         else:
-            print(f"Running FDTD simulation for resolution = {res} px/um...")
-            f_both = run_simulation(d, N, material, res, nmax, config="both", theta=0.0, eps_bg=1.0)
-            f_self = run_simulation(d, N, material, res, nmax, config="self", theta=0.0, eps_bg=1.0)
-            f_sub = f_both - f_self
+            print(f"Running parallel FDTD simulation for resolution = {res} px/um...")
+            sim_cmd = [
+                sys.executable,
+                "execution/run_meep_simulation.py",
+                "--d", f"{d:.4f}",
+                "--N", str(N),
+                "--material", material,
+                "--res", str(res),
+                "--nmax", str(nmax)
+            ]
             
-            # Save results (mimicking run_meep_simulation.py)
-            os.makedirs(".tmp", exist_ok=True)
-            result_dict = {
-                "d_um": d,
-                "N": N,
-                "material": material,
-                "resolution": res,
-                "theta_deg": 0.0,
-                "eps_bg": 1.0,
-                "force_both": float(f_both),
-                "force_self": float(f_self),
-                "force_subtracted": float(f_sub)
-            }
-            with open(json_file, "w") as f:
-                json.dump(result_dict, f, indent=4)
+            if args.cores > 1:
+                if in_slurm:
+                    cmd = ["srun", "-n", str(args.cores)] + sim_cmd
+                else:
+                    import shutil
+                    if shutil.which("mpirun") is not None:
+                        cmd = ["mpirun", "-np", str(args.cores)] + sim_cmd
+                    else:
+                        cmd = sim_cmd
+            else:
+                cmd = sim_cmd
+                
+            print(f"Executing: {' '.join(cmd)}")
+            subprocess.run(cmd)
+            
+            with open(json_file, "r") as f:
+                data = json.load(f)
+                f_sub = data["force_subtracted"]
                 
         # Fractional PFA deviation: eta = (F_FDTD - F_PFA) / F_PFA
         eta = (f_sub - f_pfa) / f_pfa

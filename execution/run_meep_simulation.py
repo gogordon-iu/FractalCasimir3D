@@ -384,25 +384,26 @@ def main():
     f_sub = f_both - f_self
     
     # Save output to .tmp folder
-    os.makedirs(".tmp", exist_ok=True)
-    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}.json"
-    
-    result = {
-        "d_um": args.d,
-        "N": args.N,
-        "material": args.material,
-        "resolution": args.res,
-        "theta_deg": args.theta,
-        "eps_bg": args.eps_bg,
-        "force_both": float(f_both),
-        "force_self": float(f_self),
-        "force_subtracted": float(f_sub)
-    }
-    
-    with open(out_file, "w") as f:
-        json.dump(result, f, indent=4)
+    if mp.am_master():
+        os.makedirs(".tmp", exist_ok=True)
+        out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}.json"
         
-    print(f"Simulation complete. Subtracted force: {f_sub:.6e}. Saved to {out_file}")
+        result = {
+            "d_um": args.d,
+            "N": args.N,
+            "material": args.material,
+            "resolution": args.res,
+            "theta_deg": args.theta,
+            "eps_bg": args.eps_bg,
+            "force_both": float(f_both),
+            "force_self": float(f_self),
+            "force_subtracted": float(f_sub)
+        }
+        
+        with open(out_file, "w") as f:
+            json.dump(result, f, indent=4)
+            
+        print(f"Simulation complete. Subtracted force: {f_sub:.6e}. Saved to {out_file}")
 
 if __name__ == "__main__":
     main()
