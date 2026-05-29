@@ -124,6 +124,39 @@ def get_casimir_material(material_name, Sigma, ft, theta=0.0):
         raise ValueError(f"Unknown material: {material_name}")
 
     # For Au and cSi:
+    if material_name in ["Gold", "Silicon"]:
+        new_sus = []
+        for sus in base_medium.E_susceptibilities:
+            freq = sus.frequency
+            gamma = sus.gamma
+            gamma_val = gamma + Sigma if ft == mp.E_stuff else gamma
+            if isinstance(sus, mp.DrudeSusceptibility):
+                # Rescale to avoid numerical overflow/underflow with 1e-10 frequency and 4e21 sigma
+                if freq < 1e-5:
+                    sigma_val = sus.sigma_diag.x * (freq ** 2)
+                    freq_val = 1.0
+                else:
+                    sigma_val = sus.sigma_diag.x
+                    freq_val = freq
+                new_sus.append(mp.DrudeSusceptibility(
+                    frequency=freq_val,
+                    gamma=gamma_val,
+                    sigma=sigma_val
+                ))
+            elif isinstance(sus, mp.LorentzianSusceptibility):
+                new_sus.append(mp.LorentzianSusceptibility(
+                    frequency=freq,
+                    gamma=gamma_val,
+                    sigma=sus.sigma_diag.x
+                ))
+        cond_attr = {"D_conductivity" if ft == mp.E_stuff else "B_conductivity": Sigma}
+        return mp.Medium(
+            epsilon=base_medium.epsilon_diag.x,
+            E_susceptibilities=new_sus,
+            **cond_attr
+        )
+
+    # For general anisotropic materials (Phosphorene):
     theta_rad = np.radians(theta)
     C = np.cos(theta_rad)
     S = np.sin(theta_rad)
@@ -273,8 +306,7 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
             resolution=resolution,
             boundary_layers=[mp.PML(dpml)],
             default_material=bg_material,
-            k_point=mp.Vector3(0,0,0),  # PBCs to prevent boundary forces
-            Courant=0.3,
+            Courant=0.1,
             eps_averaging=True
         )
 
