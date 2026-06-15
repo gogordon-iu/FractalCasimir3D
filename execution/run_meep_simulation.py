@@ -400,7 +400,7 @@ def main():
     parser = argparse.ArgumentParser(description="Run 3D MEEP Casimir FDTD simulation.")
     parser.add_argument("--d", type=float, required=True, help="Plate separation in microns.")
     parser.add_argument("--N", type=int, required=True, help="Prefractal generation (1-4).")
-    parser.add_argument("--material", type=str, required=True, choices=["PEC", "Gold", "Silicon", "Phosphorene"], help="Material configuration.")
+    parser.add_argument("--material", type=str, required=True, choices=["PEC", "Gold", "Silicon", "Phosphorene", "Phosphorene_tuned"], help="Material configuration.")
     parser.add_argument("--res", type=int, default=10, help="Grid resolution.")
     parser.add_argument("--nmax", type=int, default=3, help="Max moments index limit.")
     parser.add_argument("--theta", type=float, default=0.0, help="Twist angle of top plate in degrees.")
