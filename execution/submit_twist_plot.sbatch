@@ -5,7 +5,7 @@
 #SBATCH -e logs/twist_plot.err
 #SBATCH -p general
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=12
+#SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
 #SBATCH --time=00:30:00
 #SBATCH --mail-type=FAIL,END
@@ -23,5 +23,5 @@ export OMP_NUM_THREADS=1
 
 echo "Starting Phosphorene twist plotting..."
 # Execute the consolidation and plotting script
-python execution/run_twist_sweep.py --cores 12
+python execution/run_twist_sweep.py --cores 128
 echo "Plotting complete."

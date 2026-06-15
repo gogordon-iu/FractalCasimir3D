@@ -5,9 +5,9 @@
 #SBATCH -e logs/conv_%a.err
 #SBATCH -p general
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=12
+#SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
-#SBATCH --time=12:00:00
+#SBATCH --time=24:00:00
 #SBATCH --array=0-5   # 6 resolutions: 20, 40, 60, 80, 100, 120
 #SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
@@ -38,7 +38,7 @@ export OMP_NUM_THREADS=1
 echo "Running task ID: $SLURM_ARRAY_TASK_ID (resolution = $RES px/um)"
 
 # Run both cases (both plates present, and self-force subtraction)
-srun -n 12 python execution/run_meep_simulation.py \
+srun -n 128 python execution/run_meep_simulation.py \
     --d 0.1 \
     --N 2 \
     --material Gold \

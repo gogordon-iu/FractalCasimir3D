@@ -56,61 +56,66 @@ def main():
     # Effective area A_3 = (8/9)^2 * L^2
     area = ((8.0 / 9.0)**(N - 1)) * (L**2)
     
-    results = []
+    results = {
+        "Phosphorene": [],
+        "Phosphorene_tuned": []
+    }
     
     import subprocess
     in_slurm = "SLURM_JOB_ID" in os.environ
     
     # 1. Run or Load simulations
-    for theta in theta_list:
-        json_file = f".tmp/meep_d_{d:.4f}_N_{N}_Phosphorene_res_{resolution}_theta_{theta:.1f}.json"
-        
-        if os.path.exists(json_file):
-            print(f"Found cached results for theta = {theta:.1f} deg in {json_file}")
-            with open(json_file, "r") as f:
-                data = json.load(f)
-                f_sub = data["force_subtracted"]
-        else:
-            print(f"Running parallel FDTD simulation for theta = {theta:.1f} deg...")
-            sim_cmd = [
-                sys.executable,
-                "execution/run_meep_simulation.py",
-                "--d", f"{d:.4f}",
-                "--N", str(N),
-                "--material", "Phosphorene",
-                "--res", str(resolution),
-                "--nmax", str(nmax),
-                "--theta", f"{theta:.1f}",
-                "--eps-bg", f"{eps_bg:.1f}"
-            ]
+    for mat in ["Phosphorene", "Phosphorene_tuned"]:
+        print(f"\n--- Sweeping material: {mat} ---")
+        for theta in theta_list:
+            json_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}.json"
             
-            if args.cores > 1:
-                if in_slurm:
-                    cmd = ["srun", "-n", str(args.cores)] + sim_cmd
-                else:
-                    import shutil
-                    if shutil.which("mpirun") is not None:
-                        cmd = ["mpirun", "-np", str(args.cores)] + sim_cmd
-                    else:
-                        cmd = sim_cmd
+            if os.path.exists(json_file):
+                print(f"Found cached results for theta = {theta:.1f} deg in {json_file}")
+                with open(json_file, "r") as f:
+                    data = json.load(f)
+                    f_sub = data["force_subtracted"]
             else:
-                cmd = sim_cmd
+                print(f"Running parallel FDTD simulation for theta = {theta:.1f} deg...")
+                sim_cmd = [
+                    sys.executable,
+                    "execution/run_meep_simulation.py",
+                    "--d", f"{d:.4f}",
+                    "--N", str(N),
+                    "--material", mat,
+                    "--res", str(resolution),
+                    "--nmax", str(nmax),
+                    "--theta", f"{theta:.1f}",
+                    "--eps-bg", f"{eps_bg:.1f}"
+                ]
                 
-            print(f"Executing: {' '.join(cmd)}")
-            subprocess.run(cmd)
-            
-            with open(json_file, "r") as f:
-                data = json.load(f)
-                f_sub = data["force_subtracted"]
+                if args.cores > 1:
+                    if in_slurm:
+                        cmd = ["srun", "-n", str(args.cores)] + sim_cmd
+                    else:
+                        import shutil
+                        if shutil.which("mpirun") is not None:
+                            cmd = ["mpirun", "-np", str(args.cores)] + sim_cmd
+                        else:
+                            cmd = sim_cmd
+                else:
+                    cmd = sim_cmd
+                    
+                print(f"Executing: {' '.join(cmd)}")
+                subprocess.run(cmd)
                 
-        # Normal pressure: P = F / Area
-        pressure = f_sub / area
-        results.append({
-            "theta_deg": theta,
-            "force_subtracted": f_sub,
-            "pressure": pressure
-        })
-        print(f"Theta: {theta:.1f} deg -> Force: {f_sub:.6e}, Pressure: {pressure:.6e}")
+                with open(json_file, "r") as f:
+                    data = json.load(f)
+                    f_sub = data["force_subtracted"]
+                    
+            # Normal pressure: P = F / Area
+            pressure = f_sub / area
+            results[mat].append({
+                "theta_deg": theta,
+                "force_subtracted": f_sub,
+                "pressure": pressure
+            })
+            print(f"Theta: {theta:.1f} deg -> Force: {f_sub:.6e}, Pressure: {pressure:.6e}")
         
     # Save the consolidated twist sweep results
     consolidated_file = os.path.join(outdir, "twist_sweep_results.json")
@@ -118,12 +123,12 @@ def main():
         json.dump(results, f, indent=4)
         
     # 2. Extract arrays
-    thetas = np.array([r["theta_deg"] for r in results])
-    pressures = np.array([r["pressure"] for r in results])
+    thetas = np.array([r["theta_deg"] for r in results["Phosphorene_tuned"]])
+    pressures_tuned = np.array([r["pressure"] for r in results["Phosphorene_tuned"]])
     
     # 3. Find the Magic Angle (where pressure crosses zero)
-    spline = UnivariateSpline(thetas, pressures, s=0)
-    roots = spline.roots()
+    spline_tuned = UnivariateSpline(thetas, pressures_tuned, s=0)
+    roots = spline_tuned.roots()
     
     magic_angle = None
     if len(roots) > 0:
@@ -132,8 +137,8 @@ def main():
     else:
         # Fallback: linear interpolation
         for i in range(len(thetas) - 1):
-            if pressures[i] * pressures[i+1] < 0:
-                p1, p2 = pressures[i], pressures[i+1]
+            if pressures_tuned[i] * pressures_tuned[i+1] < 0:
+                p1, p2 = pressures_tuned[i], pressures_tuned[i+1]
                 t1, t2 = thetas[i], thetas[i+1]
                 magic_angle = t1 - p1 * (t2 - t1) / (p2 - p1)
                 print(f"\n>>> Detected Casimir Magic Angle (linear interp): {magic_angle:.3f} degrees <<<")
@@ -144,15 +149,19 @@ def main():
         magic_angle = 45.0  # default fallback
         
     # 4. Generate Plot
-    fig, ax = plt.subplots(figsize=(3.5, 3.0))
+    fig, ax = plt.subplots(figsize=(4.2, 3.2))
     
-    # Plot spline fit
     theta_dense = np.linspace(0, 90, 200)
-    pressure_dense = spline(theta_dense)
-    ax.plot(theta_dense, pressure_dense, color='#16a085', linewidth=1.5, label='Spline Fit')
     
-    # Plot simulation data points
-    ax.scatter(thetas, pressures, color='#c0392b', marker='o', s=25, zorder=3, label='FDTD Data')
+    # Plot original Phosphorene curve
+    pressures_orig = np.array([r["pressure"] for r in results["Phosphorene"]])
+    spline_orig = UnivariateSpline(thetas, pressures_orig, s=0)
+    ax.plot(theta_dense, spline_orig(theta_dense), color='#c0392b', linestyle='--', linewidth=1.2, label=r'Original Phosphorene ($\epsilon_z = 1.2$, Untuned)')
+    ax.scatter(thetas, pressures_orig, color='#c0392b', marker='o', s=20, zorder=3)
+    
+    # Plot tuned Phosphorene curve
+    ax.plot(theta_dense, spline_tuned(theta_dense), color='#27ae60', linestyle='-', linewidth=1.5, label=r'Tuned Phosphorene ($\epsilon_z = 1.6$, Magic Angle)')
+    ax.scatter(thetas, pressures_tuned, color='#27ae60', marker='s', s=20, zorder=3)
     
     # Draw horizontal line at zero
     ax.axhline(0, color='black', linestyle='-', linewidth=0.8, alpha=0.7)
@@ -162,9 +171,9 @@ def main():
     
     ax.set_xlabel(r'Twist Angle $\theta$ (degrees)')
     ax.set_ylabel('Normal Casimir Pressure P (dimensionless)')
-    ax.set_title('Casimir Pressure vs. Twist Angle (Phosphorene)', fontsize=9, fontweight='bold')
+    ax.set_title('Casimir Pressure vs. Twist Angle Comparison', fontsize=9, fontweight='bold')
     ax.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
-    ax.legend(loc='upper right', frameon=True, edgecolor='none', facecolor='#f5f5f5')
+    ax.legend(loc='lower left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
     
     plt.tight_layout()
     

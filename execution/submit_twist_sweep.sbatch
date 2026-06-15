@@ -5,7 +5,7 @@
 #SBATCH -e logs/twist_%a.err
 #SBATCH -p general
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=12
+#SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
 #SBATCH --time=12:00:00
 #SBATCH --array=0-6   # 7 angles: 0, 15, 30, 45, 60, 75, 90
@@ -37,11 +37,21 @@ export OMP_NUM_THREADS=1
 
 echo "Running task ID: $SLURM_ARRAY_TASK_ID (theta = $THETA deg)"
 
-# Run both cases (both plates present, and self-force subtraction)
-srun -n 12 python execution/run_meep_simulation.py \
+# 1. Run Original Phosphorene (untuned)
+srun -n 128 python execution/run_meep_simulation.py \
     --d 0.1 \
     --N 3 \
     --material Phosphorene \
+    --res 40 \
+    --nmax 3 \
+    --theta "$THETA" \
+    --eps-bg 1.6
+
+# 2. Run Tuned Phosphorene (magic angle zero-crossing)
+srun -n 128 python execution/run_meep_simulation.py \
+    --d 0.1 \
+    --N 3 \
+    --material Phosphorene_tuned \
     --res 40 \
     --nmax 3 \
     --theta "$THETA" \
