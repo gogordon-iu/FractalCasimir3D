@@ -25,6 +25,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Sweep MEEP resolution and plot convergence.")
     parser.add_argument("--cores", type=int, default=12, help="Number of MPI cores to use for running simulations.")
+    parser.add_argument("--run-missing", action="store_true", help="Run simulations for missing resolutions instead of skipping them.")
     args = parser.parse_args()
     
     import datetime
@@ -74,35 +75,43 @@ def main():
                 data = json.load(f)
                 f_sub = data["force_subtracted"]
         else:
-            print(f"Running parallel FDTD simulation for resolution = {res} px/um...")
-            sim_cmd = [
-                sys.executable,
-                "execution/run_meep_simulation.py",
-                "--d", f"{d:.4f}",
-                "--N", str(N),
-                "--material", material,
-                "--res", str(res),
-                "--nmax", str(nmax)
-            ]
-            
-            if args.cores > 1:
-                if in_slurm:
-                    cmd = ["srun", "-n", str(args.cores)] + sim_cmd
-                else:
-                    import shutil
-                    if shutil.which("mpirun") is not None:
-                        cmd = ["mpirun", "-np", str(args.cores)] + sim_cmd
-                    else:
-                        cmd = sim_cmd
-            else:
-                cmd = sim_cmd
+            if args.run_missing:
+                print(f"Running parallel FDTD simulation for resolution = {res} px/um...")
+                sim_cmd = [
+                    sys.executable,
+                    "execution/run_meep_simulation.py",
+                    "--d", f"{d:.4f}",
+                    "--N", str(N),
+                    "--material", material,
+                    "--res", str(res),
+                    "--nmax", str(nmax)
+                ]
                 
-            print(f"Executing: {' '.join(cmd)}")
-            subprocess.run(cmd)
-            
-            with open(json_file, "r") as f:
-                data = json.load(f)
-                f_sub = data["force_subtracted"]
+                if args.cores > 1:
+                    if in_slurm:
+                        cmd = ["srun", "-n", str(args.cores)] + sim_cmd
+                    else:
+                        import shutil
+                        if shutil.which("mpirun") is not None:
+                            cmd = ["mpirun", "-np", str(args.cores)] + sim_cmd
+                        else:
+                            cmd = sim_cmd
+                else:
+                    cmd = sim_cmd
+                    
+                print(f"Executing: {' '.join(cmd)}")
+                subprocess.run(cmd)
+                
+                if os.path.exists(json_file):
+                    with open(json_file, "r") as f:
+                        data = json.load(f)
+                        f_sub = data["force_subtracted"]
+                else:
+                    print(f"ERROR: Simulation failed to generate {json_file}")
+                    continue
+            else:
+                print(f"WARNING: Cached result file not found: {json_file}. Skipping resolution {res}.")
+                continue
                 
         # Fractional PFA deviation: eta = (F_FDTD - F_PFA) / F_PFA
         eta = (f_sub - f_pfa) / f_pfa
@@ -113,6 +122,10 @@ def main():
         })
         print(f"Resolution: {res} px/um -> Force: {f_sub:.6e}, Deviation (eta): {eta*100:.4f}%")
         
+    if not results:
+        print("ERROR: No valid simulation results found in .tmp! Exiting.")
+        sys.exit(1)
+        
     # Save the consolidated convergence results
     consolidated_file = os.path.join(outdir, "convergence_results.json")
     with open(consolidated_file, "w") as f:
@@ -122,18 +135,32 @@ def main():
     res_arr = np.array([r["resolution"] for r in results])
     eta_arr = np.array([r["eta"] for r in results])
     
-    # 3. Verify Convergence Tolerance (< 0.1% change between 100 and 120 px/um)
-    eta_100 = eta_arr[res_arr == 100][0]
-    eta_120 = eta_arr[res_arr == 120][0]
-    deviation_diff = abs(eta_120 - eta_100)
-    print(f"\nDeviation at R=100: {eta_100*100:.6f}%")
-    print(f"Deviation at R=120: {eta_120*100:.6f}%")
-    print(f"Absolute change: {deviation_diff*100:.6f}%")
-    
-    if deviation_diff < 0.001:
-        print(">>> CONVERGENCE VERIFIED: Grid discretization change is < 0.1%! <<<")
+    # 3. Verify Convergence Tolerance (change between two highest available resolutions)
+    if len(res_arr) >= 2:
+        # Sort by resolution
+        sort_idx = np.argsort(res_arr)
+        res_sorted = res_arr[sort_idx]
+        eta_sorted = eta_arr[sort_idx]
+        
+        res_max_1 = res_sorted[-2]
+        res_max_2 = res_sorted[-1]
+        eta_max_1 = eta_sorted[-2]
+        eta_max_2 = eta_sorted[-1]
+        
+        deviation_diff = abs(eta_max_2 - eta_max_1)
+        print(f"\nDeviation at R={res_max_1}: {eta_max_1*100:.6f}%")
+        print(f"Deviation at R={res_max_2}: {eta_max_2*100:.6f}%")
+        print(f"Absolute change: {deviation_diff*100:.6f}%")
+        
+        if deviation_diff < 0.001:
+            print(f">>> CONVERGENCE VERIFIED: Grid discretization change between {res_max_1} and {res_max_2} is < 0.1%! <<<")
+        else:
+            print(f"WARNING: Grid discretization change between {res_max_1} and {res_max_2} is >= 0.1%. Higher resolution may be needed.")
+        status_text = f"Change ({res_max_1} -> {res_max_2}):\n{deviation_diff*100:.4f}%"
     else:
-        print("WARNING: Grid discretization change is >= 0.1%. Higher resolution may be needed.")
+        deviation_diff = 0.0
+        print("\nWARNING: Only one resolution data point available. Cannot compute convergence change.")
+        status_text = "Insufficient Data"
         
     # 4. Generate Plot
     fig, ax = plt.subplots(figsize=(3.5, 3.0))
@@ -148,7 +175,6 @@ def main():
     ax.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
     
     # Text box with convergence status
-    status_text = f"Change (100 -> 120):\n{deviation_diff*100:.4f}%"
     box_props = dict(boxstyle='round', facecolor='white', edgecolor='none', alpha=0.8)
     ax.text(0.05, 0.15, status_text, transform=ax.transAxes, fontsize=7, verticalalignment='bottom', bbox=box_props)
     
