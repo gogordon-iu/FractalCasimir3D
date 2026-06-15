@@ -13,6 +13,8 @@
 
 # Activate Conda environment
 source ~/miniconda3/etc/profile.d/conda.sh
+module unload xalt
+export XALT_EXECUTABLE_TRACKING=no
 conda activate meep
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
