@@ -14,6 +14,7 @@
 # Activate Conda environment
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate meep
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 # Force Slurm to run from the repository root directory
 cd /N/project/gorengor_werewolf/FractalCasimir3D
