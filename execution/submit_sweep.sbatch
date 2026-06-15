@@ -9,7 +9,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --time=48:00:00
 #SBATCH --array=0-599   # 3 materials * 4 generations * 50 separation steps = 600 tasks
-#SBATCH --mail-type=FAIL,END
+#SBATCH --mail-type=BEGIN,FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 
 # Define sweep parameters

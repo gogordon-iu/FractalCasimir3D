@@ -9,7 +9,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --time=24:00:00
 #SBATCH --array=0-5   # 6 resolutions: 20, 40, 60, 80, 100, 120
-#SBATCH --mail-type=FAIL,END
+#SBATCH --mail-type=BEGIN,FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 
 # Define resolutions
