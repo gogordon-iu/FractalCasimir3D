@@ -7,7 +7,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
-#SBATCH --time=00:30:00
+#SBATCH --time=96:00:00
 #SBATCH --mail-type=BEGIN,FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 
