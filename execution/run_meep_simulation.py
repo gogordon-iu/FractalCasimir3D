@@ -205,9 +205,22 @@ def get_casimir_material(material_name, Sigma, ft, theta=0.0):
         **cond_attr
     )
 
-def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0):
+def get_optimal_subgroups(M, num_tasks):
     """
-    Runs a 3D FDTD simulation for a single configuration.
+    Finds the largest divisor of M (the total number of MPI processes) 
+    that is less than or equal to the number of tasks.
+    """
+    divisors = [i for i in range(1, M + 1) if M % i == 0]
+    valid_divisors = [d for d in divisors if d <= num_tasks]
+    if not valid_divisors:
+        return 1
+    return max(valid_divisors)
+
+
+def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1):
+    """
+    Runs a 3D FDTD simulation for a single configuration, utilizing subgroups
+    to run different polarizations and moments in parallel.
     """
     # 1. Computational Cell and Geometry parameters
     L = 0.3  # plate width/length in microns
@@ -252,8 +265,17 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     ]
     
     total_force = 0.0
+    num_tasks = 36 * n_max
     
-    for p in range(len(pol_list)):
+    # Use mpi4py to perform world communicator reductions
+    from mpi4py import MPI
+    comm = MPI.COMM_WORLD
+    
+    # Each subgroup runs its assigned slice of tasks in parallel
+    for task_idx in range(subgroup_index, num_tasks, K):
+        p = task_idx // (n_max * 6)
+        n = task_idx % (n_max * 6)
+        
         curr_pol = pol_list[p]
         ft = mp.E_stuff if curr_pol in [mp.Ex, mp.Ey, mp.Ez] else mp.H_stuff
         
@@ -269,16 +291,13 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
         # Geometry list
         geometry = []
         if config == "both":
-            # Flat plate centered at z = -d/2 - t_plate/2
             geometry.append(mp.Block(
                 center=mp.Vector3(0.0, 0.0, -d/2.0 - t_plate/2.0),
                 size=mp.Vector3(L, L, t_plate),
                 material=bottom_plate_material
             ))
             
-        # Prefractal plate centered at z = d/2 + t_plate/2 (only if not "vacuum")
         if config != "vacuum":
-            # Solid block
             theta_rad = np.radians(theta)
             C = np.cos(theta_rad)
             S = np.sin(theta_rad)
@@ -296,12 +315,11 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
             ))
             # Subtract holes recursively
             holes = generate_carpet_holes(N, L, 0.0, 0.0, t_plate + 0.01, top_plate_material, theta=theta)
-            # Offset hole centers to the prefractal plate center
             for hole in holes:
                 hole.center = mp.Vector3(hole.center.x, hole.center.y, d/2.0 + t_plate/2.0)
             geometry.extend(holes)
             
-        # Setup Simulation
+        # Setup Simulation on the subgroup communicator
         sim = mp.Simulation(
             cell_size=cell_size,
             geometry=geometry,
@@ -311,7 +329,6 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
             Courant=0.1,
             eps_averaging=True
         )
-
         
         sim.init_sim()
         dt = sim.Courant / resolution
@@ -324,77 +341,78 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
         data = np.ctypeslib.as_array(double_ptr, shape=(T_steps * 2,))
         gt_arr = data[0::2] + 1j * data[1::2]
         
-        # Iterate over moments and sides
-        for n in range(n_max * 6):
-            s = n % 6
-            nr = n // 6
-            m1, m2 = get_src_index(nr)
+        # Process the specific moment and side
+        s = n % 6
+        nr = n // 6
+        m1, m2 = get_src_index(nr)
+        
+        side = sides_info[s]
+        side_center = side["center"]
+        side_size = side["size"]
+        side_orientation = side["orientation"]
+        
+        # Map DCT indices based on normal direction
+        if s in [0, 1]:  # x-const
+            mx, my, mz = 0, m1, m2
+        elif s in [2, 3]:  # y-const
+            mx, my, mz = m1, 0, m2
+        else:  # z-const
+            mx, my, mz = m1, m2, 0
             
-            side = sides_info[s]
-            side_center = side["center"]
-            side_size = side["size"]
-            side_orientation = side["orientation"]
+        # Setup cosine modulation amplitude function
+        def make_amp_func(mx_val, my_val, mz_val, size_vec):
+            sx_v, sy_v, sz_v = size_vec.x, size_vec.y, size_vec.z
+            Nx = (2.0 / sx_v if mx_val > 0 else 1.0 / sx_v) if sx_v > 1e-15 else 1.0
+            Ny = (2.0 / sy_v if my_val > 0 else 1.0 / sy_v) if sy_v > 1e-15 else 1.0
+            Nz = (2.0 / sz_v if mz_val > 0 else 1.0 / sz_v) if sz_v > 1e-15 else 1.0
+            factor = np.sqrt(Nx * Ny * Nz)
             
-            # Map DCT indices based on normal direction
-            if s in [0, 1]:  # x-const
-                mx, my, mz = 0, m1, m2
-            elif s in [2, 3]:  # y-const
-                mx, my, mz = m1, 0, m2
-            else:  # z-const
-                mx, my, mz = m1, m2, 0
-                
-            # Setup cosine modulation amplitude function
-            def make_amp_func(mx_val, my_val, mz_val, size_vec):
-                sx_v, sy_v, sz_v = size_vec.x, size_vec.y, size_vec.z
-                Nx = (2.0 / sx_v if mx_val > 0 else 1.0 / sx_v) if sx_v > 1e-15 else 1.0
-                Ny = (2.0 / sy_v if my_val > 0 else 1.0 / sy_v) if sy_v > 1e-15 else 1.0
-                Nz = (2.0 / sz_v if mz_val > 0 else 1.0 / sz_v) if sz_v > 1e-15 else 1.0
-                factor = np.sqrt(Nx * Ny * Nz)
-                
-                def amp_func(p):
-                    x = p.x + 0.5 * sx_v
-                    y = p.y + 0.5 * sy_v
-                    z = p.z + 0.5 * sz_v
-                    kx = mx_val * np.pi / sx_v if sx_v > 1e-15 else 0.0
-                    ky = my_val * np.pi / sy_v if sy_v > 1e-15 else 0.0
-                    kz = mz_val * np.pi / sz_v if sz_v > 1e-15 else 0.0
-                    return factor * np.cos(kx * x) * np.cos(ky * y) * np.cos(kz * z)
-                return amp_func
-                
-            # Create source modulation
-            src_vol = mp.Volume(center=side_center, size=side_size, dims=3)
+            def amp_func(p):
+                x = p.x + 0.5 * sx_v
+                y = p.y + 0.5 * sy_v
+                z = p.z + 0.5 * sz_v
+                kx = mx_val * np.pi / sx_v if sx_v > 1e-15 else 0.0
+                ky = my_val * np.pi / sy_v if sy_v > 1e-15 else 0.0
+                kz = mz_val * np.pi / sz_v if sz_v > 1e-15 else 0.0
+                return factor * np.cos(kx * x) * np.cos(ky * y) * np.cos(kz * z)
+            return amp_func
             
-            sim.change_sources([
-                mp.Source(
-                    src=mp.CustomSource(src_func=lambda t: 1.0/dt, start_time=-0.25*dt, end_time=0.75*dt),
-                    component=curr_pol,
-                    center=side_center,
-                    size=side_size,
-                    amp_func=make_amp_func(mx, my, mz, side_size)
-                )
-            ])
+        # Create source modulation
+        src_vol = mp.Volume(center=side_center, size=side_size, dims=3)
+        
+        sim.change_sources([
+            mp.Source(
+                src=mp.CustomSource(src_func=lambda t: 1.0/dt, start_time=-0.25*dt, end_time=0.75*dt),
+                component=curr_pol,
+                center=side_center,
+                size=side_size,
+                amp_func=make_amp_func(mx, my, mz, side_size)
+            )
+        ])
+        
+        sim.reset_meep()
+        sim.init_sim()
+        
+        # Step and integrate
+        force_integral = 0.0
+        for step in range(T_steps):
+            sim.fields.step()
+            f_temp = sim.fields.casimir_stress_dct_integral(
+                mp.Z, component_direction[curr_pol],
+                float(mx), float(my), float(mz),
+                ft, src_vol.swigobj
+            )
+            force_integral += np.imag(gt_arr[step] * dt * side_orientation * f_temp)
             
-            sim.reset_meep()
-            sim.init_sim()
-            
-            # Step and integrate
-            force_integral = 0.0
-            for step in range(T_steps):
-                sim.fields.step()
-                # Integrate Maxwell stress tensor over surface S
-                # Z force component is what we want to evaluate
-                f_temp = sim.fields.casimir_stress_dct_integral(
-                    mp.Z, component_direction[curr_pol],
-                    float(mx), float(my), float(mz),
-                    ft, src_vol.swigobj
-                )
-                
-                # Update contribution
-                force_integral += np.imag(gt_arr[step] * dt * side_orientation * f_temp)
-                
-            total_force += force_integral
-            
-    return total_force
+        total_force += force_integral
+        
+    # Sum the force over all subgroups using a global MPI sum reduction
+    global_force_sum = comm.allreduce(total_force, op=MPI.SUM)
+    subgroup_size = comm.Get_size() / K
+    final_force = global_force_sum / subgroup_size
+    
+    return final_force
+
 
 def main():
     parser = argparse.ArgumentParser(description="Run 3D MEEP Casimir FDTD simulation.")
@@ -407,13 +425,26 @@ def main():
     parser.add_argument("--eps-bg", type=float, default=1.0, help="Dielectric constant of the background medium.")
     args = parser.parse_args()
     
-    print(f"Starting simulation: d={args.d} um, N={args.N}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}")
+    # Calculate number of tasks and setup parallel subgroups
+    from mpi4py import MPI
+    comm = MPI.COMM_WORLD
+    M = comm.Get_size()
+    num_tasks = 36 * args.nmax
+    K = get_optimal_subgroups(M, num_tasks)
+    
+    subgroup_index = 0
+    if K > 1:
+        subgroup_index = mp.divide_parallel_processes(K)
+        
+    if mp.am_master():
+        print(f"Starting simulation: d={args.d} um, N={args.N}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}")
+        print(f"Parallel configuration: {M} processes divided into {K} subgroups of size {M//K} processes each.")
     
     # We run the two cases for vacuum subtraction:
     # 1. both plates present
-    f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg)
+    f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K)
     # 2. only the prefractal plate present (to subtract the self-force)
-    f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg)
+    f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K)
     
     f_sub = f_both - f_self
     
