@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J casimir_twist_plot
 #SBATCH -A r01540
-#SBATCH -o logs/twist_plot.out
-#SBATCH -e logs/twist_plot.err
+#SBATCH -o logs/twist_plot_%j.out
+#SBATCH -e logs/twist_plot_%j.err
 #SBATCH -p general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128

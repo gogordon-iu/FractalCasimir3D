@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J casimir_conv_plot
 #SBATCH -A r01540
-#SBATCH -o logs/conv_plot.out
-#SBATCH -e logs/conv_plot.err
+#SBATCH -o logs/conv_plot_%j.out
+#SBATCH -e logs/conv_plot_%j.err
 #SBATCH -p general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128

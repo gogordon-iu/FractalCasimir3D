@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J casimir_sweep
 #SBATCH -A r01540
-#SBATCH -o logs/casimir_%a.out
-#SBATCH -e logs/casimir_%a.err
+#SBATCH -o logs/sweep_%A_%a.out
+#SBATCH -e logs/sweep_%A_%a.err
 #SBATCH -p general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=12

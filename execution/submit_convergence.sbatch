@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J casimir_convergence
 #SBATCH -A r01540
-#SBATCH -o logs/conv_%a.out
-#SBATCH -e logs/conv_%a.err
+#SBATCH -o logs/conv_%A_%a.out
+#SBATCH -e logs/conv_%A_%a.err
 #SBATCH -p general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128

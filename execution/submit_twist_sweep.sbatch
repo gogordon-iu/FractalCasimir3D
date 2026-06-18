@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J casimir_twist_sweep
 #SBATCH -A r01540
-#SBATCH -o logs/twist_%a.out
-#SBATCH -e logs/twist_%a.err
+#SBATCH -o logs/twist_%A_%a.out
+#SBATCH -e logs/twist_%A_%a.err
 #SBATCH -p general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128

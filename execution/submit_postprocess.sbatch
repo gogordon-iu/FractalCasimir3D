@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J casimir_postprocess
 #SBATCH -A r01540
-#SBATCH -o logs/postprocess.out
-#SBATCH -e logs/postprocess.err
+#SBATCH -o logs/postprocess_%j.out
+#SBATCH -e logs/postprocess_%j.err
 #SBATCH -p general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
