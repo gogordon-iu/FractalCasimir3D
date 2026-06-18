@@ -406,11 +406,47 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
             
         total_force += force_integral
         
-    # Sum the force over all subgroups using a global MPI sum reduction
-    global_force_sum = comm.allreduce(total_force, op=MPI.SUM)
-    subgroup_size = comm.Get_size() / K
-    final_force = global_force_sum / subgroup_size
-    
+    # Sum the force over all subgroups using MPI reduction or file-based aggregation fallback
+    try:
+        from mpi4py import MPI
+        comm = MPI.COMM_WORLD
+        global_force_sum = comm.allreduce(total_force, op=MPI.SUM)
+        subgroup_size = comm.Get_size() / K
+        final_force = global_force_sum / subgroup_size
+    except ImportError:
+        import time
+        global_rank = int(os.environ.get("SLURM_PROCID", 0))
+        
+        # Subgroup master writes its total_force
+        if mp.am_master():
+            os.makedirs(".tmp", exist_ok=True)
+            temp_file = f".tmp/temp_force_{config}_subgroup_{subgroup_index}.json"
+            with open(temp_file, "w") as f:
+                json.dump({"force": float(total_force)}, f)
+                
+        # Global rank 0 waits and sums
+        if global_rank == 0:
+            final_force = 0.0
+            for i in range(K):
+                temp_file = f".tmp/temp_force_{config}_subgroup_{i}.json"
+                while not os.path.exists(temp_file):
+                    time.sleep(0.5)
+                success = False
+                while not success:
+                    try:
+                        with open(temp_file, "r") as f:
+                            data = json.load(f)
+                            final_force += data["force"]
+                        success = True
+                    except (json.JSONDecodeError, PermissionError):
+                        time.sleep(0.1)
+                try:
+                    os.remove(temp_file)
+                except OSError:
+                    pass
+        else:
+            final_force = 0.0
+            
     return final_force
 
 
@@ -426,9 +462,13 @@ def main():
     args = parser.parse_args()
     
     # Calculate number of tasks and setup parallel subgroups
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
-    M = comm.Get_size()
+    try:
+        from mpi4py import MPI
+        comm = MPI.COMM_WORLD
+        M = comm.Get_size()
+    except ImportError:
+        M = int(os.environ.get("SLURM_NTASKS", 1))
+        
     num_tasks = 36 * args.nmax
     K = get_optimal_subgroups(M, num_tasks)
     
@@ -436,7 +476,15 @@ def main():
     if K > 1:
         subgroup_index = mp.divide_parallel_processes(K)
         
-    if mp.am_master():
+    # We check if we are the global master (global rank 0) to print and write files
+    global_rank = 0
+    try:
+        from mpi4py import MPI
+        global_rank = MPI.COMM_WORLD.Get_rank()
+    except ImportError:
+        global_rank = int(os.environ.get("SLURM_PROCID", 0))
+        
+    if global_rank == 0:
         print(f"Starting simulation: d={args.d} um, N={args.N}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}")
         print(f"Parallel configuration: {M} processes divided into {K} subgroups of size {M//K} processes each.")
     
@@ -449,7 +497,7 @@ def main():
     f_sub = f_both - f_self
     
     # Save output to .tmp folder
-    if mp.am_master():
+    if global_rank == 0:
         os.makedirs(".tmp", exist_ok=True)
         out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}.json"
         
