@@ -267,9 +267,6 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     total_force = 0.0
     num_tasks = 36 * n_max
     
-    # Use mpi4py to perform world communicator reductions
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
     
     # Each subgroup runs its assigned slice of tasks in parallel
     for task_idx in range(subgroup_index, num_tasks, K):
