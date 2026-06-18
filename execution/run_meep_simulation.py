@@ -406,6 +406,10 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
             
         total_force += force_integral
         
+    # If K is 1 (non-MPI mode or single subgroup), return total_force immediately
+    if K == 1:
+        return total_force
+
     # Sum the force over all subgroups using MPI reduction or file-based aggregation fallback
     try:
         from mpi4py import MPI
@@ -462,13 +466,8 @@ def main():
     args = parser.parse_args()
     
     # Calculate number of tasks and setup parallel subgroups
-    try:
-        from mpi4py import MPI
-        comm = MPI.COMM_WORLD
-        M = comm.Get_size()
-    except ImportError:
-        M = int(os.environ.get("SLURM_NTASKS", 1))
-        
+    # Use mp.count_processors() to check the actual number of MPI processes initialized by Meep
+    M = mp.count_processors()
     num_tasks = 36 * args.nmax
     K = get_optimal_subgroups(M, num_tasks)
     
