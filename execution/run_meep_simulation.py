@@ -81,11 +81,11 @@ def get_casimir_material(material_name, Sigma, ft, theta=0.0):
         from meep.materials import cSi
         base_medium = cSi
     elif material_name in ["Phosphorene", "Phosphorene_tuned"]:
-        # Define Phosphorene principal components
         eps_x, eps_y, eps_z = 2.0, 1.5, 1.2
+        sig_x, sig_y, sig_z = 3.0, 1.0, 2.0
         if material_name == "Phosphorene_tuned":
             eps_z = 1.6  # Tuned to match background eps_bg = 1.6
-        sig_x, sig_y, sig_z = 3.0, 1.0, 2.0
+            sig_z = 0.0  # Zero out out-of-plane dispersion to eliminate z-attraction
         f0 = 1.5
         gamma_p = 0.1
         
