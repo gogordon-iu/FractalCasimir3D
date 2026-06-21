@@ -64,7 +64,7 @@ def generate_carpet_holes(N, L, center_x, center_y, size_z, material, theta=0.0)
     return holes
 
 
-def get_casimir_material(material_name, Sigma, ft, theta=0.0):
+def get_casimir_material(material_name, Sigma, ft, theta=0.0, eps_bg=1.0):
     """
     Constructs the MEEP Medium for the bottom or top plate.
     If ft == mp.E_stuff: D_conductivity = Sigma, and gamma is shifted by Sigma.
@@ -84,7 +84,7 @@ def get_casimir_material(material_name, Sigma, ft, theta=0.0):
         eps_x, eps_y, eps_z = 2.0, 1.5, 1.2
         sig_x, sig_y, sig_z = 3.0, 1.0, 2.0
         if material_name == "Phosphorene_tuned":
-            eps_z = 1.6  # Tuned to match background eps_bg = 1.6
+            eps_z = eps_bg  # Tuned dynamically to match background eps_bg
             sig_z = 0.0  # Zero out out-of-plane dispersion to eliminate z-attraction
         f0 = 1.5
         gamma_p = 0.1
@@ -277,8 +277,8 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
         ft = mp.E_stuff if curr_pol in [mp.Ex, mp.Ey, mp.Ez] else mp.H_stuff
         
         # Setup materials with appropriate conductivity added
-        bottom_plate_material = get_casimir_material(material, Sigma, ft, theta=0.0)
-        top_plate_material = get_casimir_material(material, Sigma, ft, theta=theta)
+        bottom_plate_material = get_casimir_material(material, Sigma, ft, theta=0.0, eps_bg=eps_bg)
+        top_plate_material = get_casimir_material(material, Sigma, ft, theta=theta, eps_bg=eps_bg)
         
         if ft == mp.E_stuff:
             bg_material = mp.Medium(epsilon=eps_bg, D_conductivity=Sigma)
