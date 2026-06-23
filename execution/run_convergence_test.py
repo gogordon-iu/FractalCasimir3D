@@ -37,7 +37,7 @@ def main():
     d = 0.1
     N = 2
     material = "Gold"
-    nmax = 3
+    nmax = 1
     
     # Save parameters.txt
     with open(os.path.join(outdir, "parameters.txt"), "w") as f:
@@ -84,7 +84,8 @@ def main():
                     "--N", str(N),
                     "--material", material,
                     "--res", str(res),
-                    "--nmax", str(nmax)
+                    "--nmax", str(nmax),
+                    "--T-run", "20.0"
                 ]
                 
                 if args.cores > 1:

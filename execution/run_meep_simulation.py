@@ -1,4 +1,6 @@
 import meep as mp
+mp.quiet(True)
+mp.verbosity(0)
 import numpy as np
 import ctypes
 import argparse
@@ -217,7 +219,7 @@ def get_optimal_subgroups(M, num_tasks):
     return max(valid_divisors)
 
 
-def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1):
+def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0):
     """
     Runs a 3D FDTD simulation for a single configuration, utilizing subgroups
     to run different polarizations and moments in parallel.
@@ -237,7 +239,6 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     
     # Global conductivity scaling
     Sigma = 0.5 / d
-    T_run = 30.0  # total runtime in dimensionless time units
     
     pol_list = [mp.Ex, mp.Ey, mp.Ez, mp.Hx, mp.Hy, mp.Hz]
     component_direction = {
@@ -460,6 +461,7 @@ def main():
     parser.add_argument("--nmax", type=int, default=3, help="Max moments index limit.")
     parser.add_argument("--theta", type=float, default=0.0, help="Twist angle of top plate in degrees.")
     parser.add_argument("--eps-bg", type=float, default=1.0, help="Dielectric constant of the background medium.")
+    parser.add_argument("--T-run", type=float, default=30.0, help="Total simulation runtime in dimensionless time units.")
     args = parser.parse_args()
     
     # Calculate number of tasks and setup parallel subgroups
@@ -486,9 +488,9 @@ def main():
     
     # We run the two cases for vacuum subtraction:
     # 1. both plates present
-    f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K)
+    f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run)
     # 2. only the prefractal plate present (to subtract the self-force)
-    f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K)
+    f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run)
     
     f_sub = f_both - f_self
     

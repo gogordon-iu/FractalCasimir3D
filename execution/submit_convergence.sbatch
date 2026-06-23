@@ -7,7 +7,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
-#SBATCH --time=96:00:00
+#SBATCH --time=36:00:00
 #SBATCH --array=0-5   # 6 resolutions: 20, 40, 60, 80, 100, 120
 #SBATCH --mail-type=BEGIN,FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
@@ -46,4 +46,5 @@ srun -n 128 python execution/run_meep_simulation.py \
     --N 2 \
     --material Gold \
     --res "$RES" \
-    --nmax 3
+    --nmax 1 \
+    --T-run 20.0
