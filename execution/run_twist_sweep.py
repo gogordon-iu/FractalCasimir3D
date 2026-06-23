@@ -38,7 +38,7 @@ def main():
     N = 3
     resolution = 40
     nmax = 3
-    eps_bg = 2.1
+    eps_bg = 3.0
     
     # Save parameters.txt
     with open(os.path.join(outdir, "parameters.txt"), "w") as f:
@@ -160,7 +160,7 @@ def main():
     ax.scatter(thetas, pressures_orig, color='#c0392b', marker='o', s=20, zorder=3)
     
     # Plot tuned Phosphorene curve
-    ax.plot(theta_dense, spline_tuned(theta_dense), color='#27ae60', linestyle='-', linewidth=1.5, label=r'Tuned Phosphorene ($\epsilon_z = 2.1$, Magic Angle)')
+    ax.plot(theta_dense, spline_tuned(theta_dense), color='#27ae60', linestyle='-', linewidth=1.5, label=r'Tuned Phosphorene ($\epsilon_z = 3.0$, Magic Angle)')
     ax.scatter(thetas, pressures_tuned, color='#27ae60', marker='s', s=20, zorder=3)
     
     # Draw horizontal line at zero
