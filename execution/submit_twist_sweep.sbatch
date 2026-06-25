@@ -48,7 +48,7 @@ srun -n 128 python execution/run_meep_simulation.py \
     --res 40 \
     --nmax 3 \
     --theta "$THETA" \
-    --eps-bg 3.0
+    --eps-bg 2.6
 
 # 2. Run Tuned Phosphorene (magic angle zero-crossing)
 srun -n 128 python execution/run_meep_simulation.py \
@@ -58,4 +58,4 @@ srun -n 128 python execution/run_meep_simulation.py \
     --res 40 \
     --nmax 3 \
     --theta "$THETA" \
-    --eps-bg 3.0
+    --eps-bg 2.6
