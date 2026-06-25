@@ -75,44 +75,106 @@ def main():
                 data = json.load(f)
                 f_sub = data["force_subtracted"]
         else:
-            if args.run_missing:
-                print(f"Running parallel FDTD simulation for resolution = {res} px/um...")
-                sim_cmd = [
-                    sys.executable,
-                    "execution/run_meep_simulation.py",
-                    "--d", f"{d:.4f}",
-                    "--N", str(N),
-                    "--material", material,
-                    "--res", str(res),
-                    "--nmax", str(nmax),
-                    "--T-run", "20.0"
-                ]
+            # Auto-consolidate individual task files if the config file doesn't exist
+            for cfg in ["both", "self"]:
+                cfg_file = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_config_{cfg}.json"
+                if not os.path.exists(cfg_file):
+                    task_files = [
+                        f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_config_{cfg}_task_{i}.json"
+                        for i in range(36 * nmax)
+                    ]
+                    if all(os.path.exists(tf) for tf in task_files):
+                        print(f"Consolidating 36 task files for resolution = {res} px/um (config {cfg})...")
+                        total_f = 0.0
+                        for tf in task_files:
+                            try:
+                                with open(tf, "r") as f:
+                                    tf_data = json.load(f)
+                                total_f += tf_data["force"]
+                            except Exception as e:
+                                print(f"Error reading {tf}: {e}")
+                                total_f = None
+                                break
+                        
+                        if total_f is not None:
+                            consolidated_config_data = {
+                                "d_um": d,
+                                "N": N,
+                                "material": material,
+                                "resolution": res,
+                                "theta_deg": 0.0,
+                                "eps_bg": 1.0,
+                                f"force_{cfg}": total_f
+                            }
+                            with open(cfg_file, "w") as f:
+                                json.dump(consolidated_config_data, f, indent=4)
+
+            # Check if separate config_both and config_self files exist, and compile them
+            both_file = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_config_both.json"
+            self_file = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_config_self.json"
+            if os.path.exists(both_file) and os.path.exists(self_file):
+                print(f"Found separate both/self files for resolution = {res} px/um. Consolidating...")
+                with open(both_file, "r") as f:
+                    both_data = json.load(f)
+                with open(self_file, "r") as f:
+                    self_data = json.load(f)
+                f_both = both_data["force_both"]
+                f_self = self_data["force_self"]
+                f_sub = f_both - f_self
                 
-                if args.cores > 1:
-                    if in_slurm:
-                        cmd = ["srun", "-n", str(args.cores)] + sim_cmd
-                    else:
-                        import shutil
-                        if shutil.which("mpirun") is not None:
-                            cmd = ["mpirun", "-np", str(args.cores)] + sim_cmd
-                        else:
-                            cmd = sim_cmd
-                else:
-                    cmd = sim_cmd
-                    
-                print(f"Executing: {' '.join(cmd)}")
-                subprocess.run(cmd)
-                
-                if os.path.exists(json_file):
-                    with open(json_file, "r") as f:
-                        data = json.load(f)
-                        f_sub = data["force_subtracted"]
-                else:
-                    print(f"ERROR: Simulation failed to generate {json_file}")
-                    continue
+                # Save the consolidated JSON file
+                consolidated_data = {
+                    "d_um": d,
+                    "N": N,
+                    "material": material,
+                    "resolution": res,
+                    "theta_deg": 0.0,
+                    "eps_bg": both_data.get("eps_bg", 1.0),
+                    "force_both": f_both,
+                    "force_self": f_self,
+                    "force_subtracted": f_sub
+                }
+                with open(json_file, "w") as f:
+                    json.dump(consolidated_data, f, indent=4)
             else:
-                print(f"WARNING: Cached result file not found: {json_file}. Skipping resolution {res}.")
-                continue
+                if args.run_missing:
+                    print(f"Running parallel FDTD simulation for resolution = {res} px/um...")
+                    sim_cmd = [
+                        sys.executable,
+                        "execution/run_meep_simulation.py",
+                        "--d", f"{d:.4f}",
+                        "--N", str(N),
+                        "--material", material,
+                        "--res", str(res),
+                        "--nmax", str(nmax),
+                        "--T-run", "20.0"
+                    ]
+                    
+                    if args.cores > 1:
+                        if in_slurm:
+                            cmd = ["srun", "-n", str(args.cores)] + sim_cmd
+                        else:
+                            import shutil
+                            if shutil.which("mpirun") is not None:
+                                cmd = ["mpirun", "-np", str(args.cores)] + sim_cmd
+                            else:
+                                cmd = sim_cmd
+                    else:
+                        cmd = sim_cmd
+                        
+                    print(f"Executing: {' '.join(cmd)}")
+                    subprocess.run(cmd)
+                    
+                    if os.path.exists(json_file):
+                        with open(json_file, "r") as f:
+                            data = json.load(f)
+                            f_sub = data["force_subtracted"]
+                    else:
+                        print(f"ERROR: Simulation failed to generate {json_file}")
+                        continue
+                else:
+                    print(f"WARNING: Cached result file not found: {json_file}. Skipping resolution {res}.")
+                    continue
                 
         # Fractional PFA deviation: eta = (F_FDTD - F_PFA) / F_PFA
         eta = (f_sub - f_pfa) / f_pfa

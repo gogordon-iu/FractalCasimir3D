@@ -219,7 +219,7 @@ def get_optimal_subgroups(M, num_tasks):
     return max(valid_divisors)
 
 
-def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0):
+def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1):
     """
     Runs a 3D FDTD simulation for a single configuration, utilizing subgroups
     to run different polarizations and moments in parallel.
@@ -270,7 +270,12 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     
     
     # Each subgroup runs its assigned slice of tasks in parallel
-    for task_idx in range(subgroup_index, num_tasks, K):
+    if task_idx_override >= 0:
+        tasks_to_run = [task_idx_override]
+    else:
+        tasks_to_run = list(range(subgroup_index, num_tasks, K))
+        
+    for task_idx in tasks_to_run:
         p = task_idx // (n_max * 6)
         n = task_idx % (n_max * 6)
         
@@ -462,17 +467,24 @@ def main():
     parser.add_argument("--theta", type=float, default=0.0, help="Twist angle of top plate in degrees.")
     parser.add_argument("--eps-bg", type=float, default=1.0, help="Dielectric constant of the background medium.")
     parser.add_argument("--T-run", type=float, default=30.0, help="Total simulation runtime in dimensionless time units.")
+    parser.add_argument("--config", type=str, default="all", choices=["both", "self", "all"], help="Simulation configuration (both plates, self plate only, or all).")
+    parser.add_argument("--task-idx", type=int, default=-1, help="Specific task index to run (0-35). If -1, run all using subgroups.")
     args = parser.parse_args()
     
     # Calculate number of tasks and setup parallel subgroups
     # Use mp.count_processors() to check the actual number of MPI processes initialized by Meep
     M = mp.count_processors()
     num_tasks = 36 * args.nmax
-    K = get_optimal_subgroups(M, num_tasks)
     
-    subgroup_index = 0
-    if K > 1:
-        subgroup_index = mp.divide_parallel_processes(K)
+    if args.task_idx >= 0:
+        # If running a single task, we disable subgroup division (K=1, subgroup_index=0)
+        K = 1
+        subgroup_index = 0
+    else:
+        K = get_optimal_subgroups(M, num_tasks)
+        subgroup_index = 0
+        if K > 1:
+            subgroup_index = mp.divide_parallel_processes(K)
         
     # We check if we are the global master (global rank 0) to print and write files
     global_rank = 0
@@ -483,38 +495,87 @@ def main():
         global_rank = int(os.environ.get("SLURM_PROCID", 0))
         
     if global_rank == 0:
-        print(f"Starting simulation: d={args.d} um, N={args.N}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}")
+        print(f"Starting simulation: d={args.d} um, N={args.N}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}, config={args.config}")
         print(f"Parallel configuration: {M} processes divided into {K} subgroups of size {M//K} processes each.")
     
-    # We run the two cases for vacuum subtraction:
-    # 1. both plates present
-    f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run)
-    # 2. only the prefractal plate present (to subtract the self-force)
-    f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run)
+    # We run the cases for vacuum subtraction:
+    f_both = 0.0
+    f_self = 0.0
     
-    f_sub = f_both - f_self
-    
+    if args.config in ["all", "both"]:
+        f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx)
+    if args.config in ["all", "self"]:
+        f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx)
+        
     # Save output to .tmp folder
     if global_rank == 0:
         os.makedirs(".tmp", exist_ok=True)
-        out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}.json"
-        
-        result = {
-            "d_um": args.d,
-            "N": args.N,
-            "material": args.material,
-            "resolution": args.res,
-            "theta_deg": args.theta,
-            "eps_bg": args.eps_bg,
-            "force_both": float(f_both),
-            "force_self": float(f_self),
-            "force_subtracted": float(f_sub)
-        }
+        if args.task_idx >= 0:
+            if args.config == "all":
+                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_task_{args.task_idx}.json"
+                result = {
+                    "d_um": args.d,
+                    "N": args.N,
+                    "material": args.material,
+                    "resolution": args.res,
+                    "theta_deg": args.theta,
+                    "eps_bg": args.eps_bg,
+                    "task_idx": args.task_idx,
+                    "force_both": float(f_both),
+                    "force_self": float(f_self)
+                }
+            else:
+                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_config_{args.config}_task_{args.task_idx}.json"
+                result = {
+                    "d_um": args.d,
+                    "N": args.N,
+                    "material": args.material,
+                    "resolution": args.res,
+                    "theta_deg": args.theta,
+                    "eps_bg": args.eps_bg,
+                    "config": args.config,
+                    "task_idx": args.task_idx,
+                    "force": float(f_both if args.config == "both" else f_self)
+                }
+        else:
+            if args.config == "all":
+                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}.json"
+                result = {
+                    "d_um": args.d,
+                    "N": args.N,
+                    "material": args.material,
+                    "resolution": args.res,
+                    "theta_deg": args.theta,
+                    "eps_bg": args.eps_bg,
+                    "force_both": float(f_both),
+                    "force_self": float(f_self),
+                    "force_subtracted": float(f_both - f_self)
+                }
+            else:
+                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_config_{args.config}.json"
+                result = {
+                    "d_um": args.d,
+                    "N": args.N,
+                    "material": args.material,
+                    "resolution": args.res,
+                    "theta_deg": args.theta,
+                    "eps_bg": args.eps_bg,
+                    f"force_{args.config}": float(f_both if args.config == "both" else f_self)
+                }
         
         with open(out_file, "w") as f:
             json.dump(result, f, indent=4)
             
-        print(f"Simulation complete. Subtracted force: {f_sub:.6e}. Saved to {out_file}")
+        if args.config == "all":
+            if args.task_idx >= 0:
+                print(f"Simulation task complete. Saved to {out_file}")
+            else:
+                print(f"Simulation complete. Subtracted force: {f_both - f_self:.6e}. Saved to {out_file}")
+        else:
+            if args.task_idx >= 0:
+                print(f"Simulation task complete. Saved to {out_file}")
+            else:
+                print(f"Simulation complete. {args.config} force: {f_both if args.config == 'both' else f_self:.6e}. Saved to {out_file}")
 
 if __name__ == "__main__":
     main()

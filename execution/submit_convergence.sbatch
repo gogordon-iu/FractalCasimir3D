@@ -8,13 +8,23 @@
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
 #SBATCH --time=36:00:00
-#SBATCH --array=0-5   # 6 resolutions: 20, 40, 60, 80, 100, 120
+#SBATCH --array=0-11  # 6 resolutions * 2 configs (both, self) = 12 tasks
 #SBATCH --mail-type=BEGIN,FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 
 # Define resolutions
 RESOLUTIONS=(20 40 60 80 100 120)
-RES=${RESOLUTIONS[$SLURM_ARRAY_TASK_ID]}
+
+# Calculate resolution and configuration from array task ID
+RES_IDX=$((SLURM_ARRAY_TASK_ID / 2))
+CONFIG_IDX=$((SLURM_ARRAY_TASK_ID % 2))
+
+RES=${RESOLUTIONS[$RES_IDX]}
+if [ $CONFIG_IDX -eq 0 ]; then
+    CONFIG="both"
+else
+    CONFIG="self"
+fi
 
 # Create logs and cache directories
 mkdir -p logs
@@ -38,7 +48,7 @@ fi
 # Set OpenMP threads to 1 for parallel MPI execution
 export OMP_NUM_THREADS=1
 
-echo "Running task ID: $SLURM_ARRAY_TASK_ID (resolution = $RES px/um)"
+echo "Running task ID: $SLURM_ARRAY_TASK_ID (resolution = $RES px/um, config = $CONFIG)"
 
 # Run both cases (both plates present, and self-force subtraction)
 srun -n 128 python execution/run_meep_simulation.py \
@@ -47,4 +57,5 @@ srun -n 128 python execution/run_meep_simulation.py \
     --material Gold \
     --res "$RES" \
     --nmax 1 \
-    --T-run 20.0
+    --T-run 20.0 \
+    --config "$CONFIG"
