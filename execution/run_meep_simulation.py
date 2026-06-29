@@ -512,7 +512,7 @@ def main():
         os.makedirs(".tmp", exist_ok=True)
         if args.task_idx >= 0:
             if args.config == "all":
-                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_task_{args.task_idx}.json"
+                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_task_{args.task_idx}.json"
                 result = {
                     "d_um": args.d,
                     "N": args.N,
@@ -525,7 +525,7 @@ def main():
                     "force_self": float(f_self)
                 }
             else:
-                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_config_{args.config}_task_{args.task_idx}.json"
+                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_config_{args.config}_task_{args.task_idx}.json"
                 result = {
                     "d_um": args.d,
                     "N": args.N,
@@ -539,7 +539,7 @@ def main():
                 }
         else:
             if args.config == "all":
-                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}.json"
+                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}.json"
                 result = {
                     "d_um": args.d,
                     "N": args.N,
@@ -552,7 +552,7 @@ def main():
                     "force_subtracted": float(f_both - f_self)
                 }
             else:
-                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_config_{args.config}.json"
+                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_config_{args.config}.json"
                 result = {
                     "d_um": args.d,
                     "N": args.N,

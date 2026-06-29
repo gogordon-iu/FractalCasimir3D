@@ -68,7 +68,7 @@ def main():
     for mat in ["Phosphorene", "Phosphorene_tuned"]:
         print(f"\n--- Sweeping material: {mat} ---")
         for theta in theta_list:
-            json_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}.json"
+            json_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}.json"
             
             if os.path.exists(json_file):
                 print(f"Found cached results for theta = {theta:.1f} deg in {json_file}")
