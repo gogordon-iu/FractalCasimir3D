@@ -3,10 +3,10 @@ import os
 def main():
     L_vals = [0.3, 0.4, 0.5, 0.6]
     time_limits = {
-        0.3: "03:00:00",
-        0.4: "04:00:00",
-        0.5: "05:00:00",
-        0.6: "06:00:00"
+        0.3: "06:00:00",
+        0.4: "08:00:00",
+        0.5: "10:00:00",
+        0.6: "12:00:00"
     }
     os.makedirs("execution", exist_ok=True)
     
@@ -16,7 +16,7 @@ def main():
         
         # 1. Write the main array submission script
         sweep_file = f"execution/submit_twist_L_{L_str}.sbatch"
-        with open(sweep_file, "w") as f:
+        with open(sweep_file, "w", newline='\n') as f:
             f.write(f"""#!/bin/bash
 #SBATCH -J twist_L_{L_str}
 #SBATCH -A r01540
@@ -84,7 +84,7 @@ srun -n 128 python execution/run_meep_simulation.py \\
             
         # 2. Write the plot sbatch script
         plot_file = f"execution/submit_twist_L_{L_str}_plot.sbatch"
-        with open(plot_file, "w") as f:
+        with open(plot_file, "w", newline='\n') as f:
             f.write(f"""#!/bin/bash
 #SBATCH -J twist_L_{L_str}_plot
 #SBATCH -A r01540
@@ -94,7 +94,7 @@ srun -n 128 python execution/run_meep_simulation.py \\
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
-#SBATCH --time=02:00:00
+#SBATCH --time=04:00:00
 #SBATCH --mail-type=BEGIN,FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 
