@@ -209,11 +209,15 @@ def get_casimir_material(material_name, Sigma, ft, theta=0.0, eps_bg=1.0):
 
 def get_optimal_subgroups(M, num_tasks):
     """
-    Finds the largest divisor of M (the total number of MPI processes) 
-    that is less than or equal to the number of tasks.
+    Finds the largest divisor of M that is less than or equal to num_tasks,
+    while ensuring each subgroup has at least 16 processes (or M if M < 16)
+    to prevent memory bandwidth starvation.
     """
+    min_cores_per_subgroup = 16
+    max_K = max(1, M // min_cores_per_subgroup)
+    
     divisors = [i for i in range(1, M + 1) if M % i == 0]
-    valid_divisors = [d for d in divisors if d <= num_tasks]
+    valid_divisors = [d for d in divisors if d <= num_tasks and d <= max_K]
     if not valid_divisors:
         return 1
     return max(valid_divisors)

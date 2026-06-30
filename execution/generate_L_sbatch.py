@@ -3,10 +3,10 @@ import os
 def main():
     L_vals = [0.3, 0.4, 0.5, 0.6]
     time_limits = {
-        0.3: "06:00:00",
-        0.4: "08:00:00",
-        0.5: "10:00:00",
-        0.6: "12:00:00"
+        0.3: "18:00:00",
+        0.4: "24:00:00",
+        0.5: "30:00:00",
+        0.6: "36:00:00"
     }
     os.makedirs("execution", exist_ok=True)
     
@@ -94,7 +94,7 @@ srun -n 128 python execution/run_meep_simulation.py \\
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
-#SBATCH --time=04:00:00
+#SBATCH --time=12:00:00
 #SBATCH --mail-type=BEGIN,FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 
