@@ -2,6 +2,12 @@ import os
 
 def main():
     L_vals = [0.3, 0.4, 0.5, 0.6]
+    time_limits = {
+        0.3: "03:00:00",
+        0.4: "04:00:00",
+        0.5: "05:00:00",
+        0.6: "06:00:00"
+    }
     os.makedirs("execution", exist_ok=True)
     
     # 7 twist angles: 0, 15, 30, 45, 60, 75, 90
@@ -20,7 +26,7 @@ def main():
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
-#SBATCH --time=24:00:00
+#SBATCH --time={time_limits[L]}
 #SBATCH --array=0-6
 #SBATCH --mail-type=BEGIN,FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
@@ -88,7 +94,7 @@ srun -n 128 python execution/run_meep_simulation.py \\
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
-#SBATCH --time=12:00:00
+#SBATCH --time=02:00:00
 #SBATCH --mail-type=BEGIN,FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 
