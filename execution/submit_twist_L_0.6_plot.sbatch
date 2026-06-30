@@ -25,5 +25,5 @@ cd /N/project/gorengor_werewolf/FractalCasimir3D
 export OMP_NUM_THREADS=1
 
 echo "Starting twist sweep L = 0.6 plotting..."
-python execution/run_twist_sweep.py --cores 128 --L 0.6
+$CONDA_PREFIX/bin/python execution/run_twist_sweep.py --cores 128 --L 0.6
 echo "Plotting complete."

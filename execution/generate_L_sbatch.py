@@ -60,7 +60,7 @@ export OMP_NUM_THREADS=1
 echo "Running Twist Sweep L = {L_str} task ID: $SLURM_ARRAY_TASK_ID (theta = $THETA deg)"
 
 # 1. Run Original Phosphorene (untuned, eps_bg = 2.4)
-srun -n 128 python execution/run_meep_simulation.py \\
+srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \\
     --d 0.1 \\
     --N 3 \\
     --material Phosphorene \\
@@ -71,7 +71,7 @@ srun -n 128 python execution/run_meep_simulation.py \\
     --L {L_str}
 
 # 2. Run Tuned Phosphorene (tuned, eps_bg = 2.1)
-srun -n 128 python execution/run_meep_simulation.py \\
+srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \\
     --d 0.1 \\
     --N 3 \\
     --material Phosphorene_tuned \\
@@ -112,7 +112,7 @@ cd /N/project/gorengor_werewolf/FractalCasimir3D
 export OMP_NUM_THREADS=1
 
 echo "Starting twist sweep L = {L_str} plotting..."
-python execution/run_twist_sweep.py --cores 128 --L {L_str}
+$CONDA_PREFIX/bin/python execution/run_twist_sweep.py --cores 128 --L {L_str}
 echo "Plotting complete."
 """)
             

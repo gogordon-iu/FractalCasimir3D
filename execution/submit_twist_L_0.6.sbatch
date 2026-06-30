@@ -41,7 +41,7 @@ export OMP_NUM_THREADS=1
 echo "Running Twist Sweep L = 0.6 task ID: $SLURM_ARRAY_TASK_ID (theta = $THETA deg)"
 
 # 1. Run Original Phosphorene (untuned, eps_bg = 2.4)
-srun -n 128 python execution/run_meep_simulation.py \
+srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \
     --d 0.1 \
     --N 3 \
     --material Phosphorene \
@@ -52,7 +52,7 @@ srun -n 128 python execution/run_meep_simulation.py \
     --L 0.6
 
 # 2. Run Tuned Phosphorene (tuned, eps_bg = 2.1)
-srun -n 128 python execution/run_meep_simulation.py \
+srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \
     --d 0.1 \
     --N 3 \
     --material Phosphorene_tuned \
