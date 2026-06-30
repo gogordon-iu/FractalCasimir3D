@@ -25,11 +25,12 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Consolidate and plot twist sweep results.")
     parser.add_argument("--cores", type=int, default=12, help="Number of MPI cores to use for running simulations.")
+    parser.add_argument("--L", type=float, default=0.3, help="Plate width/length in microns.")
     args = parser.parse_args()
     
     import datetime
     now_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    outdir = f"results_twist_{now_str}"
+    outdir = f"results_twist_L_{args.L:.2f}_{now_str}"
     os.makedirs(outdir, exist_ok=True)
     
     # Twist sweep parameters
@@ -38,7 +39,7 @@ def main():
     N = 3
     resolution = 40
     nmax = 3
-    eps_bg = 2.6
+    L = args.L
     
     # Save parameters.txt
     with open(os.path.join(outdir, "parameters.txt"), "w") as f:
@@ -46,7 +47,9 @@ def main():
         f.write(f"--res {resolution}\n")
         f.write(f"--d {d}\n")
         f.write(f"--N {N}\n")
-        f.write(f"--eps_bg {eps_bg}\n")
+        f.write(f"--L {L}\n")
+        f.write(f"--eps_bg_tuned 2.1\n")
+        f.write(f"--eps_bg_std 2.4\n")
         
     print("==================================================")
     print("Phosphorene Casimir Twist Sweep and Magic Angle Detection")
@@ -67,8 +70,9 @@ def main():
     # 1. Run or Load simulations
     for mat in ["Phosphorene", "Phosphorene_tuned"]:
         print(f"\n--- Sweeping material: {mat} ---")
+        eps_bg = 2.1 if mat == "Phosphorene_tuned" else 2.4
         for theta in theta_list:
-            json_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}.json"
+            json_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}.json"
             
             if os.path.exists(json_file):
                 print(f"Found cached results for theta = {theta:.1f} deg in {json_file}")
@@ -86,7 +90,8 @@ def main():
                     "--res", str(resolution),
                     "--nmax", str(nmax),
                     "--theta", f"{theta:.1f}",
-                    "--eps-bg", f"{eps_bg:.1f}"
+                    "--eps-bg", f"{eps_bg:.1f}",
+                    "--L", f"{L:.2f}"
                 ]
                 
                 if args.cores > 1:
@@ -156,11 +161,11 @@ def main():
     # Plot original Phosphorene curve
     pressures_orig = np.array([r["pressure"] for r in results["Phosphorene"]])
     spline_orig = UnivariateSpline(thetas, pressures_orig, s=0)
-    ax.plot(theta_dense, spline_orig(theta_dense), color='#c0392b', linestyle='--', linewidth=1.2, label=r'Original Phosphorene ($\epsilon_z = 1.2$, Untuned)')
+    ax.plot(theta_dense, spline_orig(theta_dense), color='#c0392b', linestyle='--', linewidth=1.2, label=r'Original Phosphorene ($\epsilon_z = 1.2, \epsilon_{\mathrm{bg}} = 2.4$)')
     ax.scatter(thetas, pressures_orig, color='#c0392b', marker='o', s=20, zorder=3)
     
     # Plot tuned Phosphorene curve
-    ax.plot(theta_dense, spline_tuned(theta_dense), color='#27ae60', linestyle='-', linewidth=1.5, label=r'Tuned Phosphorene ($\epsilon_z = 2.6$, Magic Angle)')
+    ax.plot(theta_dense, spline_tuned(theta_dense), color='#27ae60', linestyle='-', linewidth=1.5, label=r'Tuned Phosphorene ($\epsilon_z = \epsilon_{\mathrm{bg}} = 2.1$)')
     ax.scatter(thetas, pressures_tuned, color='#27ae60', marker='s', s=20, zorder=3)
     
     # Draw horizontal line at zero
@@ -171,7 +176,7 @@ def main():
     
     ax.set_xlabel(r'Twist Angle $\theta$ (degrees)')
     ax.set_ylabel('Normal Casimir Pressure P (dimensionless)')
-    ax.set_title('Casimir Pressure vs. Twist Angle Comparison', fontsize=9, fontweight='bold')
+    ax.set_title(f'Casimir Pressure vs. Twist Angle (L={L:.2f})', fontsize=9, fontweight='bold')
     ax.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
     ax.legend(loc='lower left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
     

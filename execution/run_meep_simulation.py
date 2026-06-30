@@ -219,13 +219,12 @@ def get_optimal_subgroups(M, num_tasks):
     return max(valid_divisors)
 
 
-def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1):
+def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1, L=0.3):
     """
     Runs a 3D FDTD simulation for a single configuration, utilizing subgroups
     to run different polarizations and moments in parallel.
     """
     # 1. Computational Cell and Geometry parameters
-    L = 0.3  # plate width/length in microns
     t_plate = 0.1  # plate thickness in microns
     dpml = 0.2  # PML thickness in microns
     buffer = 0.15  # buffer between plates and PML
@@ -469,6 +468,7 @@ def main():
     parser.add_argument("--T-run", type=float, default=30.0, help="Total simulation runtime in dimensionless time units.")
     parser.add_argument("--config", type=str, default="all", choices=["both", "self", "all"], help="Simulation configuration (both plates, self plate only, or all).")
     parser.add_argument("--task-idx", type=int, default=-1, help="Specific task index to run (0-35). If -1, run all using subgroups.")
+    parser.add_argument("--L", type=float, default=0.3, help="Plate width/length in microns.")
     args = parser.parse_args()
     
     # Calculate number of tasks and setup parallel subgroups
@@ -503,16 +503,16 @@ def main():
     f_self = 0.0
     
     if args.config in ["all", "both"]:
-        f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx)
+        f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L)
     if args.config in ["all", "self"]:
-        f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx)
+        f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L)
         
     # Save output to .tmp folder
     if global_rank == 0:
         os.makedirs(".tmp", exist_ok=True)
         if args.task_idx >= 0:
             if args.config == "all":
-                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_task_{args.task_idx}.json"
+                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_task_{args.task_idx}.json"
                 result = {
                     "d_um": args.d,
                     "N": args.N,
@@ -520,12 +520,13 @@ def main():
                     "resolution": args.res,
                     "theta_deg": args.theta,
                     "eps_bg": args.eps_bg,
+                    "L": args.L,
                     "task_idx": args.task_idx,
                     "force_both": float(f_both),
                     "force_self": float(f_self)
                 }
             else:
-                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_config_{args.config}_task_{args.task_idx}.json"
+                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}_task_{args.task_idx}.json"
                 result = {
                     "d_um": args.d,
                     "N": args.N,
@@ -533,13 +534,14 @@ def main():
                     "resolution": args.res,
                     "theta_deg": args.theta,
                     "eps_bg": args.eps_bg,
+                    "L": args.L,
                     "config": args.config,
                     "task_idx": args.task_idx,
                     "force": float(f_both if args.config == "both" else f_self)
                 }
         else:
             if args.config == "all":
-                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}.json"
+                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
                 result = {
                     "d_um": args.d,
                     "N": args.N,
@@ -547,12 +549,13 @@ def main():
                     "resolution": args.res,
                     "theta_deg": args.theta,
                     "eps_bg": args.eps_bg,
+                    "L": args.L,
                     "force_both": float(f_both),
                     "force_self": float(f_self),
                     "force_subtracted": float(f_both - f_self)
                 }
             else:
-                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_config_{args.config}.json"
+                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}.json"
                 result = {
                     "d_um": args.d,
                     "N": args.N,
@@ -560,6 +563,7 @@ def main():
                     "resolution": args.res,
                     "theta_deg": args.theta,
                     "eps_bg": args.eps_bg,
+                    "L": args.L,
                     f"force_{args.config}": float(f_both if args.config == "both" else f_self)
                 }
         
