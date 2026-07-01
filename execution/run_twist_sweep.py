@@ -80,38 +80,68 @@ def main():
                     data = json.load(f)
                     f_sub = data["force_subtracted"]
             else:
-                print(f"Running parallel FDTD simulation for theta = {theta:.1f} deg...")
-                sim_cmd = [
-                    sys.executable,
-                    "execution/run_meep_simulation.py",
-                    "--d", f"{d:.4f}",
-                    "--N", str(N),
-                    "--material", mat,
-                    "--res", str(resolution),
-                    "--nmax", str(nmax),
-                    "--theta", f"{theta:.1f}",
-                    "--eps-bg", f"{eps_bg:.1f}",
-                    "--L", f"{L:.2f}"
-                ]
+                # Check if separate config_both and config_self files exist, and compile them
+                both_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_both.json"
+                self_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_self.json"
                 
-                if args.cores > 1:
-                    if in_slurm:
-                        cmd = ["srun", "-n", str(args.cores)] + sim_cmd
-                    else:
-                        import shutil
-                        if shutil.which("mpirun") is not None:
-                            cmd = ["mpirun", "-np", str(args.cores)] + sim_cmd
-                        else:
-                            cmd = sim_cmd
-                else:
-                    cmd = sim_cmd
+                if os.path.exists(both_file) and os.path.exists(self_file):
+                    print(f"Found separate both/self files for theta = {theta:.1f} deg. Consolidating...")
+                    with open(both_file, "r") as f:
+                        both_data = json.load(f)
+                    with open(self_file, "r") as f:
+                        self_data = json.load(f)
+                    f_both = both_data["force_both"] if "force_both" in both_data else both_data["force"]
+                    f_self = self_data["force_self"] if "force_self" in self_data else self_data["force"]
+                    f_sub = f_both - f_self
                     
-                print(f"Executing: {' '.join(cmd)}")
-                subprocess.run(cmd)
-                
-                with open(json_file, "r") as f:
-                    data = json.load(f)
-                    f_sub = data["force_subtracted"]
+                    # Save the consolidated JSON file
+                    consolidated_data = {
+                        "d_um": d,
+                        "N": N,
+                        "material": mat,
+                        "resolution": resolution,
+                        "theta_deg": theta,
+                        "eps_bg": eps_bg,
+                        "L": L,
+                        "force_both": f_both,
+                        "force_self": f_self,
+                        "force_subtracted": f_sub
+                    }
+                    with open(json_file, "w") as f:
+                        json.dump(consolidated_data, f, indent=4)
+                else:
+                    print(f"Running parallel FDTD simulation for theta = {theta:.1f} deg...")
+                    sim_cmd = [
+                        sys.executable,
+                        "execution/run_meep_simulation.py",
+                        "--d", f"{d:.4f}",
+                        "--N", str(N),
+                        "--material", mat,
+                        "--res", str(resolution),
+                        "--nmax", str(nmax),
+                        "--theta", f"{theta:.1f}",
+                        "--eps-bg", f"{eps_bg:.1f}",
+                        "--L", f"{L:.2f}"
+                    ]
+                    
+                    if args.cores > 1:
+                        if in_slurm:
+                            cmd = ["srun", "-n", str(args.cores)] + sim_cmd
+                        else:
+                            import shutil
+                            if shutil.which("mpirun") is not None:
+                                cmd = ["mpirun", "-np", str(args.cores)] + sim_cmd
+                            else:
+                                cmd = sim_cmd
+                    else:
+                        cmd = sim_cmd
+                        
+                    print(f"Executing: {' '.join(cmd)}")
+                    subprocess.run(cmd)
+                    
+                    with open(json_file, "r") as f:
+                        data = json.load(f)
+                        f_sub = data["force_subtracted"]
                     
             # Normal pressure: P = F / Area
             pressure = f_sub / area

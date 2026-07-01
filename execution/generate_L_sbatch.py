@@ -3,25 +3,39 @@ import os
 def main():
     L_vals = [0.3, 0.4, 0.5, 0.6]
     time_limits = {
-        0.3: "18:00:00",
-        0.4: "24:00:00",
-        0.5: "30:00:00",
-        0.6: "36:00:00"
+        0.3: "06:00:00",
+        0.4: "08:00:00",
+        0.5: "10:00:00",
+        0.6: "12:00:00"
     }
+    
+    # Define combinations
+    runs = [
+        {"suffix": "std_both", "material": "Phosphorene", "config": "both", "eps": "2.4"},
+        {"suffix": "std_self", "material": "Phosphorene", "config": "self", "eps": "2.4"},
+        {"suffix": "tuned_both", "material": "Phosphorene_tuned", "config": "both", "eps": "2.1"},
+        {"suffix": "tuned_self", "material": "Phosphorene_tuned", "config": "self", "eps": "2.1"},
+    ]
+    
     os.makedirs("execution", exist_ok=True)
     
-    # 7 twist angles: 0, 15, 30, 45, 60, 75, 90
     for L in L_vals:
         L_str = f"{L:.1f}"
         
-        # 1. Write the main array submission script
-        sweep_file = f"execution/submit_twist_L_{L_str}.sbatch"
-        with open(sweep_file, "w", newline='\n') as f:
-            f.write(f"""#!/bin/bash
-#SBATCH -J twist_L_{L_str}
+        # Write array scripts for each combination
+        for run in runs:
+            suffix = run["suffix"]
+            mat = run["material"]
+            cfg = run["config"]
+            eps = run["eps"]
+            
+            sweep_file = f"execution/submit_twist_L_{L_str}_{suffix}.sbatch"
+            with open(sweep_file, "w", newline='\n') as f:
+                f.write(f"""#!/bin/bash
+#SBATCH -J twist_L_{L_str}_{suffix}
 #SBATCH -A r01540
-#SBATCH -o logs/twist_L_{L_str}_%A_%a.out
-#SBATCH -e logs/twist_L_{L_str}_%A_%a.err
+#SBATCH -o logs/twist_L_{L_str}_{suffix}_%A_%a.out
+#SBATCH -e logs/twist_L_{L_str}_{suffix}_%A_%a.err
 #SBATCH -p general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
@@ -49,40 +63,24 @@ export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 # Force Slurm to run from the repository root directory
 cd /N/project/gorengor_werewolf/FractalCasimir3D
 
-# Queue the plot job automatically once all array tasks finish
-if [ "$SLURM_ARRAY_TASK_ID" -eq 0 ]; then
-    sbatch --dependency=afterany:$SLURM_ARRAY_JOB_ID execution/submit_twist_L_{L_str}_plot.sbatch
-fi
-
 # Set OpenMP threads to 1 for parallel MPI execution
 export OMP_NUM_THREADS=1
 
-echo "Running Twist Sweep L = {L_str} task ID: $SLURM_ARRAY_TASK_ID (theta = $THETA deg)"
+echo "Running Twist Sweep L = {L_str} ({suffix}) task ID: $SLURM_ARRAY_TASK_ID (theta = $THETA deg)"
 
-# 1. Run Original Phosphorene (untuned, eps_bg = 2.4)
 srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \\
     --d 0.1 \\
     --N 3 \\
-    --material Phosphorene \\
+    --material {mat} \\
     --res 40 \\
     --nmax 3 \\
     --theta "$THETA" \\
-    --eps-bg 2.4 \\
-    --L {L_str}
-
-# 2. Run Tuned Phosphorene (tuned, eps_bg = 2.1)
-srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \\
-    --d 0.1 \\
-    --N 3 \\
-    --material Phosphorene_tuned \\
-    --res 40 \\
-    --nmax 3 \\
-    --theta "$THETA" \\
-    --eps-bg 2.1 \\
-    --L {L_str}
+    --eps-bg {eps} \\
+    --L {L_str} \\
+    --config {cfg}
 """)
-            
-        # 2. Write the plot sbatch script
+                
+        # Write the plot sbatch script
         plot_file = f"execution/submit_twist_L_{L_str}_plot.sbatch"
         with open(plot_file, "w", newline='\n') as f:
             f.write(f"""#!/bin/bash
@@ -94,7 +92,7 @@ srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \\
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
-#SBATCH --time=12:00:00
+#SBATCH --time=04:00:00
 #SBATCH --mail-type=BEGIN,FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 

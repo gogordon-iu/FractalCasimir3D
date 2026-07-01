@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH -J twist_L_0.5
+#SBATCH -J twist_L_0.6_tuned_both
 #SBATCH -A r01540
-#SBATCH -o logs/twist_L_0.5_%A_%a.out
-#SBATCH -e logs/twist_L_0.5_%A_%a.err
+#SBATCH -o logs/twist_L_0.6_tuned_both_%A_%a.out
+#SBATCH -e logs/twist_L_0.6_tuned_both_%A_%a.err
 #SBATCH -p general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
-#SBATCH --time=30:00:00
+#SBATCH --time=12:00:00
 #SBATCH --array=0-6
 #SBATCH --mail-type=BEGIN,FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
@@ -30,28 +30,11 @@ export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 # Force Slurm to run from the repository root directory
 cd /N/project/gorengor_werewolf/FractalCasimir3D
 
-# Queue the plot job automatically once all array tasks finish
-if [ "$SLURM_ARRAY_TASK_ID" -eq 0 ]; then
-    sbatch --dependency=afterany:$SLURM_ARRAY_JOB_ID execution/submit_twist_L_0.5_plot.sbatch
-fi
-
 # Set OpenMP threads to 1 for parallel MPI execution
 export OMP_NUM_THREADS=1
 
-echo "Running Twist Sweep L = 0.5 task ID: $SLURM_ARRAY_TASK_ID (theta = $THETA deg)"
+echo "Running Twist Sweep L = 0.6 (tuned_both) task ID: $SLURM_ARRAY_TASK_ID (theta = $THETA deg)"
 
-# 1. Run Original Phosphorene (untuned, eps_bg = 2.4)
-srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \
-    --d 0.1 \
-    --N 3 \
-    --material Phosphorene \
-    --res 40 \
-    --nmax 3 \
-    --theta "$THETA" \
-    --eps-bg 2.4 \
-    --L 0.5
-
-# 2. Run Tuned Phosphorene (tuned, eps_bg = 2.1)
 srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \
     --d 0.1 \
     --N 3 \
@@ -60,4 +43,5 @@ srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \
     --nmax 3 \
     --theta "$THETA" \
     --eps-bg 2.1 \
-    --L 0.5
+    --L 0.6 \
+    --config both
