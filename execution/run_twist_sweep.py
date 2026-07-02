@@ -26,6 +26,7 @@ def main():
     parser = argparse.ArgumentParser(description="Consolidate and plot twist sweep results.")
     parser.add_argument("--cores", type=int, default=12, help="Number of MPI cores to use for running simulations.")
     parser.add_argument("--L", type=float, default=0.3, help="Plate width/length in microns.")
+    parser.add_argument("--plot-only", action="store_true", help="Only consolidate cache and plot without running missing simulations.")
     args = parser.parse_args()
     
     import datetime
@@ -63,6 +64,7 @@ def main():
         "Phosphorene": [],
         "Phosphorene_tuned": []
     }
+    missing_files = []
     
     import subprocess
     in_slurm = "SLURM_JOB_ID" in os.environ
@@ -110,47 +112,71 @@ def main():
                     with open(json_file, "w") as f:
                         json.dump(consolidated_data, f, indent=4)
                 else:
-                    print(f"Running parallel FDTD simulation for theta = {theta:.1f} deg...")
-                    sim_cmd = [
-                        sys.executable,
-                        "execution/run_meep_simulation.py",
-                        "--d", f"{d:.4f}",
-                        "--N", str(N),
-                        "--material", mat,
-                        "--res", str(resolution),
-                        "--nmax", str(nmax),
-                        "--theta", f"{theta:.1f}",
-                        "--eps-bg", f"{eps_bg:.1f}",
-                        "--L", f"{L:.2f}"
-                    ]
-                    
-                    if args.cores > 1:
-                        if in_slurm:
-                            cmd = ["srun", "-n", str(args.cores)] + sim_cmd
-                        else:
-                            import shutil
-                            if shutil.which("mpirun") is not None:
-                                cmd = ["mpirun", "-np", str(args.cores)] + sim_cmd
-                            else:
-                                cmd = sim_cmd
+                    if args.plot_only:
+                        print(f"WARNING: Cache file missing for material = {mat}, theta = {theta:.1f} deg.")
+                        # Check which specific files are missing to report later
+                        missing_reasons = []
+                        if not os.path.exists(both_file):
+                            missing_reasons.append(f"{both_file} (config_both)")
+                        if not os.path.exists(self_file):
+                            missing_reasons.append(f"{self_file} (config_self)")
+                        if not missing_reasons:
+                            missing_reasons.append(f"{json_file} (unified)")
+                        missing_files.append((mat, theta, missing_reasons))
+                        f_sub = None
                     else:
-                        cmd = sim_cmd
+                        print(f"Running parallel FDTD simulation for theta = {theta:.1f} deg...")
+                        sim_cmd = [
+                            sys.executable,
+                            "execution/run_meep_simulation.py",
+                            "--d", f"{d:.4f}",
+                            "--N", str(N),
+                            "--material", mat,
+                            "--res", str(resolution),
+                            "--nmax", str(nmax),
+                            "--theta", f"{theta:.1f}",
+                            "--eps-bg", f"{eps_bg:.1f}",
+                            "--L", f"{L:.2f}"
+                        ]
                         
-                    print(f"Executing: {' '.join(cmd)}")
-                    subprocess.run(cmd)
+                        if args.cores > 1:
+                            if in_slurm:
+                                cmd = ["srun", "-n", str(args.cores)] + sim_cmd
+                            else:
+                                import shutil
+                                if shutil.which("mpirun") is not None:
+                                    cmd = ["mpirun", "-np", str(args.cores)] + sim_cmd
+                                else:
+                                    cmd = sim_cmd
+                        else:
+                            cmd = sim_cmd
+                            
+                        print(f"Executing: {' '.join(cmd)}")
+                        subprocess.run(cmd)
+                        
+                        with open(json_file, "r") as f:
+                            data = json.load(f)
+                            f_sub = data["force_subtracted"]
                     
-                    with open(json_file, "r") as f:
-                        data = json.load(f)
-                        f_sub = data["force_subtracted"]
-                    
-            # Normal pressure: P = F / Area
-            pressure = f_sub / area
-            results[mat].append({
-                "theta_deg": theta,
-                "force_subtracted": f_sub,
-                "pressure": pressure
-            })
-            print(f"Theta: {theta:.1f} deg -> Force: {f_sub:.6e}, Pressure: {pressure:.6e}")
+            if f_sub is not None:
+                # Normal pressure: P = F / Area
+                pressure = f_sub / area
+                results[mat].append({
+                    "theta_deg": theta,
+                    "force_subtracted": f_sub,
+                    "pressure": pressure
+                })
+                print(f"Theta: {theta:.1f} deg -> Force: {f_sub:.6e}, Pressure: {pressure:.6e}")
+        
+    if missing_files:
+        print("\n==================================================")
+        print("ERROR: Incomplete Sweep Data (Plot-only Mode)")
+        print("==================================================")
+        print(f"The following {len(missing_files)} configurations/angles have missing cache files:")
+        for mat, theta, reasons in missing_files:
+            print(f" - Material: {mat:<18} Angle: {theta:>5.1f} deg | Missing: {', '.join(reasons)}")
+        print("\nSimulation files are still missing on the cluster. Please submit or rerun these tasks.")
+        sys.exit(1)
         
     # Save the consolidated twist sweep results
     consolidated_file = os.path.join(outdir, "twist_sweep_results.json")
