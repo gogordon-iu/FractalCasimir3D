@@ -55,7 +55,7 @@ def main():
     print("Phosphorene Casimir Twist Sweep and Magic Angle Detection")
     print("==================================================")
     
-    L = 0.3
+    L = args.L
     # Effective area A_3 = (8/9)^2 * L^2
     area = ((8.0 / 9.0)**(N - 1)) * (L**2)
     
