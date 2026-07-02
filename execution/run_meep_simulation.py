@@ -210,10 +210,10 @@ def get_casimir_material(material_name, Sigma, ft, theta=0.0, eps_bg=1.0):
 def get_optimal_subgroups(M, num_tasks):
     """
     Finds the largest divisor of M that is less than or equal to num_tasks,
-    while ensuring each subgroup has at least 16 processes (or M if M < 16)
+    while ensuring each subgroup has at least 8 processes (or M if M < 8)
     to prevent memory bandwidth starvation.
     """
-    min_cores_per_subgroup = 16
+    min_cores_per_subgroup = 8
     max_K = max(1, M // min_cores_per_subgroup)
     
     divisors = [i for i in range(1, M + 1) if M % i == 0]
