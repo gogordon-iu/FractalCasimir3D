@@ -473,6 +473,7 @@ def main():
     parser.add_argument("--config", type=str, default="all", choices=["both", "self", "all"], help="Simulation configuration (both plates, self plate only, or all).")
     parser.add_argument("--task-idx", type=int, default=-1, help="Specific task index to run (0-35). If -1, run all using subgroups.")
     parser.add_argument("--L", type=float, default=0.3, help="Plate width/length in microns.")
+    parser.add_argument("--no-subgroups", action="store_true", help="Force sequential execution of moments without dividing processes into subgroups.")
     args = parser.parse_args()
     
     # Calculate number of tasks and setup parallel subgroups
@@ -480,8 +481,8 @@ def main():
     M = mp.count_processors()
     num_tasks = 36 * args.nmax
     
-    if args.task_idx >= 0:
-        # If running a single task, we disable subgroup division (K=1, subgroup_index=0)
+    if args.task_idx >= 0 or args.no_subgroups:
+        # If running a single task or forcing sequential, we disable subgroup division (K=1, subgroup_index=0)
         K = 1
         subgroup_index = 0
     else:
