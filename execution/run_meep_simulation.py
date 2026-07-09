@@ -213,7 +213,7 @@ def get_optimal_subgroups(M, num_tasks):
     while ensuring each subgroup has at least 8 processes (or M if M < 8)
     to prevent memory bandwidth starvation.
     """
-    min_cores_per_subgroup = 8
+    min_cores_per_subgroup = 16
     max_K = max(1, M // min_cores_per_subgroup)
     
     divisors = [i for i in range(1, M + 1) if M % i == 0]
