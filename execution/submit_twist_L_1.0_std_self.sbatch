@@ -44,5 +44,4 @@ srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \
     --theta "$THETA" \
     --eps-bg 2.4 \
     --L 1.0 \
-    --config self \\
-    --no-subgroups
+    --config self --no-subgroups

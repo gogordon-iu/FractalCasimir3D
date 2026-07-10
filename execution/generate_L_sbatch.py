@@ -25,7 +25,7 @@ def main():
     
     for L in L_vals:
         L_str = f"{L:.1f}"
-        extra_flags = " \\\\\n    --no-subgroups" if L >= 0.8 else ""
+        extra_flags = " --no-subgroups" if L >= 0.8 else ""
         
         # Write array scripts for each combination
         for run in runs:
