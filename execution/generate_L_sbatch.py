@@ -7,10 +7,10 @@ def main():
         0.4: "16:00:00",
         0.5: "20:00:00",
         0.6: "24:00:00",
-        0.8: "06:00:00",
-        1.0: "08:00:00",
-        1.2: "12:00:00",
-        1.4: "16:00:00"
+        0.8: "03:00:00",
+        1.0: "03:00:00",
+        1.2: "03:00:00",
+        1.4: "03:00:00"
     }
     
     # Define combinations
@@ -25,6 +25,7 @@ def main():
     
     for L in L_vals:
         L_str = f"{L:.1f}"
+        extra_flags = " \\\\\n    --no-subgroups" if L >= 0.8 else ""
         
         # Write array scripts for each combination
         for run in runs:
@@ -81,7 +82,7 @@ srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \\
     --theta "$THETA" \\
     --eps-bg {eps} \\
     --L {L_str} \\
-    --config {cfg}
+    --config {cfg}{extra_flags}
 """)
                 
         # Write the plot sbatch script
