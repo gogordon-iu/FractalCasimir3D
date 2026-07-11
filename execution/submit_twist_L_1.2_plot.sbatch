@@ -8,7 +8,7 @@
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
 #SBATCH --time=04:00:00
-#SBATCH --mail-type=BEGIN,FAIL,END
+#SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 
 # Activate Conda environment

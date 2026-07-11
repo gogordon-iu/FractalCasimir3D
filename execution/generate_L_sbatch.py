@@ -3,14 +3,14 @@ import os
 def main():
     L_vals = [0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.4]
     time_limits = {
-        0.3: "12:00:00",
-        0.4: "16:00:00",
-        0.5: "20:00:00",
-        0.6: "24:00:00",
-        0.8: "06:00:00",
-        1.0: "09:00:00",
-        1.2: "12:00:00",
-        1.4: "18:00:00"
+        0.3: "24:00:00",
+        0.4: "32:00:00",
+        0.5: "40:00:00",
+        0.6: "48:00:00",
+        0.8: "12:00:00",
+        1.0: "18:00:00",
+        1.2: "24:00:00",
+        1.4: "36:00:00"
     }
     
     # Define combinations
@@ -47,7 +47,7 @@ def main():
 #SBATCH --cpus-per-task=1
 #SBATCH --time={time_limits[L]}
 #SBATCH --array=0-6
-#SBATCH --mail-type=BEGIN,FAIL,END
+#SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 
 # Twist angle list
@@ -98,7 +98,7 @@ srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \\
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
 #SBATCH --time=04:00:00
-#SBATCH --mail-type=BEGIN,FAIL,END
+#SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 
 # Activate Conda environment
