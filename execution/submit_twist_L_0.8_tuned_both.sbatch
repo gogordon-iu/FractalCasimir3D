@@ -39,7 +39,7 @@ srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \
     --d 0.1 \
     --N 3 \
     --material Phosphorene_tuned \
-    --res 40 \
+    --res 30 \
     --nmax 3 \
     --theta "$THETA" \
     --eps-bg 2.1 \

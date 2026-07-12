@@ -25,6 +25,7 @@ def main():
     
     for L in L_vals:
         L_str = f"{L:.1f}"
+        res = 30 if L >= 0.8 else 40
         extra_flags = " --no-subgroups" if L >= 0.8 else ""
         
         # Write array scripts for each combination
@@ -77,7 +78,7 @@ srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \\
     --d 0.1 \\
     --N 3 \\
     --material {mat} \\
-    --res 40 \\
+    --res {res} \\
     --nmax 3 \\
     --theta "$THETA" \\
     --eps-bg {eps} \\
