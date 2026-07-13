@@ -38,7 +38,7 @@ def main():
     theta_list = [0.0, 15.0, 30.0, 45.0, 60.0, 75.0, 90.0]
     d = 0.1
     N = 3
-    resolution = 40
+    resolution = 30 if L >= 0.8 else 40
     nmax = 3
     L = args.L
     
