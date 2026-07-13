@@ -7,8 +7,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
-#SBATCH --time=12:00:00
-#SBATCH --array=0-6
+#SBATCH --time=08:00:00
+#SBATCH --array=6-6
 #SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 
@@ -39,7 +39,7 @@ srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \
     --d 0.1 \
     --N 3 \
     --material Phosphorene_tuned \
-    --res 30 \
+    --res 40 \
     --nmax 3 \
     --theta "$THETA" \
     --eps-bg 2.1 \

@@ -1,16 +1,19 @@
 import os
 
 def main():
-    L_vals = [0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.4]
+    L_vals = [0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
     time_limits = {
         0.3: "24:00:00",
         0.4: "32:00:00",
         0.5: "40:00:00",
         0.6: "48:00:00",
-        0.8: "12:00:00",
-        1.0: "18:00:00",
-        1.2: "24:00:00",
-        1.4: "36:00:00"
+        0.8: "08:00:00",
+        1.0: "10:00:00",
+        1.2: "12:00:00",
+        1.4: "15:00:00",
+        1.6: "18:00:00",
+        1.8: "20:00:00",
+        2.0: "24:00:00"
     }
     
     # Define combinations
@@ -25,11 +28,13 @@ def main():
     
     for L in L_vals:
         L_str = f"{L:.1f}"
-        res = 30 if L >= 0.8 else 40
+        res = 40  # Unified resolution 40 for all sizes
         extra_flags = " --no-subgroups" if L >= 0.8 else ""
+        array_range = "6-6" if L >= 0.8 else "0-6"
+        runs_to_use = [run for run in runs if run["suffix"] in ["tuned_both", "tuned_self"]] if L >= 0.8 else runs
         
         # Write array scripts for each combination
-        for run in runs:
+        for run in runs_to_use:
             suffix = run["suffix"]
             mat = run["material"]
             cfg = run["config"]
@@ -47,7 +52,7 @@ def main():
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
 #SBATCH --time={time_limits[L]}
-#SBATCH --array=0-6
+#SBATCH --array={array_range}
 #SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 

@@ -10,9 +10,9 @@ echo "=================================================="
 # Initialize job dependency string
 JOBS=""
 
-for L in "0.8" "1.0" "1.2" "1.4"; do
+for L in "0.8" "1.0" "1.2" "1.4" "1.6" "1.8" "2.0"; do
     echo "Submitting jobs for L = $L um:"
-    for suffix in "std_both" "std_self" "tuned_both" "tuned_self"; do
+    for suffix in "tuned_both" "tuned_self"; do
         sbatch_file="execution/submit_twist_L_${L}_${suffix}.sbatch"
         if [ -f "$sbatch_file" ]; then
             JOB_ID=$(sbatch --parsable "$sbatch_file")
@@ -23,7 +23,7 @@ for L in "0.8" "1.0" "1.2" "1.4"; do
                 JOBS="$JOBS:$JOB_ID"
             fi
         else
-            echo "  -> ERROR: File not found: $sbatch_file"
+            echo "  -> INFO: File not found (skipping): $sbatch_file"
         fi
     done
 done

@@ -69,11 +69,15 @@ def main():
     import subprocess
     in_slurm = "SLURM_JOB_ID" in os.environ
     
+    # Materials and angles to loop over based on L
+    materials_to_run = ["Phosphorene_tuned"] if L >= 0.8 else ["Phosphorene", "Phosphorene_tuned"]
+    thetas_to_run = [90.0] if L >= 0.8 else theta_list
+
     # 1. Run or Load simulations
-    for mat in ["Phosphorene", "Phosphorene_tuned"]:
+    for mat in materials_to_run:
         print(f"\n--- Sweeping material: {mat} ---")
         eps_bg = 2.1 if mat == "Phosphorene_tuned" else 2.4
-        for theta in theta_list:
+        for theta in thetas_to_run:
             json_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}.json"
             
             if os.path.exists(json_file):
@@ -183,67 +187,70 @@ def main():
     with open(consolidated_file, "w") as f:
         json.dump(results, f, indent=4)
         
-    # 2. Extract arrays
-    thetas = np.array([r["theta_deg"] for r in results["Phosphorene_tuned"]])
-    pressures_tuned = np.array([r["pressure"] for r in results["Phosphorene_tuned"]])
-    
-    # 3. Find the Magic Angle (where pressure crosses zero)
-    spline_tuned = UnivariateSpline(thetas, pressures_tuned, s=0)
-    roots = spline_tuned.roots()
-    
-    magic_angle = None
-    if len(roots) > 0:
-        magic_angle = roots[0]
-        print(f"\n>>> Detected Casimir Magic Angle: {magic_angle:.3f} degrees <<<")
-    else:
-        # Fallback: linear interpolation
-        for i in range(len(thetas) - 1):
-            if pressures_tuned[i] * pressures_tuned[i+1] < 0:
-                p1, p2 = pressures_tuned[i], pressures_tuned[i+1]
-                t1, t2 = thetas[i], thetas[i+1]
-                magic_angle = t1 - p1 * (t2 - t1) / (p2 - p1)
-                print(f"\n>>> Detected Casimir Magic Angle (linear interp): {magic_angle:.3f} degrees <<<")
-                break
-                
-    if magic_angle is None:
-        print("\nWARNING: No zero-crossing found in the pressure sweep.")
-        magic_angle = 45.0  # default fallback
+    # 2. Extract arrays and plot (only for L < 0.8 um where a full sweep was run)
+    if L < 0.8:
+        thetas = np.array([r["theta_deg"] for r in results["Phosphorene_tuned"]])
+        pressures_tuned = np.array([r["pressure"] for r in results["Phosphorene_tuned"]])
         
-    # 4. Generate Plot
-    fig, ax = plt.subplots(figsize=(4.2, 3.2))
-    
-    theta_dense = np.linspace(0, 90, 200)
-    
-    # Plot original Phosphorene curve
-    pressures_orig = np.array([r["pressure"] for r in results["Phosphorene"]])
-    spline_orig = UnivariateSpline(thetas, pressures_orig, s=0)
-    ax.plot(theta_dense, spline_orig(theta_dense), color='#c0392b', linestyle='--', linewidth=1.2, label=r'Original Phosphorene ($\epsilon_z = 1.2, \epsilon_{\mathrm{bg}} = 2.4$)')
-    ax.scatter(thetas, pressures_orig, color='#c0392b', marker='o', s=20, zorder=3)
-    
-    # Plot tuned Phosphorene curve
-    ax.plot(theta_dense, spline_tuned(theta_dense), color='#27ae60', linestyle='-', linewidth=1.5, label=r'Tuned Phosphorene ($\epsilon_z = \epsilon_{\mathrm{bg}} = 2.1$)')
-    ax.scatter(thetas, pressures_tuned, color='#27ae60', marker='s', s=20, zorder=3)
-    
-    # Draw horizontal line at zero
-    ax.axhline(0, color='black', linestyle='-', linewidth=0.8, alpha=0.7)
-    
-    # Draw vertical line at magic angle
-    ax.axvline(magic_angle, color='#2980b9', linestyle='--', linewidth=1.2, label=r'$\theta_{\mathrm{magic}} \approx ' + f'{magic_angle:.1f}^\\circ$')
-    
-    ax.set_xlabel(r'Twist Angle $\theta$ (degrees)')
-    ax.set_ylabel('Normal Casimir Pressure P (dimensionless)')
-    ax.set_title(f'Casimir Pressure vs. Twist Angle (L={L:.2f})', fontsize=9, fontweight='bold')
-    ax.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
-    ax.legend(loc='lower left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
-    
-    plt.tight_layout()
-    
-    pdf_path = os.path.join(outdir, 'figure_twist_angle_comparison.pdf')
-    svg_path = os.path.join(outdir, 'figure_twist_angle_comparison.svg')
-    plt.savefig(pdf_path, format='pdf', dpi=300)
-    plt.savefig(svg_path, format='svg', dpi=300)
-    print(f"Plot saved to {pdf_path} / {svg_path}")
-    plt.close()
+        # 3. Find the Magic Angle (where pressure crosses zero)
+        spline_tuned = UnivariateSpline(thetas, pressures_tuned, s=0)
+        roots = spline_tuned.roots()
+        
+        magic_angle = None
+        if len(roots) > 0:
+            magic_angle = roots[0]
+            print(f"\n>>> Detected Casimir Magic Angle: {magic_angle:.3f} degrees <<<")
+        else:
+            # Fallback: linear interpolation
+            for i in range(len(thetas) - 1):
+                if pressures_tuned[i] * pressures_tuned[i+1] < 0:
+                    p1, p2 = pressures_tuned[i], pressures_tuned[i+1]
+                    t1, t2 = thetas[i], thetas[i+1]
+                    magic_angle = t1 - p1 * (t2 - t1) / (p2 - p1)
+                    print(f"\n>>> Detected Casimir Magic Angle (linear interp): {magic_angle:.3f} degrees <<<")
+                    break
+                    
+        if magic_angle is None:
+            print("\nWARNING: No zero-crossing found in the pressure sweep.")
+            magic_angle = 45.0  # default fallback
+            
+        # 4. Generate Plot
+        fig, ax = plt.subplots(figsize=(4.2, 3.2))
+        
+        theta_dense = np.linspace(0, 90, 200)
+        
+        # Plot original Phosphorene curve
+        pressures_orig = np.array([r["pressure"] for r in results["Phosphorene"]])
+        spline_orig = UnivariateSpline(thetas, pressures_orig, s=0)
+        ax.plot(theta_dense, spline_orig(theta_dense), color='#c0392b', linestyle='--', linewidth=1.2, label=r'Original Phosphorene ($\epsilon_z = 1.2, \epsilon_{\mathrm{bg}} = 2.4$)')
+        ax.scatter(thetas, pressures_orig, color='#c0392b', marker='o', s=20, zorder=3)
+        
+        # Plot tuned Phosphorene curve
+        ax.plot(theta_dense, spline_tuned(theta_dense), color='#27ae60', linestyle='-', linewidth=1.5, label=r'Tuned Phosphorene ($\epsilon_z = \epsilon_{\mathrm{bg}} = 2.1$)')
+        ax.scatter(thetas, pressures_tuned, color='#27ae60', marker='s', s=20, zorder=3)
+        
+        # Draw horizontal line at zero
+        ax.axhline(0, color='black', linestyle='-', linewidth=0.8, alpha=0.7)
+        
+        # Draw vertical line at magic angle
+        ax.axvline(magic_angle, color='#2980b9', linestyle='--', linewidth=1.2, label=r'$\theta_{\mathrm{magic}} \approx ' + f'{magic_angle:.1f}^\\circ$')
+        
+        ax.set_xlabel(r'Twist Angle $\theta$ (degrees)')
+        ax.set_ylabel('Normal Casimir Pressure P (dimensionless)')
+        ax.set_title(f'Casimir Pressure vs. Twist Angle (L={L:.2f})', fontsize=9, fontweight='bold')
+        ax.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.5)
+        ax.legend(loc='lower left', frameon=True, edgecolor='none', facecolor='#f5f5f5')
+        
+        plt.tight_layout()
+        
+        pdf_path = os.path.join(outdir, 'figure_twist_angle_comparison.pdf')
+        svg_path = os.path.join(outdir, 'figure_twist_angle_comparison.svg')
+        plt.savefig(pdf_path, format='pdf', dpi=300)
+        plt.savefig(svg_path, format='svg', dpi=300)
+        print(f"Plot saved to {pdf_path} / {svg_path}")
+        plt.close()
+    else:
+        print("\nOptimized 90-degree sweep complete. Skipping plot for L >= 0.8 um.")
     
 if __name__ == "__main__":
     main()
