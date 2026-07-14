@@ -29,7 +29,7 @@ def main():
     for L in L_vals:
         L_str = f"{L:.1f}"
         res = 40  # Unified resolution 40 for all sizes
-        extra_flags = " --no-subgroups" if L >= 0.8 else ""
+        extra_flags = ""
         array_range = "6-6" if L >= 0.8 else "0-6"
         runs_to_use = [run for run in runs if run["suffix"] in ["tuned_both", "tuned_self"]] if L >= 0.8 else runs
         
