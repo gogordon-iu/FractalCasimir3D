@@ -86,10 +86,58 @@ def main():
                     data = json.load(f)
                     f_sub = data["force_subtracted"]
             else:
-                # Check if separate config_both and config_self files exist, and compile them
-                both_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_both.json"
-                self_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_self.json"
+                # Segment-based checkpointing compilation
+                segments = [
+                    (0, 11), (11, 22), (22, 33), (33, 44), (44, 55),
+                    (55, 66), (66, 77), (77, 88), (88, 99), (99, 108)
+                ]
                 
+                both_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_both.json"
+                if not os.path.exists(both_file):
+                    both_segs_exist = True
+                    for start, end in segments:
+                        seg_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_both_moments_{start}_{end}.json"
+                        if not os.path.exists(seg_file):
+                            both_segs_exist = False
+                            break
+                    if both_segs_exist:
+                        print(f"All 10 segment files for config both found. Compiling...")
+                        f_both_sum = 0.0
+                        for start, end in segments:
+                            seg_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_both_moments_{start}_{end}.json"
+                            with open(seg_file, "r") as sf:
+                                seg_data = json.load(sf)
+                                f_both_sum += seg_data["force"]
+                        with open(both_file, "w") as f:
+                            json.dump({
+                                "d_um": d, "N": N, "material": mat, "resolution": resolution,
+                                "theta_deg": theta, "eps_bg": eps_bg, "L": L, "config": "both",
+                                "force": f_both_sum
+                            }, f, indent=4)
+                            
+                self_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_self.json"
+                if not os.path.exists(self_file):
+                    self_segs_exist = True
+                    for start, end in segments:
+                        seg_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_self_moments_{start}_{end}.json"
+                        if not os.path.exists(seg_file):
+                            self_segs_exist = False
+                            break
+                    if self_segs_exist:
+                        print(f"All 10 segment files for config self found. Compiling...")
+                        f_self_sum = 0.0
+                        for start, end in segments:
+                            seg_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_self_moments_{start}_{end}.json"
+                            with open(seg_file, "r") as sf:
+                                seg_data = json.load(sf)
+                                f_self_sum += seg_data["force"]
+                        with open(self_file, "w") as f:
+                            json.dump({
+                                "d_um": d, "N": N, "material": mat, "resolution": resolution,
+                                "theta_deg": theta, "eps_bg": eps_bg, "L": L, "config": "self",
+                                "force": f_self_sum
+                            }, f, indent=4)
+
                 if os.path.exists(both_file) and os.path.exists(self_file):
                     print(f"Found separate both/self files for theta = {theta:.1f} deg. Consolidating...")
                     with open(both_file, "r") as f:
@@ -120,10 +168,17 @@ def main():
                         print(f"WARNING: Cache file missing for material = {mat}, theta = {theta:.1f} deg.")
                         # Check which specific files are missing to report later
                         missing_reasons = []
-                        if not os.path.exists(both_file):
-                            missing_reasons.append(f"{both_file} (config_both)")
-                        if not os.path.exists(self_file):
-                            missing_reasons.append(f"{self_file} (config_self)")
+                        if L >= 0.8:
+                            for cfg in ["both", "self"]:
+                                for start, end in segments:
+                                    seg_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_{cfg}_moments_{start}_{end}.json"
+                                    if not os.path.exists(seg_file):
+                                        missing_reasons.append(f"config_{cfg}_moments_{start}_{end}")
+                        else:
+                            if not os.path.exists(both_file):
+                                missing_reasons.append(f"{both_file} (config_both)")
+                            if not os.path.exists(self_file):
+                                missing_reasons.append(f"{self_file} (config_self)")
                         if not missing_reasons:
                             missing_reasons.append(f"{json_file} (unified)")
                         missing_files.append((mat, theta, missing_reasons))

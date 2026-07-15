@@ -223,7 +223,7 @@ def get_optimal_subgroups(M, num_tasks):
     return max(valid_divisors)
 
 
-def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1, L=0.3):
+def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108):
     """
     Runs a 3D FDTD simulation for a single configuration, utilizing subgroups
     to run different polarizations and moments in parallel.
@@ -276,7 +276,7 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     if task_idx_override >= 0:
         tasks_to_run = [task_idx_override]
     else:
-        tasks_to_run = list(range(subgroup_index, num_tasks, K))
+        tasks_to_run = [t for t in list(range(subgroup_index, num_tasks, K)) if moment_start <= t < moment_end]
         
     for task_idx in tasks_to_run:
         p = task_idx // (n_max * 6)
@@ -474,6 +474,8 @@ def main():
     parser.add_argument("--task-idx", type=int, default=-1, help="Specific task index to run (0-35). If -1, run all using subgroups.")
     parser.add_argument("--L", type=float, default=0.3, help="Plate width/length in microns.")
     parser.add_argument("--no-subgroups", action="store_true", help="Force sequential execution of moments without dividing processes into subgroups.")
+    parser.add_argument("--moment-start", type=int, default=0, help="Start index of moments to run (0-107).")
+    parser.add_argument("--moment-end", type=int, default=108, help="End index of moments to run (1-108).")
     args = parser.parse_args()
     
     # Calculate number of tasks and setup parallel subgroups
@@ -508,30 +510,37 @@ def main():
     f_self = 0.0
     
     if args.config in ["all", "both"]:
-        f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L)
+        f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end)
     if args.config in ["all", "self"]:
-        f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L)
+        f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end)
         
     # Save output to .tmp folder
     if global_rank == 0:
         os.makedirs(".tmp", exist_ok=True)
-        if args.task_idx >= 0:
+        is_partial = (args.moment_start > 0 or args.moment_end < num_tasks)
+        if is_partial:
+            # Write partial moment results
             if args.config == "all":
-                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_task_{args.task_idx}.json"
-                result = {
-                    "d_um": args.d,
-                    "N": args.N,
-                    "material": args.material,
-                    "resolution": args.res,
-                    "theta_deg": args.theta,
-                    "eps_bg": args.eps_bg,
-                    "L": args.L,
-                    "task_idx": args.task_idx,
-                    "force_both": float(f_both),
-                    "force_self": float(f_self)
-                }
+                for cfg, force_val in [("both", f_both), ("self", f_self)]:
+                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{cfg}_moments_{args.moment_start}_{args.moment_end}.json"
+                    result = {
+                        "d_um": args.d,
+                        "N": args.N,
+                        "material": args.material,
+                        "resolution": args.res,
+                        "theta_deg": args.theta,
+                        "eps_bg": args.eps_bg,
+                        "L": args.L,
+                        "config": cfg,
+                        "moment_start": args.moment_start,
+                        "moment_end": args.moment_end,
+                        "force": float(force_val)
+                    }
+                    with open(out_file, "w") as f:
+                        json.dump(result, f, indent=4)
+                    print(f"Partial simulation task complete. Saved to {out_file}")
             else:
-                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}_task_{args.task_idx}.json"
+                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}_moments_{args.moment_start}_{args.moment_end}.json"
                 result = {
                     "d_um": args.d,
                     "N": args.N,
@@ -541,50 +550,84 @@ def main():
                     "eps_bg": args.eps_bg,
                     "L": args.L,
                     "config": args.config,
-                    "task_idx": args.task_idx,
+                    "moment_start": args.moment_start,
+                    "moment_end": args.moment_end,
                     "force": float(f_both if args.config == "both" else f_self)
                 }
+                with open(out_file, "w") as f:
+                    json.dump(result, f, indent=4)
+                print(f"Partial simulation task complete. Saved to {out_file}")
         else:
-            if args.config == "all":
-                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
-                result = {
-                    "d_um": args.d,
-                    "N": args.N,
-                    "material": args.material,
-                    "resolution": args.res,
-                    "theta_deg": args.theta,
-                    "eps_bg": args.eps_bg,
-                    "L": args.L,
-                    "force_both": float(f_both),
-                    "force_self": float(f_self),
-                    "force_subtracted": float(f_both - f_self)
-                }
+            if args.task_idx >= 0:
+                if args.config == "all":
+                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_task_{args.task_idx}.json"
+                    result = {
+                        "d_um": args.d,
+                        "N": args.N,
+                        "material": args.material,
+                        "resolution": args.res,
+                        "theta_deg": args.theta,
+                        "eps_bg": args.eps_bg,
+                        "L": args.L,
+                        "task_idx": args.task_idx,
+                        "force_both": float(f_both),
+                        "force_self": float(f_self)
+                    }
+                else:
+                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}_task_{args.task_idx}.json"
+                    result = {
+                        "d_um": args.d,
+                        "N": args.N,
+                        "material": args.material,
+                        "resolution": args.res,
+                        "theta_deg": args.theta,
+                        "eps_bg": args.eps_bg,
+                        "L": args.L,
+                        "config": args.config,
+                        "task_idx": args.task_idx,
+                        "force": float(f_both if args.config == "both" else f_self)
+                    }
             else:
-                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}.json"
-                result = {
-                    "d_um": args.d,
-                    "N": args.N,
-                    "material": args.material,
-                    "resolution": args.res,
-                    "theta_deg": args.theta,
-                    "eps_bg": args.eps_bg,
-                    "L": args.L,
-                    f"force_{args.config}": float(f_both if args.config == "both" else f_self)
-                }
-        
-        with open(out_file, "w") as f:
-            json.dump(result, f, indent=4)
+                if args.config == "all":
+                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
+                    result = {
+                        "d_um": args.d,
+                        "N": args.N,
+                        "material": args.material,
+                        "resolution": args.res,
+                        "theta_deg": args.theta,
+                        "eps_bg": args.eps_bg,
+                        "L": args.L,
+                        "force_both": float(f_both),
+                        "force_self": float(f_self),
+                        "force_subtracted": float(f_both - f_self)
+                    }
+                else:
+                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}.json"
+                    result = {
+                        "d_um": args.d,
+                        "N": args.N,
+                        "material": args.material,
+                        "resolution": args.res,
+                        "theta_deg": args.theta,
+                        "eps_bg": args.eps_bg,
+                        "L": args.L,
+                        f"force_{args.config}": float(f_both if args.config == "both" else f_self)
+                    }
             
-        if args.config == "all":
-            if args.task_idx >= 0:
-                print(f"Simulation task complete. Saved to {out_file}")
+            with open(out_file, "w") as f:
+                json.dump(result, f, indent=4)
+                
+            if args.config == "all":
+                if args.task_idx >= 0:
+                    print(f"Simulation task complete. Saved to {out_file}")
+                else:
+                    print(f"Simulation complete. Subtracted force: {f_both - f_self:.6e}. Saved to {out_file}")
             else:
-                print(f"Simulation complete. Subtracted force: {f_both - f_self:.6e}. Saved to {out_file}")
-        else:
-            if args.task_idx >= 0:
-                print(f"Simulation task complete. Saved to {out_file}")
-            else:
-                print(f"Simulation complete. {args.config} force: {f_both if args.config == 'both' else f_self:.6e}. Saved to {out_file}")
+                if args.task_idx >= 0:
+                    print(f"Simulation task complete. Saved to {out_file}")
+                else:
+                    print(f"Simulation complete. {args.config} force: {f_both if args.config == 'both' else f_self:.6e}. Saved to {out_file}")
 
 if __name__ == "__main__":
     main()

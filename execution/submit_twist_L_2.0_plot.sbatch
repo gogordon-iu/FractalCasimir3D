@@ -24,6 +24,6 @@ cd /N/project/gorengor_werewolf/FractalCasimir3D
 # Set OpenMP threads to 1
 export OMP_NUM_THREADS=1
 
-echo "Starting twist sweep L = 2.0 plotting..."
+echo "Starting twist sweep L = 2.0 compilation and plotting..."
 $CONDA_PREFIX/bin/python execution/run_twist_sweep.py --cores 128 --L 2.0
-echo "Plotting complete."
+echo "Compilation and plotting complete."

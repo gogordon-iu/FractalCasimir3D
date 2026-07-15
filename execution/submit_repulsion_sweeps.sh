@@ -4,16 +4,17 @@
 cd /N/project/gorengor_werewolf/FractalCasimir3D
 
 echo "=================================================="
-echo "Submitting all FDTD sweeps for L = 0.8, 1.0, 1.2, 1.4 um..."
+echo "Submitting segmented FDTD sweeps for L = 2.0 um at res = 40..."
 echo "=================================================="
 
 # Initialize job dependency string
 JOBS=""
 
-for L in "0.8" "1.0" "1.2" "1.4" "1.6" "1.8" "2.0"; do
-    echo "Submitting jobs for L = $L um:"
-    for suffix in "tuned_both" "tuned_self"; do
-        sbatch_file="execution/submit_twist_L_${L}_${suffix}.sbatch"
+L="2.0"
+echo "Submitting jobs for L = $L um (Tuned, 90 deg, segmented):"
+for suffix in "tuned_both" "tuned_self"; do
+    for seg in {0..9}; do
+        sbatch_file="execution/submit_twist_L_${L}_${suffix}_seg_${seg}.sbatch"
         if [ -f "$sbatch_file" ]; then
             JOB_ID=$(sbatch --parsable "$sbatch_file")
             echo "  -> Sbatch: $sbatch_file | Job ID: $JOB_ID"
@@ -23,7 +24,7 @@ for L in "0.8" "1.0" "1.2" "1.4" "1.6" "1.8" "2.0"; do
                 JOBS="$JOBS:$JOB_ID"
             fi
         else
-            echo "  -> INFO: File not found (skipping): $sbatch_file"
+            echo "  -> ERROR: File not found: $sbatch_file"
         fi
     done
 done
@@ -32,7 +33,7 @@ echo "=================================================="
 echo "Submitting final sync job with dependency link..."
 echo "=================================================="
 
-# Submit the sync job as a dependency on afterany of all 16 simulation array jobs
+# Submit the sync job as a dependency on afterany of all 20 simulation segment jobs
 if [ -n "$JOBS" ]; then
     JOB_SYNC=$(sbatch --dependency=afterany:$JOBS --parsable execution/submit_sync.sbatch)
     echo "Submitted sync job (dependency: afterany:$JOBS): Job ID $JOB_SYNC"
