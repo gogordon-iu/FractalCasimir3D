@@ -72,7 +72,9 @@ def main():
     if diff_res.returncode != 0:
         print("Committing and pushing results/summary to GitHub...")
         subprocess.run(["git", "commit", "-m", "Auto-sync twist sweep results and status summary from BigRed200"])
-        subprocess.run(["git", "push"])
+        # Rebase from origin/main to prevent push rejection
+        subprocess.run(["git", "pull", "--rebase", "origin", "main"])
+        subprocess.run(["git", "push", "origin", "main"])
         print("Git sync complete!")
     else:
         print("No changes to push.")

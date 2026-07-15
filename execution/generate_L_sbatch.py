@@ -2,7 +2,7 @@ import os
 
 def main():
     L_vals = [2.0]
-    time_limit = "04:00:00"  # 4 hours per segment
+    time_limit = "26:00:00"  # 26 hours per segment (17.3h estimated + 50% safety)
     
     # Define combinations
     runs = [
