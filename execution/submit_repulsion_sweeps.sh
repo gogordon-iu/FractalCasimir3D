@@ -4,16 +4,16 @@
 cd /N/project/gorengor_werewolf/FractalCasimir3D
 
 echo "=================================================="
-echo "Submitting segmented FDTD sweeps for L = 3.0 um at res = 40..."
+echo "Submitting segmented FDTD sweeps for L = 4.0 um at res = 40..."
 echo "=================================================="
 
 # Initialize job dependency string
 JOBS=""
 
-L="3.0"
+L="4.0"
 echo "Submitting jobs for L = $L um (Tuned, 90 deg, segmented):"
 for suffix in "tuned_both" "tuned_self"; do
-    for seg in {0..9}; do
+    for seg in {0..17}; do
         sbatch_file="execution/submit_twist_L_${L}_${suffix}_seg_${seg}.sbatch"
         if [ -f "$sbatch_file" ]; then
             JOB_ID=$(sbatch --parsable "$sbatch_file")
@@ -33,7 +33,7 @@ echo "=================================================="
 echo "Submitting final sync job with dependency link..."
 echo "=================================================="
 
-# Submit the sync job as a dependency on afterany of all 20 simulation segment jobs
+# Submit the sync job as a dependency on afterany of all 36 simulation segment jobs
 if [ -n "$JOBS" ]; then
     JOB_SYNC=$(sbatch --dependency=afterany:$JOBS --parsable execution/submit_sync.sbatch)
     echo "Submitted sync job (dependency: afterany:$JOBS): Job ID $JOB_SYNC"
