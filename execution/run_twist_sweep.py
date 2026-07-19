@@ -39,7 +39,7 @@ def main():
     d = 0.1
     N = 3
     L = args.L
-    resolution = 30 if L >= 0.8 else 40
+    resolution = 40
     nmax = 3
     
     # Save parameters.txt
