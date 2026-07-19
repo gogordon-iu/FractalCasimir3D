@@ -4,13 +4,13 @@
 cd /N/project/gorengor_werewolf/FractalCasimir3D
 
 echo "=================================================="
-echo "Submitting segmented FDTD sweeps for L = 2.0 um at res = 40..."
+echo "Submitting segmented FDTD sweeps for L = 3.0 um at res = 40..."
 echo "=================================================="
 
 # Initialize job dependency string
 JOBS=""
 
-L="2.0"
+L="3.0"
 echo "Submitting jobs for L = $L um (Tuned, 90 deg, segmented):"
 for suffix in "tuned_both" "tuned_self"; do
     for seg in {0..9}; do

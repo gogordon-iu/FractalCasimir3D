@@ -5,7 +5,7 @@ import glob
 import datetime
 
 def main():
-    L_vals = [2.0]
+    L_vals = [3.0]
     summary_lines = []
     summary_lines.append("==================================================")
     summary_lines.append(f"TWIST SWEEP STATUS SUMMARY - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")

@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH -J twist_L_2.0_plot
+#SBATCH -J twist_L_3.0_plot
 #SBATCH -A r01540
-#SBATCH -o logs/twist_L_2.0_plot_%j.out
-#SBATCH -e logs/twist_L_2.0_plot_%j.err
+#SBATCH -o logs/twist_L_3.0_plot_%j.out
+#SBATCH -e logs/twist_L_3.0_plot_%j.err
 #SBATCH -p general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
@@ -24,6 +24,6 @@ cd /N/project/gorengor_werewolf/FractalCasimir3D
 # Set OpenMP threads to 1
 export OMP_NUM_THREADS=1
 
-echo "Starting twist sweep L = 2.0 compilation and plotting..."
-$CONDA_PREFIX/bin/python execution/run_twist_sweep.py --cores 128 --L 2.0
+echo "Starting twist sweep L = 3.0 compilation and plotting..."
+$CONDA_PREFIX/bin/python execution/run_twist_sweep.py --cores 128 --L 3.0
 echo "Compilation and plotting complete."

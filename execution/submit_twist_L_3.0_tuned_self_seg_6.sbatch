@@ -1,13 +1,13 @@
 #!/bin/bash
-#SBATCH -J twist_L_2.0_tuned_self_seg_8
+#SBATCH -J twist_L_3.0_tuned_self_seg_6
 #SBATCH -A r01540
-#SBATCH -o logs/twist_L_2.0_tuned_self_seg_8_%A_%a.out
-#SBATCH -e logs/twist_L_2.0_tuned_self_seg_8_%A_%a.err
+#SBATCH -o logs/twist_L_3.0_tuned_self_seg_6_%A_%a.out
+#SBATCH -e logs/twist_L_3.0_tuned_self_seg_6_%A_%a.err
 #SBATCH -p general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
-#SBATCH --time=26:00:00
+#SBATCH --time=24:00:00
 #SBATCH --array=6-6
 #SBATCH --mail-type=FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
@@ -33,7 +33,7 @@ cd /N/project/gorengor_werewolf/FractalCasimir3D
 # Set OpenMP threads to 1 for parallel MPI execution
 export OMP_NUM_THREADS=1
 
-echo "Running Segmented Twist Sweep L = 2.0 (tuned_self) segment 8 task ID: $SLURM_ARRAY_TASK_ID (theta = $THETA deg)"
+echo "Running Segmented Twist Sweep L = 3.0 (tuned_self) segment 6 task ID: $SLURM_ARRAY_TASK_ID (theta = $THETA deg)"
 
 srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \
     --d 0.1 \
@@ -43,8 +43,8 @@ srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \
     --nmax 3 \
     --theta "$THETA" \
     --eps-bg 2.1 \
-    --L 2.0 \
+    --L 3.0 \
     --config self \
     --no-subgroups \
-    --moment-start 88 \
-    --moment-end 99
+    --moment-start 66 \
+    --moment-end 77

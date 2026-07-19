@@ -1,8 +1,8 @@
 import os
 
 def main():
-    L_vals = [2.0]
-    time_limit = "26:00:00"  # 26 hours per segment (17.3h estimated + 50% safety)
+    L_vals = [3.0]
+    time_limit = "24:00:00"  # 24 hours per segment (12.9h estimated + 85% safety)
     
     # Define combinations
     runs = [
