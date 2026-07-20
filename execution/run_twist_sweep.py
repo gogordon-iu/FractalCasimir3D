@@ -4,10 +4,9 @@ import os
 import json
 from scipy.interpolate import UnivariateSpline
 
-# Import run_simulation from run_meep_simulation.py
+# Import run_simulation from run_meep_simulation.py is omitted as it is run via subprocess
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from execution.run_meep_simulation import run_simulation
 
 # Style rules for publication-quality plots
 plt.rcParams['font.family'] = 'sans-serif'
@@ -87,10 +86,13 @@ def main():
                     f_sub = data["force_subtracted"]
             else:
                 # Segment-based checkpointing compilation
-                segments = [
-                    (0, 11), (11, 22), (22, 33), (33, 44), (44, 55),
-                    (55, 66), (66, 77), (77, 88), (88, 99), (99, 108)
-                ]
+                if L >= 4.0:
+                    segments = [(i * 6, (i + 1) * 6) for i in range(18)]
+                else:
+                    segments = [
+                        (0, 11), (11, 22), (22, 33), (33, 44), (44, 55),
+                        (55, 66), (66, 77), (77, 88), (88, 99), (99, 108)
+                    ]
                 
                 both_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_both.json"
                 if not os.path.exists(both_file):
@@ -101,7 +103,7 @@ def main():
                             both_segs_exist = False
                             break
                     if both_segs_exist:
-                        print(f"All 10 segment files for config both found. Compiling...")
+                        print(f"All {len(segments)} segment files for config both found. Compiling...")
                         f_both_sum = 0.0
                         for start, end in segments:
                             seg_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_both_moments_{start}_{end}.json"
@@ -124,7 +126,7 @@ def main():
                             self_segs_exist = False
                             break
                     if self_segs_exist:
-                        print(f"All 10 segment files for config self found. Compiling...")
+                        print(f"All {len(segments)} segment files for config self found. Compiling...")
                         f_self_sum = 0.0
                         for start, end in segments:
                             seg_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_self_moments_{start}_{end}.json"
