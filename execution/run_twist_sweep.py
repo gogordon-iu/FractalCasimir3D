@@ -86,7 +86,9 @@ def main():
                     f_sub = data["force_subtracted"]
             else:
                 # Segment-based checkpointing compilation
-                if L >= 4.0:
+                if L >= 4.5:
+                    segments = [(i * 4, (i + 1) * 4) for i in range(27)]
+                elif L >= 4.0:
                     segments = [(i * 6, (i + 1) * 6) for i in range(18)]
                 else:
                     segments = [

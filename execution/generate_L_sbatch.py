@@ -1,8 +1,8 @@
 import os
 
 def main():
-    L_vals = [4.0]
-    time_limit = "20:00:00"  # 20 hours per segment (12.4h estimated + 60% safety)
+    L_vals = [4.5]
+    time_limit = "17:00:00"  # 17 hours per segment (11.2h estimated + 50% safety)
     
     # Define combinations
     runs = [
@@ -12,8 +12,8 @@ def main():
     
     os.makedirs("execution", exist_ok=True)
     
-    # 18 segments of 6 moments each (total 108 moments)
-    segments = [(i * 6, (i + 1) * 6) for i in range(18)]
+    # 27 segments of 4 moments each (total 108 moments)
+    segments = [(i * 4, (i + 1) * 4) for i in range(27)]
     
     for L in L_vals:
         L_str = f"{L:.1f}"

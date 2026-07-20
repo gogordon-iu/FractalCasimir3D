@@ -10,10 +10,10 @@ echo "=================================================="
 # Initialize job dependency string
 JOBS=""
 
-L="4.0"
+L="4.5"
 echo "Submitting jobs for L = $L um (Tuned, 90 deg, segmented):"
 for suffix in "tuned_both" "tuned_self"; do
-    for seg in {0..17}; do
+    for seg in {0..26}; do
         sbatch_file="execution/submit_twist_L_${L}_${suffix}_seg_${seg}.sbatch"
         if [ -f "$sbatch_file" ]; then
             JOB_ID=$(sbatch --parsable "$sbatch_file")
