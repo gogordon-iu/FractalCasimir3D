@@ -12,6 +12,21 @@
 #SBATCH --mail-type=BEGIN,FAIL,END
 #SBATCH --mail-user=gogordon@iu.edu
 
+# Exit trap for staging and pushing error logs on failure
+_curr_dir=$(dirname "$0")
+_exit_handler=""
+for i in {1..4}; do
+    if [ -f "$_curr_dir/hpc_exit_handler.py" ]; then
+        _exit_handler="$_curr_dir/hpc_exit_handler.py"
+        break
+    fi
+    _curr_dir="$_curr_dir/.."
+done
+if [ -n "$_exit_handler" ]; then
+    trap 'if [ $? -ne 0 ]; then python "$_exit_handler" $? "$0"; fi' EXIT
+fi
+
+
 # Background permittivity list (matches run_bg_sweep.py)
 BG_VALS=(1.5 1.8 2.1 2.4 2.7 3.0 3.3 3.6)
 
