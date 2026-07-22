@@ -223,7 +223,7 @@ def get_optimal_subgroups(M, num_tasks):
     return max(valid_divisors)
 
 
-def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108):
+def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108, N_bottom=1):
     """
     Runs a 3D FDTD simulation for a single configuration, utilizing subgroups
     to run different polarizations and moments in parallel.
@@ -302,6 +302,11 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
                 size=mp.Vector3(L, L, t_plate),
                 material=bottom_plate_material
             ))
+            if N_bottom > 1:
+                holes_bottom = generate_carpet_holes(N_bottom, L, 0.0, 0.0, t_plate + 0.01, bottom_plate_material, theta=0.0)
+                for hole in holes_bottom:
+                    hole.center = mp.Vector3(hole.center.x, hole.center.y, -d/2.0 - t_plate/2.0)
+                geometry.extend(holes_bottom)
             
         if config != "vacuum":
             theta_rad = np.radians(theta)
@@ -463,7 +468,8 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
 def main():
     parser = argparse.ArgumentParser(description="Run 3D MEEP Casimir FDTD simulation.")
     parser.add_argument("--d", type=float, required=True, help="Plate separation in microns.")
-    parser.add_argument("--N", type=int, required=True, help="Prefractal generation (1-4).")
+    parser.add_argument("--N", type=int, required=True, help="Prefractal generation of top plate (1-4).")
+    parser.add_argument("--N-bottom", type=int, default=1, help="Prefractal generation of bottom plate (1=solid, 2=single central hole).")
     parser.add_argument("--material", type=str, required=True, choices=["PEC", "Gold", "Silicon", "Phosphorene", "Phosphorene_tuned"], help="Material configuration.")
     parser.add_argument("--res", type=int, default=10, help="Grid resolution.")
     parser.add_argument("--nmax", type=int, default=3, help="Max moments index limit.")
@@ -502,7 +508,7 @@ def main():
         global_rank = int(os.environ.get("SLURM_PROCID", 0))
         
     if global_rank == 0:
-        print(f"Starting simulation: d={args.d} um, N={args.N}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}, config={args.config}")
+        print(f"Starting simulation: d={args.d} um, N_top={args.N}, N_bottom={args.N_bottom}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}, config={args.config}")
         print(f"Parallel configuration: {M} processes divided into {K} subgroups of size {M//K} processes each.")
     
     # We run the cases for vacuum subtraction:
@@ -510,9 +516,9 @@ def main():
     f_self = 0.0
     
     if args.config in ["all", "both"]:
-        f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end)
+        f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom)
     if args.config in ["all", "self"]:
-        f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end)
+        f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom)
         
     # Save output to .tmp folder
     if global_rank == 0:
@@ -520,12 +526,14 @@ def main():
         is_partial = (args.moment_start > 0 or args.moment_end < num_tasks)
         if is_partial:
             # Write partial moment results
+            nbot_str = f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""
             if args.config == "all":
                 for cfg, force_val in [("both", f_both), ("self", f_self)]:
-                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{cfg}_moments_{args.moment_start}_{args.moment_end}.json"
+                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{cfg}_moments_{args.moment_start}_{args.moment_end}.json"
                     result = {
                         "d_um": args.d,
                         "N": args.N,
+                        "N_bottom": args.N_bottom,
                         "material": args.material,
                         "resolution": args.res,
                         "theta_deg": args.theta,
@@ -540,10 +548,11 @@ def main():
                         json.dump(result, f, indent=4)
                     print(f"Partial simulation task complete. Saved to {out_file}")
             else:
-                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}_moments_{args.moment_start}_{args.moment_end}.json"
+                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}_moments_{args.moment_start}_{args.moment_end}.json"
                 result = {
                     "d_um": args.d,
                     "N": args.N,
+                    "N_bottom": args.N_bottom,
                     "material": args.material,
                     "resolution": args.res,
                     "theta_deg": args.theta,
