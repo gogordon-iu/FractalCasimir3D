@@ -852,6 +852,7 @@ To evaluate the impact of numerical discretization and grid size, the simulation
 2.00 & --- & -0.118022 \\
 3.00 & --- & -0.057953 \\
 4.00 & --- & -0.034166 \\
+4.50 & --- & -0.027400 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -859,7 +860,7 @@ To evaluate the impact of numerical discretization and grid size, the simulation
 A key observation from Table~\ref{tab:pressures} is the presence of a grid discretization shift between the $R=30$ and $R=40$ datasets. Because Casimir forces at sub-micron scales are extremely sensitive to spatial boundary discretization, mixing resolutions leads to artificial shifts. Thus, scaling analyses must be conducted strictly within a single resolution.
 
 \subsection{Curve Fitting and Model Comparison}
-Using the high-resolution ($R=40$) data points ($L \in [0.3, 0.4, 0.5, 0.6, 2.0, 3.0, 4.0]\ \mu\text{m}$), we perform a least-squares curve fit to compare two competing physical models:
+Using the high-resolution ($R=40$) data points ($L \in [0.3, 0.4, 0.5, 0.6, 2.0, 3.0, 4.0, 4.5]\ \mu\text{m}$), we perform a least-squares curve fit to compare two competing physical models:
 \begin{itemize}
     \item \textbf{Model 1 (Offset Allowed)}: Sourced by our running Casimir coefficient framework, which predicts a non-zero asymptotic limit $B$:
     \begin{equation}
@@ -875,8 +876,8 @@ Using the high-resolution ($R=40$) data points ($L \in [0.3, 0.4, 0.5, 0.6, 2.0,
 
 The best-fit parameters obtained are:
 \begin{itemize}
-    \item \textbf{Model 1}: $A = -0.697444$, $\alpha = 0.612053$, $B = +0.295746$.
-    \item \textbf{Model 2}: $A = -0.364490$, $\alpha = 0.996432$.
+    \item \textbf{Model 1}: $A = -0.641074$, $\alpha = 0.652606$, $B = +0.241054$.
+    \item \textbf{Model 2}: $A = -0.357368$, $\alpha = 1.016235$.
 \end{itemize}
 
 The fitting metrics and residuals for both models are presented in Table~\ref{tab:fit_comparison}.
@@ -889,27 +890,28 @@ The fitting metrics and residuals for both models are presented in Table~\ref{ta
 \toprule
 \textbf{Size $L$ ($\mu\text{m}$)} & \textbf{Actual $P$} & \textbf{Model 1 (Offset) Residual} & \textbf{Model 2 (Pure) Residual} \\
 \midrule
-0.30 & -1.124345 & +0.037175 & +0.085414 \\
-0.40 & -0.980524 & -0.054274 & -0.072273 \\
-0.50 & -0.789350 & -0.019100 & -0.062171 \\
-0.60 & -0.635006 & +0.022686 & -0.028629 \\
-2.00 & -0.118022 & +0.042545 & +0.064674 \\
-3.00 & -0.057953 & +0.002331 & +0.064021 \\
-4.00 & -0.034166 & -0.031362 & +0.057408 \\
+0.30 & -1.124345 & +0.041108 & +0.090394 \\
+0.40 & -0.980524 & -0.055826 & -0.073715 \\
+0.50 & -0.789350 & -0.022632 & -0.066526 \\
+0.60 & -0.635006 & +0.018662 & -0.034433 \\
+2.00 & -0.118022 & +0.048731 & +0.058662 \\
+3.00 & -0.057953 & +0.013987 & +0.059064 \\
+4.00 & -0.034166 & -0.015802 & +0.053188 \\
+4.50 & -0.027400 & -0.028229 & +0.050099 \\
 \midrule
-\textbf{SSR} & --- & \textbf{0.00800625} & \textbf{0.02878086} \\
+\textbf{SSR} & --- & \textbf{0.00928379} & \textbf{0.03148498} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Zero-Crossing and Transition to Repulsion}
-The statistical comparison in Table~\ref{tab:fit_comparison} shows that \textbf{Model 1 has a 3.59 times lower SSR than Model 2}. Model 2 significantly overestimates the attractive Casimir pressure at larger sizes, whereas the actual attraction decays much faster, on track with Model 1.
+The statistical comparison in Table~\ref{tab:fit_comparison} shows that \textbf{Model 1 has a 3.39 times lower SSR than Model 2}. Model 2 significantly overestimates the attractive Casimir pressure at larger sizes, whereas the actual attraction decays much faster, on track with Model 1.
 
-The positive asymptotic offset $B = +0.295746$ indicates that the attractive force is counterbalanced by a repulsive contribution that outscales it at larger dimensions. Setting $P(L) = 0$ in Eq.~\eqref{eq:model1}:
+The positive asymptotic offset $B = +0.241054$ indicates that the attractive force is counterbalanced by a repulsive contribution that outscales it at larger dimensions. Setting $P(L) = 0$ in Eq.~\eqref{eq:model1}:
 \begin{equation}
--\frac{0.697444}{L^{0.612053}} + 0.295746 = 0 \implies L_{\rm crossover} = \left( \frac{0.697444}{0.295746} \right)^{\frac{1}{0.612053}} \approx \mathbf{4.05\ \mu\text{m}}.
+-\frac{0.641074}{L^{0.652606}} + 0.241054 = 0 \implies L_{\rm crossover} = \left( \frac{0.641074}{0.241054} \right)^{\frac{1}{0.652606}} \approx \mathbf{4.49\ \mu\text{m}}.
 \end{equation}
-This indicates a zero-crossing crossover from attractive (negative) to repulsive (positive) Casimir pressure at $L \approx 4.05\ \mu\text{m}$. For plate widths wider than $4.05\ \mu\text{m}$, the normal force becomes repulsive. At $L = 4.00\ \mu\text{m}$, the system is right on the threshold of repulsion, showing a very small remaining attraction ($P \approx -0.034$).
+This indicates a zero-crossing crossover from attractive (negative) to repulsive (positive) Casimir pressure at $L \approx 4.49\ \mu\text{m}$. For plate widths wider than $4.49\ \mu\text{m}$, the normal force becomes repulsive. At $L = 4.50\ \mu\text{m}$, the system is situated directly on the threshold of repulsion, showing a very small remaining attraction ($P \approx -0.027$).
 
 
 \section{Casimir Repulsion and Levitation Physics}
@@ -941,7 +943,7 @@ The effective trace framework bridges the gap between quantum field theory and g
 \subsection{Semiclassical Gravity and Metric Warping}
 Under the Einstein field equations, spacetime curvature is sourced by the stress-energy tensor. The standard attractive Casimir effect creates a local region of negative energy density ($\\langle T_{00} \\rangle < 0$), representing a localized form of ``exotic matter'' that warps the spacetime metric $g_{\mu\nu}$ to produce repulsive gravitational effects. 
 
-By scaling our fractal cavity to $L = 4.05\ \mu\text{m}$, the normal pressure crosses zero and becomes positive (repulsive). This shifts the local stress-energy tensor from negative to positive energy density. This transition is a direct laboratory simulation of a spacetime metric warping change, going from negative to positive gravitational backreaction, driven solely by geometric scaling. At $L = 4.00\ \mu\text{m}$, the system is situated directly on the cusp of this transition.
+By scaling our fractal cavity to $L = 4.49\ \mu\text{m}$, the normal pressure crosses zero and becomes positive (repulsive). This shifts the local stress-energy tensor from negative to positive energy density. This transition is a direct laboratory simulation of a spacetime metric warping change, going from negative to positive gravitational backreaction, driven solely by geometric scaling. At $L = 4.50\ \mu\text{m}$, the system is situated directly on the cusp of this transition.
 
 \subsection{Planck-Scale Fractal Spacetime and Spectral Dimension}
 Several quantum gravity models (such as Loop Quantum Gravity, Asymptotic Safety, and Causal Dynamical Triangulations) predict that at the Planck scale ($10^{-35}$ m), spacetime ceases to be a smooth manifold and behaves as a fractal. Under this scenario, spacetime undergoes ``spectral dimension reduction,'' dropping from $4$ dimensions to $\approx 2$.
