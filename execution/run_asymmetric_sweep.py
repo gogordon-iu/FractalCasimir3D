@@ -117,5 +117,21 @@ def main():
 
     print(f"Saved asymmetric sweep analysis to {out_dir}/")
 
+    # Auto-push results to GitHub
+    try:
+        import subprocess
+        print("Staging, committing, and pushing asymmetric sweep results to GitHub...")
+        subprocess.run(["git", "add", out_dir], check=False)
+        diff_res = subprocess.run(["git", "diff", "--cached", "--quiet"])
+        if diff_res.returncode != 0:
+            subprocess.run(["git", "commit", "-m", f"Auto-sync asymmetric sweep results (L={L:.2f}um, d={d:.2f}um) from BigRed200"], check=False)
+            subprocess.run(["git", "pull", "--rebase", "origin", "main"], check=False)
+            subprocess.run(["git", "push", "origin", "main"], check=False)
+            print("Git sync complete!")
+        else:
+            print("No new changes to push.")
+    except Exception as e:
+        print(f"Git push warning: {e}")
+
 if __name__ == "__main__":
     main()

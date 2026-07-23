@@ -55,6 +55,27 @@ def main():
                 summary_lines.append("   -> Reason: Unknown error or missing cache files")
                 print(f"Subprocess stderr:\n{res.stderr}")
             summary_lines.append("")
+
+    # Also check asymmetric dual-fractal sweep
+    print(f"\nProcessing Asymmetric Dual-Fractal Sweep (L=2.00 um, d=0.25 um)...")
+    cmd_asym = [python_bin, "execution/run_asymmetric_sweep.py", "--L", "2.0", "--d", "0.25", "--N-top", "3", "--N-bottom", "2", "--plot-only"]
+    res_asym = subprocess.run(cmd_asym, capture_output=True, text=True)
+
+    if res_asym.returncode == 0:
+        summary_lines.append("Asymmetric Dual-Fractal (L=2.00 um, d=0.25 um): COMPLETED SUCCESSFULLY")
+        dirs_asym = glob.glob("results_asym_L_2.00_d_0.25_*")
+        if dirs_asym:
+            latest_dir_asym = max(dirs_asym, key=os.path.getmtime)
+            print(f" -> Found completed directory: {latest_dir_asym}")
+            subprocess.run(["git", "add", latest_dir_asym])
+            staged_any = True
+            summary_lines.append(f"   -> Results pushed: {latest_dir_asym}\n")
+    else:
+        summary_lines.append("Asymmetric Dual-Fractal (L=2.00 um, d=0.25 um): INCOMPLETE (FDTD runs still missing)")
+        for line in res_asym.stdout.splitlines():
+            if line.strip().startswith("Missing:"):
+                summary_lines.append(f"   - {line.strip()}")
+        summary_lines.append("")
             
     summary_lines.append("==================================================")
     
