@@ -25,7 +25,7 @@ cd /N/project/gorengor_werewolf/FractalCasimir3D
 export OMP_NUM_THREADS=1
 
 echo "Starting Frontier 1 3D Stepped Sieve segment: config=self, moments 78 to 84..."
-mpirun -np 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \
+$CONDA_PREFIX/bin/python execution/run_meep_simulation.py \
     --L 2.00 \
     --d 0.12 \
     --N 3 \
