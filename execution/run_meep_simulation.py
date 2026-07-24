@@ -66,6 +66,53 @@ def generate_carpet_holes(N, L, center_x, center_y, size_z, material, theta=0.0)
     return holes
 
 
+def generate_stepped_sieve_holes(N, L, center_x, center_y, depths, top_z, theta=0.0):
+    """
+    Generates 3D stepped cavity wells for the bottom plate (Frontier 1: Stepped Fractal Sieve).
+    depths: list of depths for level 2 (macro), level 3 (medium), level 4 (micro), etc. in microns.
+    top_z: the z-coordinate of the top surface of the bottom plate (-d/2).
+    """
+    holes = []
+    theta_rad = np.radians(theta)
+    C = np.cos(theta_rad)
+    S = np.sin(theta_rad)
+    e1 = mp.Vector3(C, S, 0.0)
+    e2 = mp.Vector3(-S, C, 0.0)
+    e3 = mp.Vector3(0.0, 0.0, 1.0)
+    
+    def recurse(x, y, w, level):
+        if level > N:
+            return
+        hole_w = w / 3.0
+        idx = level - 2
+        h = depths[idx] if idx < len(depths) else depths[-1]
+        
+        rx = x * C - y * S
+        ry = x * S + y * C
+        
+        # Etch a vacuum cavity box of depth h into the bottom plate starting from top_z
+        holes.append(mp.Block(
+            center=mp.Vector3(rx + center_x, ry + center_y, top_z - h / 2.0),
+            size=mp.Vector3(hole_w, hole_w, h + 0.001),
+            e1=e1,
+            e2=e2,
+            e3=e3,
+            material=mp.vacuum
+        ))
+        
+        if level < N:
+            offsets = [-w/3.0, 0.0, w/3.0]
+            for dx in offsets:
+                for dy in offsets:
+                    if dx == 0.0 and dy == 0.0:
+                        continue
+                    recurse(x + dx, y + dy, hole_w, level + 1)
+                    
+    if N > 1:
+        recurse(0.0, 0.0, L, 2)
+        
+    return holes
+
 def get_casimir_material(material_name, Sigma, ft, theta=0.0, eps_bg=1.0):
     """
     Constructs the MEEP Medium for the bottom or top plate.
@@ -223,7 +270,7 @@ def get_optimal_subgroups(M, num_tasks):
     return max(valid_divisors)
 
 
-def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108, N_bottom=1):
+def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108, N_bottom=1, stepped_sieve=False, sieve_depths=[0.30, 0.15, 0.05]):
     """
     Runs a 3D FDTD simulation for a single configuration, utilizing subgroups
     to run different polarizations and moments in parallel.
@@ -234,9 +281,10 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     buffer = 0.15  # buffer between plates and PML
     
     # Cell size
+    max_sieve_h = max(sieve_depths) if stepped_sieve else 0.0
     sx = L + 2.0 * (dpml + buffer)
     sy = L + 2.0 * (dpml + buffer)
-    sz = d + 2.0 * t_plate + 2.0 * (dpml + buffer)
+    sz = d + 2.0 * t_plate + max_sieve_h + 2.0 * (dpml + buffer)
     
     cell_size = mp.Vector3(sx, sy, sz)
     
@@ -302,7 +350,10 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
                 size=mp.Vector3(L, L, t_plate),
                 material=bottom_plate_material
             ))
-            if N_bottom > 1:
+            if stepped_sieve:
+                holes_bottom = generate_stepped_sieve_holes(N_bottom, L, 0.0, 0.0, sieve_depths, -d/2.0, theta=0.0)
+                geometry.extend(holes_bottom)
+            elif N_bottom > 1:
                 holes_bottom = generate_carpet_holes(N_bottom, L, 0.0, 0.0, t_plate + 0.01, bottom_plate_material, theta=0.0)
                 for hole in holes_bottom:
                     hole.center = mp.Vector3(hole.center.x, hole.center.y, -d/2.0 - t_plate/2.0)
@@ -482,6 +533,8 @@ def main():
     parser.add_argument("--no-subgroups", action="store_true", help="Force sequential execution of moments without dividing processes into subgroups.")
     parser.add_argument("--moment-start", type=int, default=0, help="Start index of moments to run (0-107).")
     parser.add_argument("--moment-end", type=int, default=108, help="End index of moments to run (1-108).")
+    parser.add_argument("--stepped-sieve", action="store_true", help="Enable 3D Stepped Fractal Sieve for bottom plate (Frontier 1).")
+    parser.add_argument("--sieve-depths", type=float, nargs="+", default=[0.30, 0.15, 0.05], help="Cavity depths in um for 3D stepped sieve levels.")
     args = parser.parse_args()
     
     # Calculate number of tasks and setup parallel subgroups
@@ -508,7 +561,7 @@ def main():
         global_rank = int(os.environ.get("SLURM_PROCID", 0))
         
     if global_rank == 0:
-        print(f"Starting simulation: d={args.d} um, N_top={args.N}, N_bottom={args.N_bottom}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}, config={args.config}")
+        print(f"Starting simulation: d={args.d} um, N_top={args.N}, N_bottom={args.N_bottom}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}, config={args.config}, stepped_sieve={args.stepped_sieve}")
         print(f"Parallel configuration: {M} processes divided into {K} subgroups of size {M//K} processes each.")
     
     # We run the cases for vacuum subtraction:
@@ -516,9 +569,9 @@ def main():
     f_self = 0.0
     
     if args.config in ["all", "both"]:
-        f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom)
+        f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths)
     if args.config in ["all", "self"]:
-        f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom)
+        f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths)
         
     # Save output to .tmp folder
     if global_rank == 0:
@@ -526,7 +579,7 @@ def main():
         is_partial = (args.moment_start > 0 or args.moment_end < num_tasks)
         if is_partial:
             # Write partial moment results
-            nbot_str = f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""
+            nbot_str = f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else "")
             if args.config == "all":
                 for cfg, force_val in [("both", f_both), ("self", f_self)]:
                     out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{cfg}_moments_{args.moment_start}_{args.moment_end}.json"
