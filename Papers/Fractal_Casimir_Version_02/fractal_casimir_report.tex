@@ -1024,19 +1024,19 @@ Instead of cutting 2D holes completely through a flat plate, the bottom plate is
 \subsection{Full 3D FDTD Benchmark for the Stepped Fractal Sieve}
 We executed full 3D FDTD simulations on BigRed200 for the 3D Stepped Fractal Sieve setup ($L = 2.0\ \mu\text{m}$, $d = 0.12\ \mu\text{m}$ [$120$ nm], $N_{\rm top} = 3$, $N_{\rm bottom} = 3$, depths $[0.30, 0.15, 0.05]\ \mu\text{m}$, $\theta = 90.0^\circ$, $\varepsilon_{\rm bg} = 2.1$, $R = 40$ pixels/$\mu\text{m}$).
 
-The compiled 3D FDTD results are:
+The compiled 3D FDTD results for the substrate-backed ($t_{\text{bottom}} = 0.40\ \mu\text{m}$) stepped sieve are:
 \begin{itemize}
-    \item \textbf{Force (Both Plates)}: $F_{\rm both} = +6792.762408$
+    \item \textbf{Force (Both Plates)}: $F_{\rm both} = +6792.733073$
     \item \textbf{Force (Self Plate Only)}: $F_{\rm self} = +6793.424456$
-    \item \textbf{Subtracted Net Force}: $F_{\rm net} = -0.662048$
+    \item \textbf{Subtracted Net Force}: $F_{\rm net} = -0.691383$
     \item \textbf{Effective Plate Area}: $A_{\rm eff} = 3.160494\ \mu\text{m}^2$
-    \item \textbf{Consolidated Normal Pressure}: $P = \mathbf{-0.209476}$
+    \item \textbf{Consolidated Normal Pressure}: $P = \mathbf{-0.218758\text{ Pa}}$
 \end{itemize}
 
-\textbf{Key Physical and Modeling Insights}:
+\textbf{Physical Analysis \& Why Frontiers 2 \& 3 Are Necessary}:
 \begin{enumerate}
-    \item \textbf{Substrate Enclosure Requirement}: In the unbacked 100 nm plate simulation, the 300 nm central macro-cavity extended through the plate into the background medium behind it, creating a large self-force background signal ($F_{\rm self} = +6793.42$).
-    \item \textbf{Substrate Backing Model}: To properly bound the 3D cavity modes in FDTD, the bottom plate requires a total substrate thickness $t_{\text{bottom}} \ge 400$ nm ($0.40\ \mu\text{m}$). This encloses all stepped cavity wells ($300$ nm, $150$ nm, $50$ nm) entirely inside the phosphorene dielectric material, leaving a solid $100$ nm base below the cavities and eliminating PML edge discontinuities.
+    \item \textbf{Short-Range Solid Attraction Dominance}: At a narrow gap of $d = 120$ nm, the un-etched solid regions between the holes on the top and bottom plates experience strong short-range dielectric attraction. Although the 300 nm central macro-cavity induces a local phase shift, the attractive force between flat parallel solid faces outweighs the cavity phase cushion when the gap is $120$ nm.
+    \item \textbf{Necessity of Transverse Field Bending}: Flat parallel faces inherently maximize normal electric fields ($E_z^2 > E_x^2 + E_y^2$). To achieve net positive repulsion ($P > 0$) at close range ($d = 100\text{--}120$ nm), the surface profile must eliminate flat parallel faces altogether via **Frontier 2 (Interlocking 3D Fractal Corrugations)** or suppress short-range attractive modes via **Frontier 3 (Twisted Moir\'e Pre-Fractal Superlattices)**.
 \end{enumerate}
 
 \subsection{Frontier 2: Interlocking 3D Fractal Corrugations}
