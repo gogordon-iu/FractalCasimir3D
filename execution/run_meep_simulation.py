@@ -113,6 +113,60 @@ def generate_stepped_sieve_holes(N, L, center_x, center_y, depths, top_z, theta=
         
     return holes
 
+
+def generate_fractal_corrugations(N, L, center_x, center_y, base_z, is_top_plate=False, angle=45.0):
+    """
+    Generates 3D Interlocking Fractal Corrugations (Frontier 2) with 45-degree sloped walls.
+    For the bottom plate (is_top_plate=False): carves out 45-degree V-groove pyramids into the plate starting at base_z (-d/2).
+    For the top plate (is_top_plate=True): creates interlocking 45-degree pyramids projecting downward from base_z (+d/2).
+    """
+    shapes = []
+    tan_angle = np.tan(np.radians(angle)) # tan(45 deg) = 1.0
+    
+    def recurse(x, y, w, level):
+        if level > N:
+            return
+        w_hole = w / 3.0
+        h_pyramid = (w_hole / 2.0) * tan_angle # depth/height of 45-deg pyramid
+        
+        # Build 45-degree pyramid via thin slices for exact dielectric resolution in MEEP (10 slices)
+        num_slices = 10
+        dz = h_pyramid / num_slices
+        
+        for k in range(num_slices):
+            frac = (k + 0.5) / num_slices
+            if is_top_plate:
+                # Top plate pyramid points DOWNWARD into the V-grooves
+                slice_w = w_hole * (1.0 - frac)
+                slice_z = base_z - (frac * h_pyramid)
+                shapes.append(mp.Block(
+                    center=mp.Vector3(x + center_x, y + center_y, slice_z),
+                    size=mp.Vector3(slice_w, slice_w, dz + 0.001),
+                    material=mp.vacuum
+                ))
+            else:
+                # Bottom plate V-groove is carved out of the substrate (vacuum pyramid pointing DOWNWARD)
+                slice_w = w_hole * frac
+                slice_z = base_z - ((1.0 - frac) * h_pyramid)
+                shapes.append(mp.Block(
+                    center=mp.Vector3(x + center_x, y + center_y, slice_z),
+                    size=mp.Vector3(slice_w, slice_w, dz + 0.001),
+                    material=mp.vacuum
+                ))
+                
+        if level < N:
+            offsets = [-w/3.0, 0.0, w/3.0]
+            for dx in offsets:
+                for dy in offsets:
+                    if dx == 0.0 and dy == 0.0:
+                        continue
+                    recurse(x + dx, y + dy, w_hole, level + 1)
+                    
+    if N > 1:
+        recurse(0.0, 0.0, L, 2)
+        
+    return shapes
+
 def get_casimir_material(material_name, Sigma, ft, theta=0.0, eps_bg=1.0):
     """
     Constructs the MEEP Medium for the bottom or top plate.
@@ -270,14 +324,14 @@ def get_optimal_subgroups(M, num_tasks):
     return max(valid_divisors)
 
 
-def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108, N_bottom=1, stepped_sieve=False, sieve_depths=[0.30, 0.15, 0.05]):
+def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108, N_bottom=1, stepped_sieve=False, sieve_depths=[0.30, 0.15, 0.05], corrugated=False, corrugation_angle=45.0):
     """
     Runs a 3D FDTD simulation for a single configuration, utilizing subgroups
     to run different polarizations and moments in parallel.
     """
     # 1. Computational Cell and Geometry parameters
-    t_top = 0.1  # top plate thickness in microns (100 nm)
-    t_bottom = 0.40 if stepped_sieve else 0.10  # bottom plate substrate thickness (400 nm for 3D sieve)
+    t_top = 0.50 if corrugated else 0.10  # top plate thickness (500 nm for corrugated, 100 nm otherwise)
+    t_bottom = 0.50 if corrugated else (0.40 if stepped_sieve else 0.10)  # bottom substrate thickness
     dpml = 0.2  # PML thickness in microns
     buffer = 0.15  # buffer between plates and PML
     
@@ -350,13 +404,16 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
                 size=mp.Vector3(L, L, t_bottom),
                 material=bottom_plate_material
             ))
-            if stepped_sieve:
+            if corrugated:
+                corrugations_bottom = generate_fractal_corrugations(N_bottom, L, 0.0, 0.0, -d/2.0, is_top_plate=False, angle=corrugation_angle)
+                geometry.extend(corrugations_bottom)
+            elif stepped_sieve:
                 holes_bottom = generate_stepped_sieve_holes(N_bottom, L, 0.0, 0.0, sieve_depths, -d/2.0, theta=0.0)
                 geometry.extend(holes_bottom)
             elif N_bottom > 1:
-                holes_bottom = generate_carpet_holes(N_bottom, L, 0.0, 0.0, t_plate + 0.01, bottom_plate_material, theta=0.0)
+                holes_bottom = generate_carpet_holes(N_bottom, L, 0.0, 0.0, t_bottom + 0.01, bottom_plate_material, theta=0.0)
                 for hole in holes_bottom:
-                    hole.center = mp.Vector3(hole.center.x, hole.center.y, -d/2.0 - t_plate/2.0)
+                    hole.center = mp.Vector3(hole.center.x, hole.center.y, -d/2.0 - t_bottom/2.0)
                 geometry.extend(holes_bottom)
             
         if config != "vacuum":
@@ -380,6 +437,10 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
             for hole in holes:
                 hole.center = mp.Vector3(hole.center.x, hole.center.y, d/2.0 + t_top/2.0)
             geometry.extend(holes)
+            
+            if corrugated:
+                corrugations_top = generate_fractal_corrugations(N, L, 0.0, 0.0, d/2.0, is_top_plate=True, angle=corrugation_angle)
+                geometry.extend(corrugations_top)
             
         # Setup Simulation on the subgroup communicator
         sim = mp.Simulation(
@@ -535,6 +596,8 @@ def main():
     parser.add_argument("--moment-end", type=int, default=108, help="End index of moments to run (1-108).")
     parser.add_argument("--stepped-sieve", action="store_true", help="Enable 3D Stepped Fractal Sieve for bottom plate (Frontier 1).")
     parser.add_argument("--sieve-depths", type=float, nargs="+", default=[0.30, 0.15, 0.05], help="Cavity depths in um for 3D stepped sieve levels.")
+    parser.add_argument("--corrugated", action="store_true", help="Enable 3D Interlocking Fractal Corrugations (Frontier 2).")
+    parser.add_argument("--corrugation-angle", type=float, default=45.0, help="Wall slope angle in degrees for corrugation pyramids (default: 45.0).")
     args = parser.parse_args()
     
     # Calculate number of tasks and setup parallel subgroups
@@ -561,7 +624,7 @@ def main():
         global_rank = int(os.environ.get("SLURM_PROCID", 0))
         
     if global_rank == 0:
-        print(f"Starting simulation: d={args.d} um, N_top={args.N}, N_bottom={args.N_bottom}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}, config={args.config}, stepped_sieve={args.stepped_sieve}")
+        print(f"Starting simulation: d={args.d} um, N_top={args.N}, N_bottom={args.N_bottom}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}, config={args.config}, stepped_sieve={args.stepped_sieve}, corrugated={args.corrugated}")
         print(f"Parallel configuration: {M} processes divided into {K} subgroups of size {M//K} processes each.")
     
     # We run the cases for vacuum subtraction:
@@ -569,9 +632,9 @@ def main():
     f_self = 0.0
     
     if args.config in ["all", "both"]:
-        f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths)
+        f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle)
     if args.config in ["all", "self"]:
-        f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths)
+        f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle)
         
     # Save output to .tmp folder
     if global_rank == 0:
