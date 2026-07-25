@@ -276,15 +276,15 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     to run different polarizations and moments in parallel.
     """
     # 1. Computational Cell and Geometry parameters
-    t_plate = 0.1  # plate thickness in microns
+    t_top = 0.1  # top plate thickness in microns (100 nm)
+    t_bottom = 0.40 if stepped_sieve else 0.10  # bottom plate substrate thickness (400 nm for 3D sieve)
     dpml = 0.2  # PML thickness in microns
     buffer = 0.15  # buffer between plates and PML
     
     # Cell size
-    max_sieve_h = max(sieve_depths) if stepped_sieve else 0.0
     sx = L + 2.0 * (dpml + buffer)
     sy = L + 2.0 * (dpml + buffer)
-    sz = d + 2.0 * t_plate + max_sieve_h + 2.0 * (dpml + buffer)
+    sz = d + t_top + t_bottom + 2.0 * (dpml + buffer)
     
     cell_size = mp.Vector3(sx, sy, sz)
     
@@ -299,12 +299,12 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
         mp.Bx: mp.X, mp.By: mp.Y, mp.Bz: mp.Z
     }
     
-    # Integration surface S enclosing the prefractal plate
+    # Integration surface S enclosing the top prefractal plate
     delta_s = 0.03
     sx_box = L + 2.0 * delta_s
     sy_box = L + 2.0 * delta_s
-    sz_box = t_plate + 2.0 * delta_s
-    center_z = d/2.0 + t_plate/2.0
+    sz_box = t_top + 2.0 * delta_s
+    center_z = d/2.0 + t_top/2.0
     
     # 6 sides of S
     sides_info = [
@@ -346,8 +346,8 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
         geometry = []
         if config == "both":
             geometry.append(mp.Block(
-                center=mp.Vector3(0.0, 0.0, -d/2.0 - t_plate/2.0),
-                size=mp.Vector3(L, L, t_plate),
+                center=mp.Vector3(0.0, 0.0, -d/2.0 - t_bottom/2.0),
+                size=mp.Vector3(L, L, t_bottom),
                 material=bottom_plate_material
             ))
             if stepped_sieve:
@@ -368,17 +368,17 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
             e3 = mp.Vector3(0.0, 0.0, 1.0)
             
             geometry.append(mp.Block(
-                center=mp.Vector3(0.0, 0.0, d/2.0 + t_plate/2.0),
-                size=mp.Vector3(L, L, t_plate),
+                center=mp.Vector3(0.0, 0.0, d/2.0 + t_top/2.0),
+                size=mp.Vector3(L, L, t_top),
                 e1=e1,
                 e2=e2,
                 e3=e3,
                 material=top_plate_material
             ))
             # Subtract holes recursively
-            holes = generate_carpet_holes(N, L, 0.0, 0.0, t_plate + 0.01, top_plate_material, theta=theta)
+            holes = generate_carpet_holes(N, L, 0.0, 0.0, t_top + 0.01, top_plate_material, theta=theta)
             for hole in holes:
-                hole.center = mp.Vector3(hole.center.x, hole.center.y, d/2.0 + t_plate/2.0)
+                hole.center = mp.Vector3(hole.center.x, hole.center.y, d/2.0 + t_top/2.0)
             geometry.extend(holes)
             
         # Setup Simulation on the subgroup communicator
