@@ -52,7 +52,7 @@ def main():
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --cpus-per-task=1
-#SBATCH --time=04:00:00
+#SBATCH --time=08:00:00
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=gogordon@iu.edu
 
