@@ -8,12 +8,12 @@ def main():
     N_top = 3       # top plate pre-fractal N=3
     N_bot = 3       # bottom plate 3D Fractal Corrugation N=3
     resolution = 40 # 40 pixels per um
-    theta = 90.0    # 90 deg twist angle
+    theta = 91.1    # 90 deg anisotropic twist + 1.1 deg Moire twist angle
     eps_bg = 2.1    # background dielectric
     material = "Phosphorene_tuned"
     nmax = 3        # 3 moments per polarization * 6 pols = 18 moments (total 108)
     T_run = 30.0
-    corrugation_angle = 45.0 # 45-degree sloped walls
+    corrugation_angle = 60.0 # 60-degree sloped walls for strong transverse field bending
     
     # 18 segments of 6 moments each (total 108 moments)
     moments_per_seg = 6

@@ -330,8 +330,8 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     to run different polarizations and moments in parallel.
     """
     # 1. Computational Cell and Geometry parameters
-    t_top = 0.50 if corrugated else 0.10  # top plate thickness (500 nm for corrugated, 100 nm otherwise)
-    t_bottom = 0.50 if corrugated else (0.40 if stepped_sieve else 0.10)  # bottom substrate thickness
+    t_top = (0.75 if corrugation_angle >= 60.0 else 0.50) if corrugated else 0.10  # top plate thickness (750 nm for 60-deg, 500 nm for 45-deg)
+    t_bottom = (0.75 if corrugation_angle >= 60.0 else 0.50) if corrugated else (0.40 if stepped_sieve else 0.10)  # bottom substrate thickness
     dpml = 0.2  # PML thickness in microns
     buffer = 0.15  # buffer between plates and PML
     

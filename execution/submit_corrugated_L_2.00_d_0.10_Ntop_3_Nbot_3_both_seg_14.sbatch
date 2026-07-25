@@ -33,13 +33,13 @@ $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \
     --material Phosphorene_tuned \
     --res 40 \
     --nmax 3 \
-    --theta 90.0 \
+    --theta 91.1 \
     --eps-bg 2.1 \
     --T-run 30.0 \
     --config both \
     --moment-start 84 \
     --moment-end 90 \
     --corrugated \
-    --corrugation-angle 45.0
+    --corrugation-angle 60.0
 
 echo "Completed Frontier 2 segment: config=both, moments 84 to 90."

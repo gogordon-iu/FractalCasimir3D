@@ -32,7 +32,7 @@ $CONDA_PREFIX/bin/python execution/run_corrugated_sweep.py \
     --N-bottom 3 \
     --material Phosphorene_tuned \
     --res 40 \
-    --theta 90.0 \
+    --theta 91.1 \
     --eps-bg 2.1
 
 echo "Frontier 2 Aggregation complete."
