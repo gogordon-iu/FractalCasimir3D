@@ -3,121 +3,138 @@ import sys
 import glob
 import json
 import argparse
-import subprocess
+import datetime
 import numpy as np
 
+def get_effective_area(N, L):
+    return ((8.0 / 9.0)**(N - 1)) * (L**2)
+
 def main():
-    parser = argparse.ArgumentParser(description="Aggregate Frontier 2 (3D Interlocking Fractal Corrugations) FDTD results.")
-    parser.add_argument("--L", type=float, default=2.0, help="Plate width in um.")
-    parser.add_argument("--d", type=float, default=0.10, help="Gap in um.")
-    parser.add_argument("--N", type=int, default=3, help="Top pre-fractal level N.")
-    parser.add_argument("--N-bottom", type=int, default=3, help="Bottom corrugated level N.")
-    parser.add_argument("--material", type=str, default="Phosphorene_tuned", help="Material name.")
-    parser.add_argument("--res", type=int, default=40, help="Resolution in pixels/um.")
+    parser = argparse.ArgumentParser(description="Consolidate partial moment files for Frontier 2: 3D Interlocking Fractal Corrugations.")
+    parser.add_argument("--L", type=float, default=2.0, help="Plate length in microns.")
+    parser.add_argument("--d", type=float, default=0.10, help="Gap separation in microns.")
+    parser.add_argument("--N", type=int, default=3, help="Prefractal generation of top plate.")
+    parser.add_argument("--N-bottom", type=int, default=3, help="Prefractal generation of bottom plate.")
+    parser.add_argument("--res", type=int, default=40, help="Resolution (pixels/um).")
     parser.add_argument("--theta", type=float, default=90.0, help="Twist angle in degrees.")
     parser.add_argument("--eps-bg", type=float, default=2.1, help="Background dielectric constant.")
+    parser.add_argument("--material", type=str, default="Phosphorene_tuned", help="Material name.")
+    parser.add_argument("--cores", type=int, default=128, help="Number of cores used.")
+    parser.add_argument("--plot-only", action="store_true", help="Only generate plot and summary without throwing error on missing files.")
     args = parser.parse_args()
 
-    tmp_dir = ".tmp"
-    num_tasks = 108
+    L = args.L
+    d = args.d
+    N_top = args.N
+    N_bot = args.N_bottom
+    resolution = args.res
+    theta = args.theta
+    eps_bg = args.eps_bg
+    mat = args.material
 
     print("==================================================")
-    print("Aggregating Frontier 2 (3D Fractal Corrugations) Results")
-    print(f"L={args.L:.2f} um, d={args.d:.2f} um ({args.d*1000:.0f} nm), N_top={args.N}, N_bottom={args.N_bottom}")
-    print(f"Material={args.material}, R={args.res}, theta={args.theta} deg, eps_bg={args.eps_bg}")
+    print("FRONTIER 2: 3D INTERLOCKING FRACTAL CORRUGATIONS SWEEP ANALYSIS")
+    print(f"Parameters: L = {L:.2f} um, d = {d:.2f} um ({d*1000:.0f} nm), N_top = {N_top}, N_bottom = {N_bot}")
+    print(f"Resolution = {resolution}, theta = {theta} deg, eps_bg = {eps_bg}")
     print("==================================================")
 
-    def load_config_force(config_name):
-        pattern = os.path.join(tmp_dir, f"meep_corrugated_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_config_{config_name}_seg_*.dat")
-        seg_files = glob.glob(pattern)
-        print(f"Found {len(seg_files)} segment files for config={config_name}.")
+    nbot_str = f"_corrugated_Nbot_{N_bot}"
+    num_segments = 18
+    moments_per_seg = 6
 
-        collected_moments = {}
-        for fpath in seg_files:
-            try:
-                with open(fpath, "r") as f:
-                    for line in f:
-                        line = line.strip()
-                        if not line or line.startswith("#"):
-                            continue
-                        parts = line.split()
-                        if len(parts) >= 2:
-                            t_idx = int(parts[0])
-                            val = float(parts[1])
-                            collected_moments[t_idx] = val
-            except Exception as e:
-                print(f"Warning: Could not read {fpath}: {e}")
+    missing_segments = []
+    forces = {"both": {}, "self": {}}
 
-        missing = [i for i in range(num_tasks) if i not in collected_moments]
-        if missing:
-            print(f"STATUS: INCOMPLETE ({len(missing)} moments missing for {config_name}).")
-            return None, missing
+    for cfg in ["both", "self"]:
+        for seg in range(num_segments):
+            m_start = seg * moments_per_seg
+            m_end = (seg + 1) * moments_per_seg
+            
+            pattern = f".tmp/meep_d_{d:.4f}_N_{N_top}{nbot_str}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_{cfg}_moments_{m_start}_{m_end}.json"
+            files = glob.glob(pattern)
+            
+            if files:
+                with open(files[0], "r") as f:
+                    data = json.load(f)
+                    forces[cfg][(m_start, m_end)] = data["force"]
+            else:
+                missing_segments.append((cfg, m_start, m_end))
 
-        total_force = sum(collected_moments.values())
-        return total_force, []
+    if missing_segments:
+        print(f"STATUS: INCOMPLETE ({len(missing_segments)} segments missing)")
+        for cfg, m_start, m_end in missing_segments:
+            print(f"  Missing: config_{cfg} moments_{m_start}_{m_end}")
+        if not args.plot_only:
+            sys.exit(1)
+        return
 
-    f_both, missing_both = load_config_force("both")
-    f_self, missing_self = load_config_force("self")
+    print("STATUS: COMPLETE! All 36 simulation segment files found.")
 
-    if f_both is None or f_self is None:
-        print("Not all segments are complete yet. Plot job exiting safely.")
-        sys.exit(0)
-
+    f_both = sum(forces["both"].values())
+    f_self = sum(forces["self"].values())
     f_subtracted = f_both - f_self
-    area_eff = (args.L ** 2) * ((8.0 / 9.0) ** args.N) # effective solid plate area
-    pressure = f_subtracted / area_eff
+    
+    A_eff = get_effective_area(N_top, L)
+    pressure = f_subtracted / A_eff
     is_repulsive = bool(pressure > 0.0)
 
-    timestamp = subprocess.check_output(["date", "+%Y%m%d_%H%M%S"]).decode().strip()
-    out_dir = f"results_corrugated_L_{args.L:.2f}_d_{args.d:.2f}_{timestamp}"
+    regime_str = "REPULSIVE (POSITIVE PRESSURE - CASIMIR LEVITATION!)" if is_repulsive else "ATTRACTIVE (NEGATIVE PRESSURE)"
+
+    print("==================================================")
+    print(f"Force (Both Plates):       {f_both:.8e}")
+    print(f"Force (Self Plate):        {f_self:.8e}")
+    print(f"Force (Subtracted Net):    {f_subtracted:.8e}")
+    print(f"Effective Area (A_eff):    {A_eff:.6f} um^2")
+    print(f"Consolidated Pressure:     {pressure:.8e}")
+    print(f"CASIMIR REGIME:            {regime_str}")
+    print("==================================================")
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    out_dir = f"results_corrugated_L_{L:.2f}_d_{d:.2f}_{timestamp}"
     os.makedirs(out_dir, exist_ok=True)
 
-    results = {
-        "L_um": args.L,
-        "d_um": args.d,
-        "N_top": args.N,
-        "N_bottom": args.N_bottom,
-        "resolution": args.res,
-        "theta_deg": args.theta,
-        "eps_bg": args.eps_bg,
-        "material": args.material,
+    summary_data = {
+        "L_um": L,
+        "d_um": d,
+        "N_top": N_top,
+        "N_bottom": N_bot,
+        "resolution": resolution,
+        "theta_deg": theta,
+        "eps_bg": eps_bg,
+        "material": mat,
         "force_both": f_both,
         "force_self": f_self,
         "force_subtracted": f_subtracted,
-        "effective_area_um2": area_eff,
+        "effective_area_um2": A_eff,
         "pressure": pressure,
         "is_repulsive": is_repulsive,
-        "regime": "REPULSIVE (POSITIVE PRESSURE)" if is_repulsive else "ATTRACTIVE (NEGATIVE PRESSURE)"
+        "regime": regime_str
     }
 
-    json_path = os.path.join(out_dir, "corrugated_sweep_results.json")
-    with open(json_path, "w") as f:
-        json.dump(results, f, indent=4)
+    with open(os.path.join(out_dir, "corrugated_sweep_results.json"), "w") as f:
+        json.dump(summary_data, f, indent=4)
 
-    param_path = os.path.join(out_dir, "parameters.txt")
-    with open(param_path, "w") as f:
-        for k, v in results.items():
+    with open(os.path.join(out_dir, "parameters.txt"), "w") as f:
+        for k, v in summary_data.items():
             f.write(f"{k}: {v}\n")
 
-    print("\n==================================================")
-    print("FRONTIER 2 SIMULATION SWEEP RESULTS COMPLETE")
-    print(f"Force Both: {f_both:.6f}")
-    print(f"Force Self: {f_self:.6f}")
-    print(f"Net Force:  {f_subtracted:.6f}")
-    print(f"Effective Area: {area_eff:.6f} um^2")
-    print(f"Pressure:   {pressure:.6f} Pa")
-    print(f"Regime:     {results['regime']}")
-    print("==================================================")
+    print(f"Saved Frontier 2 3D Corrugated sweep analysis to {out_dir}/")
 
-    # Auto-commit and push results to GitHub
+    # Auto-push results to GitHub
     try:
-        subprocess.run(["git", "add", out_dir], check=True)
-        commit_msg = f"Auto-sync Frontier 2 3D Corrugated results (L={args.L:.2f}um, d={args.d:.2f}um, P={pressure:.4f})"
-        subprocess.run(["git", "commit", "-m", commit_msg], check=True)
-        subprocess.run(["git", "push", "origin", "main"], check=True)
-        print("Successfully auto-committed and pushed Frontier 2 results to GitHub!")
+        import subprocess
+        print("Staging, committing, and pushing Frontier 2 results to GitHub...")
+        subprocess.run(["git", "add", out_dir], check=False)
+        diff_res = subprocess.run(["git", "diff", "--cached", "--quiet"])
+        if diff_res.returncode != 0:
+            subprocess.run(["git", "commit", "-m", f"Auto-sync Frontier 2 3D Corrugated results (L={L:.2f}um, d={d:.2f}um) from BigRed200"], check=False)
+            subprocess.run(["git", "pull", "--rebase", "origin", "main"], check=False)
+            subprocess.run(["git", "push", "origin", "main"], check=False)
+            print("Git sync complete!")
+        else:
+            print("No new changes to push.")
     except Exception as e:
-        print(f"Warning: Git auto-push encountered an issue: {e}")
+        print(f"Git push warning: {e}")
 
 if __name__ == "__main__":
     main()

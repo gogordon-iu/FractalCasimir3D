@@ -642,7 +642,7 @@ def main():
         is_partial = (args.moment_start > 0 or args.moment_end < num_tasks)
         if is_partial:
             # Write partial moment results
-            nbot_str = f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else "")
+            nbot_str = f"_corrugated_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
             if args.config == "all":
                 for cfg, force_val in [("both", f_both), ("self", f_self)]:
                     out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{cfg}_moments_{args.moment_start}_{args.moment_end}.json"
