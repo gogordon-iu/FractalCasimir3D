@@ -63,7 +63,7 @@ def main():
     array_content = f"""#!/bin/bash
 #SBATCH -J hybrid_casimir_sweep
 #SBATCH -A r01540
-#SBATCH -p gpu
+#SBATCH -p general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --time=08:00:00
