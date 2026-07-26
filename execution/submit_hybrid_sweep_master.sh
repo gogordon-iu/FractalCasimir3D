@@ -1,0 +1,13 @@
+#!/bin/bash
+# Master Submission Script for Hybrid Casimir Levitation Parameter Sweep
+
+mkdir -p logs .tmp sweep_configs
+
+echo "Submitting Slurm Job Array for 180 Parameter Sweep Tasks..."
+JOB_ID=$(sbatch execution\submit_hybrid_sweep_array.sbatch | awk '{print $4}')
+echo "Submitted Slurm Job Array ID: $JOB_ID"
+
+# Submit Analysis Plot Job with dependency on array completion
+sbatch --dependency=afterok:$JOB_ID --job-name=hybrid_sweep_analysis --partition=general --nodes=1 --ntasks-per-node=128 --time=02:00:00 --output=logs/sweep_analysis_%j.log --wrap="python execution/run_hybrid_sweep_analyzer.py"
+
+echo "All jobs submitted cleanly! Dependencies set for automated analysis."
