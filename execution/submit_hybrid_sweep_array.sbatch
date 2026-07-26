@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --time=08:00:00
-#SBATCH --array=1-576%10
+#SBATCH --array=1-240%8
 #SBATCH -o logs/sweep_task_%A_%a.out
 #SBATCH -e logs/sweep_task_%A_%a.err
 

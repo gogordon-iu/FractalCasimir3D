@@ -1,9 +1,9 @@
 #!/bin/bash
-# Master Submission Script for Targeted Hybrid Casimir Levitation Parameter Sweep
+# Master Submission Script for 24-Hour Hybrid Casimir Levitation Parameter Sweep
 
 mkdir -p logs .tmp sweep_configs
 
-echo "Submitting Slurm Job Array for 576 Targeted Parameter Sweep Tasks..."
+echo "Submitting Slurm Job Array for 240 Parameter Sweep Tasks..."
 JOB_ID=$(sbatch execution/submit_hybrid_sweep_array.sbatch | awk '{print $4}')
 echo "Submitted Slurm Job Array ID: $JOB_ID"
 

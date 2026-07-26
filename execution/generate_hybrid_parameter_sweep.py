@@ -5,18 +5,18 @@ import itertools
 
 def main():
     print("==================================================")
-    print("SLURM GENERATOR: Fine-Tuned Hybrid Casimir Levitation Parameter Sweep")
-    print("Centered around Historic Levitation Point (theta=91.1 deg, alpha=60.0 deg, d=100 nm)")
+    print("SLURM GENERATOR: 24-Hour Master Hybrid Casimir Levitation Parameter Sweep")
+    print("Budget: 240 Tasks (%8 array concurrency, ~17.5 Hours Total Walltime)")
     print("==================================================")
 
-    # 1. Targeted Parameter Grid Centered Around Historic Point
-    # Slope Angles (deg) - centered around 60 deg
-    angles = [45.0, 50.0, 54.7, 58.0, 60.0, 62.0, 65.0, 70.0]
+    # 1. 240-Task Grid Optimized for 24-Hour Execution Window
+    # Slope Angles (deg) - 5 angles
+    angles = [45.0, 50.0, 54.7, 60.0, 65.0]
     
-    # Twist Angles (deg) - centered around historic 91.1 deg (90 deg + Moire twist)
-    thetas = [89.0, 90.0, 90.5, 90.8, 91.1, 91.4, 91.7, 92.5, 94.0]
+    # Twist Angles (deg) - 6 angles centered around Moire twist
+    thetas = [90.0, 90.5, 91.1, 91.5, 92.5, 95.0]
     
-    # Separations (um) - centered around 0.10 um (100 nm)
+    # Separations (um) - 8 gaps (60 nm to 250 nm)
     distances = [0.06, 0.08, 0.10, 0.12, 0.14, 0.16, 0.20, 0.25]
 
     # Shared parameters
@@ -56,7 +56,7 @@ def main():
         with open(cfg_path, "w") as f:
             json.dump(config, f, indent=4)
 
-    print(f"Generated {len(param_list)} targeted parameter configurations in sweep_configs/")
+    print(f"Generated {len(param_list)} parameter configurations in sweep_configs/")
 
     # Generate Slurm Job Array Script (use forward slashes for Linux compatibility)
     sbatch_array_path = "execution/submit_hybrid_sweep_array.sbatch"
@@ -68,7 +68,7 @@ def main():
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --time=08:00:00
-#SBATCH --array=1-{len(param_list)}%10
+#SBATCH --array=1-{len(param_list)}%8
 #SBATCH -o logs/sweep_task_%A_%a.out
 #SBATCH -e logs/sweep_task_%A_%a.err
 
@@ -127,11 +127,11 @@ echo "Task $PARAM_ID complete!"
     # Generate Master Launcher
     master_sh_path = "execution/submit_hybrid_sweep_master.sh"
     master_content = f"""#!/bin/bash
-# Master Submission Script for Targeted Hybrid Casimir Levitation Parameter Sweep
+# Master Submission Script for 24-Hour Hybrid Casimir Levitation Parameter Sweep
 
 mkdir -p logs .tmp sweep_configs
 
-echo "Submitting Slurm Job Array for {len(param_list)} Targeted Parameter Sweep Tasks..."
+echo "Submitting Slurm Job Array for {len(param_list)} Parameter Sweep Tasks..."
 JOB_ID=$(sbatch execution/submit_hybrid_sweep_array.sbatch | awk '{{print $4}}')
 echo "Submitted Slurm Job Array ID: $JOB_ID"
 
