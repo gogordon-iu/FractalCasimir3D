@@ -2,7 +2,6 @@ import os
 import sys
 import json
 import itertools
-import numpy as np
 
 def main():
     print("==================================================")
@@ -14,7 +13,6 @@ def main():
     angles = [30.0, 45.0, 54.7, 60.0, 65.0]
     
     # Twist Angles (deg) - 90 deg anisotropic + Moire twist delta
-    # theta values: 0.0 (untwisted), 90.0 (90 deg), 90.5 (+0.5), 91.1 (+1.1 magic angle), 92.5 (+2.5), 95.0 (+5.0)
     thetas = [0.0, 90.0, 90.5, 91.1, 92.5, 95.0]
     
     # Separations (um)
@@ -59,21 +57,29 @@ def main():
 
     print(f"Generated {len(param_list)} parameter configurations in sweep_configs/")
 
-    # Generate Slurm Job Array Script
-    sbatch_array_path = os.path.join(output_dir, "submit_hybrid_sweep_array.sbatch")
+    # Generate Slurm Job Array Script (use forward slashes for Linux compatibility)
+    sbatch_array_path = "execution/submit_hybrid_sweep_array.sbatch"
     
     array_content = f"""#!/bin/bash
-#SBATCH --job-name=hybrid_casimir_sweep
-#SBATCH --partition=gpu
+#SBATCH -J hybrid_casimir_sweep
+#SBATCH -A r01540
+#SBATCH -p gpu
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --time=08:00:00
 #SBATCH --array=1-{len(param_list)}%10
-#SBATCH --output=logs/sweep_task_%A_%a.log
-#SBATCH --error=logs/sweep_task_%A_%a.err
+#SBATCH -o logs/sweep_task_%A_%a.out
+#SBATCH -e logs/sweep_task_%A_%a.err
 
-module load meep/1.25.0
-module load python/3.10.8
+# Activate Conda environment
+source ~/miniconda3/etc/profile.d/conda.sh
+module unload xalt
+export XALT_EXECUTABLE_TRACKING=no
+conda activate meep
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+
+# Force Slurm to run from repository root directory
+cd /N/project/gorengor_werewolf/FractalCasimir3D
 
 # Get parameter ID from Slurm array index
 PARAM_ID=$(printf "%03d" $SLURM_ARRAY_TASK_ID)
@@ -90,14 +96,14 @@ echo "Config File: $CONFIG_FILE"
 echo "=================================================="
 
 # Parse parameters from JSON
-ALPHA=$(python -c "import json; print(json.load(open('$CONFIG_FILE'))['alpha'])")
-THETA=$(python -c "import json; print(json.load(open('$CONFIG_FILE'))['theta'])")
-D_UM=$(python -c "import json; print(json.load(open('$CONFIG_FILE'))['d'])")
+ALPHA=$($CONDA_PREFIX/bin/python -c "import json; print(json.load(open('$CONFIG_FILE'))['alpha'])")
+THETA=$($CONDA_PREFIX/bin/python -c "import json; print(json.load(open('$CONFIG_FILE'))['theta'])")
+D_UM=$($CONDA_PREFIX/bin/python -c "import json; print(json.load(open('$CONFIG_FILE'))['d'])")
 
 echo "Parameters: alpha=${{ALPHA}} deg, theta=${{THETA}} deg, d=${{D_UM}} um"
 
 # Execute simulation for both and self configurations
-python execution/run_meep_simulation.py \\
+$CONDA_PREFIX/bin/python execution/run_meep_simulation.py \\
     --d $D_UM \\
     --N 3 \\
     --N-bottom 3 \\
@@ -118,18 +124,18 @@ echo "Task $PARAM_ID complete!"
     print(f"Generated Slurm Job Array script: {sbatch_array_path}")
 
     # Generate Master Launcher
-    master_sh_path = os.path.join(output_dir, "submit_hybrid_sweep_master.sh")
+    master_sh_path = "execution/submit_hybrid_sweep_master.sh"
     master_content = f"""#!/bin/bash
 # Master Submission Script for Hybrid Casimir Levitation Parameter Sweep
 
 mkdir -p logs .tmp sweep_configs
 
 echo "Submitting Slurm Job Array for 180 Parameter Sweep Tasks..."
-JOB_ID=$(sbatch {sbatch_array_path} | awk '{{print $4}}')
+JOB_ID=$(sbatch execution/submit_hybrid_sweep_array.sbatch | awk '{{print $4}}')
 echo "Submitted Slurm Job Array ID: $JOB_ID"
 
 # Submit Analysis Plot Job with dependency on array completion
-sbatch --dependency=afterok:$JOB_ID --job-name=hybrid_sweep_analysis --partition=general --nodes=1 --ntasks-per-node=128 --time=02:00:00 --output=logs/sweep_analysis_%j.log --wrap="python execution/run_hybrid_sweep_analyzer.py"
+sbatch -A r01540 --dependency=afterok:$JOB_ID --job-name=hybrid_sweep_analysis --partition=general --nodes=1 --ntasks-per-node=128 --time=02:00:00 --output=logs/sweep_analysis_%j.log --wrap="cd /N/project/gorengor_werewolf/FractalCasimir3D && source ~/miniconda3/etc/profile.d/conda.sh && conda activate meep && $CONDA_PREFIX/bin/python execution/run_hybrid_sweep_analyzer.py"
 
 echo "All jobs submitted cleanly! Dependencies set for automated analysis."
 """
