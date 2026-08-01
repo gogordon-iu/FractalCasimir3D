@@ -40,8 +40,11 @@ D_UM=$($CONDA_PREFIX/bin/python -c "import json; print(json.load(open('$CONFIG_F
 
 echo "Parameters: alpha=${ALPHA} deg, theta=${THETA} deg, d=${D_UM} um"
 
-# Execute simulation for both and self configurations
-$CONDA_PREFIX/bin/python execution/run_meep_simulation.py \
+# Set OpenMP threads to 1 for parallel MPI execution
+export OMP_NUM_THREADS=1
+
+# Execute simulation for both and self configurations in parallel
+srun -n 128 $CONDA_PREFIX/bin/python execution/run_meep_simulation.py \
     --d $D_UM \
     --N 3 \
     --N-bottom 3 \
