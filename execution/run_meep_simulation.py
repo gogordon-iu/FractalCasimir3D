@@ -683,12 +683,15 @@ def main():
                     json.dump(result, f, indent=4)
                 print(f"Partial simulation task complete. Saved to {out_file}")
         else:
+            nbot_str = f"_corrugated_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
             if args.task_idx >= 0:
                 if args.config == "all":
-                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_task_{args.task_idx}.json"
+                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_task_{args.task_idx}.json"
                     result = {
                         "d_um": args.d,
                         "N": args.N,
+                        "N_bottom": args.N_bottom,
+                        "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
                         "material": args.material,
                         "resolution": args.res,
                         "theta_deg": args.theta,
@@ -699,10 +702,12 @@ def main():
                         "force_self": float(f_self)
                     }
                 else:
-                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}_task_{args.task_idx}.json"
+                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}_task_{args.task_idx}.json"
                     result = {
                         "d_um": args.d,
                         "N": args.N,
+                        "N_bottom": args.N_bottom,
+                        "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
                         "material": args.material,
                         "resolution": args.res,
                         "theta_deg": args.theta,
@@ -714,10 +719,12 @@ def main():
                     }
             else:
                 if args.config == "all":
-                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
+                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
                     result = {
                         "d_um": args.d,
                         "N": args.N,
+                        "N_bottom": args.N_bottom,
+                        "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
                         "material": args.material,
                         "resolution": args.res,
                         "theta_deg": args.theta,
@@ -728,10 +735,12 @@ def main():
                         "force_subtracted": float(f_both - f_self)
                     }
                 else:
-                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}.json"
+                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}.json"
                     result = {
                         "d_um": args.d,
                         "N": args.N,
+                        "N_bottom": args.N_bottom,
+                        "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
                         "material": args.material,
                         "resolution": args.res,
                         "theta_deg": args.theta,

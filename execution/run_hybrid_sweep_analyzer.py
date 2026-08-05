@@ -15,7 +15,7 @@ def main():
     print("==================================================")
 
     # Search for all completed simulation json result files in .tmp/
-    tmp_files = glob.glob(".tmp/meep_d_*_corrugated_Nbot_3_Phosphorene_tuned_res_40_*.json")
+    tmp_files = glob.glob(".tmp/meep_d_*.json")
     print(f"Found {len(tmp_files)} result files in .tmp/")
 
     records = []
