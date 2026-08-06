@@ -66,8 +66,17 @@ echo "=================================================="
 
 # Environment Activation
 source ~/miniconda3/etc/profile.d/conda.sh
+module unload xalt
+export XALT_EXECUTABLE_TRACKING=no
 conda activate meep
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
+PYTHON_EXEC="$CONDA_PREFIX/bin/python"
+if [ ! -f "$PYTHON_EXEC" ]; then
+    PYTHON_EXEC="python"
+fi
+
+cd /N/project/gorengor_werewolf/FractalCasimir3D
 mkdir -p .tmp
 
 # Determine Config File Index
@@ -80,17 +89,17 @@ if [ ! -f "$CONFIG_FILE" ]; then
 fi
 
 echo "Reading parameters from $CONFIG_FILE..."
-ALPHA=$(python -c "import json; print(json.load(open('$CONFIG_FILE'))['alpha'])")
-THETA=$(python -c "import json; print(json.load(open('$CONFIG_FILE'))['theta'])")
-D_UM=$(python -c "import json; print(json.load(open('$CONFIG_FILE'))['d'])")
-L_UM=$(python -c "import json; print(json.load(open('$CONFIG_FILE'))['L'])")
-RES=$(python -c "import json; print(json.load(open('$CONFIG_FILE'))['resolution'])")
-EPS=$(python -c "import json; print(json.load(open('$CONFIG_FILE'))['eps_bg'])")
-MAT=$(python -c "import json; print(json.load(open('$CONFIG_FILE'))['material'])")
+ALPHA=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['alpha'])")
+THETA=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['theta'])")
+D_UM=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['d'])")
+L_UM=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['L'])")
+RES=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['resolution'])")
+EPS=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['eps_bg'])")
+MAT=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['material'])")
 
 echo "Executing 3D FDTD Simulation: Alpha=$ALPHA deg, Theta=$THETA deg, d=$D_UM um, L=$L_UM um, Res=$RES..."
 
-python execution/run_meep_simulation.py \\
+$PYTHON_EXEC execution/run_meep_simulation.py \\
     --L $L_UM \\
     --d $D_UM \\
     --N 3 \\
