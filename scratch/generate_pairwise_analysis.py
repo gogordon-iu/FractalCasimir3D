@@ -16,7 +16,7 @@ def main():
     print("==================================================")
 
     # 1. Load all records from results directories and .tmp
-    summary_files = glob.glob("results_hybrid_parameter_sweep_*/hybrid_sweep_summary.json") + glob.glob("results_corrugated_*/corrugated_sweep_results.json")
+    summary_files = glob.glob("results_sweet_spot_sweep_*/sweet_spot_sweep_summary.json") + glob.glob("results_hybrid_parameter_sweep_*/hybrid_sweep_summary.json") + glob.glob("results_corrugated_*/corrugated_sweep_results.json")
     tmp_files = glob.glob(".tmp/**/*.json", recursive=True) + glob.glob(".tmp/*.json")
 
     records = []
