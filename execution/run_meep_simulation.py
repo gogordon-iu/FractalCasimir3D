@@ -600,7 +600,12 @@ def main():
     parser.add_argument("--corrugation-angle", type=float, default=45.0, help="Wall slope angle in degrees for corrugation pyramids (default: 45.0).")
     args = parser.parse_args()
     
-    # Calculate number of tasks and setup parallel subgroups
+    # Setup global crash handler for automatic logging and git push
+    try:
+        from execution.crash_handler import setup_global_exception_handler
+        setup_global_exception_handler(args.task_idx, vars(args))
+    except Exception as exc_err:
+        pass
     # Use mp.count_processors() to check the actual number of MPI processes initialized by Meep
     M = mp.count_processors()
     num_tasks = 36 * args.nmax

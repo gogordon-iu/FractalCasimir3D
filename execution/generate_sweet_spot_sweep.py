@@ -99,7 +99,7 @@ MAT=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['mater
 
 echo "Executing 3D FDTD Simulation: Alpha=$ALPHA deg, Theta=$THETA deg, d=$D_UM um, L=$L_UM um, Res=$RES..."
 
-$PYTHON_EXEC execution/run_meep_simulation.py \
+bash execution/run_meep_wrapper.sh $PYTHON_EXEC execution/run_meep_simulation.py \
     --L $L_UM \
     --d $D_UM \
     --N 3 \
