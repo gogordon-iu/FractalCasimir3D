@@ -50,18 +50,6 @@ MAT=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['mater
 
 echo "Executing 3D FDTD Simulation: Alpha=$ALPHA deg, Theta=$THETA deg, d=$D_UM um, L=$L_UM um, Res=$RES..."
 
-$PYTHON_EXEC execution/run_meep_simulation.py \
-    --L $L_UM \
-    --d $D_UM \
-    --N 3 \
-    --N_bottom 3 \
-    --corrugated \
-    --corrugation_angle $ALPHA \
-    --theta $THETA \
-    --material $MAT \
-    --res $RES \
-    --eps_bg $EPS \
-    --config all \
-    --task_idx $SLURM_ARRAY_TASK_ID
+$PYTHON_EXEC execution/run_meep_simulation.py     --L $L_UM     --d $D_UM     --N 3     --N-bottom 3     --corrugated     --corrugation-angle $ALPHA     --theta $THETA     --material $MAT     --res $RES     --eps-bg $EPS     --config all     --task-idx $SLURM_ARRAY_TASK_ID
 
 echo "Task $SLURM_ARRAY_TASK_ID complete at $(date)."
