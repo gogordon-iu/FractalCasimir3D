@@ -84,7 +84,8 @@ def main():
     print(f"Saved consolidated sweet spot summary to '{summary_file}'.")
 
     # 3. Find Nanomechanical Levitation Equilibrium Heights (P=0 with dP/dd < 0)
-    print("\n--------------------------------------------------")
+    print("
+--------------------------------------------------")
     print("NANOMECHANICAL LEVITATION EQUILIBRIUM HEIGHT ANALYSIS (P = 0, dP/dd < 0)")
     print("--------------------------------------------------")
     
@@ -121,7 +122,8 @@ def main():
 
     # 4. Auto-commit and push results to GitHub
     try:
-        print("\nAuto-syncing sweet spot sweep results to GitHub...")
+        print("
+Auto-syncing sweet spot sweep results to GitHub...")
         subprocess.run(["git", "add", summary_file], check=True)
         subprocess.run(["git", "commit", "-m", f"Add sweet spot parameter sweep results ({timestamp})"], check=True)
         subprocess.run(["git", "push"], check=True)
