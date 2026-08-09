@@ -117,7 +117,7 @@ echo "Task $SLURM_ARRAY_TASK_ID complete at $(date)."
 """
 
     sbatch_path = os.path.join("execution", "submit_sweet_spot_array.sbatch")
-    with open(sbatch_path, "w") as f:
+    with open(sbatch_path, "w", newline="\n") as f:
         f.write(sbatch_content)
     print(f"Generated Slurm job array script '{sbatch_path}'.")
 
@@ -156,7 +156,7 @@ echo "=================================================="
 """
 
     master_path = os.path.join("execution", "submit_sweet_spot_master.sh")
-    with open(master_path, "w") as f:
+    with open(master_path, "w", newline="\n") as f:
         f.write(master_sh)
     os.chmod(master_path, 0o755)
     print(f"Generated Master Launcher script '{master_path}'.")
@@ -185,7 +185,7 @@ echo "Analysis complete."
 """
 
     analyzer_sbatch_path = os.path.join("execution", "submit_sweet_spot_analyzer.sbatch")
-    with open(analyzer_sbatch_path, "w") as f:
+    with open(analyzer_sbatch_path, "w", newline="\n") as f:
         f.write(analyzer_sbatch)
     print(f"Generated Analysis Slurm script '{analyzer_sbatch_path}'.")
 
