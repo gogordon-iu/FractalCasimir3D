@@ -22,6 +22,7 @@ def main():
     repo_dir = "c:/Users/gorengor/Goren/IUB/Research/FractalCasimirEffect/Code/3Dsimulations"
     paper_dir = os.path.join(repo_dir, "Papers", "Fractal_Casimir_Version_02")
     source_tex = os.path.join(paper_dir, "report_body_source.tex")
+    tables_tex_path = os.path.join(repo_dir, "scratch", "pairwise_tables.tex")
     dest_tex = os.path.join(paper_dir, "fractal_casimir_report.tex")
     dest_pdf = os.path.join(paper_dir, "fractal_casimir_report.pdf")
 
@@ -31,6 +32,26 @@ def main():
 
     with open(source_tex, "r", encoding="utf-8") as f:
         tex_content = f.read()
+
+    # Load fresh pairwise tables if available
+    if os.path.exists(tables_tex_path):
+        with open(tables_tex_path, "r", encoding="utf-8") as f:
+            tables_content = f.read()
+            
+        start_marker = "\\begin{table}[h!]"
+        end_marker = "\\section{Casimir Repulsion and Levitation Physics}"
+        
+        s_idx = tex_content.find("10.10.1 Pair 1")
+        if s_idx != -1:
+            t_start = tex_content.find(start_marker, s_idx)
+            t_end = tex_content.find(end_marker, t_start)
+            if t_start != -1 and t_end != -1:
+                tex_content = tex_content[:t_start] + tables_content + "\n\n" + tex_content[t_end:]
+                print("Successfully injected fresh scratch/pairwise_tables.tex into report_body_source.tex!")
+
+    # Update report_body_source.tex directly
+    with open(source_tex, "w", encoding="utf-8") as f:
+        f.write(tex_content)
 
     # Write directly to destination fractal_casimir_report.tex
     with open(dest_tex, "w", encoding="utf-8") as f:
