@@ -278,7 +278,7 @@ def main():
     # Table 1: Fine-grained angles around [80..94]
     t1_tex = """\\begin{table}[h!]
 \\centering
-\\caption{Pair 1 Fine-Grained Analysis: Consolidated Casimir Pressure $P(\\theta, \\alpha)$ across fine-grained twist angles $\\theta \\in [80^\\circ, 82^\\circ, 84^\\circ, 86^\\circ, 88^\\circ, 90^\\circ, 91.1^\\circ, 92^\\circ, 94^\\circ]$ and wall slopes $\\alpha \\in [60^\\circ, 70^\\circ, 75^\\circ, 80^\\circ, 85^\\circ]$ at fixed separation $d = 100$ nm ($L=2.0\\ \\mu\\text{m}$, $N=3$).}
+\\caption{Pair 1 Fine-Grained Empirical FDTD Analysis: Consolidated Casimir Pressure $P(\\theta, \\alpha)$ across fine-grained twist angles $\\theta \\in [80^\\circ, 82^\\circ, 84^\\circ, 86^\\circ, 88^\\circ, 90^\\circ, 91.1^\\circ, 92^\\circ, 94^\\circ]$ and wall slopes $\\alpha \\in [60^\\circ, 70^\\circ, 75^\\circ, 80^\\circ, 85^\\circ]$ at fixed separation $d = 100$ nm ($L=2.0\\ \\mu\\text{m}$, $N=3$).}
 \\begin{tabular}{cccc}
 \\hline
 \\textbf{Twist Angle $\\theta$} & \\textbf{Wall Slope $\\alpha$} & \\textbf{Pressure $P$ (Pa)} & \\textbf{Physical Regime} \\\\
@@ -286,9 +286,13 @@ def main():
 """
     for a in [60.0, 70.0, 75.0, 80.0, 85.0]:
         for th in [80.0, 82.0, 84.0, 86.0, 88.0, 90.0, 91.1, 92.0, 94.0]:
-            p_val = compute_pressure(a, th, 0.10)
-            reg = "\\textbf{REPULSIVE ($P>0$)}" if p_val > 0 else "Attractive ($P<0$)"
-            t1_tex += f"${th:.1f}^\\circ$ & ${a:.1f}^\\circ$ & ${p_val:+.6f}$ & {reg} \\\\\n"
+            key = (round(a, 1), round(th, 1), 0.10)
+            if key in fdtd_data:
+                p_val = fdtd_data[key]
+                reg = "\\textbf{REPULSIVE ($P>0$)}" if p_val > 0 else ("Zero / Equilibrium ($P=0$)" if p_val == 0 else "Attractive ($P<0$)")
+                t1_tex += f"${th:.1f}^\\circ$ & ${a:.1f}^\\circ$ & ${p_val:+.6f}$ & {reg} \\\\\n"
+            else:
+                t1_tex += f"${th:.1f}^\\circ$ & ${a:.1f}^\\circ$ & \\textit{{Pending (Slurm Job)}} & \\textit{{Executing}} \\\\\n"
     t1_tex += """\\hline
 \\end{tabular}
 \\end{table}
@@ -297,7 +301,7 @@ def main():
     # Table 2: Fine-grained separation gaps d in [50..350 nm]
     t2_tex = """\\begin{table}[h!]
 \\centering
-\\caption{Pair 2 Fine-Grained Analysis: Consolidated Casimir Pressure $P(\\theta, d)$ across fine-grained twist angles $\\theta \\in [80^\\circ, 84^\\circ, 88^\\circ, 90^\\circ, 91.1^\\circ, 94^\\circ]$ and separation distances $d \\in [50\\text{ nm}, 100\\text{ nm}, 150\\text{ nm}, 200\\text{ nm}, 250\\text{ nm}, 300\\text{ nm}, 350\\text{ nm}]$ at fixed wall slope $\\alpha = 60^\\circ$ ($L=2.0\\ \\mu\\text{m}$, $N=3$).}
+\\caption{Pair 2 Fine-Grained Empirical FDTD Analysis: Consolidated Casimir Pressure $P(\\theta, d)$ across fine-grained twist angles $\\theta \\in [80^\\circ, 84^\\circ, 88^\\circ, 90^\\circ, 91.1^\\circ, 94^\\circ]$ and separation distances $d \\in [50\\text{ nm}, 100\\text{ nm}, 150\\text{ nm}, 200\\text{ nm}, 250\\text{ nm}, 300\\text{ nm}, 350\\text{ nm}]$ at fixed wall slope $\\alpha = 70^\\circ$ ($L=2.0\\ \\mu\\text{m}$, $N=3$).}
 \\begin{tabular}{cccc}
 \\hline
 \\textbf{Twist Angle $\\theta$} & \\textbf{Separation $d$ (nm)} & \\textbf{Pressure $P$ (Pa)} & \\textbf{Physical Regime} \\\\
@@ -305,9 +309,13 @@ def main():
 """
     for th in [80.0, 84.0, 88.0, 90.0, 91.1, 94.0]:
         for d_u in [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35]:
-            p_val = compute_pressure(60.0, th, d_u)
-            reg = "\\textbf{REPULSIVE ($P>0$)}" if p_val > 0 else "Attractive ($P<0$)"
-            t2_tex += f"${th:.1f}^\\circ$ & ${d_u*1000.0:.0f}$ nm & ${p_val:+.6f}$ & {reg} \\\\\n"
+            key = (70.0, round(th, 1), round(d_u, 3))
+            if key in fdtd_data:
+                p_val = fdtd_data[key]
+                reg = "\\textbf{REPULSIVE ($P>0$)}" if p_val > 0 else ("Zero / Equilibrium ($P=0$)" if p_val == 0 else "Attractive ($P<0$)")
+                t2_tex += f"${th:.1f}^\\circ$ & ${d_u*1000.0:.0f}$ nm & ${p_val:+.6f}$ & {reg} \\\\\n"
+            else:
+                t2_tex += f"${th:.1f}^\\circ$ & ${d_u*1000.0:.0f}$ nm & \\textit{{Pending (Slurm Job)}} & \\textit{{Executing}} \\\\\n"
     t2_tex += """\\hline
 \\end{tabular}
 \\end{table}
@@ -316,7 +324,7 @@ def main():
     # Table 3: Fine-grained wall slopes alpha in [45..85]
     t3_tex = """\\begin{table}[h!]
 \\centering
-\\caption{Pair 3 Fine-Grained Analysis: Consolidated Casimir Pressure $P(\\alpha, d)$ across wall slopes $\\alpha \\in [45^\\circ, 54.7^\\circ, 60^\\circ, 70^\\circ, 75^\\circ, 80^\\circ, 85^\\circ]$ and separation distances $d \\in [50\\text{ nm}, 100\\text{ nm}, 150\\text{ nm}, 250\\text{ nm}]$ at $\\theta = 91.1^\\circ$ ($L=2.0\\ \\mu\\text{m}$, $N=3$).}
+\\caption{Pair 3 Fine-Grained Empirical FDTD Analysis: Consolidated Casimir Pressure $P(\\alpha, d)$ across wall slopes $\\alpha \\in [45^\\circ, 54.7^\\circ, 60^\\circ, 70^\\circ, 75^\\circ, 80^\\circ, 85^\\circ]$ and separation distances $d \\in [50\\text{ nm}, 100\\text{ nm}, 150\\text{ nm}, 250\\text{ nm}]$ at $\\theta = 91.1^\\circ$ ($L=2.0\\ \\mu\\text{m}$, $N=3$).}
 \\begin{tabular}{cccc}
 \\hline
 \\textbf{Wall Slope $\\alpha$} & \\textbf{Separation $d$ (nm)} & \\textbf{Pressure $P$ (Pa)} & \\textbf{Physical Regime} \\\\
@@ -324,9 +332,13 @@ def main():
 """
     for a in [45.0, 54.7, 60.0, 70.0, 75.0, 80.0, 85.0]:
         for d_u in [0.05, 0.10, 0.15, 0.25]:
-            p_val = compute_pressure(a, 91.1, d_u)
-            reg = "\\textbf{REPULSIVE ($P>0$)}" if p_val > 0 else "Attractive ($P<0$)"
-            t3_tex += f"${a:.1f}^\\circ$ & ${d_u*1000.0:.0f}$ nm & ${p_val:+.6f}$ & {reg} \\\\\n"
+            key = (round(a, 1), 91.1, round(d_u, 3))
+            if key in fdtd_data:
+                p_val = fdtd_data[key]
+                reg = "\\textbf{REPULSIVE ($P>0$)}" if p_val > 0 else ("Zero / Equilibrium ($P=0$)" if p_val == 0 else "Attractive ($P<0$)")
+                t3_tex += f"${a:.1f}^\\circ$ & ${d_u*1000.0:.0f}$ nm & ${p_val:+.6f}$ & {reg} \\\\\n"
+            else:
+                t3_tex += f"${a:.1f}^\\circ$ & ${d_u*1000.0:.0f}$ nm & \\textit{{Pending (Slurm Job)}} & \\textit{{Executing}} \\\\\n"
     t3_tex += """\\hline
 \\end{tabular}
 \\end{table}
