@@ -14,12 +14,12 @@ def main():
     print("SWEET SPOT PARAMETER SWEEP RESULTS ANALYZER")
     print("==================================================")
 
-    # 1. Search for all output JSONs across historical sweeps and new sweet spot sweep
-    summary_files = glob.glob("results_*/sweet_spot_sweep_summary.json") + glob.glob("results_*/hybrid_sweep_summary.json")
-    tmp_files = glob.glob(".tmp/**/*.json", recursive=True) + glob.glob(".tmp/*.json")
+    # 1. Search for output JSONs across .tmp and historical summary files
+    tmp_files = sorted(glob.glob(".tmp/**/*.json", recursive=True) + glob.glob(".tmp/*.json"))
+    summary_files = sorted(glob.glob("results_*/sweet_spot_sweep_summary.json") + glob.glob("results_*/hybrid_sweep_summary.json"))
 
     records = []
-    for fp in summary_files + tmp_files:
+    for fp in tmp_files + summary_files:
         try:
             with open(fp, "r") as f:
                 data = json.load(f)
@@ -43,20 +43,17 @@ def main():
         f_self = rec.get("force_self", None)
         p_direct = rec.get("pressure_Pa", rec.get("pressure", None))
         
-        if p_direct is not None:
-            p = float(p_direct)
-            key = (round(alpha, 1), round(theta, 1), round(d, 4))
-            results_map[key] = {
-                "alpha_deg": alpha,
-                "theta_deg": theta,
-                "d_um": d,
-                "pressure_Pa": p,
-                "is_repulsive": bool(p > 0.0)
-            }
-        elif f_both is not None and f_self is not None:
+        p = None
+        if f_both is not None and f_self is not None:
             f_net = float(f_both) - float(f_self)
             A_eff = get_effective_area(3, float(rec.get("L", 2.0)))
             p = f_net / A_eff
+        elif p_direct is not None:
+            val = float(p_direct)
+            if abs(val) > 1e-12: # Ignore dummy 0.0 placeholders
+                p = val
+                
+        if p is not None:
             key = (round(alpha, 1), round(theta, 1), round(d, 4))
             results_map[key] = {
                 "alpha_deg": alpha,
@@ -67,7 +64,7 @@ def main():
             }
 
     data_list = list(results_map.values())
-    print(f"Extracted {len(data_list)} unique physical parameter points.")
+    print(f"Extracted {len(data_list)} verified unique physical parameter points.")
 
     # Sort data points logically
     data_list.sort(key=lambda x: (x["alpha_deg"], x["theta_deg"], x["d_um"]))
@@ -106,7 +103,6 @@ def main():
             # Check for zero crossings from positive to negative as d increases (stable levitation point!)
             for i in range(len(p_arr) - 1):
                 if p_arr[i] > 0 and p_arr[i+1] < 0:
-                    # Linear interpolation for zero crossing
                     d1, d2 = d_arr[i], d_arr[i+1]
                     p1, p2 = p_arr[i], p_arr[i+1]
                     d_eq = d1 + (0.0 - p1) * (d2 - d1) / (p2 - p1)
@@ -119,15 +115,7 @@ def main():
                     })
                     print(f"FOUND STABLE EQUILIBRIUM: Alpha={a} deg, Theta={th} deg => d_eq = {d_eq*1000.0:.2f} nm (P_max = {max(p_arr):+.4f} Pa)")
 
-    # 4. Auto-commit and push results to GitHub
-    try:
-        print("\nAuto-syncing sweet spot sweep results to GitHub...")
-        subprocess.run(["git", "add", summary_file], check=True)
-        subprocess.run(["git", "commit", "-m", f"Add sweet spot parameter sweep results ({timestamp})"], check=True)
-        subprocess.run(["git", "push"], check=True)
-        print("Successfully synced sweet spot results to GitHub!")
-    except Exception as e:
-        print(f"Git auto-sync notice: {e}")
+    print("Sweet spot analysis complete!")
 
 if __name__ == "__main__":
     main()
