@@ -13,18 +13,18 @@ def main():
         print("sweep_configs_sweet_spot missing. Generating...")
         subprocess.run(["python", "execution/generate_sweet_spot_configs.py"], check=True)
 
-    # 2. Find fully-integrated task files (containing both force_both and force_self)
+    # 2. Find fully-integrated task files (containing both force_both and force_self with no partial moment flags)
     completed_task_ids = set()
     files = glob.glob(".tmp/**/*.json", recursive=True) + glob.glob(".tmp/*.json")
     for f in files:
         try:
             with open(f, "r") as fp:
                 d = json.load(fp)
-                # Only mark complete if it's a full-integration run with both forces calculated
-                if isinstance(d, dict) and "force_both" in d and "force_self" in d and "moment_start" not in d:
-                    # Match task_idx from config if present
-                    if "task_idx" in d and d["task_idx"] > 0:
-                        completed_task_ids.add(d["task_idx"])
+                # Ignore single-moment partial runs (which have "moment_start" or "moment_end" < 108)
+                if isinstance(d, dict) and "force_both" in d and "force_self" in d:
+                    if "moment_start" not in d and "moment_end" not in d:
+                        if "task_idx" in d and d["task_idx"] > 0:
+                            completed_task_ids.add(d["task_idx"])
         except Exception:
             pass
 
