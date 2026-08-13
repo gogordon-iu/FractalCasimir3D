@@ -32,13 +32,23 @@ fi
 cd /N/project/gorengor_werewolf/FractalCasimir3D
 mkdir -p .tmp
 
+# Ensure sweep_configs_sweet_spot exist, or generate them dynamically if missing
+if [ ! -d "sweep_configs_sweet_spot" ] || [ ! -f "sweep_configs_sweet_spot/config_001.json" ]; then
+    echo "Sweep configs missing, pulling from git..."
+    git pull
+    if [ ! -d "sweep_configs_sweet_spot" ]; then
+        echo "Generating sweep configs dynamically..."
+        $PYTHON_EXEC execution/generate_sweet_spot_configs.py
+    fi
+fi
+
 # Determine Config File Index
 CFG_INDEX=$(printf "%03d" $SLURM_ARRAY_TASK_ID)
 CONFIG_FILE="sweep_configs_sweet_spot/config_${CFG_INDEX}.json"
 
 if [ ! -f "$CONFIG_FILE" ]; then
-    echo "ERROR: Config file $CONFIG_FILE not found!"
-    exit 1
+    echo "ERROR: Config file $CONFIG_FILE not found! Generating configs..."
+    $PYTHON_EXEC execution/generate_sweet_spot_configs.py
 fi
 
 echo "Reading parameters from $CONFIG_FILE..."
