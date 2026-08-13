@@ -6,6 +6,8 @@
 #SBATCH --ntasks-per-node=128
 #SBATCH --time=12:00:00
 #SBATCH --array=1-224%8
+#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-user=gogordon@iu.edu
 #SBATCH -o .tmp/sweet_spot_%A_%a.out
 #SBATCH -e .tmp/sweet_spot_%A_%a.err
 
@@ -50,6 +52,18 @@ MAT=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['mater
 
 echo "Executing 3D FDTD Simulation: Alpha=$ALPHA deg, Theta=$THETA deg, d=$D_UM um, L=$L_UM um, Res=$RES..."
 
-bash execution/run_meep_wrapper.sh $PYTHON_EXEC execution/run_meep_simulation.py     --L $L_UM     --d $D_UM     --N 3     --N-bottom 3     --corrugated     --corrugation-angle $ALPHA     --theta $THETA     --material $MAT     --res $RES     --eps-bg $EPS     --config all     --task-idx $SLURM_ARRAY_TASK_ID
+bash execution/run_meep_wrapper.sh $PYTHON_EXEC execution/run_meep_simulation.py \
+    --L $L_UM \
+    --d $D_UM \
+    --N 3 \
+    --N-bottom 3 \
+    --corrugated \
+    --corrugation-angle $ALPHA \
+    --theta $THETA \
+    --material $MAT \
+    --res $RES \
+    --eps-bg $EPS \
+    --config all \
+    --task-idx $SLURM_ARRAY_TASK_ID
 
 echo "Task $SLURM_ARRAY_TASK_ID complete at $(date)."
