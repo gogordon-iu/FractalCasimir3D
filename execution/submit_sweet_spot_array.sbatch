@@ -73,7 +73,6 @@ bash execution/run_meep_wrapper.sh $PYTHON_EXEC execution/run_meep_simulation.py
     --material $MAT \
     --res $RES \
     --eps-bg $EPS \
-    --config all \
-    --task-idx $SLURM_ARRAY_TASK_ID
+    --config all
 
 echo "Task $SLURM_ARRAY_TASK_ID complete at $(date)."
