@@ -212,17 +212,24 @@ def get_casimir_material(material_name, Sigma, ft, theta=0.0, eps_bg=1.0):
         gamma_val = gamma_p + Sigma if ft == mp.E_stuff else gamma_p
         cond_attr = {"D_conductivity" if ft == mp.E_stuff else "B_conductivity": Sigma}
         
+        try:
+            sus = mp.LorentzianSusceptibility(
+                frequency=f0,
+                gamma=gamma_val,
+                sigma_diag=mp.Vector3(sig_xx, sig_yy, sig_zz),
+                sigma_offdiag=mp.Vector3(sig_xy, 0.0, 0.0)
+            )
+        except TypeError:
+            sus = mp.LorentzianSusceptibility(
+                frequency=f0,
+                gamma=gamma_val,
+                sigma_diag=mp.Vector3(sig_xx, sig_yy, sig_zz)
+            )
+
         return mp.Medium(
             epsilon_diag=mp.Vector3(eps_xx, eps_yy, eps_zz),
             epsilon_offdiag=mp.Vector3(eps_xy, 0.0, 0.0),
-            E_susceptibilities=[
-                mp.LorentzianSusceptibility(
-                    frequency=f0,
-                    gamma=gamma_val,
-                    sigma_diag=mp.Vector3(sig_xx, sig_yy, sig_zz),
-                    sigma_offdiag=mp.Vector3(sig_xy, 0.0, 0.0)
-                )
-            ],
+            E_susceptibilities=[sus],
             **cond_attr
         )
     else:
