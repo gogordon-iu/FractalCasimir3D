@@ -203,28 +203,20 @@ def get_casimir_material(material_name, Sigma, ft, theta=0.0, eps_bg=1.0):
         eps_zz = eps_z
         eps_xy = (eps_x - eps_y) * S * C
         
-        # Rotated susceptibility sigma
+        # Rotated susceptibility oscillator strength
         sig_xx = sig_x * C**2 + sig_y * S**2
         sig_yy = sig_x * S**2 + sig_y * C**2
         sig_zz = sig_z
-        sig_xy = (sig_x - sig_y) * S * C
         
         gamma_val = gamma_p + Sigma if ft == mp.E_stuff else gamma_p
         cond_attr = {"D_conductivity" if ft == mp.E_stuff else "B_conductivity": Sigma}
         
-        try:
-            sus = mp.LorentzianSusceptibility(
-                frequency=f0,
-                gamma=gamma_val,
-                sigma_diag=mp.Vector3(sig_xx, sig_yy, sig_zz),
-                sigma_offdiag=mp.Vector3(sig_xy, 0.0, 0.0)
-            )
-        except TypeError:
-            sus = mp.LorentzianSusceptibility(
-                frequency=f0,
-                gamma=gamma_val,
-                sigma_diag=mp.Vector3(sig_xx, sig_yy, sig_zz)
-            )
+        # In MEEP, susceptibility tensor rotation is handled via epsilon_offdiag in mp.Medium
+        sus = mp.LorentzianSusceptibility(
+            frequency=f0,
+            gamma=gamma_val,
+            sigma_diag=mp.Vector3(sig_xx, sig_yy, sig_zz)
+        )
 
         return mp.Medium(
             epsilon_diag=mp.Vector3(eps_xx, eps_yy, eps_zz),
