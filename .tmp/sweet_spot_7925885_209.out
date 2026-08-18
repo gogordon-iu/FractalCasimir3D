@@ -1,0 +1,24 @@
+==================================================
+SLURM ARRAY TASK ID: 209 / 224
+Running on node: x1000c3s2b1n0
+Start time: Sun Aug  9 08:39:48 PM EDT 2026
+==================================================
+Reading parameters from sweep_configs_sweet_spot/config_209.json...
+Executing 3D FDTD Simulation: Alpha=85.0 deg, Theta=90.0 deg, d=0.3 um, L=2.0 um, Res=40...
+==================================================
+RUNNING CRASH-PROOF MEEP SIMULATION WRAPPER
+==================================================
+Executing: /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python execution/run_meep_simulation.py --L 2.0 --d 0.3 --N 3 --N-bottom 3 --corrugated --corrugation-angle 85.0 --theta 90.0 --material Phosphorene_tuned --res 40 --eps-bg 2.1 --config all --task-idx 209
+Starting simulation: d=0.3 um, N_top=3, N_bottom=3, material=Phosphorene_tuned, resolution=40, nmax=3, theta=90.0, eps_bg=2.1, config=all, stepped_sieve=False, corrugated=True
+Parallel configuration: 1 processes divided into 1 subgroups of size 1 processes each.
+
+Elapsed run time = 0.0076 s
+Command failed with exit status 1.
+==================================================
+[CRASH DETECTED] Task 209 exited with status code 1
+==================================================
+
+[CRASH HANDLER] Logged crash details to '.tmp/crash_logs/crash_task_209_20260809_203950.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+[CRASH HANDLER] Successfully pushed crash log to GitHub!
+Task 209 complete at Sun Aug  9 08:39:51 PM EDT 2026.

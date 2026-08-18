@@ -1,0 +1,26 @@
+/N/u/gogordon/BigRed200/.conda/envs/meep/lib/python3.13/site-packages/meep/simulation.py:6269: RuntimeWarning: quiet has been deprecated; use the Verbosity class instead
+  warnings.warn(
+Traceback (most recent call last):
+  File "/N/project/gorengor_werewolf/FractalCasimir3D/execution/run_meep_simulation.py", line 772, in <module>
+    main()
+    ~~~~^^
+  File "/N/project/gorengor_werewolf/FractalCasimir3D/execution/run_meep_simulation.py", line 640, in main
+    f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle)
+  File "/N/project/gorengor_werewolf/FractalCasimir3D/execution/run_meep_simulation.py", line 387, in run_simulation
+    curr_pol = pol_list[p]
+               ~~~~~~~~^^^
+IndexError: list index out of range
+fatal: Unable to create '/N/project/gorengor_werewolf/FractalCasimir3D/.git/index.lock': File exists.
+
+Another git process seems to be running in this repository, e.g.
+an editor opened by 'git commit'. Please make sure all processes
+are terminated then try again. If it still fails, a git process
+may have crashed in this repository earlier:
+remove the file manually to continue.
+To https://github.com/gogordon-iu/FractalCasimir3D.git
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'https://github.com/gogordon-iu/FractalCasimir3D.git'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. If you want to integrate the remote changes,
+hint: use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
