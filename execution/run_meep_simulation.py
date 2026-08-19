@@ -542,11 +542,12 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     except ImportError:
         import time
         global_rank = int(os.environ.get("SLURM_PROCID", 0))
+        task_tag = f"d_{d:.4f}_th_{theta:.1f}_al_{corrugation_angle:.1f}_mat_{material}_L_{L:.2f}"
         
         # Subgroup master writes its total_force
         if mp.am_master():
             os.makedirs(".tmp", exist_ok=True)
-            temp_file = f".tmp/temp_force_{config}_subgroup_{subgroup_index}.json"
+            temp_file = f".tmp/temp_force_{task_tag}_{config}_subgroup_{subgroup_index}.json"
             with open(temp_file, "w") as f:
                 json.dump({"force": float(total_force)}, f)
                 
@@ -554,20 +555,26 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
         if global_rank == 0:
             final_force = 0.0
             for i in range(K):
-                temp_file = f".tmp/temp_force_{config}_subgroup_{i}.json"
-                while not os.path.exists(temp_file):
+                temp_file = f".tmp/temp_force_{task_tag}_{config}_subgroup_{i}.json"
+                wait_count = 0
+                while not os.path.exists(temp_file) and wait_count < 7200:
                     time.sleep(0.5)
+                    wait_count += 1
                 success = False
-                while not success:
+                retry_count = 0
+                while not success and retry_count < 100:
                     try:
-                        with open(temp_file, "r") as f:
-                            data = json.load(f)
-                            final_force += data["force"]
-                        success = True
+                        if os.path.exists(temp_file):
+                            with open(temp_file, "r") as f:
+                                data = json.load(f)
+                                final_force += data["force"]
+                            success = True
                     except (json.JSONDecodeError, PermissionError):
                         time.sleep(0.1)
+                        retry_count += 1
                 try:
-                    os.remove(temp_file)
+                    if os.path.exists(temp_file):
+                        os.remove(temp_file)
                 except OSError:
                     pass
         else:
