@@ -13,6 +13,19 @@ def main():
         print("sweep_configs_sweet_spot missing. Generating...")
         subprocess.run(["python", "execution/generate_sweet_spot_configs.py"], check=True)
 
+    # Load all sweep configs
+    config_files = sorted(glob.glob("sweep_configs_sweet_spot/config_*.json"))
+    configs_map = {}
+    for cf in config_files:
+        try:
+            task_num = int(os.path.basename(cf).replace("config_", "").replace(".json", ""))
+            with open(cf, "r") as fp:
+                cdata = json.load(fp)
+                key = (round(float(cdata["d"]), 4), round(float(cdata["theta"]), 1), round(float(cdata["alpha"]), 1))
+                configs_map[key] = task_num
+        except Exception:
+            pass
+
     # 2. Find fully-integrated task files (containing both force_both and force_self with no partial moment flags)
     completed_task_ids = set()
     files = glob.glob(".tmp/**/*.json", recursive=True) + glob.glob(".tmp/*.json")
@@ -25,6 +38,10 @@ def main():
                     if "moment_start" not in d and "moment_end" not in d:
                         if "task_idx" in d and d["task_idx"] > 0:
                             completed_task_ids.add(d["task_idx"])
+                        elif "d_um" in d and "theta_deg" in d and "corrugation_angle" in d:
+                            key = (round(float(d["d_um"]), 4), round(float(d["theta_deg"]), 1), round(float(d["corrugation_angle"]), 1))
+                            if key in configs_map:
+                                completed_task_ids.add(configs_map[key])
         except Exception:
             pass
 
@@ -52,6 +69,7 @@ def main():
     if len(missing_task_ids) == 224:
         array_param = "1-224%8"
     else:
+        # Construct compact array specification
         array_param = f"{missing_task_ids[0]}-{missing_task_ids[-1]}%8"
     
     for line in lines:

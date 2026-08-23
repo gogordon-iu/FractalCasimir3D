@@ -638,14 +638,46 @@ def main():
         print(f"Starting simulation: d={args.d} um, N_top={args.N}, N_bottom={args.N_bottom}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}, config={args.config}, stepped_sieve={args.stepped_sieve}, corrugated={args.corrugated}")
         print(f"Parallel configuration: {M} processes divided into {K} subgroups of size {M//K} processes each.")
     
-    # We run the cases for vacuum subtraction:
+    # Checkpointing and cache tags
+    task_chk_tag = f"d_{args.d:.4f}_N_{args.N}_mat_{args.material}_res_{args.res}_th_{args.theta:.1f}_al_{args.corrugation_angle:.1f}_L_{args.L:.2f}"
+    chk_both = f".tmp/chk_{task_chk_tag}_both.json"
+    chk_self = f".tmp/chk_{task_chk_tag}_self.json"
+    
+    # We run the cases for vacuum subtraction with checkpoint resume:
     f_both = 0.0
     f_self = 0.0
     
     if args.config in ["all", "both"]:
-        f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle)
+        if os.path.exists(chk_both):
+            try:
+                with open(chk_both, "r") as f:
+                    f_both = float(json.load(f)["force"])
+                if global_rank == 0:
+                    print(f"Loaded cached 'both' force: {f_both:.6e} from {chk_both}")
+            except Exception:
+                f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle)
+        else:
+            f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle)
+            if global_rank == 0:
+                os.makedirs(".tmp", exist_ok=True)
+                with open(chk_both, "w") as f:
+                    json.dump({"force": float(f_both)}, f)
+
     if args.config in ["all", "self"]:
-        f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle)
+        if os.path.exists(chk_self):
+            try:
+                with open(chk_self, "r") as f:
+                    f_self = float(json.load(f)["force"])
+                if global_rank == 0:
+                    print(f"Loaded cached 'self' force: {f_self:.6e} from {chk_self}")
+            except Exception:
+                f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle)
+        else:
+            f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle)
+            if global_rank == 0:
+                os.makedirs(".tmp", exist_ok=True)
+                with open(chk_self, "w") as f:
+                    json.dump({"force": float(f_self)}, f)
         
     # Save output to .tmp folder
     if global_rank == 0:
