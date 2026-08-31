@@ -3,6 +3,29 @@ import glob
 import json
 import subprocess
 
+def compress_ranges(task_ids):
+    """Converts a sorted list of integer IDs into a compact Slurm array string (e.g., '2-3,8-9,14-15')."""
+    if not task_ids:
+        return ""
+    ranges = []
+    start = task_ids[0]
+    prev = task_ids[0]
+    for tid in task_ids[1:]:
+        if tid == prev + 1:
+            prev = tid
+        else:
+            if start == prev:
+                ranges.append(str(start))
+            else:
+                ranges.append(f"{start}-{prev}")
+            start = tid
+            prev = tid
+    if start == prev:
+        ranges.append(str(start))
+    else:
+        ranges.append(f"{start}-{prev}")
+    return ",".join(ranges)
+
 def main():
     print("==================================================")
     print("AUDITING FINE-GRAINED SWEET SPOT TASKS (1-224)")
@@ -26,7 +49,7 @@ def main():
         except Exception:
             pass
 
-    # 2. Find fully-integrated task files (containing both force_both and force_self with no partial moment flags)
+    # 2. Find fully-integrated task files
     completed_task_ids = set()
     files = glob.glob(".tmp/**/*.json", recursive=True) + glob.glob(".tmp/*.json")
     for f in files:
@@ -55,7 +78,7 @@ def main():
         print("ALL 224 TASKS ARE 100% FULLY INTEGRATED & COMPLETE!")
         return
 
-    print(f"Submitting {len(missing_task_ids)} tasks to Slurm for full 108-moment FDTD integration...")
+    print(f"Submitting {len(missing_task_ids)} tasks to Slurm with --T-run 20.0 and %32 throttle...")
 
     # Create missing sbatch file
     sbatch_missing_path = "execution/submit_missing_sweet_spot.sbatch"
@@ -65,12 +88,9 @@ def main():
     lines = sbatch_content.splitlines()
     new_lines = []
     
-    # Format array string for missing range (e.g. 1-224%8)
-    if len(missing_task_ids) == 224:
-        array_param = "1-224%8"
-    else:
-        # Construct compact array specification
-        array_param = f"{missing_task_ids[0]}-{missing_task_ids[-1]}%8"
+    # Format array string for exact missing ranges (e.g. 2-3,8-9,14-15%32)
+    compact_ranges = compress_ranges(missing_task_ids)
+    array_param = f"{compact_ranges}%32"
     
     for line in lines:
         if line.startswith("#SBATCH --array="):
@@ -81,7 +101,7 @@ def main():
     with open(sbatch_missing_path, "w", newline="\n") as f:
         f.write("\n".join(new_lines) + "\n")
 
-    print(f"Generated clean SBATCH file '{sbatch_missing_path}'.")
+    print(f"Generated clean SBATCH file '{sbatch_missing_path}' with array specification: {array_param}")
 
     # Submit to Slurm
     cmd = f"sbatch {sbatch_missing_path}"
