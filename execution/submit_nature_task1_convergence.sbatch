@@ -5,13 +5,13 @@
 #SBATCH --ntasks-per-node=128
 #SBATCH --time=12:00:00
 #SBATCH -J nature_t1_conv
-#SBATCH --array=1-34%8
+#SBATCH --array=1-24%8
 #SBATCH -o .tmp/nature_t1_%A_%a.out
 #SBATCH -e .tmp/nature_t1_%A_%a.err
 
 echo "=================================================="
 echo "NATURE TASK 1: GRID CONVERGENCE & EDGE ROUNDING"
-echo "Array Task: $SLURM_ARRAY_TASK_ID / 34 on $(hostname)"
+echo "Array Task: $SLURM_ARRAY_TASK_ID / 24 on $(hostname)"
 echo "Start: $(date)"
 echo "=================================================="
 
