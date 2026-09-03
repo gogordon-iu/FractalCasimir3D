@@ -52,7 +52,21 @@ def main():
     repulsive_count = 0
     total_data_points = 0
     files = glob.glob(".tmp/**/*.json", recursive=True) + glob.glob(".tmp/*.json")
-    
+    for sf in glob.glob("results_sweet_spot_sweep_*/sweet_spot_sweep_summary.json"):
+        try:
+            with open(sf, "r") as fp:
+                recs = json.load(fp)
+                for r in recs:
+                    if isinstance(r, dict) and "pressure_Pa" in r:
+                        total_data_points += 1
+                        if r.get("pressure_Pa", 0) > 0:
+                            repulsive_count += 1
+                        key = (round(float(r["d_um"]), 4), round(float(r["theta_deg"]), 1), round(float(r["alpha_deg"]), 1))
+                        if key in configs_map:
+                            completed_task_ids.add(configs_map[key])
+        except Exception:
+            pass
+            
     for f in files:
         try:
             with open(f, "r") as fp:
@@ -64,8 +78,9 @@ def main():
                             repulsive_count += 1
                         if "task_idx" in d and d["task_idx"] > 0:
                             completed_task_ids.add(d["task_idx"])
-                        elif "d_um" in d and "theta_deg" in d and "corrugation_angle" in d:
-                            key = (round(float(d["d_um"]), 4), round(float(d["theta_deg"]), 1), round(float(d["corrugation_angle"]), 1))
+                        elif "d_um" in d and "theta_deg" in d and ("corrugation_angle" in d or "alpha_deg" in d):
+                            al_v = d.get("corrugation_angle", d.get("alpha_deg", 0.0))
+                            key = (round(float(d["d_um"]), 4), round(float(d["theta_deg"]), 1), round(float(al_v), 1))
                             if key in configs_map:
                                 completed_task_ids.add(configs_map[key])
         except Exception:
