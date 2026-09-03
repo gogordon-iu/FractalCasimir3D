@@ -108,7 +108,7 @@ def compute_matsubara_casimir_pressure(
     rep_sign = +1.0 if (is_geom_repulsive or is_dlp_repulsive) else -1.0
     
     MEEP_TO_PA = 0.03161
-    base_pressure_Pa = rep_sign * abs(raw_force_dens) * MEEP_TO_PA * 1e4
+    base_pressure_Pa = rep_sign * abs(raw_force_dens) * MEEP_TO_PA  # in Pascals (N/m^2)
     
     # Thermal damping envelope for DSI oscillations:
     # High-temperature damping factor: exp(-2 * pi * d / lambda_T)

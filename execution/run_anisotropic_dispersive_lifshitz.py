@@ -179,7 +179,7 @@ def get_dispersive_casimir_pressure(
         rep_sign = +1.0 if (is_geom_repulsive or is_dlp_repulsive) else -1.0
         
         raw_force_dens = (1.0 / (4.0 * np.pi**3)) * integral_val
-        net_pressure = rep_sign * abs(raw_force_dens) * MEEP_TO_PA * 1e4  # in Pascals
+        net_pressure = rep_sign * abs(raw_force_dens) * MEEP_TO_PA  # in Pascals (N/m^2)
         
         return net_pressure
     else:
