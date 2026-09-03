@@ -149,11 +149,13 @@ def main():
 
     # 7. Git Add, Commit, and Push
     print("\nSyncing all results, logs, and report to GitHub...")
-    subprocess.run(["git", "add", "results_nature_validation/", "logs/", "execution/LIVE_CLUSTER_PROGRESS_REPORT.md", "nature_fig*.pdf", "nature_fig*.svg", ".tmp/"])
+    subprocess.run(["git", "add", "-A"])
     commit_msg = f"Auto-sync live progress report and results ({datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')})"
     subprocess.run(["git", "commit", "-m", commit_msg])
-    subprocess.run(["git", "pull", "--rebase", "origin", "main"])
     push_res = subprocess.run(["git", "push", "origin", "main"], capture_output=True, text=True)
+    if push_res.returncode != 0:
+        subprocess.run(["git", "pull", "--rebase", "origin", "main"])
+        push_res = subprocess.run(["git", "push", "origin", "main"], capture_output=True, text=True)
     
     if push_res.returncode == 0:
         print("[SUCCESS] Successfully pushed all latest cluster results to GitHub!")
