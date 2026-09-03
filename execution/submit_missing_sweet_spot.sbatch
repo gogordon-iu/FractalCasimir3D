@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --time=24:00:00
-#SBATCH --array=1-224%8
+#SBATCH --array=1-224%32
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu
 #SBATCH -o .tmp/sweet_spot_%A_%a.out
@@ -73,6 +73,7 @@ srun -n 128 $PYTHON_EXEC execution/run_meep_simulation.py \
     --material $MAT \
     --res $RES \
     --eps-bg $EPS \
+    --T-run 20.0 \
     --config all
 
 echo "Task $SLURM_ARRAY_TASK_ID complete at $(date)."
