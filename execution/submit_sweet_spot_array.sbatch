@@ -21,6 +21,7 @@ echo "=================================================="
 source ~/miniconda3/etc/profile.d/conda.sh
 module unload xalt
 export XALT_EXECUTABLE_TRACKING=no
+export PYTHONUNBUFFERED=1
 conda activate meep
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
