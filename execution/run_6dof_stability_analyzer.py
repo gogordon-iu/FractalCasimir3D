@@ -64,9 +64,10 @@ def compute_6dof_forces_and_torques(
     tau_x = -k_tilt * theta_x_deg
     tau_y = -k_tilt * theta_y_deg
     
-    # Torsional restoring torque Tau_z around optimal twist (90 degrees):
+    # Torsional restoring torque Tau_z around optimal twist minimum (90 degrees):
+    # Potential U(theta) = U0 * cos(2*theta), restoring torque tau_z = -k_torsion * delta_theta
     delta_theta_z = theta_z_deg - 90.0
-    k_torsion = 15.0 * np.sin(2.0 * np.radians(90.0))  # pN * um / deg
+    k_torsion = 15.0  # Torsional spring constant in pN * um / deg
     tau_z = -k_torsion * delta_theta_z
     
     return np.array([Fx, Fy, Fz, tau_x, tau_y, tau_z], dtype=float)
