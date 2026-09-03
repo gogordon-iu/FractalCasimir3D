@@ -22,6 +22,16 @@ def main():
     print(f"BIGRED 200 PROGRESS SCAN & GIT SYNC - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("==================================================")
 
+    # Refresh analytical Tasks 2, 3, 4 and figures with latest audited code (<10s)
+    try:
+        subprocess.run([sys.executable, "execution/run_anisotropic_dispersive_lifshitz.py", "--d", "0.15", "--material-top", "BlackPhosphorus", "--medium", "Teflon_AF", "--theta", "90.0", "--outdir", "results_nature_validation"], capture_output=True)
+        subprocess.run([sys.executable, "execution/run_anisotropic_dispersive_lifshitz.py", "--d", "0.15", "--material-top", "ReS2", "--medium", "Teflon_AF", "--theta", "90.0", "--outdir", "results_nature_validation"], capture_output=True)
+        subprocess.run([sys.executable, "execution/run_6dof_stability_analyzer.py", "--d-eq", "0.15", "--alpha", "75.0", "--theta-z", "90.0", "--outdir", "results_nature_validation"], capture_output=True)
+        subprocess.run([sys.executable, "execution/run_thermal_matsubara_dsi.py", "--d", "0.15", "--T", "300.0", "--sweep-all", "--outdir", "results_nature_validation"], capture_output=True)
+        subprocess.run([sys.executable, "execution/postprocess_nature_validation.py"], capture_output=True)
+    except Exception:
+        pass
+
     # 1. Check Active Slurm Jobs
     squeue_output = ""
     try:
