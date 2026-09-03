@@ -207,7 +207,8 @@ def run_rounded_convergence_simulation(
     
     A_eff = get_effective_area(N_top, L)
     f_net = f_both - f_self
-    pressure_Pa = f_net / A_eff
+    MEEP_TO_PA = 0.031615  # hbar*c / a^4 with a = 1 um in Pascals (N/m^2)
+    pressure_Pa = (f_net / A_eff) * MEEP_TO_PA
 
     return {
         "d_um": d,
