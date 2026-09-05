@@ -527,8 +527,14 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
             force_integral += np.imag(gt_arr[step] * dt * side_orientation * f_temp)
             
         total_force += force_integral
-        if mp.am_master() and (global_rank == 0):
-            print(f"  [{config.upper()}] Done moment {idx+1}/{len(my_tasks)}: force_integral={force_integral:+.6e}", flush=True)
+        if mp.am_master():
+            try:
+                from mpi4py import MPI
+                is_g0 = (MPI.COMM_WORLD.Get_rank() == 0)
+            except Exception:
+                is_g0 = True
+            if is_g0:
+                print(f"  [{config.upper()}] Done moment {idx+1}/{len(my_tasks)}: force_integral={force_integral:+.6e}", flush=True)
         
     # If K is 1 (non-MPI mode or single subgroup), return total_force immediately
     if K == 1:
