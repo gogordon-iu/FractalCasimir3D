@@ -379,7 +379,7 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     else:
         tasks_to_run = [t for t in list(range(subgroup_index, num_tasks, K)) if moment_start <= t < moment_end]
         
-    for task_idx in tasks_to_run:
+    for cur_idx, task_idx in enumerate(tasks_to_run):
         p = task_idx // (n_max * 6)
         n = task_idx % (n_max * 6)
         
@@ -534,7 +534,7 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
             except Exception:
                 is_g0 = True
             if is_g0:
-                print(f"  [{config.upper()}] Done moment {idx+1}/{len(my_tasks)}: force_integral={force_integral:+.6e}", flush=True)
+                print(f"  [{config.upper()}] Done moment {cur_idx+1}/{len(tasks_to_run)} (task {task_idx}): force_integral={force_integral:+.6e}", flush=True)
         
     # If K is 1 (non-MPI mode or single subgroup), return total_force immediately
     if K == 1:
