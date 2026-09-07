@@ -651,6 +651,20 @@ def main():
     chk_both = f".tmp/chk_{task_chk_tag}_both.json"
     chk_self = f".tmp/chk_{task_chk_tag}_self.json"
     
+    # Early exit if final output already exists
+    nbot_str = f"_corrugated_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
+    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
+    if args.config == "all" and args.task_idx < 0 and os.path.exists(out_file):
+        try:
+            with open(out_file, "r") as f:
+                cached_res = json.load(f)
+            if "force_subtracted" in cached_res:
+                if global_rank == 0:
+                    print(f"Task already complete! Found cached result in {out_file} (F_sub={cached_res['force_subtracted']:.6e}). Skipping.")
+                return
+        except Exception:
+            pass
+
     # We run the cases for vacuum subtraction with checkpoint resume:
     f_both = 0.0
     f_self = 0.0

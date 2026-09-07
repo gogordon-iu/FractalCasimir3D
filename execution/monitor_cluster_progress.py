@@ -92,7 +92,7 @@ def main():
     pct_done = len(completed_task_ids) / 224 * 100
     bar_len = 30
     filled = int(bar_len * len(completed_task_ids) // 224)
-    bar = "█" * filled + "░" * (bar_len - filled)
+    bar = "#" * filled + "-" * (bar_len - filled)
 
     print(f"  Progress: [{bar}] {pct_done:.1f}% ({len(completed_task_ids)} / 224 Tasks Completed)")
     print(f"  Missing / Remaining Tasks: {len(missing_task_ids)}")
