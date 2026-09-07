@@ -1,12 +1,15 @@
 # Live Cluster Progress Report — BigRed 200
 
-**Timestamp:** `2026-09-04 22:58:07 UTC`  
+**Timestamp:** `2026-09-07 01:00:12 UTC`  
 **Cluster:** Indiana University BigRed 200 Cray EX (128-core AMD EPYC 7742)  
 
 ## 1. Slurm Active Queue Status
 ```
 JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
-           8148815       gpu evo_all_ gogordon  R   13:02:23      1 nid0673
+ 8153733_[100-224]   general casimir_ gogordon PD       0:00      1 (Priority)
+        8153733_98   general casimir_ gogordon  R       3:35      1 nid0633
+        8153733_99   general casimir_ gogordon  R       3:28      1 nid0337
+        8153733_97   general casimir_ gogordon  R      42:26      1 nid0115
 ```
 
 ## 2. Nature Refutation Suite Progress Summary
