@@ -294,9 +294,10 @@ def main():
             "is_repulsive": bool(p_val > 0)
         }
 
-    with open(out_file, "w") as f:
-        json.dump(result, f, indent=4)
-    print(f"Convergence task complete: Res={args.res}, r_tip={args.r_tip} nm, P={result['pressure_Pa']:+.4f} Pa -> Saved to {out_file}")
+    if mp is None or mp.am_master():
+        with open(out_file, "w") as f:
+            json.dump(result, f, indent=4)
+        print(f"Convergence task complete: Res={args.res}, r_tip={args.r_tip} nm, P={result['pressure_Pa']:+.4f} Pa -> Saved to {out_file}", flush=True)
 
 
 if __name__ == "__main__":
