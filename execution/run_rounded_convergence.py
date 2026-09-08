@@ -80,11 +80,18 @@ def run_rounded_convergence_simulation(
         mp.Hx: mp.X, mp.Hy: mp.Y, mp.Hz: mp.Z
     }
     
+    global_rank = int(os.environ.get("SLURM_PROCID", 0))
+    total_ranks = int(os.environ.get("SLURM_NTASKS", 1))
+
     def simulate_cfg(current_cfg):
-        total_f = 0.0
         num_moments = 36 * n_max
-        
-        for task_idx in range(num_moments):
+        if total_ranks > 1:
+            my_moments = [t for t in range(global_rank, num_moments, total_ranks)]
+        else:
+            my_moments = list(range(num_moments))
+            
+        local_f = 0.0
+        for cur_i, task_idx in enumerate(my_moments):
             p = task_idx // (n_max * 6)
             n = task_idx % (n_max * 6)
             curr_pol = pol_list[p]
@@ -199,8 +206,39 @@ def run_rounded_convergence_simulation(
                 )
                 f_integral += np.imag(gt_arr[step] * dt * side["orientation"] * f_temp)
                 
-            total_f += f_integral
-        return total_f
+            local_f += f_integral
+            if global_rank == 0 or len(my_moments) > 1:
+                print(f"  [{current_cfg.upper()}][Rank {global_rank}] Done moment {cur_i+1}/{len(my_moments)} (task {task_idx}): force_integral={f_integral:+.6e}", flush=True)
+
+        if total_ranks > 1:
+            import time
+            task_tag = f"conv_res_{resolution}_rtip_{r_tip_nm:.1f}_ds_{delta_s_nm:.1f}_{current_cfg}"
+            os.makedirs(".tmp", exist_ok=True)
+            temp_file = f".tmp/temp_conv_{task_tag}_rank_{global_rank}.json"
+            with open(temp_file, "w") as f:
+                json.dump({"force": float(local_f)}, f)
+                
+            if global_rank == 0:
+                total_f = 0.0
+                active_ranks = min(total_ranks, num_moments)
+                for r in range(active_ranks):
+                    r_file = f".tmp/temp_conv_{task_tag}_rank_{r}.json"
+                    wait_count = 0
+                    while not os.path.exists(r_file) and wait_count < 7200:
+                        time.sleep(0.5)
+                        wait_count += 1
+                    try:
+                        if os.path.exists(r_file):
+                            with open(r_file, "r") as f:
+                                total_f += float(json.load(f)["force"])
+                            os.remove(r_file)
+                    except Exception:
+                        pass
+                return total_f
+            else:
+                return 0.0
+        else:
+            return local_f
 
     f_both = simulate_cfg("both") if config in ["all", "both"] else 0.0
     f_self = simulate_cfg("self") if config in ["all", "self"] else 0.0
@@ -259,6 +297,18 @@ def main():
         f"conv_res_{args.res}_rtip_{args.r_tip:.1f}_ds_{args.delta_s:.1f}_al_{args.alpha:.1f}_th_{args.theta:.1f}.json"
     )
 
+    global_rank = int(os.environ.get("SLURM_PROCID", 0))
+    if os.path.exists(out_file):
+        try:
+            with open(out_file, "r") as f:
+                cached = json.load(f)
+            if "pressure_Pa" in cached:
+                if global_rank == 0:
+                    print(f"Task already complete! Found cached {out_file} (P={cached['pressure_Pa']:+.4f} Pa). Skipping.")
+                return
+        except Exception:
+            pass
+
     if mp is not None:
         result = run_rounded_convergence_simulation(
             d=args.d,
@@ -294,7 +344,7 @@ def main():
             "is_repulsive": bool(p_val > 0)
         }
 
-    if mp is None or mp.am_master():
+    if global_rank == 0:
         with open(out_file, "w") as f:
             json.dump(result, f, indent=4)
         print(f"Convergence task complete: Res={args.res}, r_tip={args.r_tip} nm, P={result['pressure_Pa']:+.4f} Pa -> Saved to {out_file}", flush=True)

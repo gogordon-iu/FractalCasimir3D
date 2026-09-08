@@ -527,14 +527,9 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
             force_integral += np.imag(gt_arr[step] * dt * side_orientation * f_temp)
             
         total_force += force_integral
-        if mp.am_master():
-            try:
-                from mpi4py import MPI
-                is_g0 = (MPI.COMM_WORLD.Get_rank() == 0)
-            except Exception:
-                is_g0 = True
-            if is_g0:
-                print(f"  [{config.upper()}] Done moment {cur_idx+1}/{len(tasks_to_run)} (task {task_idx}): force_integral={force_integral:+.6e}", flush=True)
+        is_g0 = (int(os.environ.get("SLURM_PROCID", 0)) == 0)
+        if is_g0 or len(tasks_to_run) > 1:
+            print(f"  [{config.upper()}][Rank {subgroup_index}] Done moment {cur_idx+1}/{len(tasks_to_run)} (task {task_idx}): force_integral={force_integral:+.6e}", flush=True)
         
     # If K is 1 (non-MPI mode or single subgroup), return total_force immediately
     if K == 1:
@@ -544,16 +539,20 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     try:
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
-        global_force_sum = comm.allreduce(total_force, op=MPI.SUM)
-        subgroup_size = comm.Get_size() / K
-        final_force = global_force_sum / subgroup_size
-    except ImportError:
+        if comm.Get_size() > 1 and mp.count_processors() > 1:
+            global_force_sum = comm.allreduce(total_force, op=MPI.SUM)
+            subgroup_size = comm.Get_size() / K
+            final_force = global_force_sum / subgroup_size
+            return final_force
+        else:
+            raise RuntimeError("Use file aggregation for multi-process Slurm launch")
+    except Exception:
         import time
         global_rank = int(os.environ.get("SLURM_PROCID", 0))
         task_tag = f"d_{d:.4f}_th_{theta:.1f}_al_{corrugation_angle:.1f}_mat_{material}_L_{L:.2f}"
         
         # Subgroup master writes its total_force
-        if mp.am_master():
+        if subgroup_index < K:
             os.makedirs(".tmp", exist_ok=True)
             temp_file = f".tmp/temp_force_{task_tag}_{config}_subgroup_{subgroup_index}.json"
             with open(temp_file, "w") as f:
@@ -620,31 +619,32 @@ def main():
         setup_global_exception_handler(args.task_idx, vars(args))
     except Exception as exc_err:
         pass
-    # Use mp.count_processors() to check the actual number of MPI processes initialized by Meep
-    M = mp.count_processors()
+    global_rank = int(os.environ.get("SLURM_PROCID", 0))
+    total_ranks = int(os.environ.get("SLURM_NTASKS", 1))
     num_tasks = 36 * args.nmax
     
-    if args.task_idx >= 0 or args.no_subgroups:
-        # If running a single task or forcing sequential, we disable subgroup division (K=1, subgroup_index=0)
+    if args.task_idx >= 0 or args.no_subgroups or total_ranks <= 1:
         K = 1
         subgroup_index = 0
     else:
-        K = get_optimal_subgroups(M, num_tasks)
-        subgroup_index = 0
-        if K > 1:
-            subgroup_index = mp.divide_parallel_processes(K)
+        if mp.count_processors() > 1:
+            M = mp.count_processors()
+            K = get_optimal_subgroups(M, num_tasks)
+            subgroup_index = mp.divide_parallel_processes(K) if K > 1 else 0
+        else:
+            K = min(total_ranks, num_tasks)
+            subgroup_index = global_rank
         
-    # We check if we are the global master (global rank 0) to print and write files
-    global_rank = 0
     try:
         from mpi4py import MPI
-        global_rank = MPI.COMM_WORLD.Get_rank()
-    except ImportError:
-        global_rank = int(os.environ.get("SLURM_PROCID", 0))
+        if MPI.COMM_WORLD.Get_size() > 1 and mp.count_processors() > 1:
+            global_rank = MPI.COMM_WORLD.Get_rank()
+    except Exception:
+        pass
         
     if global_rank == 0:
         print(f"Starting simulation: d={args.d} um, N_top={args.N}, N_bottom={args.N_bottom}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}, config={args.config}, stepped_sieve={args.stepped_sieve}, corrugated={args.corrugated}")
-        print(f"Parallel configuration: {M} processes divided into {K} subgroups of size {M//K} processes each.")
+        print(f"Parallel configuration: {total_ranks} processes running {K} parallel moment partitions.")
     
     # Checkpointing and cache tags
     task_chk_tag = f"d_{args.d:.4f}_N_{args.N}_mat_{args.material}_res_{args.res}_th_{args.theta:.1f}_al_{args.corrugation_angle:.1f}_L_{args.L:.2f}"
