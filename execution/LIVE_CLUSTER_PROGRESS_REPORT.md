@@ -1,45 +1,45 @@
 # Live Cluster Progress Report — BigRed 200
 
-**Timestamp:** `2026-09-08 16:38:32 UTC`  
+**Timestamp:** `2026-09-09 17:57:01 UTC`  
 **Cluster:** Indiana University BigRed 200 Cray EX (128-core AMD EPYC 7742)  
 
 ## 1. Slurm Active Queue Status
 ```
 JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
-  8170419_[25-224]   general casimir_ gogordon PD       0:00      1 (Priority)
-   8170420_[15-24]   general nature_t gogordon PD       0:00      1 (JobArrayTaskLimit)
-         8170420_9   general nature_t gogordon  R      31:33      1 nid0270
-        8170420_10   general nature_t gogordon  R      31:33      1 nid0422
-        8170419_18   general casimir_ gogordon  R    5:08:01      1 nid0051
-        8170419_19   general casimir_ gogordon  R    5:08:01      1 nid0345
-         8170420_8   general nature_t gogordon  R    5:18:44      1 nid0240
-        8170419_20   general casimir_ gogordon  R    5:08:01      1 nid0409
-         8170420_5   general nature_t gogordon  R    8:52:33      1 nid0619
-         8170420_6   general nature_t gogordon  R    8:52:33      1 nid0630
-        8170419_16   general casimir_ gogordon  R    8:49:26      1 nid0457
-        8170419_17   general casimir_ gogordon  R    8:43:13      1 nid0351
-         8170420_7   general nature_t gogordon  R    8:48:05      1 nid0526
-         8170420_4   general nature_t gogordon  R    9:05:01      1 nid0213
-        8170419_14   general casimir_ gogordon  R    9:05:01      1 nid0463
-        8170419_15   general casimir_ gogordon  R    9:05:01      1 nid0554
-        8170419_24   general casimir_ gogordon  R       6:57      1 nid0013
-         8170419_7   general casimir_ gogordon  R   13:18:42      1 nid0449
-         8170419_8   general casimir_ gogordon  R   13:18:42      1 nid0483
-         8170419_6   general casimir_ gogordon  R   13:25:05      1 nid0226
-         8170419_4   general casimir_ gogordon  R   13:27:30      1 nid0046
-         8170419_5   general casimir_ gogordon  R   13:27:30      1 nid0589
-         8170419_3   general casimir_ gogordon  R   13:37:30      1 nid0035
-         8170419_2   general casimir_ gogordon  R   13:39:54      1 nid0579
-         8170419_1   general casimir_ gogordon  R   13:57:18      1 nid0625
-        8170419_23   general casimir_ gogordon  R    3:15:19      1 nid0286
-        8170419_21   general casimir_ gogordon  R    3:28:34      1 nid0298
-        8170419_22   general casimir_ gogordon  R    3:28:34      1 nid0357
-         8170419_9   general casimir_ gogordon  R   12:31:59      1 nid0541
-        8170419_13   general casimir_ gogordon  R   12:14:14      1 nid0381
-        8170419_10   general casimir_ gogordon  R   12:26:45      1 nid0595
-        8170419_11   general casimir_ gogordon  R   12:26:45      1 nid0596
-        8170419_12   general casimir_ gogordon  R   12:19:14      1 nid0550
-           8171546       gpu evo_all_ gogordon PD       0:00      1 (Priority)
+  8170419_[57-224]   general casimir_ gogordon PD       0:00      1 (JobArrayTaskLimit)
+        8170419_56   general casimir_ gogordon  R    1:25:18      1 nid0017
+        8170419_53   general casimir_ gogordon  R    4:46:44      1 nid0298
+        8170419_50   general casimir_ gogordon  R    6:26:16      1 nid0051
+        8170419_51   general casimir_ gogordon  R    6:26:16      1 nid0240
+        8170419_52   general casimir_ gogordon  R    6:26:16      1 nid0246
+        8170419_55   general casimir_ gogordon  R    4:33:15      1 nid0510
+        8170419_54   general casimir_ gogordon  R    4:46:43      1 nid0357
+        8170419_48   general casimir_ gogordon  R   10:07:47      1 nid0014
+        8170419_46   general casimir_ gogordon  R   10:23:18      1 nid0554
+        8170419_27   general casimir_ gogordon  R   21:10:40      1 nid0426
+        8170419_47   general casimir_ gogordon  R   10:23:18      1 nid0463
+        8170419_26   general casimir_ gogordon  R   21:20:41      1 nid0591
+        8170419_25   general casimir_ gogordon  R   21:55:46      1 nid0526
+        8170419_33   general casimir_ gogordon  R   15:15:28      1 nid0231
+        8170419_35   general casimir_ gogordon  R   14:55:29      1 nid0601
+        8170419_34   general casimir_ gogordon  R   14:57:56      1 nid0184
+        8170419_49   general casimir_ gogordon  R   10:01:18      1 nid0034
+        8170419_29   general casimir_ gogordon  R   18:52:58      1 nid0311
+        8170419_36   general casimir_ gogordon  R   14:45:27      1 nid0035
+        8170419_37   general casimir_ gogordon  R   14:45:27      1 nid0037
+        8170419_31   general casimir_ gogordon  R   18:21:46      1 nid0394
+        8170419_38   general casimir_ gogordon  R   14:43:27      1 nid0046
+        8170419_30   general casimir_ gogordon  R   18:24:39      1 nid0415
+        8170419_28   general casimir_ gogordon  R   19:13:16      1 nid0151
+        8170419_39   general casimir_ gogordon  R   14:36:56      1 nid0111
+        8170419_40   general casimir_ gogordon  R   14:36:56      1 nid0144
+        8170419_32   general casimir_ gogordon  R   17:45:27      1 nid0055
+        8170419_42   general casimir_ gogordon  R   12:45:01      1 nid0429
+        8170419_43   general casimir_ gogordon  R   12:44:33      1 nid0537
+        8170419_45   general casimir_ gogordon  R   12:43:04      1 nid0406
+        8170419_44   general casimir_ gogordon  R   12:43:18      1 nid0307
+        8170419_41   general casimir_ gogordon  R   13:21:49      1 nid0536
+           8182440       gpu evo_all_ gogordon PD       0:00      1 (Priority)
 ```
 
 ## 2. Nature Refutation Suite Progress Summary
