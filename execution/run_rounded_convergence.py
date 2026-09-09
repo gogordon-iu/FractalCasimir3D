@@ -83,10 +83,25 @@ def run_rounded_convergence_simulation(
     global_rank = int(os.environ.get("SLURM_PROCID", 0))
     total_ranks = int(os.environ.get("SLURM_NTASKS", 1))
 
+    # Memory-safe process allocation to prevent OOM on 240 GB Cray EX nodes
+    if resolution <= 40:
+        max_active_ranks = 72
+    elif resolution <= 60:
+        max_active_ranks = 48
+    elif resolution <= 80:
+        max_active_ranks = 24
+    else:
+        max_active_ranks = 16
+
+    active_ranks = min(total_ranks, max_active_ranks, 36 * n_max)
+
     def simulate_cfg(current_cfg):
         num_moments = 36 * n_max
         if total_ranks > 1:
-            my_moments = [t for t in range(global_rank, num_moments, total_ranks)]
+            if global_rank < active_ranks:
+                my_moments = [t for t in range(global_rank, num_moments, active_ranks)]
+            else:
+                my_moments = []
         else:
             my_moments = list(range(num_moments))
             
@@ -214,13 +229,13 @@ def run_rounded_convergence_simulation(
             import time
             task_tag = f"conv_res_{resolution}_rtip_{r_tip_nm:.1f}_ds_{delta_s_nm:.1f}_{current_cfg}"
             os.makedirs(".tmp", exist_ok=True)
-            temp_file = f".tmp/temp_conv_{task_tag}_rank_{global_rank}.json"
-            with open(temp_file, "w") as f:
-                json.dump({"force": float(local_f)}, f)
+            if global_rank < active_ranks:
+                temp_file = f".tmp/temp_conv_{task_tag}_rank_{global_rank}.json"
+                with open(temp_file, "w") as f:
+                    json.dump({"force": float(local_f)}, f)
                 
             if global_rank == 0:
                 total_f = 0.0
-                active_ranks = min(total_ranks, num_moments)
                 for r in range(active_ranks):
                     r_file = f".tmp/temp_conv_{task_tag}_rank_{r}.json"
                     wait_count = 0
