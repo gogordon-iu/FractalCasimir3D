@@ -1,8 +1,16 @@
 import json
 import os
 
+import glob
+
 def generate_latex_tables():
-    with open('results_sweet_spot_sweep_20260831_134421/sweet_spot_sweep_summary.json', 'r') as f:
+    summaries = sorted(glob.glob("results_sweet_spot_sweep_*/sweet_spot_sweep_summary.json"), key=os.path.getmtime)
+    if not summaries:
+        print("No sweet spot sweep summary found.")
+        return
+    summary_path = summaries[-1]
+    print(f"Loading sweet spot sweep summary from: {summary_path}")
+    with open(summary_path, 'r') as f:
         data = json.load(f)
 
     # 1. High repulsive table

@@ -28,6 +28,8 @@ def main():
         subprocess.run([sys.executable, "execution/run_anisotropic_dispersive_lifshitz.py", "--d", "0.15", "--material-top", "ReS2", "--medium", "Teflon_AF", "--theta", "90.0", "--outdir", "results_nature_validation"], capture_output=True)
         subprocess.run([sys.executable, "execution/run_6dof_stability_analyzer.py", "--d-eq", "0.15", "--alpha", "75.0", "--theta-z", "90.0", "--outdir", "results_nature_validation"], capture_output=True)
         subprocess.run([sys.executable, "execution/run_thermal_matsubara_dsi.py", "--d", "0.15", "--T", "300.0", "--sweep-all", "--outdir", "results_nature_validation"], capture_output=True)
+        subprocess.run([sys.executable, "execution/run_sweet_spot_analyzer.py"], capture_output=True)
+        subprocess.run([sys.executable, "execution/generate_sweet_spot_tables.py"], capture_output=True)
         subprocess.run([sys.executable, "execution/postprocess_nature_validation.py"], capture_output=True)
     except Exception:
         pass
@@ -86,7 +88,7 @@ def main():
         try:
             with open(f, "r") as fp:
                 data = json.load(fp)
-                if isinstance(data, dict) and "force_subtracted" in data:
+                if isinstance(data, dict) and ("force_subtracted" in data or "force_both" in data):
                     sweet_spot_data.append(data)
         except Exception:
             pass
