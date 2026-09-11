@@ -652,15 +652,33 @@ def main():
     chk_self = f".tmp/chk_{task_chk_tag}_self.json"
     
     # Early exit if final output already exists
-    nbot_str = f"_corrugated_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
+    nbot_str = f"_corrugated_al_{args.corrugation_angle:.1f}_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
     out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
-    if args.config == "all" and args.task_idx < 0 and os.path.exists(out_file):
+    
+    # Check current file or legacy file with matching corrugation angle
+    old_nbot_str = f"_corrugated_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
+    old_out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{old_nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
+    
+    check_file = None
+    if os.path.exists(out_file):
+        check_file = out_file
+    elif os.path.exists(old_out_file):
         try:
-            with open(out_file, "r") as f:
+            with open(old_out_file, "r") as f:
+                c_data = json.load(f)
+            target_al = float(args.corrugation_angle if args.corrugated else 0.0)
+            if abs(float(c_data.get("corrugation_angle", -999.0)) - target_al) < 1e-3:
+                check_file = old_out_file
+        except Exception:
+            pass
+
+    if args.config == "all" and args.task_idx < 0 and check_file:
+        try:
+            with open(check_file, "r") as f:
                 cached_res = json.load(f)
             if "force_subtracted" in cached_res:
                 if global_rank == 0:
-                    print(f"Task already complete! Found cached result in {out_file} (F_sub={cached_res['force_subtracted']:.6e}). Skipping.")
+                    print(f"Task already complete! Found cached result in {check_file} (F_sub={cached_res['force_subtracted']:.6e}). Skipping.")
                 return
         except Exception:
             pass
@@ -707,7 +725,7 @@ def main():
         is_partial = (args.moment_start > 0 or args.moment_end < num_tasks)
         if is_partial:
             # Write partial moment results
-            nbot_str = f"_corrugated_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
+            nbot_str = f"_corrugated_al_{args.corrugation_angle:.1f}_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
             if args.config == "all":
                 for cfg, force_val in [("both", f_both), ("self", f_self)]:
                     out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{cfg}_moments_{args.moment_start}_{args.moment_end}.json"
@@ -748,7 +766,7 @@ def main():
                     json.dump(result, f, indent=4)
                 print(f"Partial simulation task complete. Saved to {out_file}")
         else:
-            nbot_str = f"_corrugated_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
+            nbot_str = f"_corrugated_al_{args.corrugation_angle:.1f}_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
             if args.task_idx >= 0:
                 if args.config == "all":
                     out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_task_{args.task_idx}.json"
