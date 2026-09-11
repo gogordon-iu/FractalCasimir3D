@@ -1,53 +1,39 @@
 # Live Cluster Progress Report — BigRed 200
 
-**Timestamp:** `2026-09-09 17:57:01 UTC`  
+**Timestamp:** `2026-09-10 22:52:12 UTC`  
 **Cluster:** Indiana University BigRed 200 Cray EX (128-core AMD EPYC 7742)  
 
 ## 1. Slurm Active Queue Status
 ```
 JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
-  8170419_[57-224]   general casimir_ gogordon PD       0:00      1 (JobArrayTaskLimit)
-        8170419_56   general casimir_ gogordon  R    1:25:18      1 nid0017
-        8170419_53   general casimir_ gogordon  R    4:46:44      1 nid0298
-        8170419_50   general casimir_ gogordon  R    6:26:16      1 nid0051
-        8170419_51   general casimir_ gogordon  R    6:26:16      1 nid0240
-        8170419_52   general casimir_ gogordon  R    6:26:16      1 nid0246
-        8170419_55   general casimir_ gogordon  R    4:33:15      1 nid0510
-        8170419_54   general casimir_ gogordon  R    4:46:43      1 nid0357
-        8170419_48   general casimir_ gogordon  R   10:07:47      1 nid0014
-        8170419_46   general casimir_ gogordon  R   10:23:18      1 nid0554
-        8170419_27   general casimir_ gogordon  R   21:10:40      1 nid0426
-        8170419_47   general casimir_ gogordon  R   10:23:18      1 nid0463
-        8170419_26   general casimir_ gogordon  R   21:20:41      1 nid0591
-        8170419_25   general casimir_ gogordon  R   21:55:46      1 nid0526
-        8170419_33   general casimir_ gogordon  R   15:15:28      1 nid0231
-        8170419_35   general casimir_ gogordon  R   14:55:29      1 nid0601
-        8170419_34   general casimir_ gogordon  R   14:57:56      1 nid0184
-        8170419_49   general casimir_ gogordon  R   10:01:18      1 nid0034
-        8170419_29   general casimir_ gogordon  R   18:52:58      1 nid0311
-        8170419_36   general casimir_ gogordon  R   14:45:27      1 nid0035
-        8170419_37   general casimir_ gogordon  R   14:45:27      1 nid0037
-        8170419_31   general casimir_ gogordon  R   18:21:46      1 nid0394
-        8170419_38   general casimir_ gogordon  R   14:43:27      1 nid0046
-        8170419_30   general casimir_ gogordon  R   18:24:39      1 nid0415
-        8170419_28   general casimir_ gogordon  R   19:13:16      1 nid0151
-        8170419_39   general casimir_ gogordon  R   14:36:56      1 nid0111
-        8170419_40   general casimir_ gogordon  R   14:36:56      1 nid0144
-        8170419_32   general casimir_ gogordon  R   17:45:27      1 nid0055
-        8170419_42   general casimir_ gogordon  R   12:45:01      1 nid0429
-        8170419_43   general casimir_ gogordon  R   12:44:33      1 nid0537
-        8170419_45   general casimir_ gogordon  R   12:43:04      1 nid0406
-        8170419_44   general casimir_ gogordon  R   12:43:18      1 nid0307
-        8170419_41   general casimir_ gogordon  R   13:21:49      1 nid0536
-           8182440       gpu evo_all_ gogordon PD       0:00      1 (Priority)
+        8182902_23   general nature_t gogordon PD       0:00      1 (JobArrayTaskLimit)
+        8182902_24   general nature_t gogordon PD       0:00      1 (JobArrayTaskLimit)
+        8182902_22   general nature_t gogordon  R       2:04      1 nid0107
+        8182902_17   general nature_t gogordon  R   11:23:06      1 nid0608
+        8182902_16   general nature_t gogordon  R   11:30:36      1 nid0409
+        8182902_18   general nature_t gogordon  R   10:20:36      1 nid0447
+        8182902_15   general nature_t gogordon  R   11:52:05      1 nid0606
+        8182902_19   general nature_t gogordon  R   10:09:35      1 nid0463
+        8182902_20   general nature_t gogordon  R    9:53:06      1 nid0017
+        8182902_21   general nature_t gogordon  R    9:49:06      1 nid0316
+           8198957       gpu evo_all_ gogordon  R    3:00:33      1 nid0675
 ```
 
 ## 2. Nature Refutation Suite Progress Summary
-- **Task 1 (FDTD Grid Convergence & Tip Rounding):** `0 / 24` completed files
+- **Task 1 (FDTD Grid Convergence & Tip Rounding):** `5 / 24` completed files
 - **Task 2 (Anisotropic Dispersive Loss):** `2 / 216` completed files
 - **Task 3 (6-DOF Mechanical Stability Matrix):** `1 / 20` completed files
 - **Task 4 (Finite-T Matsubara DSI):** `1 / 60` completed files
-- **Total Nature Validation Files:** `4 / 320` completed
+- **Total Nature Validation Files:** `9 / 320` completed
+
+### Task 1 Sample Grid Convergence Points:
+| Resolution (px/um) | Tip Radius r_tip (nm) | Standoff delta_s (nm) | Pressure P (Pa) | Repulsive? |
+|---|---|---|---|---|
+| 40 | 0.0 | 30.0 | +0.0022 | True |
+| 40 | 10.0 | 30.0 | +0.0022 | True |
+| 40 | 2.0 | 30.0 | +83.6078 | True |
+| 40 | 20.0 | 30.0 | +0.0022 | True |
+| 40 | 5.0 | 30.0 | +0.0022 | True |
 
 ### Task 3 6-DOF Stability Status:
 - **Equilibrium Gap $d_{eq}$:** `0.15 um`
@@ -56,7 +42,7 @@ JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
 - **Min Eigenvalue $\lambda_{min}$:** `+1.5000e+01`
 
 ## 3. Sweet Spot Parameter Sweep Progress (.tmp)
-- **Completed Subtracted Force Calculations:** `716` points recorded.
+- **Completed Subtracted Force Calculations:** `1052` points recorded.
 
 ## 4. Latest Compute Node Log Output
 ```
