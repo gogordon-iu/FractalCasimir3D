@@ -22,13 +22,15 @@ try:
     import numpy as np
 except ImportError:
     candidates = [
+        os.path.expanduser("~/.conda/envs/meep/bin/python"),
+        "/N/u/gogordon/BigRed200/.conda/envs/meep/bin/python",
         os.path.expanduser("~/miniconda3/envs/meep/bin/python"),
         os.path.expanduser("~/anaconda3/envs/meep/bin/python"),
-        os.path.expanduser("~/.conda/envs/meep/bin/python"),
         "/N/soft/rhel8/miniconda3/envs/meep/bin/python"
     ]
     for candidate in candidates:
         if os.path.exists(candidate) and sys.executable != candidate:
+            print(f"[Auto-Env] Switching to MEEP environment: {candidate}")
             os.execv(candidate, [candidate] + sys.argv)
     np = None
 
@@ -55,16 +57,15 @@ def main():
     config_files = sorted(glob.glob("sweep_configs_phase1/config_*.json"))
     print(f"Loaded {len(config_files)} Phase 1 target task configurations.")
 
-    tmp_files = sorted(glob.glob(".tmp/**/*.json", recursive=True) + glob.glob(".tmp/*.json"))
+    target_files = sorted(set(glob.glob(".tmp/meep_*.json")))
+    print(f"Scanning {len(target_files)} simulation result files...")
     raw_records = []
-    for fp in tmp_files:
+    for fp in target_files:
         try:
             with open(fp, "r") as f:
                 d = json.load(f)
                 if isinstance(d, dict) and "d_um" in d:
                     raw_records.append(d)
-                elif isinstance(d, list):
-                    raw_records.extend(d)
         except Exception:
             pass
 

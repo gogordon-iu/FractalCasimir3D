@@ -24,9 +24,10 @@ try:
     import matplotlib.pyplot as plt
 except ImportError:
     for candidate in [
+        os.path.expanduser("~/.conda/envs/meep/bin/python"),
+        "/N/u/gogordon/BigRed200/.conda/envs/meep/bin/python",
         os.path.expanduser("~/miniconda3/envs/meep/bin/python"),
         os.path.expanduser("~/anaconda3/envs/meep/bin/python"),
-        os.path.expanduser("~/.conda/envs/meep/bin/python"),
         "/N/soft/rhel8/miniconda3/envs/meep/bin/python"
     ]:
         if os.path.exists(candidate) and sys.executable != candidate:
@@ -47,10 +48,11 @@ def main():
     config_files = sorted(glob.glob("sweep_configs_phase3/config_*.json"))
     print(f"Loaded {len(config_files)} Phase 3 target task configurations.")
 
-    tmp_files = sorted(glob.glob(".tmp/**/*.json", recursive=True) + glob.glob(".tmp/*.json"))
+    target_files = sorted(set(glob.glob(".tmp/meep_*.json")))
     summary_files = sorted(glob.glob("results_sweet_spot_sweep_*/sweet_spot_sweep_summary.json"))
+    print(f"Scanning {len(target_files)} simulation result files...")
     raw_records = []
-    for fp in tmp_files + summary_files:
+    for fp in target_files + summary_files:
         try:
             with open(fp, "r") as f:
                 d = json.load(f)

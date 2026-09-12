@@ -26,12 +26,14 @@ try:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 except ImportError:
-    for candidate in [
+    candidates = [
+        os.path.expanduser("~/.conda/envs/meep/bin/python"),
+        "/N/u/gogordon/BigRed200/.conda/envs/meep/bin/python",
         os.path.expanduser("~/miniconda3/envs/meep/bin/python"),
         os.path.expanduser("~/anaconda3/envs/meep/bin/python"),
-        os.path.expanduser("~/.conda/envs/meep/bin/python"),
         "/N/soft/rhel8/miniconda3/envs/meep/bin/python"
-    ]:
+    ]
+    for candidate in candidates:
         if os.path.exists(candidate) and sys.executable != candidate:
             print(f"[Auto-Env] Switching from {sys.executable} to MEEP conda environment: {candidate}")
             os.execv(candidate, [candidate] + sys.argv)
@@ -43,12 +45,14 @@ def get_effective_area(N, L):
     return ((8.0 / 9.0)**(N - 1)) * (L**2)
 
 def load_all_records():
-    tmp_files = sorted(glob.glob(".tmp/**/*.json", recursive=True) + glob.glob(".tmp/*.json"))
+    tmp_files = sorted(set(glob.glob(".tmp/meep_*.json")))
     summary_files = sorted(
+        glob.glob("results_phase*/phase*_summary.json") +
         glob.glob("results_sweet_spot_sweep_*/sweet_spot_sweep_summary.json") +
         glob.glob("results_hybrid_sweep_*/hybrid_sweep_summary.json") +
         glob.glob("results_nature_unified_*/nature_unified_summary.json")
     )
+    print(f"Scanning {len(tmp_files)} raw result files and {len(summary_files)} summary files...")
 
     records = []
     for fp in tmp_files + summary_files:
