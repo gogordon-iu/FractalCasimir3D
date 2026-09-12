@@ -717,10 +717,16 @@ def main():
             args.eps_bg = IMMERSION_MEDIA[args.medium]["eps_static"]
     r_tip_um = args.r_tip / 1000.0
 
-    # Checkpointing and cache tags (version 2 for clean, non-slicing geometry)
-    rtip_str = f"_rtip_{args.r_tip:.1f}" if args.r_tip > 0.0 else ""
+    # Checkpointing and cache tags (version 3 with unambiguous geometry separation)
+    rtip_str = f"_rtip_{args.r_tip:.1f}" if (args.corrugated and args.r_tip > 0.0) else ""
     med_str = f"_med_{args.medium}" if args.medium and args.medium not in ["Vacuum", "None"] else ""
-    task_chk_tag = f"v2_d_{args.d:.4f}_N_{args.N}_mat_{args.material}_res_{args.res}_th_{args.theta:.1f}_al_{args.corrugation_angle:.1f}{rtip_str}{med_str}_L_{args.L:.2f}"
+    if args.corrugated:
+        geom_tag = f"_corr_al_{args.corrugation_angle:.1f}{rtip_str}"
+    elif args.stepped_sieve:
+        geom_tag = "_sieve"
+    else:
+        geom_tag = "_planar"
+    task_chk_tag = f"v3_d_{args.d:.4f}_Ntop_{args.N}_Nbot_{args.N_bottom}_mat_{args.material}_res_{args.res}_th_{args.theta:.1f}{geom_tag}{med_str}_L_{args.L:.2f}"
     chk_both = f".tmp/chk_{task_chk_tag}_both.json"
     chk_self = f".tmp/chk_{task_chk_tag}_self.json"
     

@@ -89,6 +89,7 @@ bash execution/run_meep_wrapper.sh $PYTHON_EXEC execution/run_meep_simulation.py
     --res $RES \
     --eps-bg $EPS \
     --config all \
+    --no-cache \
     $EXTRA_ARGS
 
 EXIT_CODE=$?
