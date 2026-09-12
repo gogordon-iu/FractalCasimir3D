@@ -18,12 +18,26 @@ import sys
 import glob
 import json
 import datetime
-import numpy as np
 
-# Use headless backend for matplotlib
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+# Auto-detect and switch to meep conda environment if numpy or matplotlib is missing
+try:
+    import numpy as np
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+except ImportError:
+    for candidate in [
+        os.path.expanduser("~/miniconda3/envs/meep/bin/python"),
+        os.path.expanduser("~/anaconda3/envs/meep/bin/python"),
+        os.path.expanduser("~/.conda/envs/meep/bin/python"),
+        "/N/soft/rhel8/miniconda3/envs/meep/bin/python"
+    ]:
+        if os.path.exists(candidate) and sys.executable != candidate:
+            print(f"[Auto-Env] Switching from {sys.executable} to MEEP conda environment: {candidate}")
+            os.execv(candidate, [candidate] + sys.argv)
+    print("ERROR: 'numpy' or 'matplotlib' not found. Please activate the meep environment:")
+    print("       conda activate meep")
+    sys.exit(1)
 
 def get_effective_area(N, L):
     return ((8.0 / 9.0)**(N - 1)) * (L**2)

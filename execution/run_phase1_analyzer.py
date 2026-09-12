@@ -7,15 +7,45 @@ Inspects Phase 1 simulation results:
 - Lifshitz 1/d^4 distance scaling
 - Sierpinski (8/9)^(N-1) fractal area law
 - Anisotropic twist angle theta on flat plates
+
+Works in pure Python without requiring numpy or external dependencies!
 """
 
 import os
+import sys
 import glob
 import json
-import numpy as np
+import math
+
+# Auto-detect and switch to meep conda environment if available
+try:
+    import numpy as np
+except ImportError:
+    candidates = [
+        os.path.expanduser("~/miniconda3/envs/meep/bin/python"),
+        os.path.expanduser("~/anaconda3/envs/meep/bin/python"),
+        os.path.expanduser("~/.conda/envs/meep/bin/python"),
+        "/N/soft/rhel8/miniconda3/envs/meep/bin/python"
+    ]
+    for candidate in candidates:
+        if os.path.exists(candidate) and sys.executable != candidate:
+            os.execv(candidate, [candidate] + sys.argv)
+    np = None
 
 def get_effective_area(N, L):
     return ((8.0 / 9.0)**(N - 1)) * (L**2)
+
+def linear_fit(x_arr, y_arr):
+    n = len(x_arr)
+    if n < 2:
+        return 0.0, 0.0
+    mean_x = sum(x_arr) / n
+    mean_y = sum(y_arr) / n
+    cov = sum((x - mean_x) * (y - mean_y) for x, y in zip(x_arr, y_arr))
+    var = sum((x - mean_x)**2 for x in x_arr)
+    slope = cov / var if var != 0 else 0.0
+    intercept = mean_y - slope * mean_x
+    return slope, intercept
 
 def main():
     print("================================================================================")
@@ -99,10 +129,12 @@ def main():
     # 1. Lifshitz Distance Power Law Check
     lifshitz = [m for m in completed if m["tier"] == "tier1_lifshitz_scaling"]
     if len(lifshitz) >= 2:
-        d_vals = np.array([m["d_um"] for m in lifshitz])
-        p_vals = np.abs(np.array([m["pressure_Pa"] for m in lifshitz]))
-        poly = np.polyfit(np.log(d_vals), np.log(p_vals), 1)
-        print(f"\n* Lifshitz Distance Scaling: Fitted P(d) ~ d^({poly[0]:.2f}) [Theory: d^-4.00]")
+        d_vals = [m["d_um"] for m in lifshitz]
+        p_vals = [abs(m["pressure_Pa"]) for m in lifshitz]
+        log_d = [math.log(x) for x in d_vals]
+        log_p = [math.log(x) for x in p_vals]
+        slope, intercept = linear_fit(log_d, log_p)
+        print(f"\n* Lifshitz Distance Scaling: Fitted P(d) ~ d^({slope:.2f}) [Theory: d^-4.00]")
 
     # 2. Fractal Area Law Check
     area_tasks = [m for m in completed if m["tier"] == "tier1_fractal_area_law"]
