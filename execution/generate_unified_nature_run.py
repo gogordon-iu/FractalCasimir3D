@@ -1,49 +1,58 @@
 #!/usr/bin/env python3
 """
-Unified Nature Publication Campaign Generator (292 Tasks)
--------------------------------------------------------
+Unified Nature Publication Campaign Generator (Phases 1, 2, 3 & Master Unified)
+-----------------------------------------------------------------------------
 Generates the comprehensive parameter space required for the Nature paper:
-- Tier 1: General Parameters & Fundamental Casimir Baselines (28 tasks)
+- Phase 1: General Parameters & Fundamental Casimir Baselines (28 tasks)
   * Planar uncorrugated baselines (Gold, Silicon, Phosphorene)
   * 1/d^4 Lifshitz distance scaling
   * (8/9)^(N-1) Sierpinski fractal area law
   * Optical anisotropy twist angle theta baseline
-- Tier 2: Pyramid Corrugation & Corner Singularity Refutation (40 tasks)
+- Phase 2: Pyramid Corrugation & Reviewer Defenses (40 tasks)
+  * Integrated physical rounded tips (r_tip = 5.0 nm) across all corrugated runs!
   * Wall slope alpha in [45, 54.7, 60, 70, 75, 80, 85] deg
-  * Tip rounding r_tip in [0, 2, 5, 10, 20] nm (proves repulsion is not a corner singularity)
+  * Tip rounding singularity refutation sweep r_tip in [0, 2, 5, 10, 20] nm
   * Full multi-oscillator dispersion & optical loss (BlackPhosphorus, ReS2)
   * Immersion dielectric screening (Teflon_AF, Ethanol, Bromobenzene, Glycerol, Cyclohexane)
-- Tier 3: Sweet Spot High-Resolution 3D Parameter Sweep (224 tasks)
+- Phase 3: Sweet Spot High-Resolution 3D Parameter Sweep (224 tasks)
   * 8 thetas in [80, 94] deg x 4 alphas in [70, 85] deg x 7 gaps in [50, 350] nm
+  * All corrugated runs integrated with realistic nanofabricated tip rounding r_tip = 5.0 nm
   * Maps 3D P=0 phase boundary and passive levitation equilibrium heights d_eq
+
+Separates into 3 dedicated Slurm jobs with user email notifications (END, FAIL)
+so the user gets notified immediately as each phase concludes.
 """
 
 import os
 import json
 
-def generate_unified_campaign():
+def generate_campaign():
     print("================================================================================")
-    print("GENERATING UNIFIED NATURE CAMPAIGN PARAMETER RUN (292 TASKS)")
+    print("GENERATING NATURE PUBLICATION CAMPAIGN: PHASES 1, 2, AND 3")
     print("================================================================================")
 
-    config_dir = "sweep_configs_unified"
-    os.makedirs(config_dir, exist_ok=True)
-    os.makedirs("execution", exist_ok=True)
+    p1_dir = "sweep_configs_phase1"
+    p2_dir = "sweep_configs_phase2"
+    p3_dir = "sweep_configs_phase3"
+    unified_dir = "sweep_configs_unified"
 
-    tasks = []
-    task_id = 1
+    for d in [p1_dir, p2_dir, p3_dir, unified_dir, "execution"]:
+        os.makedirs(d, exist_ok=True)
 
     # ==========================================================================
-    # TIER 1: GENERAL PARAMETERS & FUNDAMENTAL BASELINES (28 tasks)
+    # PHASE 1: GENERAL PARAMETERS & FUNDAMENTAL BASELINES (28 tasks)
     # ==========================================================================
-    print("Generating Tier 1: General Parameters & Fundamental Casimir Baselines...")
-    
+    print("Generating Phase 1: General Parameters & Fundamental Casimir Baselines (28 tasks)...")
+    p1_tasks = []
+    t_id = 1
+
     # 1.1 Conventional Materials Planar Baselines (Au, cSi) at d=100nm, N=1,2,3
     for mat in ["Gold", "Silicon"]:
         for N in [1, 2, 3]:
-            tasks.append({
-                "task_id": task_id,
+            p1_tasks.append({
+                "task_id": t_id,
                 "tier": "tier1_general_materials",
+                "phase": 1,
                 "label": f"Planar {mat} N={N} d=100nm baseline",
                 "d": 0.10,
                 "N_top": N,
@@ -59,13 +68,14 @@ def generate_unified_campaign():
                 "medium": "Vacuum",
                 "stepped_sieve": False
             })
-            task_id += 1
+            t_id += 1
 
     # 1.2 Untuned Phosphorene in Vacuum (eps_bg=1.0) - Lifshitz 1/d^4 Scaling (N=1)
     for d_val in [0.05, 0.10, 0.20, 0.35]:
-        tasks.append({
-            "task_id": task_id,
+        p1_tasks.append({
+            "task_id": t_id,
             "tier": "tier1_lifshitz_scaling",
+            "phase": 1,
             "label": f"Phosphorene planar Lifshitz scaling d={int(d_val*1000)}nm N=1",
             "d": float(d_val),
             "N_top": 1,
@@ -81,13 +91,14 @@ def generate_unified_campaign():
             "medium": "Vacuum",
             "stepped_sieve": False
         })
-        task_id += 1
+        t_id += 1
 
     # 1.3 Untuned Phosphorene in Vacuum - Sierpinski Fractal Area Law (8/9)^(N-1) at d=100nm
     for N in [1, 2, 3, 4]:
-        tasks.append({
-            "task_id": task_id,
+        p1_tasks.append({
+            "task_id": t_id,
             "tier": "tier1_fractal_area_law",
+            "phase": 1,
             "label": f"Phosphorene planar fractal area law N={N} d=100nm",
             "d": 0.10,
             "N_top": N,
@@ -103,13 +114,14 @@ def generate_unified_campaign():
             "medium": "Vacuum",
             "stepped_sieve": False
         })
-        task_id += 1
+        t_id += 1
 
-    # 1.4 Untuned Phosphorene in Vacuum - Twist Angle Theta Baseline (Planar uncorrugated)
+    # 1.4 Untuned Phosphorene in Vacuum - Twist Angle Theta Baseline
     for th in [0.0, 30.0, 60.0, 90.0]:
-        tasks.append({
-            "task_id": task_id,
+        p1_tasks.append({
+            "task_id": t_id,
             "tier": "tier1_theta_baseline",
+            "phase": 1,
             "label": f"Phosphorene planar twist baseline theta={int(th)}deg N=3 d=100nm",
             "d": 0.10,
             "N_top": 3,
@@ -125,13 +137,14 @@ def generate_unified_campaign():
             "medium": "Vacuum",
             "stepped_sieve": False
         })
-        task_id += 1
+        t_id += 1
 
     # 1.5 Tuned Phosphorene (eps_bg=2.1) - Planar Uncorrugated Twist Series
     for th in [0.0, 30.0, 60.0, 90.0]:
-        tasks.append({
-            "task_id": task_id,
+        p1_tasks.append({
+            "task_id": t_id,
             "tier": "tier1_tuned_twist_series",
+            "phase": 1,
             "label": f"Tuned Phosphorene planar twist theta={int(th)}deg eps=2.1 d=100nm",
             "d": 0.10,
             "N_top": 3,
@@ -147,13 +160,14 @@ def generate_unified_campaign():
             "medium": "Vacuum",
             "stepped_sieve": False
         })
-        task_id += 1
+        t_id += 1
 
     # 1.6 Tuned Phosphorene (eps_bg=2.1) - Planar Uncorrugated Distance Series
     for d_val in [0.05, 0.10, 0.20, 0.35]:
-        tasks.append({
-            "task_id": task_id,
+        p1_tasks.append({
+            "task_id": t_id,
             "tier": "tier1_tuned_distance_series",
+            "phase": 1,
             "label": f"Tuned Phosphorene planar distance d={int(d_val*1000)}nm theta=90deg",
             "d": float(d_val),
             "N_top": 3,
@@ -169,13 +183,14 @@ def generate_unified_campaign():
             "medium": "Vacuum",
             "stepped_sieve": False
         })
-        task_id += 1
+        t_id += 1
 
     # 1.7 Tuned Phosphorene (eps_bg=2.1) - Size Scaling (L=0.3um, 1.0um)
     for L_val in [0.30, 1.00]:
-        tasks.append({
-            "task_id": task_id,
+        p1_tasks.append({
+            "task_id": t_id,
             "tier": "tier1_size_scaling",
+            "phase": 1,
             "label": f"Tuned Phosphorene planar size scaling L={L_val}um d=100nm",
             "d": 0.10,
             "N_top": 3,
@@ -191,22 +206,29 @@ def generate_unified_campaign():
             "medium": "Vacuum",
             "stepped_sieve": False
         })
-        task_id += 1
+        t_id += 1
 
-    print(f"  -> Tier 1 generated: {task_id - 1} tasks.")
+    for i, t in enumerate(p1_tasks, 1):
+        cfg_path = os.path.join(p1_dir, f"config_{i:03d}.json")
+        with open(cfg_path, "w") as f:
+            json.dump(t, f, indent=4)
+    print(f"  -> Phase 1 serialized: {len(p1_tasks)} configs in '{p1_dir}/'.")
 
     # ==========================================================================
-    # TIER 2: PYRAMID CORRUGATION & CORNER SINGULARITY REFUTATION (40 tasks)
+    # PHASE 2: PYRAMID CORRUGATIONS & REVIEWER DEFENSES (40 tasks)
+    # Physical rounded tips (r_tip = 5.0 nm) integrated into ALL corrugated runs!
     # ==========================================================================
-    print("Generating Tier 2: Pyramid Corrugation & Corner Singularity Refutation...")
-    tier2_start = task_id
+    print("Generating Phase 2: Pyramid Corrugation & Reviewer Defenses (40 tasks)...")
+    p2_tasks = []
+    p2_id = 1
 
-    # 2.1 Wall Slope Alpha Dependence at theta=90deg, d=100nm
+    # 2.1 Wall Slope Alpha Dependence with physical rounded tips r_tip = 5.0 nm
     for alpha_val in [45.0, 54.7, 60.0, 70.0, 75.0, 80.0, 85.0]:
-        tasks.append({
-            "task_id": task_id,
+        p2_tasks.append({
+            "task_id": p2_id,
             "tier": "tier2_alpha_dependence",
-            "label": f"Corrugated pyramid alpha={alpha_val}deg theta=90deg d=100nm",
+            "phase": 2,
+            "label": f"Corrugated pyramid alpha={alpha_val}deg r_tip=5nm theta=90deg d=100nm",
             "d": 0.10,
             "N_top": 3,
             "N_bot": 3,
@@ -217,18 +239,19 @@ def generate_unified_campaign():
             "L": 2.0,
             "corrugated": True,
             "corrugation_angle": float(alpha_val),
-            "r_tip_nm": 0.0,
+            "r_tip_nm": 5.0,  # Physical rounded tips integrated
             "medium": "Vacuum",
             "stepped_sieve": False
         })
-        task_id += 1
+        p2_id += 1
 
-    # 2.2 Corrugated Distance Series for alpha=45deg
+    # 2.2 Corrugated Distance Series for alpha=45deg with r_tip = 5.0 nm
     for d_val in [0.05, 0.15, 0.25, 0.35]:
-        tasks.append({
-            "task_id": task_id,
+        p2_tasks.append({
+            "task_id": p2_id,
             "tier": "tier2_corrugated_d_series_45",
-            "label": f"Corrugated pyramid alpha=45deg d={int(d_val*1000)}nm",
+            "phase": 2,
+            "label": f"Corrugated pyramid alpha=45deg r_tip=5nm d={int(d_val*1000)}nm",
             "d": float(d_val),
             "N_top": 3,
             "N_bot": 3,
@@ -239,18 +262,19 @@ def generate_unified_campaign():
             "L": 2.0,
             "corrugated": True,
             "corrugation_angle": 45.0,
-            "r_tip_nm": 0.0,
+            "r_tip_nm": 5.0,  # Physical rounded tips integrated
             "medium": "Vacuum",
             "stepped_sieve": False
         })
-        task_id += 1
+        p2_id += 1
 
-    # 2.3 Corrugated Distance Series for alpha=60deg
+    # 2.3 Corrugated Distance Series for alpha=60deg with r_tip = 5.0 nm
     for d_val in [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35]:
-        tasks.append({
-            "task_id": task_id,
+        p2_tasks.append({
+            "task_id": p2_id,
             "tier": "tier2_corrugated_d_series_60",
-            "label": f"Corrugated pyramid alpha=60deg d={int(d_val*1000)}nm",
+            "phase": 2,
+            "label": f"Corrugated pyramid alpha=60deg r_tip=5nm d={int(d_val*1000)}nm",
             "d": float(d_val),
             "N_top": 3,
             "N_bot": 3,
@@ -261,18 +285,19 @@ def generate_unified_campaign():
             "L": 2.0,
             "corrugated": True,
             "corrugation_angle": 60.0,
-            "r_tip_nm": 0.0,
+            "r_tip_nm": 5.0,  # Physical rounded tips integrated
             "medium": "Vacuum",
             "stepped_sieve": False
         })
-        task_id += 1
+        p2_id += 1
 
-    # 2.4 Tip Rounding Singularity Refutation (r_tip sweep at alpha=75deg, d=100nm)
+    # 2.4 Explicit Tip Rounding Singularity Refutation (r_tip in [0, 2, 5, 10, 20] nm)
     for r_val in [0.0, 2.0, 5.0, 10.0, 20.0]:
-        tasks.append({
-            "task_id": task_id,
+        p2_tasks.append({
+            "task_id": p2_id,
             "tier": "tier2_tip_rounding_75",
-            "label": f"Tip rounding r_tip={int(r_val)}nm alpha=75deg d=100nm",
+            "phase": 2,
+            "label": f"Tip rounding singularity test r_tip={int(r_val)}nm alpha=75deg d=100nm",
             "d": 0.10,
             "N_top": 3,
             "N_bot": 3,
@@ -287,13 +312,14 @@ def generate_unified_campaign():
             "medium": "Vacuum",
             "stepped_sieve": False
         })
-        task_id += 1
+        p2_id += 1
 
     # 2.5 Tip Rounding at alpha=80deg, d=100nm
     for r_val in [2.0, 5.0, 10.0, 20.0]:
-        tasks.append({
-            "task_id": task_id,
+        p2_tasks.append({
+            "task_id": p2_id,
             "tier": "tier2_tip_rounding_80",
+            "phase": 2,
             "label": f"Tip rounding r_tip={int(r_val)}nm alpha=80deg d=100nm",
             "d": 0.10,
             "N_top": 3,
@@ -309,13 +335,14 @@ def generate_unified_campaign():
             "medium": "Vacuum",
             "stepped_sieve": False
         })
-        task_id += 1
+        p2_id += 1
 
     # 2.6 Tip Rounding at alpha=75deg, d=150nm
     for r_val in [5.0, 10.0]:
-        tasks.append({
-            "task_id": task_id,
+        p2_tasks.append({
+            "task_id": p2_id,
             "tier": "tier2_tip_rounding_gap150",
+            "phase": 2,
             "label": f"Tip rounding r_tip={int(r_val)}nm alpha=75deg d=150nm",
             "d": 0.15,
             "N_top": 3,
@@ -331,14 +358,15 @@ def generate_unified_campaign():
             "medium": "Vacuum",
             "stepped_sieve": False
         })
-        task_id += 1
+        p2_id += 1
 
-    # 2.7 Material Multi-Oscillator Dispersion with Optical Loss (BlackPhosphorus)
+    # 2.7 Multi-Oscillator Dispersion with Optical Loss (BlackPhosphorus, r_tip = 5.0 nm)
     for d_val in [0.05, 0.10, 0.15, 0.20]:
-        tasks.append({
-            "task_id": task_id,
+        p2_tasks.append({
+            "task_id": p2_id,
             "tier": "tier2_dispersive_loss_bp",
-            "label": f"Authentic dispersive BP with loss d={int(d_val*1000)}nm alpha=75deg",
+            "phase": 2,
+            "label": f"Authentic dispersive BP with loss r_tip=5nm d={int(d_val*1000)}nm",
             "d": float(d_val),
             "N_top": 3,
             "N_bot": 3,
@@ -353,14 +381,15 @@ def generate_unified_campaign():
             "medium": "Vacuum",
             "stepped_sieve": False
         })
-        task_id += 1
+        p2_id += 1
 
-    # 2.8 Material Dispersion: Rhenium Disulfide (ReS2)
+    # 2.8 Material Dispersion: Rhenium Disulfide (ReS2, r_tip = 5.0 nm)
     for d_val in [0.05, 0.10]:
-        tasks.append({
-            "task_id": task_id,
+        p2_tasks.append({
+            "task_id": p2_id,
             "tier": "tier2_dispersive_res2",
-            "label": f"Authentic dispersive ReS2 d={int(d_val*1000)}nm alpha=75deg",
+            "phase": 2,
+            "label": f"Authentic dispersive ReS2 r_tip=5nm d={int(d_val*1000)}nm",
             "d": float(d_val),
             "N_top": 3,
             "N_bot": 3,
@@ -375,21 +404,22 @@ def generate_unified_campaign():
             "medium": "Vacuum",
             "stepped_sieve": False
         })
-        task_id += 1
+        p2_id += 1
 
-    # 2.9 Liquid Immersion Screening (Nature Reviewer 2)
+    # 2.9 Liquid Immersion Screening (Nature Reviewer 2, r_tip = 5.0 nm)
     for med in ["Teflon_AF", "Ethanol", "Bromobenzene", "Glycerol", "Cyclohexane"]:
-        tasks.append({
-            "task_id": task_id,
+        p2_tasks.append({
+            "task_id": p2_id,
             "tier": "tier2_liquid_immersion",
-            "label": f"Liquid immersion screening medium={med} alpha=75deg d=100nm",
+            "phase": 2,
+            "label": f"Liquid immersion medium={med} r_tip=5nm d=100nm",
             "d": 0.10,
             "N_top": 3,
             "N_bot": 3,
             "material": "BlackPhosphorus",
             "resolution": 40,
             "theta": 90.0,
-            "eps_bg": 1.0,  # Will be dynamically set to liquid eps_static
+            "eps_bg": 1.0,
             "L": 2.0,
             "corrugated": True,
             "corrugation_angle": 75.0,
@@ -397,15 +427,21 @@ def generate_unified_campaign():
             "medium": med,
             "stepped_sieve": False
         })
-        task_id += 1
+        p2_id += 1
 
-    print(f"  -> Tier 2 generated: {task_id - tier2_start} tasks.")
+    for i, t in enumerate(p2_tasks, 1):
+        cfg_path = os.path.join(p2_dir, f"config_{i:03d}.json")
+        with open(cfg_path, "w") as f:
+            json.dump(t, f, indent=4)
+    print(f"  -> Phase 2 serialized: {len(p2_tasks)} configs in '{p2_dir}/'.")
 
     # ==========================================================================
-    # TIER 3: SWEET SPOT HIGH-RESOLUTION 3D PARAMETER SWEEP (224 tasks)
+    # PHASE 3: SWEET SPOT HIGH-RESOLUTION 3D PARAMETER SWEEP (224 tasks)
+    # All corrugated runs with r_tip = 5.0 nm
     # ==========================================================================
-    print("Generating Tier 3: Sweet Spot High-Resolution 3D Parameter Sweep...")
-    tier3_start = task_id
+    print("Generating Phase 3: Sweet Spot High-Resolution 3D Sweep (224 tasks)...")
+    p3_tasks = []
+    p3_id = 1
 
     thetas = [80.0, 82.0, 84.0, 86.0, 88.0, 90.0, 92.0, 94.0]
     alphas = [70.0, 75.0, 80.0, 85.0]
@@ -414,10 +450,11 @@ def generate_unified_campaign():
     for a in alphas:
         for th in thetas:
             for d in ds:
-                tasks.append({
-                    "task_id": task_id,
+                p3_tasks.append({
+                    "task_id": p3_id,
                     "tier": "tier3_sweet_spot_grid",
-                    "label": f"Sweet spot alpha={a:.1f}deg theta={th:.1f}deg d={int(d*1000)}nm",
+                    "phase": 3,
+                    "label": f"Sweet spot alpha={a:.1f}deg theta={th:.1f}deg r_tip=5nm d={int(d*1000)}nm",
                     "d": float(d),
                     "N_top": 3,
                     "N_bot": 3,
@@ -428,45 +465,51 @@ def generate_unified_campaign():
                     "L": 2.0,
                     "corrugated": True,
                     "corrugation_angle": float(a),
-                    "r_tip_nm": 5.0,  # Realistic nanofabricated tip rounding
+                    "r_tip_nm": 5.0,  # Physical rounded tips integrated into all sweet spot runs
                     "medium": "Vacuum",
                     "stepped_sieve": False
                 })
-                task_id += 1
+                p3_id += 1
 
-    total_tasks = len(tasks)
-    print(f"  -> Tier 3 generated: {task_id - tier3_start} tasks.")
-    print(f"Total unified campaign tasks: {total_tasks}")
-
-    # Write all JSON config files
-    for t in tasks:
-        cfg_path = os.path.join(config_dir, f"config_{t['task_id']:03d}.json")
+    for i, t in enumerate(p3_tasks, 1):
+        cfg_path = os.path.join(p3_dir, f"config_{i:03d}.json")
         with open(cfg_path, "w") as f:
             json.dump(t, f, indent=4)
+    print(f"  -> Phase 3 serialized: {len(p3_tasks)} configs in '{p3_dir}/'.")
 
-    print(f"Successfully serialized {total_tasks} configuration files in '{config_dir}/'.")
+    # Serialize Unified Master Index (292 tasks)
+    all_tasks = p1_tasks + p2_tasks + p3_tasks
+    for i, t in enumerate(all_tasks, 1):
+        t_master = dict(t)
+        t_master["master_task_id"] = i
+        cfg_path = os.path.join(unified_dir, f"config_{i:03d}.json")
+        with open(cfg_path, "w") as f:
+            json.dump(t_master, f, indent=4)
+    print(f"  -> Master Unified serialized: {len(all_tasks)} configs in '{unified_dir}/'.")
 
     # ==========================================================================
-    # SLURM JOB ARRAY SCRIPT (execution/submit_unified_nature_array.sbatch)
+    # SLURM ARRAY GENERATOR HELPER
     # ==========================================================================
-    sbatch_content = f"""#!/bin/bash
-#SBATCH -J casimir_nature_unified
+    def build_sbatch(job_name, total, cfg_folder, time_limit, throttle=16):
+        return f"""#!/bin/bash
+#SBATCH -J {job_name}
 #SBATCH -p general
 #SBATCH -A r01540
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
-#SBATCH --time=12:00:00
-#SBATCH --array=1-{total_tasks}%16
-#SBATCH -o .tmp/nature_unified_%A_%a.out
-#SBATCH -e .tmp/nature_unified_%A_%a.err
+#SBATCH --time={time_limit}
+#SBATCH --array=1-{total}%{throttle}
+#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-user=gogordon@iu.edu
+#SBATCH -o .tmp/{job_name}_%A_%a.out
+#SBATCH -e .tmp/{job_name}_%A_%a.err
 
 echo "================================================================================"
-echo "UNIFIED NATURE CAMPAIGN TASK: $SLURM_ARRAY_TASK_ID / {total_tasks}"
+echo "{job_name.upper()} TASK: $SLURM_ARRAY_TASK_ID / {total}"
 echo "Host: $(hostname)"
 echo "Started: $(date)"
 echo "================================================================================"
 
-# Environment Activation
 source ~/miniconda3/etc/profile.d/conda.sh
 module unload xalt
 export XALT_EXECUTABLE_TRACKING=no
@@ -481,9 +524,8 @@ fi
 cd /N/project/gorengor_werewolf/FractalCasimir3D
 mkdir -p .tmp
 
-# Load Task Configuration
 CFG_INDEX=$(printf "%03d" $SLURM_ARRAY_TASK_ID)
-CONFIG_FILE="sweep_configs_unified/config_${{CFG_INDEX}}.json"
+CONFIG_FILE="{cfg_folder}/config_${{CFG_INDEX}}.json"
 
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "ERROR: Configuration file $CONFIG_FILE not found!"
@@ -491,7 +533,6 @@ if [ ! -f "$CONFIG_FILE" ]; then
 fi
 
 echo "Reading task parameters from $CONFIG_FILE..."
-TIER=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['tier'])")
 LABEL=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['label'])")
 ALPHA=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['corrugation_angle'])")
 THETA=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['theta'])")
@@ -507,7 +548,7 @@ RTIP=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['r_ti
 MED=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['medium'])")
 SIEVE=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['stepped_sieve'])")
 
-echo "Executing [$TIER]: $LABEL"
+echo "Executing: $LABEL"
 echo "Params: d=$D_UM um, N=($NTOP,$NBOT), mat=$MAT, res=$RES, theta=$THETA deg, alpha=$ALPHA deg, r_tip=$RTIP nm, med=$MED"
 
 EXTRA_ARGS=""
@@ -539,97 +580,120 @@ echo "Task $SLURM_ARRAY_TASK_ID completed with exit code $EXIT_CODE at $(date)."
 exit $EXIT_CODE
 """
 
-    sbatch_file = os.path.join("execution", "submit_unified_nature_array.sbatch")
-    with open(sbatch_file, "w", newline="\n") as f:
-        f.write(sbatch_content)
-    print(f"Generated Slurm job array script: '{sbatch_file}'.")
+    # Generate Phase 1 sbatch
+    with open("execution/submit_phase1_baselines.sbatch", "w", newline="\n") as f:
+        f.write(build_sbatch("casimir_p1_baselines", len(p1_tasks), p1_dir, "04:00:00", throttle=14))
+    print("Generated 'execution/submit_phase1_baselines.sbatch'.")
+
+    # Generate Phase 2 sbatch
+    with open("execution/submit_phase2_corrugations.sbatch", "w", newline="\n") as f:
+        f.write(build_sbatch("casimir_p2_pyramids", len(p2_tasks), p2_dir, "08:00:00", throttle=10))
+    print("Generated 'execution/submit_phase2_corrugations.sbatch'.")
+
+    # Generate Phase 3 sbatch
+    with open("execution/submit_phase3_sweet_spot.sbatch", "w", newline="\n") as f:
+        f.write(build_sbatch("casimir_p3_sweetspot", len(p3_tasks), p3_dir, "12:00:00", throttle=16))
+    print("Generated 'execution/submit_phase3_sweet_spot.sbatch'.")
+
+    # Generate Unified Array sbatch
+    with open("execution/submit_unified_nature_array.sbatch", "w", newline="\n") as f:
+        f.write(build_sbatch("casimir_nature_unified", len(all_tasks), unified_dir, "12:00:00", throttle=16))
+    print("Generated 'execution/submit_unified_nature_array.sbatch'.")
 
     # ==========================================================================
-    # SLURM ANALYZER SBATCH SCRIPT (execution/submit_unified_nature_analyzer.sbatch)
+    # LAUNCHER SHELL SCRIPTS FOR INDIVIDUAL PHASES
     # ==========================================================================
-    analyzer_sbatch = """#!/bin/bash
-#SBATCH -J casimir_nature_analyzer
-#SBATCH -p general
-#SBATCH -A r01540
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=16
-#SBATCH --time=02:00:00
-#SBATCH -o .tmp/nature_analyzer_%j.out
-#SBATCH -e .tmp/nature_analyzer_%j.err
+    for p_num, sbatch_name in [(1, "submit_phase1_baselines.sbatch"), (2, "submit_phase2_corrugations.sbatch"), (3, "submit_phase3_sweet_spot.sbatch")]:
+        launcher_content = f"""#!/bin/bash
+# Standalone Launcher for Phase {p_num} on BigRed 200
 
 echo "================================================================================"
-echo "UNIFIED NATURE CAMPAIGN POST-SIMULATION ANALYZER"
-echo "Host: $(hostname)"
-echo "Started: $(date)"
-echo "================================================================================"
-
-source ~/miniconda3/etc/profile.d/conda.sh
-module unload xalt
-export XALT_EXECUTABLE_TRACKING=no
-conda activate meep
-export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
-
-PYTHON_EXEC="$CONDA_PREFIX/bin/python"
-if [ ! -f "$PYTHON_EXEC" ]; then
-    PYTHON_EXEC="python"
-fi
-
-cd /N/project/gorengor_werewolf/FractalCasimir3D
-
-echo "Executing Unified Nature Analyzer..."
-$PYTHON_EXEC execution/run_unified_nature_analyzer.py
-
-echo "Analysis complete at $(date)."
-"""
-
-    analyzer_sbatch_file = os.path.join("execution", "submit_unified_nature_analyzer.sbatch")
-    with open(analyzer_sbatch_file, "w", newline="\n") as f:
-        f.write(analyzer_sbatch)
-    print(f"Generated Slurm analyzer script: '{analyzer_sbatch_file}'.")
-
-    # ==========================================================================
-    # MASTER LAUNCHER SCRIPT (execution/submit_unified_nature_master.sh)
-    # ==========================================================================
-    master_sh = f"""#!/bin/bash
-# Master Launcher Script for Unified Nature Campaign (292 Tasks) & Automated Analyzer
-
-echo "================================================================================"
-echo "LAUNCHING UNIFIED NATURE PUBLICATION RUN (292 TASKS) ON BIGRED 200"
+echo "LAUNCHING PHASE {p_num} ON BIGRED 200"
 echo "================================================================================"
 
 mkdir -p .tmp
 
-# Submit Job Array
-ARRAY_SUBMIT=$(sbatch execution/submit_unified_nature_array.sbatch)
-echo "$ARRAY_SUBMIT"
+SUBMIT_OUT=$(sbatch execution/{sbatch_name})
+echo "$SUBMIT_OUT"
 
-ARRAY_ID=$(echo "$ARRAY_SUBMIT" | awk '{{print $4}}')
-if [ -z "$ARRAY_ID" ]; then
-    echo "ERROR: Failed to obtain Slurm Job Array ID!"
+JOB_ID=$(echo "$SUBMIT_OUT" | awk '{{print $4}}')
+if [ -z "$JOB_ID" ]; then
+    echo "ERROR: Failed to launch Phase {p_num}!"
     exit 1
 fi
 
-echo "Submitted Job Array ID: $ARRAY_ID"
+echo "Phase {p_num} Job Array Enqueued: $JOB_ID"
+echo "Slurm will email gogordon@iu.edu when Phase {p_num} finishes."
+echo "Check queue with: squeue -u $USER"
+echo "================================================================================"
+"""
+        with open(f"execution/submit_phase{p_num}.sh", "w", newline="\n") as f:
+            f.write(launcher_content)
+        print(f"Generated 'execution/submit_phase{p_num}.sh'.")
 
-# Submit Dependent Analyzer Job (afterok)
-echo "Submitting Dependent Analyzer (afterok:$ARRAY_ID)..."
-ANALYZER_SUBMIT=$(sbatch --dependency=afterok:$ARRAY_ID execution/submit_unified_nature_analyzer.sbatch)
-echo "$ANALYZER_SUBMIT"
+    # ==========================================================================
+    # PIPELINED MASTER LAUNCHER (Chained with notifications upon each completion)
+    # ==========================================================================
+    pipelined_sh = """#!/bin/bash
+# Pipelined Master Launcher for All 3 Phases with Sequential Dependencies & Notifications
 
 echo "================================================================================"
-echo "SUCCESS: Entire Unified Nature Campaign Enqueued on BigRed 200!"
-echo "Array ID: $ARRAY_ID"
-echo "Monitor status with: squeue -u $USER"
+echo "ENQUEUING ALL 3 PHASES WITH SLURM CHAINING & INDIVIDUAL NOTIFICATIONS"
+echo "================================================================================"
+
+mkdir -p .tmp
+
+# 1. Enqueue Phase 1 (Baselines)
+P1_OUT=$(sbatch execution/submit_phase1_baselines.sbatch)
+echo "$P1_OUT"
+P1_ID=$(echo "$P1_OUT" | awk '{print $4}')
+if [ -z "$P1_ID" ]; then
+    echo "ERROR: Failed to enqueue Phase 1!"
+    exit 1
+fi
+echo "Phase 1 Array Enqueued: $P1_ID"
+
+# 2. Enqueue Phase 2 (Pyramids & Defenses, dependent on Phase 1)
+P2_OUT=$(sbatch --dependency=afterok:$P1_ID execution/submit_phase2_corrugations.sbatch)
+echo "$P2_OUT"
+P2_ID=$(echo "$P2_OUT" | awk '{print $4}')
+if [ -z "$P2_ID" ]; then
+    echo "ERROR: Failed to enqueue Phase 2!"
+    exit 1
+fi
+echo "Phase 2 Array Enqueued (afterok:$P1_ID): $P2_ID"
+
+# 3. Enqueue Phase 3 (Sweet Spot Sweep, dependent on Phase 2)
+P3_OUT=$(sbatch --dependency=afterok:$P2_ID execution/submit_phase3_sweet_spot.sbatch)
+echo "$P3_OUT"
+P3_ID=$(echo "$P3_OUT" | awk '{print $4}')
+if [ -z "$P3_ID" ]; then
+    echo "ERROR: Failed to enqueue Phase 3!"
+    exit 1
+fi
+echo "Phase 3 Array Enqueued (afterok:$P2_ID): $P3_ID"
+
+# 4. Enqueue Master Analyzer (dependent on Phase 3)
+ANALYZER_OUT=$(sbatch --dependency=afterok:$P3_ID execution/submit_unified_nature_analyzer.sbatch)
+echo "$ANALYZER_OUT"
+ANALYZER_ID=$(echo "$ANALYZER_OUT" | awk '{print $4}')
+echo "Master Analyzer Enqueued (afterok:$P3_ID): $ANALYZER_ID"
+
+echo "================================================================================"
+echo "SUCCESS: All 3 Phases Chained and Active!"
+echo "Notifications: Slurm will email gogordon@iu.edu when Phase 1 finishes,"
+echo "               allowing you to inspect Phase 1 while Phase 2 runs,"
+echo "               and again when Phase 2 finishes while Phase 3 runs."
+echo "Check queue with: squeue -u $USER"
 echo "================================================================================"
 """
 
-    master_file = os.path.join("execution", "submit_unified_nature_master.sh")
-    with open(master_file, "w", newline="\n") as f:
-        f.write(master_sh)
-    print(f"Generated Master Launcher script: '{master_file}'.")
+    with open("execution/submit_all_phases_pipelined.sh", "w", newline="\n") as f:
+        f.write(pipelined_sh)
+    print("Generated 'execution/submit_all_phases_pipelined.sh'.")
     print("================================================================================")
-    print("ALL 292 CONFIGS AND SCRIPTS SUCCESSFULLY GENERATED!")
+    print("CAMPAIGN GENERATION COMPLETE!")
     print("================================================================================")
 
 if __name__ == "__main__":
-    generate_unified_campaign()
+    generate_campaign()

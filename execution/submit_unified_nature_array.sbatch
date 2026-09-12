@@ -6,16 +6,17 @@
 #SBATCH --ntasks-per-node=128
 #SBATCH --time=12:00:00
 #SBATCH --array=1-292%16
-#SBATCH -o .tmp/nature_unified_%A_%a.out
-#SBATCH -e .tmp/nature_unified_%A_%a.err
+#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-user=gogordon@iu.edu
+#SBATCH -o .tmp/casimir_nature_unified_%A_%a.out
+#SBATCH -e .tmp/casimir_nature_unified_%A_%a.err
 
 echo "================================================================================"
-echo "UNIFIED NATURE CAMPAIGN TASK: $SLURM_ARRAY_TASK_ID / 292"
+echo "CASIMIR_NATURE_UNIFIED TASK: $SLURM_ARRAY_TASK_ID / 292"
 echo "Host: $(hostname)"
 echo "Started: $(date)"
 echo "================================================================================"
 
-# Environment Activation
 source ~/miniconda3/etc/profile.d/conda.sh
 module unload xalt
 export XALT_EXECUTABLE_TRACKING=no
@@ -30,7 +31,6 @@ fi
 cd /N/project/gorengor_werewolf/FractalCasimir3D
 mkdir -p .tmp
 
-# Load Task Configuration
 CFG_INDEX=$(printf "%03d" $SLURM_ARRAY_TASK_ID)
 CONFIG_FILE="sweep_configs_unified/config_${CFG_INDEX}.json"
 
@@ -40,7 +40,6 @@ if [ ! -f "$CONFIG_FILE" ]; then
 fi
 
 echo "Reading task parameters from $CONFIG_FILE..."
-TIER=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['tier'])")
 LABEL=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['label'])")
 ALPHA=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['corrugation_angle'])")
 THETA=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['theta'])")
@@ -56,7 +55,7 @@ RTIP=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['r_ti
 MED=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['medium'])")
 SIEVE=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['stepped_sieve'])")
 
-echo "Executing [$TIER]: $LABEL"
+echo "Executing: $LABEL"
 echo "Params: d=$D_UM um, N=($NTOP,$NBOT), mat=$MAT, res=$RES, theta=$THETA deg, alpha=$ALPHA deg, r_tip=$RTIP nm, med=$MED"
 
 EXTRA_ARGS=""
