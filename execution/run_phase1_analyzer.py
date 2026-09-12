@@ -85,6 +85,10 @@ def main():
         best_match = None
         best_score = -1
         for r in raw_records:
+            # Reject partial single-moment runs (task_idx >= 0 means only 1 of 108 moments was evaluated)
+            if "task_idx" in r and r["task_idx"] is not None and r["task_idx"] >= 0:
+                continue
+
             # Verify corrugation flag
             is_corr = bool(r.get("corrugated", False)) or float(r.get("corrugation_angle", r.get("alpha_deg", 0.0))) > 0.0
             if is_corr != corr_tgt:
@@ -95,6 +99,12 @@ def main():
             if n_bot_r != int(cfg.get("N_bot", 1)):
                 continue
 
+            # Require target resolution (reject old res=10 or res=20 scratch runs)
+            target_res = cfg.get("resolution", 40)
+            res_r = int(r.get("resolution", 0))
+            if res_r != target_res:
+                continue
+
             if (round(float(r.get("d_um", r.get("d", -1))), 4) == round(d_tgt, 4) and
                 int(r.get("N", r.get("N_top", -1))) == N_tgt and
                 r.get("material") == mat_tgt and
@@ -102,16 +112,7 @@ def main():
                 round(float(r.get("eps_bg", -1)), 1) == round(eps_tgt, 1) and
                 round(float(r.get("L", -1)), 2) == round(L_tgt, 2)):
                 
-                # Scoring: prioritize exact task_idx match and highest resolution
-                score = 0
-                if r.get("task_idx") == cfg["task_id"]:
-                    score += 1000
-                res_r = int(r.get("resolution", 0))
-                if res_r == cfg.get("resolution", 40):
-                    score += 200
-                else:
-                    score += res_r
-                
+                score = res_r
                 if score > best_score:
                     best_score = score
                     best_match = r
@@ -126,6 +127,10 @@ def main():
                 p_val = (float(f_both) - float(f_self)) / A_eff
             elif p_dir is not None:
                 p_val = float(p_dir)
+
+            # Disqualify unphysical identically zero or NaN force
+            if p_val is not None and (math.isnan(p_val) or abs(p_val) < 1e-15):
+                p_val = None
 
         matched.append({
             "task_id": cfg["task_id"],

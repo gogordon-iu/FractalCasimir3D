@@ -68,6 +68,10 @@ def load_all_records():
     return records
 
 def parse_record(rec):
+    # Reject partial single-moment runs
+    if "task_idx" in rec and rec["task_idx"] is not None and rec["task_idx"] >= 0:
+        return None
+
     d = float(rec.get("d_um", rec.get("d", 0.1)))
     theta = float(rec.get("theta_deg", rec.get("theta", 0.0)))
     alpha = float(rec.get("corrugation_angle", rec.get("alpha_deg", rec.get("alpha", 0.0))))
@@ -94,6 +98,9 @@ def parse_record(rec):
         val = float(p_direct)
         if abs(val) > 1e-12:
             p = val
+
+    if p is not None and abs(p) < 1e-15:
+        p = None
 
     return {
         "d_um": d,
@@ -122,7 +129,7 @@ def main():
     physical_map = {}
     for r in records:
         parsed = parse_record(r)
-        if parsed["pressure_Pa"] is None:
+        if parsed is None or parsed["pressure_Pa"] is None:
             continue
         key = (
             parsed["material"],
@@ -244,23 +251,32 @@ def main():
     # Detect Passive Levitation Equilibria (P=0, dP/dd < 0)
     curves = {}
     for r in t3_records:
-        k = (r["alpha_deg"], r["theta_deg"])
+        k = (r["alpha_deg"], r["theta_deg"], r.get("r_tip_nm", 5.0), r.get("medium", "Vacuum"), r.get("L", 2.0))
         curves.setdefault(k, []).append(r)
 
     eq_points = []
-    for (a, th), pts in curves.items():
-        pts.sort(key=lambda x: x["d_um"])
-        d_arr = [p["d_um"] for p in pts]
-        p_arr = [p["pressure_Pa"] for p in pts]
+    for (a, th, rtip, med, L_val), pts in curves.items():
+        # Filter duplicate distances by keeping highest resolution
+        unique_d = {}
+        for p in pts:
+            d_val = round(p["d_um"], 4)
+            if d_val not in unique_d or p.get("resolution", 0) > unique_d[d_val].get("resolution", 0):
+                unique_d[d_val] = p
+        sorted_pts = sorted(unique_d.values(), key=lambda x: x["d_um"])
+        d_arr = [p["d_um"] for p in sorted_pts]
+        p_arr = [p["pressure_Pa"] for p in sorted_pts]
         for i in range(len(p_arr) - 1):
             if p_arr[i] > 0 and p_arr[i+1] < 0:
                 d1, d2 = d_arr[i], d_arr[i+1]
                 p1, p2 = p_arr[i], p_arr[i+1]
+                if abs(d2 - d1) < 1e-6 or abs(p2 - p1) < 1e-12:
+                    continue
                 d_eq = d1 + (0.0 - p1) * (d2 - d1) / (p2 - p1)
                 stiffness = -(p2 - p1) / ((d2 - d1) * 1e-6) # Pa / m
                 eq_points.append({
                     "alpha": a,
                     "theta": th,
+                    "r_tip_nm": rtip,
                     "d_eq_nm": d_eq * 1000.0,
                     "p_max": max(p_arr),
                     "stiffness_Pa_per_m": stiffness

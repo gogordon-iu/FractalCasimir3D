@@ -15,6 +15,7 @@ import os
 import sys
 import glob
 import json
+import math
 
 # Auto-detect and switch to meep conda environment if numpy or matplotlib is missing
 try:
@@ -75,26 +76,28 @@ def main():
         best_match = None
         best_score = -1
         for r in raw_records:
+            # Reject partial single-moment runs (task_idx >= 0 means only 1 of 108 moments was evaluated)
+            if "task_idx" in r and r["task_idx"] is not None and r["task_idx"] >= 0:
+                continue
+
             is_corr = bool(r.get("corrugated", False)) or float(r.get("corrugation_angle", r.get("alpha_deg", 0.0))) > 0.0
             if not is_corr:
+                continue
+
+            # Require target resolution 40
+            res_r = int(r.get("resolution", 0))
+            if res_r != 40:
                 continue
 
             if (round(float(r.get("d_um", r.get("d", -1))), 4) == round(d_tgt, 4) and
                 round(float(r.get("theta_deg", r.get("theta", -1))), 1) == round(th_tgt, 1) and
                 round(float(r.get("corrugation_angle", r.get("alpha_deg", -1))), 1) == round(al_tgt, 1)):
 
-                score = 0
-                if r.get("task_idx") == cfg["task_id"]:
-                    score += 1000
                 r_tip_r = float(r.get("r_tip_nm", r.get("r_tip", 5.0)))
-                if round(r_tip_r, 1) == round(r_tip_tgt, 1):
-                    score += 300
-                res_r = int(r.get("resolution", 0))
-                if res_r == 40:
-                    score += 100
-                else:
-                    score += res_r
+                if round(r_tip_r, 1) != round(r_tip_tgt, 1):
+                    continue
 
+                score = res_r
                 if score > best_score:
                     best_score = score
                     best_match = r
@@ -109,6 +112,10 @@ def main():
                 p_val = (float(f_both) - float(f_self)) / A_eff
             elif p_dir is not None:
                 p_val = float(p_dir)
+
+            # Disqualify unphysical identically zero or NaN force
+            if p_val is not None and (math.isnan(p_val) or abs(p_val) < 1e-15):
+                p_val = None
 
         matched.append({
             "task_id": cfg["task_id"],

@@ -33,6 +33,7 @@ elif [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
 else
     PYTHON_EXEC="python"
 fi
+export PYTHON_EXEC
 
 module unload xalt 2>/dev/null || true
 export XALT_EXECUTABLE_TRACKING=no
@@ -79,7 +80,7 @@ if [ "$MED" != "None" ] && [ "$MED" != "Vacuum" ] && [ -n "$MED" ]; then
     EXTRA_ARGS="$EXTRA_ARGS --medium $MED"
 fi
 
-bash execution/run_meep_wrapper.sh $PYTHON_EXEC execution/run_meep_simulation.py \
+bash execution/run_meep_wrapper.sh srun -n 128 $PYTHON_EXEC execution/run_meep_simulation.py \
     --L $L_UM \
     --d $D_UM \
     --N $NTOP \
