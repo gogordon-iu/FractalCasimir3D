@@ -1,22 +1,12 @@
 # Live Cluster Progress Report — BigRed 200
 
-**Timestamp:** `2026-09-10 22:52:12 UTC`  
+**Timestamp:** `2026-09-12 16:58:39 UTC`  
 **Cluster:** Indiana University BigRed 200 Cray EX (128-core AMD EPYC 7742)  
 
 ## 1. Slurm Active Queue Status
 ```
 JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
-        8182902_23   general nature_t gogordon PD       0:00      1 (JobArrayTaskLimit)
-        8182902_24   general nature_t gogordon PD       0:00      1 (JobArrayTaskLimit)
-        8182902_22   general nature_t gogordon  R       2:04      1 nid0107
-        8182902_17   general nature_t gogordon  R   11:23:06      1 nid0608
-        8182902_16   general nature_t gogordon  R   11:30:36      1 nid0409
-        8182902_18   general nature_t gogordon  R   10:20:36      1 nid0447
-        8182902_15   general nature_t gogordon  R   11:52:05      1 nid0606
-        8182902_19   general nature_t gogordon  R   10:09:35      1 nid0463
-        8182902_20   general nature_t gogordon  R    9:53:06      1 nid0017
-        8182902_21   general nature_t gogordon  R    9:49:06      1 nid0316
-           8198957       gpu evo_all_ gogordon  R    3:00:33      1 nid0675
+           8210716       gpu evo_all_ gogordon  R   21:50:17      1 nid0675
 ```
 
 ## 2. Nature Refutation Suite Progress Summary
@@ -42,7 +32,7 @@ JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
 - **Min Eigenvalue $\lambda_{min}$:** `+1.5000e+01`
 
 ## 3. Sweet Spot Parameter Sweep Progress (.tmp)
-- **Completed Subtracted Force Calculations:** `1052` points recorded.
+- **Completed Subtracted Force Calculations:** `1386` points recorded.
 
 ## 4. Latest Compute Node Log Output
 ```
