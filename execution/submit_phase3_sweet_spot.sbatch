@@ -17,16 +17,26 @@ echo "Host: $(hostname)"
 echo "Started: $(date)"
 echo "================================================================================"
 
-source ~/miniconda3/etc/profile.d/conda.sh
-module unload xalt
-export XALT_EXECUTABLE_TRACKING=no
-conda activate meep
-export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
-
-PYTHON_EXEC="$CONDA_PREFIX/bin/python"
-if [ ! -f "$PYTHON_EXEC" ]; then
+# Environment Activation (Detect BigRed 200 conda installation)
+if [ -f "/N/u/gogordon/BigRed200/.conda/envs/meep/bin/python" ]; then
+    PYTHON_EXEC="/N/u/gogordon/BigRed200/.conda/envs/meep/bin/python"
+    export PATH="/N/u/gogordon/BigRed200/.conda/envs/meep/bin:$PATH"
+    export LD_LIBRARY_PATH="/N/u/gogordon/BigRed200/.conda/envs/meep/lib:$LD_LIBRARY_PATH"
+elif [ -f "$HOME/.conda/envs/meep/bin/python" ]; then
+    PYTHON_EXEC="$HOME/.conda/envs/meep/bin/python"
+    export PATH="$HOME/.conda/envs/meep/bin:$PATH"
+    export LD_LIBRARY_PATH="$HOME/.conda/envs/meep/lib:$LD_LIBRARY_PATH"
+elif [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
+    source ~/miniconda3/etc/profile.d/conda.sh
+    conda activate meep
+    PYTHON_EXEC="$CONDA_PREFIX/bin/python"
+else
     PYTHON_EXEC="python"
 fi
+
+module unload xalt 2>/dev/null || true
+export XALT_EXECUTABLE_TRACKING=no
+export PYTHONUNBUFFERED=1
 
 cd /N/project/gorengor_werewolf/FractalCasimir3D
 mkdir -p .tmp
@@ -79,7 +89,6 @@ bash execution/run_meep_wrapper.sh $PYTHON_EXEC execution/run_meep_simulation.py
     --res $RES \
     --eps-bg $EPS \
     --config all \
-    --task-idx $SLURM_ARRAY_TASK_ID \
     $EXTRA_ARGS
 
 EXIT_CODE=$?
