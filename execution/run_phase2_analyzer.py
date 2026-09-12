@@ -72,20 +72,41 @@ def main():
         L_tgt = cfg["L"]
 
         best_match = None
+        best_score = -1
         for r in raw_records:
             r_med = r.get("medium", "Vacuum")
             if r_med is None or r_med == "None":
                 r_med = "Vacuum"
+
+            # Check corrugation
+            is_corr = bool(r.get("corrugated", False)) or float(r.get("corrugation_angle", r.get("alpha_deg", 0.0))) > 0.0
+            if not is_corr:
+                continue
+
+            n_bot_r = int(r.get("N_bottom", r.get("N_bot", 3)))
+            if n_bot_r != int(cfg.get("N_bot", 3)):
+                continue
+
             if (round(float(r.get("d_um", r.get("d", -1))), 4) == round(d_tgt, 4) and
                 int(r.get("N", r.get("N_top", -1))) == N_tgt and
                 r.get("material") == mat_tgt and
                 round(float(r.get("theta_deg", r.get("theta", -1))), 1) == round(th_tgt, 1) and
                 round(float(r.get("corrugation_angle", r.get("alpha_deg", -1))), 1) == round(al_tgt, 1) and
                 round(float(r.get("r_tip_nm", r.get("r_tip", 0.0))), 1) == round(r_tip_tgt, 1) and
-                r_med == med_tgt and
-                bool(r.get("corrugated", False)) == True):
-                best_match = r
-                break
+                r_med == med_tgt):
+                
+                score = 0
+                if r.get("task_idx") == cfg["task_id"]:
+                    score += 1000
+                res_r = int(r.get("resolution", 0))
+                if res_r == cfg.get("resolution", 40):
+                    score += 200
+                else:
+                    score += res_r
+                
+                if score > best_score:
+                    best_score = score
+                    best_match = r
 
         p_val = None
         if best_match:
@@ -138,15 +159,14 @@ def main():
         p_vals = [m["pressure_Pa"] for m in tip_75]
         plt.plot(r_vals, p_vals, "o-", color="#1f77b4", lw=2, ms=7, label=r"FDTD Simulation ($\alpha=75^\circ, \theta=90^\circ, d=100$ nm)")
         if len(r_vals) >= 2:
-            poly = np.polyfit(r_vals, p_vals, 1)
-            r_dense = np.linspace(0, max(r_vals), 50)
-            plt.plot(r_dense, np.polyval(poly, r_dense), "--", color="#ff7f0e", label=f"Extrapolation $r_{{\\rm tip}} \\to 0$: $P_0 = {poly[1]:+.4f}$ Pa")
+            r_dense = np.linspace(0, max(r_vals) * 1.1, 100)
+            plt.plot(r_dense, np.polyval(poly, r_dense), "--", color="#ff7f0e", label=f"Extrapolation: $P_0={poly[1]:+.3f}$ Pa")
+        plt.legend(frameon=True)
     plt.axhline(0, color="gray", ls=":")
     plt.xlabel(r"Tip Rounding Radius $r_{\rm tip}$ (nm)", fontsize=12)
     plt.ylabel(r"Casimir Pressure $P$ (Pa)", fontsize=12)
     plt.title("Figure 1: Invariance of Casimir Repulsion to Physical Tip Rounding", fontsize=13, pad=12)
     plt.grid(True, alpha=0.3)
-    plt.legend(frameon=True)
     plt.tight_layout()
     fig_path = "Papers/Fractal_Casimir_Nature_EM/figures/fig1_tip_convergence.png"
     plt.savefig(fig_path, dpi=300)

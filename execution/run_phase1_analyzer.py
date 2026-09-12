@@ -83,16 +83,38 @@ def main():
         corr_tgt = cfg["corrugated"]
 
         best_match = None
+        best_score = -1
         for r in raw_records:
+            # Verify corrugation flag
+            is_corr = bool(r.get("corrugated", False)) or float(r.get("corrugation_angle", r.get("alpha_deg", 0.0))) > 0.0
+            if is_corr != corr_tgt:
+                continue
+
+            # Verify bottom plate generation
+            n_bot_r = int(r.get("N_bottom", r.get("N_bot", 1)))
+            if n_bot_r != int(cfg.get("N_bot", 1)):
+                continue
+
             if (round(float(r.get("d_um", r.get("d", -1))), 4) == round(d_tgt, 4) and
                 int(r.get("N", r.get("N_top", -1))) == N_tgt and
                 r.get("material") == mat_tgt and
                 round(float(r.get("theta_deg", r.get("theta", -1))), 1) == round(th_tgt, 1) and
                 round(float(r.get("eps_bg", -1)), 1) == round(eps_tgt, 1) and
-                round(float(r.get("L", -1)), 2) == round(L_tgt, 2) and
-                bool(r.get("corrugated", False)) == corr_tgt):
-                best_match = r
-                break
+                round(float(r.get("L", -1)), 2) == round(L_tgt, 2)):
+                
+                # Scoring: prioritize exact task_idx match and highest resolution
+                score = 0
+                if r.get("task_idx") == cfg["task_id"]:
+                    score += 1000
+                res_r = int(r.get("resolution", 0))
+                if res_r == cfg.get("resolution", 40):
+                    score += 200
+                else:
+                    score += res_r
+                
+                if score > best_score:
+                    best_score = score
+                    best_match = r
 
         p_val = None
         if best_match:
@@ -129,22 +151,28 @@ def main():
 
     # 1. Lifshitz Distance Power Law Check
     lifshitz = [m for m in completed if m["tier"] == "tier1_lifshitz_scaling"]
-    if len(lifshitz) >= 2:
-        d_vals = [m["d_um"] for m in lifshitz]
-        p_vals = [abs(m["pressure_Pa"]) for m in lifshitz]
+    valid_lifshitz = [m for m in lifshitz if m["pressure_Pa"] is not None and abs(m["pressure_Pa"]) > 1e-12 and m["d_um"] > 0]
+    if len(valid_lifshitz) >= 2:
+        d_vals = [m["d_um"] for m in valid_lifshitz]
+        p_vals = [abs(m["pressure_Pa"]) for m in valid_lifshitz]
         log_d = [math.log(x) for x in d_vals]
         log_p = [math.log(x) for x in p_vals]
         slope, intercept = linear_fit(log_d, log_p)
-        print(f"\n* Lifshitz Distance Scaling: Fitted P(d) ~ d^({slope:.2f}) [Theory: d^-4.00]")
+        print(f"\n* Lifshitz Distance Scaling: Fitted |P(d)| ~ d^({slope:.2f}) [Theory: d^-4.00, points: {len(valid_lifshitz)}/{len(lifshitz)}]")
+    else:
+        print("\n* Lifshitz Distance Scaling: Awaiting completed non-zero distance datapoints.")
 
     # 2. Fractal Area Law Check
     area_tasks = [m for m in completed if m["tier"] == "tier1_fractal_area_law"]
-    if len(area_tasks) >= 2:
-        area_tasks.sort(key=lambda x: x["N"])
-        p_first = abs(area_tasks[0]["pressure_Pa"])
-        p_last = abs(area_tasks[-1]["pressure_Pa"])
-        ratio = p_last / p_first if p_first > 0 else 0
-        print(f"* Fractal Area Law Scaling: N={area_tasks[0]['N']} to {area_tasks[-1]['N']} Ratio = {ratio:.4f} [Theory: (8/9)^(N-1)]")
+    valid_area = [m for m in area_tasks if m["pressure_Pa"] is not None and abs(m["pressure_Pa"]) > 1e-12]
+    if len(valid_area) >= 2:
+        valid_area.sort(key=lambda x: x["N"])
+        p_first = abs(valid_area[0]["pressure_Pa"])
+        p_last = abs(valid_area[-1]["pressure_Pa"])
+        ratio = p_last / p_first if p_first > 1e-12 else 0.0
+        print(f"* Fractal Area Law Scaling: N={valid_area[0]['N']} to {valid_area[-1]['N']} Ratio = {ratio:.4f} [Theory: (8/9)^(N-1)]")
+    else:
+        print("* Fractal Area Law Scaling: Awaiting completed non-zero fractal generation datapoints.")
 
     # Write LaTeX Table
     os.makedirs("Papers/Fractal_Casimir_Nature_EM/tables", exist_ok=True)
