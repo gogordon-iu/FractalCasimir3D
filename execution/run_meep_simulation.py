@@ -610,7 +610,9 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     except Exception:
         import time
         global_rank = int(os.environ.get("SLURM_PROCID", 0))
-        task_tag = f"d_{d:.4f}_th_{theta:.1f}_al_{corrugation_angle:.1f}_mat_{material}_L_{L:.2f}"
+        slurm_job = os.environ.get("SLURM_ARRAY_JOB_ID", os.environ.get("SLURM_JOB_ID", "local"))
+        slurm_task = os.environ.get("SLURM_ARRAY_TASK_ID", "0")
+        task_tag = f"job_{slurm_job}_task_{slurm_task}_N_{N}_Nbot_{N_bottom}_d_{d:.4f}_th_{theta:.1f}_al_{corrugation_angle:.1f}_mat_{material}_L_{L:.2f}"
         
         # Subgroup master writes its total_force
         if subgroup_index < K:
