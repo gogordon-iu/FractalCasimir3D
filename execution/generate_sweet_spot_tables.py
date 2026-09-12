@@ -50,7 +50,7 @@ def generate_latex_tables():
     # Write sweet spot table
     out_tex_path = os.path.join('Papers', 'Fractal_Casimir_Nature_EM', 'tables', 'table_sweet_spot_repulsion.tex')
     with open(out_tex_path, 'w') as f:
-        f.write("% Auto-generated from results_sweet_spot_sweep_20260831_134421\n")
+        f.write(f"% Auto-generated from {summary_path}\n")
         f.write("\\begin{table}[htbp]\n")
         f.write("\\centering\n")
         f.write("\\caption{Representative Verified 3D FDTD Repulsive Casimir Pressures ($P > 0$) in Vacuum across the $(\\alpha, \\theta, d)$ Parameter Space ($L=2.0\\ \\mu\\text{m}$, $N=3$).}\n")
@@ -68,7 +68,7 @@ def generate_latex_tables():
     # Write equilibrium table
     eq_tex_path = os.path.join('Papers', 'Fractal_Casimir_Nature_EM', 'tables', 'table_levitation_equilibria.tex')
     with open(eq_tex_path, 'w') as f:
-        f.write("% Auto-generated from results_sweet_spot_sweep_20260831_134421\n")
+        f.write(f"% Auto-generated from {summary_path}\n")
         f.write("\\begin{table}[htbp]\n")
         f.write("\\centering\n")
         f.write("\\caption{Stable Passive Nanomechanical Levitation Equilibrium Heights ($d_{\\rm eq}$ where $P=0$ and $\\partial P/\\partial d < 0$) in Vacuum.}\n")
