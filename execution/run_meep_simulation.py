@@ -118,14 +118,22 @@ def generate_stepped_sieve_holes(N, L, center_x, center_y, depths, top_z, theta=
     return holes
 
 
-def generate_fractal_corrugations(N, L, center_x, center_y, base_z, is_top_plate=False, angle=45.0, theta=0.0, max_depth=None, material=None):
+def generate_fractal_corrugations(N, L, center_x, center_y, base_z, is_top_plate=False, angle=45.0, theta=0.0, max_depth=None, material=None, r_tip=0.0):
     """
-    Generates 3D Fractal Corrugations (Frontier 2) with sloped walls.
+    Generates 3D Fractal Corrugations (Frontier 2) with sloped walls and optional tip rounding.
     For bottom plate (is_top_plate=False): carves V-groove pyramids downward into the substrate starting at base_z (-d/2).
     For top plate (is_top_plate=True): carves V-groove pyramids upward into the top plate starting at base_z (+d/2),
     rotated by angle theta in the xy-plane so corrugations rotate rigidly with the plate.
+    When r_tip > 0, delegates to generate_rounded_pyramid_corrugations for spherical apex profiling.
     Both plates preserve a clear gap between -d/2 and +d/2, ensuring the stress tensor integration box never slices any material.
     """
+    if r_tip > 0.0:
+        from execution.edge_rounding_geometry import generate_rounded_pyramid_corrugations
+        return generate_rounded_pyramid_corrugations(
+            N, L, center_x, center_y, base_z, is_top_plate=is_top_plate,
+            angle=angle, r_tip=r_tip, theta=theta, max_depth=max_depth, material=material
+        )
+
     shapes = []
     tan_angle = np.tan(np.radians(angle))
     theta_rad = np.radians(theta)
@@ -201,6 +209,10 @@ def get_casimir_material(material_name, Sigma, ft, theta=0.0, eps_bg=1.0):
     if material_name == "PEC":
         cond_attr = {"D_conductivity" if ft == mp.E_stuff else "B_conductivity": Sigma}
         return mp.Medium(epsilon=-1e20, **cond_attr)
+
+    if material_name in ["BlackPhosphorus", "ReS2", "BP_realistic"]:
+        from execution.materials_database_dispersive import get_meep_dispersive_medium
+        return get_meep_dispersive_medium(material_name, Sigma, ft, theta_deg=theta)
         
     if material_name == "Gold":
         from meep.materials import Au
@@ -350,7 +362,7 @@ def get_optimal_subgroups(M, num_tasks):
     return max(valid_divisors)
 
 
-def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108, N_bottom=1, stepped_sieve=False, sieve_depths=[0.30, 0.15, 0.05], corrugated=False, corrugation_angle=45.0):
+def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108, N_bottom=1, stepped_sieve=False, sieve_depths=[0.30, 0.15, 0.05], corrugated=False, corrugation_angle=45.0, r_tip=0.0, medium=None):
     """
     Runs a 3D FDTD simulation for a single configuration, utilizing subgroups
     to run different polarizations and moments in parallel.
@@ -424,10 +436,17 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
         bottom_plate_material = get_casimir_material(material, Sigma, ft, theta=0.0, eps_bg=eps_bg)
         top_plate_material = get_casimir_material(material, Sigma, ft, theta=theta, eps_bg=eps_bg)
         
-        if ft == mp.E_stuff:
-            bg_material = mp.Medium(epsilon=eps_bg, D_conductivity=Sigma)
+        if medium is not None and medium not in ["Vacuum", "None"]:
+            try:
+                from execution.materials_database_dispersive import get_meep_dispersive_medium
+                bg_material = get_meep_dispersive_medium(medium, Sigma, ft)
+            except Exception:
+                bg_material = mp.Medium(epsilon=eps_bg, D_conductivity=Sigma if ft == mp.E_stuff else 0.0, B_conductivity=Sigma if ft == mp.H_stuff else 0.0)
         else:
-            bg_material = mp.Medium(epsilon=eps_bg, B_conductivity=Sigma)
+            if ft == mp.E_stuff:
+                bg_material = mp.Medium(epsilon=eps_bg, D_conductivity=Sigma)
+            else:
+                bg_material = mp.Medium(epsilon=eps_bg, B_conductivity=Sigma)
                 
         # Geometry list
         geometry = []
@@ -441,7 +460,7 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
                 corrugations_bottom = generate_fractal_corrugations(
                     N_bottom, L, 0.0, 0.0, -d/2.0, is_top_plate=False,
                     angle=corrugation_angle, theta=0.0,
-                    max_depth=0.85 * t_bottom, material=bg_material
+                    max_depth=0.85 * t_bottom, material=bg_material, r_tip=r_tip
                 )
                 geometry.extend(corrugations_bottom)
             elif stepped_sieve:
@@ -473,7 +492,7 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
                 corrugations_top = generate_fractal_corrugations(
                     N, L, 0.0, 0.0, d/2.0, is_top_plate=True,
                     angle=corrugation_angle, theta=theta,
-                    max_depth=0.85 * t_top, material=bg_material
+                    max_depth=0.85 * t_top, material=bg_material, r_tip=r_tip
                 )
                 geometry.extend(corrugations_top)
             elif N > 1:
@@ -637,7 +656,7 @@ def main():
     parser.add_argument("--d", type=float, required=True, help="Plate separation in microns.")
     parser.add_argument("--N", type=int, required=True, help="Prefractal generation of top plate (1-4).")
     parser.add_argument("--N-bottom", type=int, default=1, help="Prefractal generation of bottom plate (1=solid, 2=single central hole).")
-    parser.add_argument("--material", type=str, required=True, choices=["PEC", "Gold", "Silicon", "Phosphorene", "Phosphorene_tuned"], help="Material configuration.")
+    parser.add_argument("--material", type=str, required=True, choices=["PEC", "Gold", "Silicon", "Phosphorene", "Phosphorene_tuned", "BlackPhosphorus", "ReS2", "BP_realistic"], help="Material configuration.")
     parser.add_argument("--res", type=int, default=10, help="Grid resolution.")
     parser.add_argument("--nmax", type=int, default=3, help="Max moments index limit.")
     parser.add_argument("--theta", type=float, default=0.0, help="Twist angle of top plate in degrees.")
@@ -653,6 +672,8 @@ def main():
     parser.add_argument("--sieve-depths", type=float, nargs="+", default=[0.30, 0.15, 0.05], help="Cavity depths in um for 3D stepped sieve levels.")
     parser.add_argument("--corrugated", action="store_true", help="Enable 3D Interlocking Fractal Corrugations (Frontier 2).")
     parser.add_argument("--corrugation-angle", type=float, default=45.0, help="Wall slope angle in degrees for corrugation pyramids (default: 45.0).")
+    parser.add_argument("--r-tip", type=float, default=0.0, help="Tip rounding radius in nm for corrugation pyramids (default: 0.0).")
+    parser.add_argument("--medium", type=str, default=None, choices=[None, "Vacuum", "Teflon_AF", "Ethanol", "Bromobenzene", "Glycerol", "Cyclohexane"], help="Liquid immersion or background dielectric medium.")
     parser.add_argument("--no-cache", action="store_true", help="Ignore cached checkpoint and result files, forcing complete recomputation.")
     args = parser.parse_args()
     
@@ -689,13 +710,22 @@ def main():
         print(f"Starting simulation: d={args.d} um, N_top={args.N}, N_bottom={args.N_bottom}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}, config={args.config}, stepped_sieve={args.stepped_sieve}, corrugated={args.corrugated}")
         print(f"Parallel configuration: {total_ranks} processes running {K} parallel moment partitions.")
     
+    # Setup immersion medium background permittivity if specified
+    if args.medium and args.medium not in ["Vacuum", "None"]:
+        from execution.materials_database_dispersive import IMMERSION_MEDIA
+        if args.medium in IMMERSION_MEDIA and args.eps_bg == 1.0:
+            args.eps_bg = IMMERSION_MEDIA[args.medium]["eps_static"]
+    r_tip_um = args.r_tip / 1000.0
+
     # Checkpointing and cache tags (version 2 for clean, non-slicing geometry)
-    task_chk_tag = f"v2_d_{args.d:.4f}_N_{args.N}_mat_{args.material}_res_{args.res}_th_{args.theta:.1f}_al_{args.corrugation_angle:.1f}_L_{args.L:.2f}"
+    rtip_str = f"_rtip_{args.r_tip:.1f}" if args.r_tip > 0.0 else ""
+    med_str = f"_med_{args.medium}" if args.medium and args.medium not in ["Vacuum", "None"] else ""
+    task_chk_tag = f"v2_d_{args.d:.4f}_N_{args.N}_mat_{args.material}_res_{args.res}_th_{args.theta:.1f}_al_{args.corrugation_angle:.1f}{rtip_str}{med_str}_L_{args.L:.2f}"
     chk_both = f".tmp/chk_{task_chk_tag}_both.json"
     chk_self = f".tmp/chk_{task_chk_tag}_self.json"
     
     # Early exit if final output already exists
-    nbot_str = f"_corrugated_al_{args.corrugation_angle:.1f}_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
+    nbot_str = f"_corrugated_al_{args.corrugation_angle:.1f}{rtip_str}{med_str}_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
     out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
     
     check_file = None
@@ -725,9 +755,9 @@ def main():
                 if global_rank == 0:
                     print(f"Loaded cached 'both' force: {f_both:.6e} from {chk_both}")
             except Exception:
-                f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle)
+                f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium)
         else:
-            f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle)
+            f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium)
             if global_rank == 0:
                 os.makedirs(".tmp", exist_ok=True)
                 with open(chk_both, "w") as f:
@@ -741,9 +771,9 @@ def main():
                 if global_rank == 0:
                     print(f"Loaded cached 'self' force: {f_self:.6e} from {chk_self}")
             except Exception:
-                f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle)
+                f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium)
         else:
-            f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle)
+            f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium)
             if global_rank == 0:
                 os.makedirs(".tmp", exist_ok=True)
                 with open(chk_self, "w") as f:
@@ -752,10 +782,10 @@ def main():
     # Save output to .tmp folder
     if global_rank == 0:
         os.makedirs(".tmp", exist_ok=True)
+        A_eff = get_effective_area(args.N, args.L)
         is_partial = (args.moment_start > 0 or args.moment_end < num_tasks)
         if is_partial:
             # Write partial moment results
-            nbot_str = f"_corrugated_al_{args.corrugation_angle:.1f}_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
             if args.config == "all":
                 for cfg, force_val in [("both", f_both), ("self", f_self)]:
                     out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{cfg}_moments_{args.moment_start}_{args.moment_end}.json"
@@ -763,6 +793,9 @@ def main():
                         "d_um": args.d,
                         "N": args.N,
                         "N_bottom": args.N_bottom,
+                        "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
+                        "r_tip_nm": args.r_tip,
+                        "medium": args.medium if args.medium else "Vacuum",
                         "material": args.material,
                         "resolution": args.res,
                         "theta_deg": args.theta,
@@ -782,6 +815,9 @@ def main():
                     "d_um": args.d,
                     "N": args.N,
                     "N_bottom": args.N_bottom,
+                    "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
+                    "r_tip_nm": args.r_tip,
+                    "medium": args.medium if args.medium else "Vacuum",
                     "material": args.material,
                     "resolution": args.res,
                     "theta_deg": args.theta,
@@ -796,7 +832,6 @@ def main():
                     json.dump(result, f, indent=4)
                 print(f"Partial simulation task complete. Saved to {out_file}")
         else:
-            nbot_str = f"_corrugated_al_{args.corrugation_angle:.1f}_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
             if args.task_idx >= 0:
                 if args.config == "all":
                     out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_task_{args.task_idx}.json"
@@ -805,6 +840,8 @@ def main():
                         "N": args.N,
                         "N_bottom": args.N_bottom,
                         "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
+                        "r_tip_nm": args.r_tip,
+                        "medium": args.medium if args.medium else "Vacuum",
                         "material": args.material,
                         "resolution": args.res,
                         "theta_deg": args.theta,
@@ -812,7 +849,9 @@ def main():
                         "L": args.L,
                         "task_idx": args.task_idx,
                         "force_both": float(f_both),
-                        "force_self": float(f_self)
+                        "force_self": float(f_self),
+                        "force_subtracted": float(f_both - f_self),
+                        "pressure_Pa": float((f_both - f_self) / A_eff)
                     }
                 else:
                     out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}_task_{args.task_idx}.json"
@@ -821,6 +860,8 @@ def main():
                         "N": args.N,
                         "N_bottom": args.N_bottom,
                         "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
+                        "r_tip_nm": args.r_tip,
+                        "medium": args.medium if args.medium else "Vacuum",
                         "material": args.material,
                         "resolution": args.res,
                         "theta_deg": args.theta,
@@ -838,6 +879,8 @@ def main():
                         "N": args.N,
                         "N_bottom": args.N_bottom,
                         "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
+                        "r_tip_nm": args.r_tip,
+                        "medium": args.medium if args.medium else "Vacuum",
                         "material": args.material,
                         "resolution": args.res,
                         "theta_deg": args.theta,
@@ -845,7 +888,8 @@ def main():
                         "L": args.L,
                         "force_both": float(f_both),
                         "force_self": float(f_self),
-                        "force_subtracted": float(f_both - f_self)
+                        "force_subtracted": float(f_both - f_self),
+                        "pressure_Pa": float((f_both - f_self) / A_eff)
                     }
                 else:
                     out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}.json"
@@ -854,6 +898,8 @@ def main():
                         "N": args.N,
                         "N_bottom": args.N_bottom,
                         "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
+                        "r_tip_nm": args.r_tip,
+                        "medium": args.medium if args.medium else "Vacuum",
                         "material": args.material,
                         "resolution": args.res,
                         "theta_deg": args.theta,
