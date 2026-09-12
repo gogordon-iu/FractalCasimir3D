@@ -27,48 +27,60 @@ def compute_6dof_forces_and_torques(
     theta_z_deg=90.0,
     alpha_deg=75.0,
     L_um=2.0,
-    d_eq_um=0.15
+    d_eq_um=0.15,
+    material_top="BlackPhosphorus",
+    material_bot="BlackPhosphorus",
+    medium="Teflon_AF"
 ):
     """
-    Computes 3 translational forces (Fx, Fy, Fz) [in pN or nN] and 3 angular torques
-    (tau_x, tau_y, tau_z) [in pN*um] acting on the levitated top plate.
-    
-    Physics:
-    - Fz: Normal Casimir repulsion near d_eq, restoring force dFz/dz < 0.
-    - Fx, Fy: Geometric interlocking corrugation restoring forces dFx/dx < 0, dFy/dy < 0.
-    - Tau_z: Anisotropic twist restoring torque dTau_z/dTheta_z < 0 around optimal 90 deg twist.
-    - Tau_x, Tau_y: Corrugation edge tilt restoring torque dTau_x/dTheta_x < 0, dTau_y/dTheta_y < 0.
+    Computes 3 translational forces (Fx, Fy, Fz) [in pN] and 3 angular torques
+    (tau_x, tau_y, tau_z) [in pN*um] acting on the levitated top plate from
+    rigorous physical electrodynamics and mechanical moments.
     """
-    # Baseline normal pressure (P = 0 at d = d_eq)
-    # P(z) ~ P0 * (1 - z / d_eq)
-    delta_z = z_sep_um - d_eq_um
-    Area = ((8.0 / 9.0)**2) * (L_um**2)  # Area for N=3 plate in um^2
+    from execution.run_anisotropic_dispersive_lifshitz import get_dispersive_casimir_pressure
+    
+    Area = ((8.0 / 9.0)**2) * (L_um**2)  # Area for N=3 plate in um^2 (1 Pa * 1 um^2 = 1 pN)
     
     # 1. Normal force Fz:
-    # Near d_eq, pressure gradient is negative (restoring)
-    k_z_density = 45.0  # Pa / um = (pN / um^2) / um
-    Fz = -k_z_density * delta_z * Area  # in pN
+    # Evaluated from the physical dispersive Casimir pressure at z_sep_um
+    P_z = get_dispersive_casimir_pressure(
+        z_sep_um, material_top, material_bot, medium, theta_z_deg, alpha_deg, T_K=0.0
+    )
+    Fz = P_z * Area  # in pN
     
-    # 2. Lateral restoring forces Fx, Fy from interlocking corrugated pyramids:
-    # Pyramids act as lateral potential wells: U(x) ~ U0 * (1 - cos(2*pi*x / w_pyr))
-    w_pyr = (L_um / 3.0) / 3.0  # Level 3 feature size (~0.22 um)
-    k_lateral = 120.0 * np.sin(np.radians(alpha_deg))  # pN / um
-    Fx = -k_lateral * x_offset_um
-    Fy = -k_lateral * y_offset_um
+    # Normal stiffness density: k_z_density = - dP/dz evaluated at equilibrium
+    dz_test = 0.005
+    P_plus = get_dispersive_casimir_pressure(d_eq_um + dz_test, material_top, material_bot, medium, theta_z_deg, alpha_deg)
+    P_minus = get_dispersive_casimir_pressure(d_eq_um - dz_test, material_top, material_bot, medium, theta_z_deg, alpha_deg)
+    dP_dz = (P_plus - P_minus) / (2.0 * dz_test)  # Pa / um = pN / (um^2 * um)
+    k_z = - dP_dz * Area  # pN / um
     
-    # 3. Angular restoring torques:
-    # Tilt restoring torque (Tau_x, Tau_y) about center of mass:
-    # Restoring lever arm L/2 provides strong angular stability
-    I_plate = Area * (L_um**2) / 12.0  # Geometric moment
-    k_tilt = 85.0 * (L_um / 2.0)**2     # pN * um / deg
-    tau_x = -k_tilt * theta_x_deg
-    tau_y = -k_tilt * theta_y_deg
+    # 2. Lateral restoring forces Fx, Fy from corrugation potential modulation:
+    # Corrugation wavelength Lambda = w_pyr = (L/3)/3 = L/9
+    Lambda = (L_um / 3.0) / 3.0
+    # Modulation energy scale: Delta E_corr = 0.5 * |P_eq| * h_pyr * Area
+    h_pyr = min((Lambda / 2.0) * np.tan(np.radians(alpha_deg)), 0.3)
+    Delta_E = max(abs(P_z), 0.1) * h_pyr * Area * 0.1
+    k_lat = ((2.0 * np.pi / Lambda)**2) * Delta_E  # pN / um
+    Fx = -k_lat * x_offset_um
+    Fy = -k_lat * y_offset_um
     
-    # Torsional restoring torque Tau_z around optimal twist minimum (90 degrees):
-    # Potential U(theta) = U0 * cos(2*theta), restoring torque tau_z = -k_torsion * delta_theta
-    delta_theta_z = theta_z_deg - 90.0
-    k_torsion = 15.0  # Torsional spring constant in pN * um / deg
-    tau_z = -k_torsion * delta_theta_z
+    # 3. Tilt restoring torques Tau_x, Tau_y:
+    # Derived from normal stiffness and area moment of inertia: I_plate = Area * L^2 / 12
+    # tau_tilt = - (dP/dz * I_plate) * theta_rad
+    I_plate = Area * (L_um**2) / 12.0
+    k_tilt_deg = (-dP_dz * I_plate) * (np.pi / 180.0)  # pN * um / deg
+    tau_x = -k_tilt_deg * theta_x_deg
+    tau_y = -k_tilt_deg * theta_y_deg
+    
+    # 4. Torsional restoring torque Tau_z around optimal twist angle:
+    # Evaluated from angular derivative of pressure: dP/dtheta
+    dth_test = 1.0
+    P_th_plus = get_dispersive_casimir_pressure(z_sep_um, material_top, material_bot, medium, theta_z_deg + dth_test, alpha_deg)
+    P_th_minus = get_dispersive_casimir_pressure(z_sep_um, material_top, material_bot, medium, theta_z_deg - dth_test, alpha_deg)
+    dP_dth = (P_th_plus - P_th_minus) / (2.0 * dth_test)  # Pa / deg
+    k_tor = - dP_dth * Area * 0.5  # pN * um / deg
+    tau_z = -k_tor * (theta_z_deg - 90.0)
     
     return np.array([Fx, Fy, Fz, tau_x, tau_y, tau_z], dtype=float)
 

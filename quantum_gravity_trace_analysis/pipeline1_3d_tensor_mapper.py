@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 import json
 import argparse
@@ -87,7 +87,8 @@ def compute_3d_stress_tensor_fields(L=2.0, d=0.15, alpha=75.0, theta=82.0, N=3, 
 
     print('\n--- Space-Averaged Stress Tensor Diagnostics ---')
     print(f'  Mean Energy Density <T_00>:   {mean_T00:+.6e}')
-    print(f'  Mean Normal Stress <T_zz>:    {mean_Tzz:+.6e} (Repulsive Cushion!)')
+    regime_str = "Repulsive" if mean_Tzz > 0 else "Attractive"
+    print(f'  Mean Normal Stress <T_zz>:    {mean_Tzz:+.6e} ({regime_str})')
     print(f'  Mean Transverse <T_xx>:       {mean_Txx:+.6e}')
     print(f'  Mean Transverse <T_yy>:       {mean_Tyy:+.6e}')
     print(f'  Shear Quadrupole <Txx - Tyy>: {shear_quadrupole:+.6e}')

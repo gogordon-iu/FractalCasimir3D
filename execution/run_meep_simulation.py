@@ -20,10 +20,11 @@ def get_src_index(n):
 def get_effective_area(N, L):
     return ((8.0 / 9.0)**(N - 1)) * (L**2)
 
-def generate_carpet_holes(N, L, center_x, center_y, size_z, material, theta=0.0):
+def generate_carpet_holes(N, L, center_x, center_y, size_z, material=None, theta=0.0):
     """
-    Generates a list of mp.Block objects representing the air holes
+    Generates a list of mp.Block objects representing the holes
     in a Sierpinski carpet prefractal plate, rotated by theta degrees in the xy-plane.
+    Holes are filled with material (bg_material or mp.vacuum).
     """
     holes = []
     theta_rad = np.radians(theta)
@@ -32,6 +33,7 @@ def generate_carpet_holes(N, L, center_x, center_y, size_z, material, theta=0.0)
     e1 = mp.Vector3(C, S, 0.0)
     e2 = mp.Vector3(-S, C, 0.0)
     e3 = mp.Vector3(0.0, 0.0, 1.0)
+    hole_mat = mp.vacuum if material is None else material
     
     def recurse(x, y, w, level):
         if level > N:
@@ -48,7 +50,7 @@ def generate_carpet_holes(N, L, center_x, center_y, size_z, material, theta=0.0)
             e1=e1,
             e2=e2,
             e3=e3,
-            material=mp.vacuum
+            material=hole_mat
         ))
         
         # Recurse for the 8 surrounding squares
@@ -66,11 +68,12 @@ def generate_carpet_holes(N, L, center_x, center_y, size_z, material, theta=0.0)
     return holes
 
 
-def generate_stepped_sieve_holes(N, L, center_x, center_y, depths, top_z, theta=0.0):
+def generate_stepped_sieve_holes(N, L, center_x, center_y, depths, top_z, theta=0.0, material=None):
     """
     Generates 3D stepped cavity wells for the bottom plate (Frontier 1: Stepped Fractal Sieve).
     depths: list of depths for level 2 (macro), level 3 (medium), level 4 (micro), etc. in microns.
     top_z: the z-coordinate of the top surface of the bottom plate (-d/2).
+    Cavities are filled with material (bg_material or mp.vacuum).
     """
     holes = []
     theta_rad = np.radians(theta)
@@ -79,6 +82,7 @@ def generate_stepped_sieve_holes(N, L, center_x, center_y, depths, top_z, theta=
     e1 = mp.Vector3(C, S, 0.0)
     e2 = mp.Vector3(-S, C, 0.0)
     e3 = mp.Vector3(0.0, 0.0, 1.0)
+    hole_mat = mp.vacuum if material is None else material
     
     def recurse(x, y, w, level):
         if level > N:
@@ -90,14 +94,14 @@ def generate_stepped_sieve_holes(N, L, center_x, center_y, depths, top_z, theta=
         rx = x * C - y * S
         ry = x * S + y * C
         
-        # Etch a vacuum cavity box of depth h into the bottom plate starting from top_z
+        # Etch a cavity box of depth h into the bottom plate starting from top_z
         holes.append(mp.Block(
             center=mp.Vector3(rx + center_x, ry + center_y, top_z - h / 2.0),
             size=mp.Vector3(hole_w, hole_w, h + 0.001),
             e1=e1,
             e2=e2,
             e3=e3,
-            material=mp.vacuum
+            material=hole_mat
         ))
         
         if level < N:
@@ -114,44 +118,65 @@ def generate_stepped_sieve_holes(N, L, center_x, center_y, depths, top_z, theta=
     return holes
 
 
-def generate_fractal_corrugations(N, L, center_x, center_y, base_z, is_top_plate=False, angle=45.0):
+def generate_fractal_corrugations(N, L, center_x, center_y, base_z, is_top_plate=False, angle=45.0, theta=0.0, max_depth=None, material=None):
     """
-    Generates 3D Interlocking Fractal Corrugations (Frontier 2) with 45-degree sloped walls.
-    For the bottom plate (is_top_plate=False): carves out 45-degree V-groove pyramids into the plate starting at base_z (-d/2).
-    For the top plate (is_top_plate=True): creates interlocking 45-degree pyramids projecting downward from base_z (+d/2).
+    Generates 3D Fractal Corrugations (Frontier 2) with sloped walls.
+    For bottom plate (is_top_plate=False): carves V-groove pyramids downward into the substrate starting at base_z (-d/2).
+    For top plate (is_top_plate=True): carves V-groove pyramids upward into the top plate starting at base_z (+d/2),
+    rotated by angle theta in the xy-plane so corrugations rotate rigidly with the plate.
+    Both plates preserve a clear gap between -d/2 and +d/2, ensuring the stress tensor integration box never slices any material.
     """
     shapes = []
-    tan_angle = np.tan(np.radians(angle)) # tan(45 deg) = 1.0
+    tan_angle = np.tan(np.radians(angle))
+    theta_rad = np.radians(theta)
+    C = np.cos(theta_rad)
+    S = np.sin(theta_rad)
+    e1 = mp.Vector3(C, S, 0.0)
+    e2 = mp.Vector3(-S, C, 0.0)
+    e3 = mp.Vector3(0.0, 0.0, 1.0)
+    carve_mat = mp.vacuum if material is None else material
     
     def recurse(x, y, w, level):
         if level > N:
             return
         w_hole = w / 3.0
-        h_pyramid = (w_hole / 2.0) * tan_angle # depth/height of 45-deg pyramid
+        h_pyramid = (w_hole / 2.0) * tan_angle
+        if max_depth is not None:
+            h_pyramid = min(h_pyramid, max_depth)
         
-        # Build 45-degree pyramid via thin slices for exact dielectric resolution in MEEP (10 slices)
         num_slices = 10
         dz = h_pyramid / num_slices
         
         for k in range(num_slices):
             frac = (k + 0.5) / num_slices
             if is_top_plate:
-                # Top plate pyramid points DOWNWARD into the V-grooves
+                # Top plate V-groove is carved UPWARD into the top plate starting at base_z (+d/2)
+                # Slices taper from width w_hole at base_z to 0 at base_z + h_pyramid
                 slice_w = w_hole * (1.0 - frac)
-                slice_z = base_z - (frac * h_pyramid)
+                slice_z = base_z + (frac * h_pyramid)
+                rx = x * C - y * S
+                ry = x * S + y * C
                 shapes.append(mp.Block(
-                    center=mp.Vector3(x + center_x, y + center_y, slice_z),
-                    size=mp.Vector3(slice_w, slice_w, dz + 0.001),
-                    material=mp.vacuum
+                    center=mp.Vector3(rx + center_x, ry + center_y, slice_z),
+                    size=mp.Vector3(max(slice_w, 1e-4), max(slice_w, 1e-4), dz + 0.001),
+                    e1=e1,
+                    e2=e2,
+                    e3=e3,
+                    material=carve_mat
                 ))
             else:
-                # Bottom plate V-groove is carved out of the substrate (vacuum pyramid pointing DOWNWARD)
+                # Bottom plate V-groove is carved DOWNWARD into the substrate starting at base_z (-d/2)
                 slice_w = w_hole * frac
                 slice_z = base_z - ((1.0 - frac) * h_pyramid)
+                rx = x * C - y * S
+                ry = x * S + y * C
                 shapes.append(mp.Block(
-                    center=mp.Vector3(x + center_x, y + center_y, slice_z),
-                    size=mp.Vector3(slice_w, slice_w, dz + 0.001),
-                    material=mp.vacuum
+                    center=mp.Vector3(rx + center_x, ry + center_y, slice_z),
+                    size=mp.Vector3(max(slice_w, 1e-4), max(slice_w, 1e-4), dz + 0.001),
+                    e1=e1,
+                    e2=e2,
+                    e3=e3,
+                    material=carve_mat
                 ))
                 
         if level < N:
@@ -207,15 +232,17 @@ def get_casimir_material(material_name, Sigma, ft, theta=0.0, eps_bg=1.0):
         sig_xx = sig_x * C**2 + sig_y * S**2
         sig_yy = sig_x * S**2 + sig_y * C**2
         sig_zz = sig_z
+        sig_xy = (sig_x - sig_y) * S * C
         
         gamma_val = gamma_p + Sigma if ft == mp.E_stuff else gamma_p
         cond_attr = {"D_conductivity" if ft == mp.E_stuff else "B_conductivity": Sigma}
         
-        # In MEEP, susceptibility tensor rotation is handled via epsilon_offdiag in mp.Medium
+        # In MEEP, susceptibility tensor rotation is handled via sigma_offdiag and epsilon_offdiag
         sus = mp.LorentzianSusceptibility(
             frequency=f0,
             gamma=gamma_val,
-            sigma_diag=mp.Vector3(sig_xx, sig_yy, sig_zz)
+            sigma_diag=mp.Vector3(sig_xx, sig_yy, sig_zz),
+            sigma_offdiag=mp.Vector3(sig_xy, 0.0, 0.0)
         )
 
         return mp.Medium(
@@ -334,9 +361,15 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     dpml = 0.2  # PML thickness in microns
     buffer = 0.15  # buffer between plates and PML
     
-    # Cell size
-    sx = L + 2.0 * (dpml + buffer)
-    sy = L + 2.0 * (dpml + buffer)
+    # Bounding footprint for plate of size L rotated by theta in the xy-plane:
+    theta_rad = np.radians(theta)
+    C_env = abs(np.cos(theta_rad))
+    S_env = abs(np.sin(theta_rad))
+    L_rot = L * (C_env + S_env)
+    
+    # Cell size: ensure buffer exists between rotated plate and PML
+    sx = L_rot + 2.0 * (dpml + buffer)
+    sy = L_rot + 2.0 * (dpml + buffer)
     sz = d + t_top + t_bottom + 2.0 * (dpml + buffer)
     
     cell_size = mp.Vector3(sx, sy, sz)
@@ -353,10 +386,11 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     }
     
     # Integration surface S enclosing the top prefractal plate
-    delta_s = 0.03
-    sx_box = L + 2.0 * delta_s
-    sy_box = L + 2.0 * delta_s
-    sz_box = t_top + 2.0 * delta_s
+    delta_s_xy = 0.03
+    delta_s_z = min(0.02, d / 4.0)
+    sx_box = L_rot + 2.0 * delta_s_xy
+    sy_box = L_rot + 2.0 * delta_s_xy
+    sz_box = t_top + 2.0 * delta_s_z
     center_z = d/2.0 + t_top/2.0
     
     # 6 sides of S
@@ -404,13 +438,17 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
                 material=bottom_plate_material
             ))
             if corrugated:
-                corrugations_bottom = generate_fractal_corrugations(N_bottom, L, 0.0, 0.0, -d/2.0, is_top_plate=False, angle=corrugation_angle)
+                corrugations_bottom = generate_fractal_corrugations(
+                    N_bottom, L, 0.0, 0.0, -d/2.0, is_top_plate=False,
+                    angle=corrugation_angle, theta=0.0,
+                    max_depth=0.85 * t_bottom, material=bg_material
+                )
                 geometry.extend(corrugations_bottom)
             elif stepped_sieve:
-                holes_bottom = generate_stepped_sieve_holes(N_bottom, L, 0.0, 0.0, sieve_depths, -d/2.0, theta=0.0)
+                holes_bottom = generate_stepped_sieve_holes(N_bottom, L, 0.0, 0.0, sieve_depths, -d/2.0, theta=0.0, material=bg_material)
                 geometry.extend(holes_bottom)
             elif N_bottom > 1:
-                holes_bottom = generate_carpet_holes(N_bottom, L, 0.0, 0.0, t_bottom + 0.01, bottom_plate_material, theta=0.0)
+                holes_bottom = generate_carpet_holes(N_bottom, L, 0.0, 0.0, t_bottom + 0.01, material=bg_material, theta=0.0)
                 for hole in holes_bottom:
                     hole.center = mp.Vector3(hole.center.x, hole.center.y, -d/2.0 - t_bottom/2.0)
                 geometry.extend(holes_bottom)
@@ -431,15 +469,19 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
                 e3=e3,
                 material=top_plate_material
             ))
-            # Subtract holes recursively
-            holes = generate_carpet_holes(N, L, 0.0, 0.0, t_top + 0.01, top_plate_material, theta=theta)
-            for hole in holes:
-                hole.center = mp.Vector3(hole.center.x, hole.center.y, d/2.0 + t_top/2.0)
-            geometry.extend(holes)
-            
             if corrugated:
-                corrugations_top = generate_fractal_corrugations(N, L, 0.0, 0.0, d/2.0, is_top_plate=True, angle=corrugation_angle)
+                corrugations_top = generate_fractal_corrugations(
+                    N, L, 0.0, 0.0, d/2.0, is_top_plate=True,
+                    angle=corrugation_angle, theta=theta,
+                    max_depth=0.85 * t_top, material=bg_material
+                )
                 geometry.extend(corrugations_top)
+            elif N > 1:
+                # Subtract holes recursively
+                holes = generate_carpet_holes(N, L, 0.0, 0.0, t_top + 0.01, material=bg_material, theta=theta)
+                for hole in holes:
+                    hole.center = mp.Vector3(hole.center.x, hole.center.y, d/2.0 + t_top/2.0)
+                geometry.extend(holes)
             
         # Setup Simulation on the subgroup communicator
         sim = mp.Simulation(
@@ -611,6 +653,7 @@ def main():
     parser.add_argument("--sieve-depths", type=float, nargs="+", default=[0.30, 0.15, 0.05], help="Cavity depths in um for 3D stepped sieve levels.")
     parser.add_argument("--corrugated", action="store_true", help="Enable 3D Interlocking Fractal Corrugations (Frontier 2).")
     parser.add_argument("--corrugation-angle", type=float, default=45.0, help="Wall slope angle in degrees for corrugation pyramids (default: 45.0).")
+    parser.add_argument("--no-cache", action="store_true", help="Ignore cached checkpoint and result files, forcing complete recomputation.")
     args = parser.parse_args()
     
     # Setup global crash handler for automatic logging and git push
@@ -646,8 +689,8 @@ def main():
         print(f"Starting simulation: d={args.d} um, N_top={args.N}, N_bottom={args.N_bottom}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}, config={args.config}, stepped_sieve={args.stepped_sieve}, corrugated={args.corrugated}")
         print(f"Parallel configuration: {total_ranks} processes running {K} parallel moment partitions.")
     
-    # Checkpointing and cache tags
-    task_chk_tag = f"d_{args.d:.4f}_N_{args.N}_mat_{args.material}_res_{args.res}_th_{args.theta:.1f}_al_{args.corrugation_angle:.1f}_L_{args.L:.2f}"
+    # Checkpointing and cache tags (version 2 for clean, non-slicing geometry)
+    task_chk_tag = f"v2_d_{args.d:.4f}_N_{args.N}_mat_{args.material}_res_{args.res}_th_{args.theta:.1f}_al_{args.corrugation_angle:.1f}_L_{args.L:.2f}"
     chk_both = f".tmp/chk_{task_chk_tag}_both.json"
     chk_self = f".tmp/chk_{task_chk_tag}_self.json"
     
@@ -655,24 +698,11 @@ def main():
     nbot_str = f"_corrugated_al_{args.corrugation_angle:.1f}_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
     out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
     
-    # Check current file or legacy file with matching corrugation angle
-    old_nbot_str = f"_corrugated_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
-    old_out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{old_nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
-    
     check_file = None
-    if os.path.exists(out_file):
+    if not args.no_cache and os.path.exists(out_file):
         check_file = out_file
-    elif os.path.exists(old_out_file):
-        try:
-            with open(old_out_file, "r") as f:
-                c_data = json.load(f)
-            target_al = float(args.corrugation_angle if args.corrugated else 0.0)
-            if abs(float(c_data.get("corrugation_angle", -999.0)) - target_al) < 1e-3:
-                check_file = old_out_file
-        except Exception:
-            pass
 
-    if args.config == "all" and args.task_idx < 0 and check_file:
+    if not args.no_cache and args.config == "all" and args.task_idx < 0 and check_file:
         try:
             with open(check_file, "r") as f:
                 cached_res = json.load(f)
@@ -688,7 +718,7 @@ def main():
     f_self = 0.0
     
     if args.config in ["all", "both"]:
-        if os.path.exists(chk_both):
+        if not args.no_cache and os.path.exists(chk_both):
             try:
                 with open(chk_both, "r") as f:
                     f_both = float(json.load(f)["force"])
@@ -704,7 +734,7 @@ def main():
                     json.dump({"force": float(f_both)}, f)
 
     if args.config in ["all", "self"]:
-        if os.path.exists(chk_self):
+        if not args.no_cache and os.path.exists(chk_self):
             try:
                 with open(chk_self, "r") as f:
                     f_self = float(json.load(f)["force"])

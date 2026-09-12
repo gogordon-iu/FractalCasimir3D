@@ -25,46 +25,30 @@ def generate_rounded_pyramid_corrugations(
     r_tip=0.005,      # Tip rounding radius in microns (e.g., 0.005 um = 5 nm)
     r_fillet=0.005,   # Valley fillet rounding radius in microns
     num_slices=25,    # Number of vertical slices for smooth dielectric profiling
-    subpixel_blend=True
+    subpixel_blend=True,
+    theta=0.0,
+    max_depth=None,
+    material=None
 ):
     """
-    Generates 3D Interlocking Fractal Corrugations with physical tip and valley roundings.
-    
-    Parameters:
-    -----------
-    N : int
-        Prefractal generation level (1-4).
-    L : float
-        Plate side length in microns.
-    center_x, center_y : float
-        Coordinates of plate center in xy-plane.
-    base_z : float
-        Reference interface plane z-coordinate (+d/2 for top plate, -d/2 for bottom plate).
-    is_top_plate : bool
-        True if projecting downward from top plate; False if carved into bottom substrate.
-    angle : float
-        Pyramid wall slope angle in degrees (e.g. 60.0, 75.0, 45.0).
-    r_tip : float
-        Physical tip curvature radius in microns (0.0 = sharp, >0 = rounded).
-    r_fillet : float
-        Trough/valley curvature radius in microns.
-    num_slices : int
-        Number of discrete z-slices per pyramid level.
-    subpixel_blend : bool
-        Whether to apply subpixel layer height modulation.
-        
-    Returns:
-    --------
-    list of mp.Block
-        List of MEEP geometric objects forming the smoothed rounded geometry.
+    Generates 3D Fractal Corrugations with physical tip and valley roundings.
+    For bottom plate (is_top_plate=False): carves V-grooves downward into substrate starting at base_z (-d/2).
+    For top plate (is_top_plate=True): carves V-grooves upward into top plate starting at base_z (+d/2),
+    rotated by theta in the xy-plane to maintain rigid body alignment with the plate.
+    Preserves a clean gap region between -d/2 and +d/2 for uncompromised stress-tensor integration.
     """
     if mp is None:
         return []
 
     shapes = []
     tan_angle = np.tan(np.radians(angle))
-    cos_angle = np.cos(np.radians(angle))
-    sin_angle = np.sin(np.radians(angle))
+    theta_rad = np.radians(theta)
+    C = np.cos(theta_rad)
+    S = np.sin(theta_rad)
+    e1 = mp.Vector3(C, S, 0.0)
+    e2 = mp.Vector3(-S, C, 0.0)
+    e3 = mp.Vector3(0.0, 0.0, 1.0)
+    carve_mat = mp.vacuum if material is None else material
 
     def recurse_level(x, y, w, level):
         if level > N:
@@ -76,13 +60,14 @@ def generate_rounded_pyramid_corrugations(
         
         # Effective tip rounding truncation height and fillet transitions
         if r_tip > 0.0 and h_ideal > 2.0 * r_tip:
-            # Tip sphere radius r_tip blends into the sloped sides at height h_ideal - delta_h_tip
-            # Contact point distance from apex: delta_z = r_tip * (1 - sin(angle)) / sin(angle)
             h_actual = h_ideal - (r_tip * (1.0 / np.cos(np.radians(90.0 - angle)) - 1.0))
             if h_actual <= 0.0:
                 h_actual = h_ideal * 0.95
         else:
             h_actual = h_ideal
+
+        if max_depth is not None:
+            h_actual = min(h_actual, max_depth)
 
         dz = h_actual / float(num_slices)
 
@@ -90,28 +75,29 @@ def generate_rounded_pyramid_corrugations(
             frac = (k + 0.5) / float(num_slices)
             
             if is_top_plate:
-                # Top plate pyramid points DOWNWARD
-                # Slices go from wide base at base_z to rounded tip at base_z - h_actual
+                # Top plate: V-groove carved UPWARD into top plate starting at base_z (+d/2)
                 if r_tip > 0.0 and frac > 0.85:
-                    # Spherical/elliptical tip rounding at the apex
                     tip_frac = (frac - 0.85) / 0.15
-                    # Radius follows circle arc: sqrt(1 - tip_frac^2)
                     curvature_factor = np.sqrt(max(0.0, 1.0 - tip_frac**2))
                     slice_w = w_hole * 0.15 * curvature_factor
                 else:
                     slice_w = w_hole * (1.0 - frac)
 
-                slice_z = base_z - (frac * h_actual)
+                slice_z = base_z + (frac * h_actual)
+                rx = x * C - y * S
+                ry = x * S + y * C
                 
                 shapes.append(mp.Block(
-                    center=mp.Vector3(x + center_x, y + center_y, slice_z),
+                    center=mp.Vector3(rx + center_x, ry + center_y, slice_z),
                     size=mp.Vector3(max(slice_w, 1e-4), max(slice_w, 1e-4), dz + 0.0005),
-                    material=mp.vacuum
+                    e1=e1,
+                    e2=e2,
+                    e3=e3,
+                    material=carve_mat
                 ))
             else:
-                # Bottom plate: V-groove carved into substrate (vacuum pyramid pointing DOWNWARD)
+                # Bottom plate: V-groove carved DOWNWARD into substrate starting at base_z (-d/2)
                 if r_tip > 0.0 and frac < 0.15:
-                    # Valley fillet rounding at trough bottom
                     fillet_frac = frac / 0.15
                     curvature_factor = 1.0 - np.sqrt(max(0.0, 1.0 - fillet_frac**2))
                     slice_w = w_hole * 0.15 * curvature_factor
@@ -119,11 +105,16 @@ def generate_rounded_pyramid_corrugations(
                     slice_w = w_hole * frac
 
                 slice_z = base_z - ((1.0 - frac) * h_actual)
+                rx = x * C - y * S
+                ry = x * S + y * C
                 
                 shapes.append(mp.Block(
-                    center=mp.Vector3(x + center_x, y + center_y, slice_z),
+                    center=mp.Vector3(rx + center_x, ry + center_y, slice_z),
                     size=mp.Vector3(max(slice_w, 1e-4), max(slice_w, 1e-4), dz + 0.0005),
-                    material=mp.vacuum
+                    e1=e1,
+                    e2=e2,
+                    e3=e3,
+                    material=carve_mat
                 ))
 
         if level < N:

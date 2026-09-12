@@ -48,10 +48,7 @@ def get_fallback_data(d, N, material, T):
     lamb = 0.3 # cutoff length scale in microns
     
     if N > 1:
-        ln_period = np.log(3.0)
-        oscillation = 0.08 * np.cos(2.0 * np.pi * np.log(d / 0.3) / ln_period + 0.5)
-        eta_baseline = - alpha * (d / 0.3)**beta * np.exp(-d / lamb)
-        eta = eta_baseline * (1.0 + oscillation)
+        eta = - alpha * (d / 0.3)**beta * np.exp(-d / lamb)
     else:
         eta = - 0.02 * (d / 0.3)**0.2 * np.exp(-d / lamb)
     
@@ -65,15 +62,12 @@ def get_fallback_data(d, N, material, T):
     return f_exact, f_pfa
 
 def get_eta(d, N):
-    """Theoretical log-periodic deviation from PFA due to fractal boundaries."""
+    """Theoretical edge-correction deviation from PFA due to fractal boundaries."""
     alpha = 0.08 * (N - 1)
     beta = 0.45
     lamb = 0.3
     if N > 1:
-        ln_period = np.log(3.0)
-        oscillation = 0.08 * np.cos(2.0 * np.pi * np.log(d / 0.3) / ln_period + 0.5)
-        eta_baseline = - alpha * (d / 0.3)**beta * np.exp(-d / lamb)
-        return eta_baseline * (1.0 + oscillation)
+        return - alpha * (d / 0.3)**beta * np.exp(-d / lamb)
     else:
         return - 0.02 * (d / 0.3)**0.2 * np.exp(-d / lamb)
 

@@ -19,6 +19,7 @@ def main():
     parser.add_argument("--theta", type=float, default=90.0, help="Twist angle in degrees.")
     parser.add_argument("--eps-bg", type=float, default=2.1, help="Background dielectric constant.")
     parser.add_argument("--material", type=str, default="Phosphorene_tuned", help="Material name.")
+    parser.add_argument("--corrugation-angle", type=float, default=60.0, help="Wall slope angle in degrees.")
     parser.add_argument("--cores", type=int, default=128, help="Number of cores used.")
     parser.add_argument("--plot-only", action="store_true", help="Only generate plot and summary without throwing error on missing files.")
     args = parser.parse_args()
@@ -31,14 +32,16 @@ def main():
     theta = args.theta
     eps_bg = args.eps_bg
     mat = args.material
+    alpha = args.corrugation_angle
 
     print("==================================================")
     print("FRONTIER 2: 3D INTERLOCKING FRACTAL CORRUGATIONS SWEEP ANALYSIS")
     print(f"Parameters: L = {L:.2f} um, d = {d:.2f} um ({d*1000:.0f} nm), N_top = {N_top}, N_bottom = {N_bot}")
-    print(f"Resolution = {resolution}, theta = {theta} deg, eps_bg = {eps_bg}")
+    print(f"Corrugation Angle = {alpha} deg, Resolution = {resolution}, theta = {theta} deg, eps_bg = {eps_bg}")
     print("==================================================")
 
-    nbot_str = f"_corrugated_Nbot_{N_bot}"
+    nbot_str = f"_corrugated_al_{alpha:.1f}_Nbot_{N_bot}"
+    nbot_str_legacy = f"_corrugated_Nbot_{N_bot}"
     num_segments = 18
     moments_per_seg = 6
 
@@ -52,6 +55,9 @@ def main():
             
             pattern = f".tmp/meep_d_{d:.4f}_N_{N_top}{nbot_str}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_{cfg}_moments_{m_start}_{m_end}.json"
             files = glob.glob(pattern)
+            if not files:
+                pattern_legacy = f".tmp/meep_d_{d:.4f}_N_{N_top}{nbot_str_legacy}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}_config_{cfg}_moments_{m_start}_{m_end}.json"
+                files = glob.glob(pattern_legacy)
             
             if files:
                 with open(files[0], "r") as f:

@@ -52,17 +52,25 @@ def run_rounded_convergence_simulation(
     dpml = 0.25
     buffer = 0.20
     
-    sx = L + 2.0 * (dpml + buffer)
-    sy = L + 2.0 * (dpml + buffer)
+    # Bounding footprint for plate of size L rotated by theta in xy-plane:
+    theta_rad = np.radians(theta)
+    C_env = abs(np.cos(theta_rad))
+    S_env = abs(np.sin(theta_rad))
+    L_rot = L * (C_env + S_env)
+
+    sx = L_rot + 2.0 * (dpml + buffer)
+    sy = L_rot + 2.0 * (dpml + buffer)
     sz = d + t_top + t_bottom + 2.0 * (dpml + buffer)
     cell_size = mp.Vector3(sx, sy, sz)
     
     Sigma = 0.5 / d
     
     # Stress tensor integration box enclosing top plate
-    sx_box = L + 2.0 * delta_s_um
-    sy_box = L + 2.0 * delta_s_um
-    sz_box = t_top + 2.0 * delta_s_um
+    delta_s_xy = delta_s_um
+    delta_s_z = min(delta_s_um, d / 4.0)
+    sx_box = L_rot + 2.0 * delta_s_xy
+    sy_box = L_rot + 2.0 * delta_s_xy
+    sz_box = t_top + 2.0 * delta_s_z
     center_z = d / 2.0 + t_top / 2.0
     
     sides_info = [
@@ -130,7 +138,8 @@ def run_rounded_convergence_simulation(
                 ))
                 # Add rounded bottom corrugations
                 geometry.extend(generate_rounded_pyramid_corrugations(
-                    N_bot, L, 0.0, 0.0, -d / 2.0, is_top_plate=False, angle=alpha, r_tip=r_tip_um
+                    N_bot, L, 0.0, 0.0, -d / 2.0, is_top_plate=False, angle=alpha, r_tip=r_tip_um,
+                    theta=0.0, max_depth=0.85 * t_bottom, material=bg_mat
                 ))
                 
             if current_cfg != "vacuum":
@@ -146,7 +155,8 @@ def run_rounded_convergence_simulation(
                 ))
                 # Add rounded top corrugations
                 geometry.extend(generate_rounded_pyramid_corrugations(
-                    N_top, L, 0.0, 0.0, d / 2.0, is_top_plate=True, angle=alpha, r_tip=r_tip_um
+                    N_top, L, 0.0, 0.0, d / 2.0, is_top_plate=True, angle=alpha, r_tip=r_tip_um,
+                    theta=theta, max_depth=0.85 * t_top, material=bg_mat
                 ))
                 
             sim = mp.Simulation(
@@ -324,40 +334,19 @@ def main():
         except Exception:
             pass
 
-    if mp is not None:
-        result = run_rounded_convergence_simulation(
-            d=args.d,
-            alpha=args.alpha,
-            theta=args.theta,
-            resolution=args.res,
-            r_tip_nm=args.r_tip,
-            delta_s_nm=args.delta_s,
-            n_max=args.nmax,
-            config=args.config
-        )
-    else:
-        # Fallback realistic analytical model for non-MPI test node
-        # Asymptotic pressure with 2nd order convergence and tip curvature physics
-        base_repulsion = +3.61 * np.sin(np.radians(args.alpha - 30.0)) / np.sin(np.radians(45.0))
-        tip_factor = 1.0 - 0.035 * (args.r_tip / 5.0)**0.8  # Slight reduction with large rounding
-        grid_error = 0.45 * (40.0 / args.res)**2
-        standoff_invariance_error = 0.005 * np.cos(args.delta_s / 10.0)
-        p_val = (base_repulsion * tip_factor) + grid_error + standoff_invariance_error
-        
-        result = {
-            "d_um": args.d,
-            "alpha_deg": args.alpha,
-            "theta_deg": args.theta,
-            "resolution": args.res,
-            "r_tip_nm": args.r_tip,
-            "delta_s_nm": args.delta_s,
-            "L_um": 2.0,
-            "force_both": float(p_val * 3.16 + 1.2e-3),
-            "force_self": float(1.2e-3),
-            "force_net": float(p_val * 3.16),
-            "pressure_Pa": float(p_val),
-            "is_repulsive": bool(p_val > 0)
-        }
+    if mp is None:
+        raise RuntimeError("MEEP is required to execute 3D Casimir convergence simulations. Synthetic data generation has been removed.")
+
+    result = run_rounded_convergence_simulation(
+        d=args.d,
+        alpha=args.alpha,
+        theta=args.theta,
+        resolution=args.res,
+        r_tip_nm=args.r_tip,
+        delta_s_nm=args.delta_s,
+        n_max=args.nmax,
+        config=args.config
+    )
 
     if global_rank == 0:
         with open(out_file, "w") as f:

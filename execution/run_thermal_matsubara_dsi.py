@@ -94,40 +94,26 @@ def compute_matsubara_casimir_pressure(
         val_n = np.sum(integrand * w_arr)
         sum_val += weight * val_n
         
-    # Prefactor: (k_B * T) / pi * sum_val
+    # Physical finite-temperature Lifshitz Matsubara pressure:
+    # P(d, T) = - (k_B * T / pi) * sum_{n=0}^infty ' int kp dkp kz0 [ (rt rb e^(-2kz0 d)) / (1 - rt rb e^(-2kz0 d)) ]
+    # The minus sign reflects attractive interaction for identical plates, and positive for repulsive contrast.
     kbT_meep = 0.00043676 * T_K
-    raw_force_dens = (kbT_meep / np.pi) * sum_val
-    
-    # Anisotropic mode-inversion and corrugated Casimir repulsion:
-    eps_xx_t0, _, _, _ = get_dielectric_tensor_imag(material_top, 0.5, theta_deg)
-    eps_xx_b0, _, _, _ = get_dielectric_tensor_imag(material_bot, 0.5, 0.0)
-    eps_med0, _, _, _ = get_dielectric_tensor_imag(medium_bg, 0.5, 0.0)
-    
-    is_dlp_repulsive = bool((eps_xx_t0 - eps_med0) * (eps_xx_b0 - eps_med0) < 0)
-    is_geom_repulsive = bool(alpha_deg >= 60.0 and theta_deg >= 70.0)
-    rep_sign = +1.0 if (is_geom_repulsive or is_dlp_repulsive) else -1.0
+    raw_force_dens = - (kbT_meep / np.pi) * sum_val
     
     MEEP_TO_PA = 0.03161
-    base_pressure_Pa = rep_sign * abs(raw_force_dens) * MEEP_TO_PA  # in Pascals (N/m^2)
+    total_pressure_Pa = raw_force_dens * MEEP_TO_PA  # in Pascals (N/m^2)
     
-    # Thermal damping envelope for DSI oscillations:
-    # High-temperature damping factor: exp(-2 * pi * d / lambda_T)
+    # Thermal damping crossover factor: exp(-2 * pi * d / lambda_T)
     thermal_damping = np.exp(-1.8 * chi_T)
-    dsi_amplitude = 0.28 * base_pressure_Pa * thermal_damping
-    dsi_oscillation = dsi_amplitude * np.cos(2.0 * np.pi * np.log(d_um / prefractal_scale) / dsi_period + dsi_phase)
-    
-    total_pressure = base_pressure_Pa + dsi_oscillation
     
     return {
         "d_um": d_um,
         "T_K": T_K,
         "lambda_T_um": lambda_T_um,
         "chi_T": chi_T,
-        "base_pressure_Pa": float(base_pressure_Pa),
-        "dsi_amplitude_Pa": float(dsi_amplitude),
-        "total_pressure_Pa": float(total_pressure),
+        "total_pressure_Pa": float(total_pressure_Pa),
         "thermal_visibility": float(thermal_damping),
-        "is_repulsive": bool(total_pressure > 0.0)
+        "is_repulsive": bool(total_pressure_Pa > 0.0)
     }
 
 

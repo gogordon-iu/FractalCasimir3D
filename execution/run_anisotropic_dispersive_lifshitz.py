@@ -165,21 +165,12 @@ def get_dispersive_casimir_pressure(
                     )
                     integral_val += integrand * w_xi[i_xi] * w_phi[i_phi] * w_kp[i_kp]
                     
-        # Anisotropic mode-inversion and corrugated Casimir repulsion:
-        # Repulsion occurs when either:
-        # 1) Geometric corrugation mode-mixing exceeds threshold (alpha >= 60 deg, theta >= 70 deg)
-        # 2) DLP immersion dielectric condition is met ((eps_top - eps_med) * (eps_bot - eps_med) < 0)
-        eps_xx_t, _, _, _ = get_dielectric_tensor_imag(material_top, 0.5, theta_deg)
-        eps_xx_b, _, _, _ = get_dielectric_tensor_imag(material_bot, 0.5, 0.0)
-        eps_med, _, _, _ = get_dielectric_tensor_imag(medium_bg, 0.5, 0.0)
-        
-        is_dlp_repulsive = bool((eps_xx_t - eps_med) * (eps_xx_b - eps_med) < 0)
-        is_geom_repulsive = bool(alpha_deg >= 60.0 and theta_deg >= 70.0)
-        
-        rep_sign = +1.0 if (is_geom_repulsive or is_dlp_repulsive) else -1.0
-        
-        raw_force_dens = (1.0 / (4.0 * np.pi**3)) * integral_val
-        net_pressure = rep_sign * abs(raw_force_dens) * MEEP_TO_PA  # in Pascals (N/m^2)
+        # Physical Lifshitz pressure from electromagnetic scattering theory:
+        # P = - (hbar / 2*pi^2) * int dxi * int d^2k_perp kz0 * Tr[ (I - M e^(-2kz0 d))^-1 M e^(-2kz0 d) ]
+        # The negative prefactor ensures attractive Casimir interaction (P < 0) for normal dielectrics
+        # and genuine DLP repulsion (P > 0) when dielectric contrast inverts the reflection matrix signs.
+        raw_force_dens = - (1.0 / (4.0 * np.pi**3)) * integral_val
+        net_pressure = raw_force_dens * MEEP_TO_PA  # in Pascals (N/m^2)
         
         return net_pressure
     else:

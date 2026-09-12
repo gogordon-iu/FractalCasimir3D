@@ -67,22 +67,31 @@ def main():
     
     # 1. Run or Load simulations
     for res in resolutions:
-        json_file = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0.json"
+        json_file = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_eps_1.0_L_{L:.2f}.json"
+        json_file_legacy = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0.json"
+        target_json = json_file if os.path.exists(json_file) else (json_file_legacy if os.path.exists(json_file_legacy) else json_file)
         
-        if os.path.exists(json_file):
-            print(f"Found cached results for resolution = {res} px/um in {json_file}")
-            with open(json_file, "r") as f:
+        if os.path.exists(target_json):
+            print(f"Found cached results for resolution = {res} px/um in {target_json}")
+            with open(target_json, "r") as f:
                 data = json.load(f)
                 f_sub = data["force_subtracted"]
         else:
             # Auto-consolidate individual task files if the config file doesn't exist
             for cfg in ["both", "self"]:
-                cfg_file = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_config_{cfg}.json"
-                if not os.path.exists(cfg_file):
+                cfg_file = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_eps_1.0_L_{L:.2f}_config_{cfg}.json"
+                cfg_file_legacy = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_config_{cfg}.json"
+                target_cfg_file = cfg_file if os.path.exists(cfg_file) else (cfg_file_legacy if os.path.exists(cfg_file_legacy) else cfg_file)
+                if not os.path.exists(target_cfg_file):
                     task_files = [
-                        f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_config_{cfg}_task_{i}.json"
+                        f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_eps_1.0_L_{L:.2f}_config_{cfg}_task_{i}.json"
                         for i in range(36 * nmax)
                     ]
+                    if not any(os.path.exists(tf) for tf in task_files):
+                        task_files = [
+                            f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_config_{cfg}_task_{i}.json"
+                            for i in range(36 * nmax)
+                        ]
                     if all(os.path.exists(tf) for tf in task_files):
                         print(f"Consolidating 36 task files for resolution = {res} px/um (config {cfg})...")
                         total_f = 0.0
@@ -104,14 +113,19 @@ def main():
                                 "resolution": res,
                                 "theta_deg": 0.0,
                                 "eps_bg": 1.0,
+                                "L": L,
                                 f"force_{cfg}": total_f
                             }
                             with open(cfg_file, "w") as f:
                                 json.dump(consolidated_config_data, f, indent=4)
 
             # Check if separate config_both and config_self files exist, and compile them
-            both_file = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_config_both.json"
-            self_file = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_config_self.json"
+            both_file = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_eps_1.0_L_{L:.2f}_config_both.json"
+            if not os.path.exists(both_file):
+                both_file = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_config_both.json"
+            self_file = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_eps_1.0_L_{L:.2f}_config_self.json"
+            if not os.path.exists(self_file):
+                self_file = f".tmp/meep_d_{d:.4f}_N_{N}_{material}_res_{res}_theta_0.0_config_self.json"
             if os.path.exists(both_file) and os.path.exists(self_file):
                 print(f"Found separate both/self files for resolution = {res} px/um. Consolidating...")
                 with open(both_file, "r") as f:
@@ -130,6 +144,7 @@ def main():
                     "resolution": res,
                     "theta_deg": 0.0,
                     "eps_bg": both_data.get("eps_bg", 1.0),
+                    "L": L,
                     "force_both": f_both,
                     "force_self": f_self,
                     "force_subtracted": f_sub
@@ -147,7 +162,9 @@ def main():
                         "--material", material,
                         "--res", str(res),
                         "--nmax", str(nmax),
-                        "--T-run", "20.0"
+                        "--T-run", "20.0",
+                        "--L", f"{L:.2f}",
+                        "--eps-bg", "1.0"
                     ]
                     
                     if args.cores > 1:
@@ -165,8 +182,9 @@ def main():
                     print(f"Executing: {' '.join(cmd)}")
                     subprocess.run(cmd)
                     
-                    if os.path.exists(json_file):
-                        with open(json_file, "r") as f:
+                    target_out = json_file if os.path.exists(json_file) else json_file_legacy
+                    if os.path.exists(target_out):
+                        with open(target_out, "r") as f:
                             data = json.load(f)
                             f_sub = data["force_subtracted"]
                     else:

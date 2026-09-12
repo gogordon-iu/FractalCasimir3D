@@ -270,8 +270,7 @@ def main():
                     break
                     
         if magic_angle is None:
-            print("\nWARNING: No zero-crossing found in the pressure sweep.")
-            magic_angle = 45.0  # default fallback
+            print("\nNOTE: No zero-crossing found in the pressure sweep (force remains strictly in one sign regime).")
             
         # 4. Generate Plot
         fig, ax = plt.subplots(figsize=(4.2, 3.2))
@@ -291,8 +290,9 @@ def main():
         # Draw horizontal line at zero
         ax.axhline(0, color='black', linestyle='-', linewidth=0.8, alpha=0.7)
         
-        # Draw vertical line at magic angle
-        ax.axvline(magic_angle, color='#2980b9', linestyle='--', linewidth=1.2, label=r'$\theta_{\mathrm{magic}} \approx ' + f'{magic_angle:.1f}^\\circ$')
+        # Draw vertical line at magic angle if authentic crossing exists
+        if magic_angle is not None:
+            ax.axvline(magic_angle, color='#2980b9', linestyle='--', linewidth=1.2, label=r'$\theta_{\mathrm{magic}} \approx ' + f'{magic_angle:.1f}^\\circ$')
         
         ax.set_xlabel(r'Twist Angle $\theta$ (degrees)')
         ax.set_ylabel('Normal Casimir Pressure P (dimensionless)')

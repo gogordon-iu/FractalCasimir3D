@@ -13,25 +13,40 @@ def get_epsilon_imag(xi, material_name):
     if material_name == "PEC":
         return -1e20
     
-    import meep as mp
-    import meep.materials as mat
-    
-    if material_name == "Gold":
-        mat_obj = mat.Au
-    elif material_name == "Silicon":
-        mat_obj = mat.cSi
-    else:
-        raise ValueError(f"Unknown material: {material_name}")
-        
-    eps_inf = mat_obj.epsilon_diag.x
-    val = eps_inf
-    for sus in mat_obj.E_susceptibilities:
-        freq = sus.frequency
-        gamma = sus.gamma
-        sigma = sus.sigma_diag.x
-        val += (sigma * freq**2) / (freq**2 + xi**2 + gamma * xi + 1e-30)
-        
-    return val
+    try:
+        import meep as mp
+        import meep.materials as mat
+        if material_name == "Gold":
+            mat_obj = mat.Au
+        elif material_name == "Silicon":
+            mat_obj = mat.cSi
+        else:
+            raise ValueError(f"Unknown material: {material_name}")
+            
+        eps_inf = mat_obj.epsilon_diag.x
+        val = eps_inf
+        for sus in mat_obj.E_susceptibilities:
+            freq = sus.frequency
+            gamma = sus.gamma
+            sigma = sus.sigma_diag.x
+            val += (sigma * freq**2) / (freq**2 + xi**2 + gamma * xi + 1e-30)
+        return val
+    except ImportError:
+        # Standard analytical Drude-Lorentz optical parameters in Meep units (a = 1 um):
+        # f = E [eV] / 1.23984193 eV*um
+        if material_name == "Gold":
+            # Drude model for Au: omega_p = 9.0 eV, gamma = 0.035 eV
+            wp = 9.0 / 1.23984193
+            gam = 0.035 / 1.23984193
+            return 1.0 + (wp**2) / (xi * (xi + gam) + 1e-30)
+        elif material_name == "Silicon":
+            # Lorentz model for c-Si: eps_s = 11.87, omega_0 = 3.64 eV
+            w0 = 3.64 / 1.23984193
+            gam = 0.10 / 1.23984193
+            f0 = (11.87 - 1.0) * (w0**2)
+            return 1.0 + f0 / (w0**2 + xi**2 + gam * xi + 1e-30)
+        else:
+            raise ValueError(f"Unknown material: {material_name}")
 
 def lifshitz_integrand(k_parallel, xi, d, material):
     if material == "PEC":

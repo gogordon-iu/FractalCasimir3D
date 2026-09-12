@@ -69,11 +69,13 @@ def main():
     for mat in ["Phosphorene", "Phosphorene_tuned"]:
         print(f"\n--- Sweeping material: {mat} ---")
         for eps in eps_bg_list:
-            json_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps:.1f}.json"
+            json_file = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps:.1f}_L_{L:.2f}.json"
+            json_file_legacy = f".tmp/meep_d_{d:.4f}_N_{N}_{mat}_res_{resolution}_theta_{theta:.1f}_eps_{eps:.1f}.json"
+            target_json = json_file if os.path.exists(json_file) else (json_file_legacy if os.path.exists(json_file_legacy) else json_file)
             
-            if os.path.exists(json_file):
-                print(f"Found cached results for eps_bg = {eps:.1f} in {json_file}")
-                with open(json_file, "r") as f:
+            if os.path.exists(target_json):
+                print(f"Found cached results for eps_bg = {eps:.1f} in {target_json}")
+                with open(target_json, "r") as f:
                     data = json.load(f)
                     f_sub = data["force_subtracted"]
             else:
@@ -87,7 +89,8 @@ def main():
                     "--res", str(resolution),
                     "--nmax", str(nmax),
                     "--theta", f"{theta:.1f}",
-                    "--eps-bg", f"{eps:.1f}"
+                    "--eps-bg", f"{eps:.1f}",
+                    "--L", f"{L:.2f}"
                 ]
                 
                 if args.cores > 1:
@@ -105,7 +108,8 @@ def main():
                 print(f"Executing: {' '.join(cmd)}")
                 subprocess.run(cmd)
                 
-                with open(json_file, "r") as f:
+                target_read = json_file if os.path.exists(json_file) else json_file_legacy
+                with open(target_read, "r") as f:
                     data = json.load(f)
                     f_sub = data["force_subtracted"]
                     
