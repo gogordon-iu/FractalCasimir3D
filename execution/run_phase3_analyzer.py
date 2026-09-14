@@ -41,6 +41,26 @@ except ImportError:
 def get_effective_area(N, L):
     return ((8.0 / 9.0)**(N - 1)) * (L**2)
 
+def get_expected_output_path(cfg):
+    d = float(cfg["d"])
+    N = int(cfg.get("N_top", 3))
+    N_bot = int(cfg.get("N_bot", 3))
+    corr = bool(cfg.get("corrugated", True))
+    alpha = float(cfg.get("corrugation_angle", 45.0))
+    rtip = float(cfg.get("r_tip_nm", 5.0))
+    med = cfg.get("medium", "Vacuum")
+    sieve = bool(cfg.get("stepped_sieve", False))
+    mat = cfg.get("material", "Phosphorene_tuned")
+    res = int(cfg.get("resolution", 40))
+    theta = float(cfg["theta"])
+    eps_bg = float(cfg.get("eps_bg", 2.1))
+    L = float(cfg.get("L", 2.0))
+    
+    rtip_str = f"_rtip_{rtip:.1f}" if (corr and rtip > 0.0) else ""
+    med_str = f"_med_{med}" if med and med not in ["Vacuum", "None"] else ""
+    nbot_str = f"_corrugated_al_{alpha:.1f}{rtip_str}{med_str}_Nbot_{N_bot}" if corr else (f"_sieve_Nbot_{N_bot}" if sieve else (f"_Nbot_{N_bot}" if N_bot > 1 else ""))
+    return f".tmp/meep_d_{d:.4f}_N_{N}{nbot_str}_{mat}_res_{res}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}.json"
+
 def main():
     print("================================================================================")
     print("PHASE 3 RESULTS ANALYZER: SWEET SPOT 3D GRID & PASSIVE LEVITATION")
@@ -49,18 +69,16 @@ def main():
     config_files = sorted(glob.glob("sweep_configs_phase3/config_*.json"))
     print(f"Loaded {len(config_files)} Phase 3 target task configurations.")
 
-    target_files = sorted(set(glob.glob(".tmp/meep_*.json")))
     summary_files = sorted(glob.glob("results_sweet_spot_sweep_*/sweet_spot_sweep_summary.json"))
-    print(f"Scanning {len(target_files)} simulation result files...")
     raw_records = []
-    for fp in target_files + summary_files:
+    for fp in summary_files:
         try:
             with open(fp, "r") as f:
                 d = json.load(f)
-                if isinstance(d, dict) and "d_um" in d:
-                    raw_records.append(d)
-                elif isinstance(d, list):
+                if isinstance(d, list):
                     raw_records.extend(d)
+                elif isinstance(d, dict) and "d_um" in d:
+                    raw_records.append(d)
         except Exception:
             pass
 
@@ -74,33 +92,43 @@ def main():
         r_tip_tgt = cfg["r_tip_nm"]
 
         best_match = None
-        best_score = -1
-        for r in raw_records:
-            # Reject partial single-moment runs (task_idx >= 0 means only 1 of 108 moments was evaluated)
-            if "task_idx" in r and r["task_idx"] is not None and r["task_idx"] >= 0:
-                continue
+        expected_fp = get_expected_output_path(cfg)
+        if os.path.exists(expected_fp):
+            try:
+                with open(expected_fp, "r") as f:
+                    r = json.load(f)
+                if isinstance(r, dict) and "task_idx" not in r:
+                    best_match = r
+            except Exception:
+                pass
 
-            is_corr = bool(r.get("corrugated", False)) or float(r.get("corrugation_angle", r.get("alpha_deg", 0.0))) > 0.0
-            if not is_corr:
-                continue
-
-            # Require target resolution 40
-            res_r = int(r.get("resolution", 0))
-            if res_r != 40:
-                continue
-
-            if (round(float(r.get("d_um", r.get("d", -1))), 4) == round(d_tgt, 4) and
-                round(float(r.get("theta_deg", r.get("theta", -1))), 1) == round(th_tgt, 1) and
-                round(float(r.get("corrugation_angle", r.get("alpha_deg", -1))), 1) == round(al_tgt, 1)):
-
-                r_tip_r = float(r.get("r_tip_nm", r.get("r_tip", 5.0)))
-                if round(r_tip_r, 1) != round(r_tip_tgt, 1):
+        if not best_match:
+            best_score = -1
+            for r in raw_records:
+                # Reject partial single-moment runs
+                if "task_idx" in r and r["task_idx"] is not None and r["task_idx"] >= 0:
                     continue
 
-                score = res_r
-                if score > best_score:
-                    best_score = score
-                    best_match = r
+                is_corr = bool(r.get("corrugated", True)) or float(r.get("corrugation_angle", r.get("alpha_deg", 0.0))) > 0.0
+                if not is_corr:
+                    continue
+
+                res_r = int(r.get("resolution", 40))
+                if res_r != 40:
+                    continue
+
+                if (round(float(r.get("d_um", r.get("d", -1))), 4) == round(d_tgt, 4) and
+                    round(float(r.get("theta_deg", r.get("theta", -1))), 1) == round(th_tgt, 1) and
+                    round(float(r.get("corrugation_angle", r.get("alpha_deg", -1))), 1) == round(al_tgt, 1)):
+
+                    r_tip_r = float(r.get("r_tip_nm", r.get("r_tip", 5.0)))
+                    if round(r_tip_r, 1) != round(r_tip_tgt, 1):
+                        continue
+
+                    score = res_r
+                    if score > best_score:
+                        best_score = score
+                        best_match = r
 
         p_val = None
         if best_match:

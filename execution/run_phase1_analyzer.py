@@ -49,6 +49,26 @@ def linear_fit(x_arr, y_arr):
     intercept = mean_y - slope * mean_x
     return slope, intercept
 
+def get_expected_output_path(cfg):
+    d = float(cfg["d"])
+    N = int(cfg["N_top"])
+    N_bot = int(cfg.get("N_bot", 1))
+    corr = bool(cfg.get("corrugated", False))
+    alpha = float(cfg.get("corrugation_angle", 0.0))
+    rtip = float(cfg.get("r_tip_nm", 0.0))
+    med = cfg.get("medium", "Vacuum")
+    sieve = bool(cfg.get("stepped_sieve", False))
+    mat = cfg["material"]
+    res = int(cfg.get("resolution", 40))
+    theta = float(cfg["theta"])
+    eps_bg = float(cfg["eps_bg"])
+    L = float(cfg["L"])
+    
+    rtip_str = f"_rtip_{rtip:.1f}" if (corr and rtip > 0.0) else ""
+    med_str = f"_med_{med}" if med and med not in ["Vacuum", "None"] else ""
+    nbot_str = f"_corrugated_al_{alpha:.1f}{rtip_str}{med_str}_Nbot_{N_bot}" if corr else (f"_sieve_Nbot_{N_bot}" if sieve else (f"_Nbot_{N_bot}" if N_bot > 1 else ""))
+    return f".tmp/meep_d_{d:.4f}_N_{N}{nbot_str}_{mat}_res_{res}_theta_{theta:.1f}_eps_{eps_bg:.1f}_L_{L:.2f}.json"
+
 def main():
     print("================================================================================")
     print("PHASE 1 RESULTS ANALYZER: GENERAL PARAMETERS & FUNDAMENTAL BASELINES")
@@ -57,19 +77,7 @@ def main():
     config_files = sorted(glob.glob("sweep_configs_phase1/config_*.json"))
     print(f"Loaded {len(config_files)} Phase 1 target task configurations.")
 
-    target_files = sorted(set(glob.glob(".tmp/meep_*.json")))
-    print(f"Scanning {len(target_files)} simulation result files...")
-    raw_records = []
-    for fp in target_files:
-        try:
-            with open(fp, "r") as f:
-                d = json.load(f)
-                if isinstance(d, dict) and "d_um" in d:
-                    raw_records.append(d)
-        except Exception:
-            pass
-
-    # Match each Phase 1 config to available results
+    # Match each Phase 1 config to available results using fast direct lookup
     matched = []
     for cfg_path in config_files:
         with open(cfg_path) as f:
@@ -83,39 +91,15 @@ def main():
         corr_tgt = cfg["corrugated"]
 
         best_match = None
-        best_score = -1
-        for r in raw_records:
-            # Reject partial single-moment runs (task_idx >= 0 means only 1 of 108 moments was evaluated)
-            if "task_idx" in r and r["task_idx"] is not None and r["task_idx"] >= 0:
-                continue
-
-            # Verify corrugation flag
-            is_corr = bool(r.get("corrugated", False)) or float(r.get("corrugation_angle", r.get("alpha_deg", 0.0))) > 0.0
-            if is_corr != corr_tgt:
-                continue
-
-            # Verify bottom plate generation
-            n_bot_r = int(r.get("N_bottom", r.get("N_bot", 1)))
-            if n_bot_r != int(cfg.get("N_bot", 1)):
-                continue
-
-            # Require target resolution (reject old res=10 or res=20 scratch runs)
-            target_res = cfg.get("resolution", 40)
-            res_r = int(r.get("resolution", 0))
-            if res_r != target_res:
-                continue
-
-            if (round(float(r.get("d_um", r.get("d", -1))), 4) == round(d_tgt, 4) and
-                int(r.get("N", r.get("N_top", -1))) == N_tgt and
-                r.get("material") == mat_tgt and
-                round(float(r.get("theta_deg", r.get("theta", -1))), 1) == round(th_tgt, 1) and
-                round(float(r.get("eps_bg", -1)), 1) == round(eps_tgt, 1) and
-                round(float(r.get("L", -1)), 2) == round(L_tgt, 2)):
-                
-                score = res_r
-                if score > best_score:
-                    best_score = score
+        expected_fp = get_expected_output_path(cfg)
+        if os.path.exists(expected_fp):
+            try:
+                with open(expected_fp, "r") as f:
+                    r = json.load(f)
+                if isinstance(r, dict) and "task_idx" not in r:
                     best_match = r
+            except Exception:
+                pass
 
         p_val = None
         if best_match:
