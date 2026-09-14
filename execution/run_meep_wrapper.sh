@@ -7,6 +7,7 @@ echo "=================================================="
 
 SLURM_TASK=${SLURM_ARRAY_TASK_ID:-0}
 PYTHON_EXEC=${PYTHON_EXEC:-python}
+export PYTHONPATH="/N/project/gorengor_werewolf/FractalCasimir3D:${PYTHONPATH}"
 
 # Function to handle crash exit
 on_exit_failure() {
@@ -17,7 +18,7 @@ on_exit_failure() {
         echo "=================================================="
         
         # Invoke crash_handler.py to log details and push to GitHub
-        $PYTHON_EXEC execution/crash_handler.py "$SLURM_TASK" "ExitCode_$EXIT_CODE" "Simulation task failed with exit code $EXIT_CODE. Check .tmp/sweet_spot_${SLURM_ARRAY_JOB_ID:-0}_${SLURM_TASK}.err for details."
+        $PYTHON_EXEC execution/crash_handler.py "$SLURM_TASK" "ExitCode_$EXIT_CODE" "Simulation task failed with exit code $EXIT_CODE. Check .tmp/*_${SLURM_ARRAY_JOB_ID:-0}_${SLURM_TASK}.err for details."
     fi
 }
 

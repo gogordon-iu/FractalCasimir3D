@@ -38,6 +38,7 @@ export PYTHON_EXEC
 module unload xalt 2>/dev/null || true
 export XALT_EXECUTABLE_TRACKING=no
 export PYTHONUNBUFFERED=1
+export PYTHONPATH="/N/project/gorengor_werewolf/FractalCasimir3D:${PYTHONPATH}"
 
 cd /N/project/gorengor_werewolf/FractalCasimir3D
 mkdir -p .tmp

@@ -1,10 +1,20 @@
+import sys
+import os
+
+# Guarantee repository root and execution dir are in sys.path across all Slurm nodes/ranks
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+CUR_DIR = os.path.dirname(os.path.abspath(__file__))
+if CUR_DIR not in sys.path:
+    sys.path.insert(0, CUR_DIR)
+
 import meep as mp
 mp.quiet(True)
 mp.verbosity(0)
 import numpy as np
 import ctypes
 import argparse
-import os
 import json
 
 def get_src_index(n):
@@ -128,7 +138,10 @@ def generate_fractal_corrugations(N, L, center_x, center_y, base_z, is_top_plate
     Both plates preserve a clear gap between -d/2 and +d/2, ensuring the stress tensor integration box never slices any material.
     """
     if r_tip > 0.0:
-        from execution.edge_rounding_geometry import generate_rounded_pyramid_corrugations
+        try:
+            from execution.edge_rounding_geometry import generate_rounded_pyramid_corrugations
+        except ImportError:
+            from edge_rounding_geometry import generate_rounded_pyramid_corrugations
         return generate_rounded_pyramid_corrugations(
             N, L, center_x, center_y, base_z, is_top_plate=is_top_plate,
             angle=angle, r_tip=r_tip, theta=theta, max_depth=max_depth, material=material
@@ -211,7 +224,10 @@ def get_casimir_material(material_name, Sigma, ft, theta=0.0, eps_bg=1.0):
         return mp.Medium(epsilon=-1e20, **cond_attr)
 
     if material_name in ["BlackPhosphorus", "ReS2", "BP_realistic"]:
-        from execution.materials_database_dispersive import get_meep_dispersive_medium
+        try:
+            from execution.materials_database_dispersive import get_meep_dispersive_medium
+        except ImportError:
+            from materials_database_dispersive import get_meep_dispersive_medium
         return get_meep_dispersive_medium(material_name, Sigma, ft, theta_deg=theta)
         
     if material_name == "Gold":
@@ -438,7 +454,10 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
         
         if medium is not None and medium not in ["Vacuum", "None"]:
             try:
-                from execution.materials_database_dispersive import get_meep_dispersive_medium
+                try:
+                    from execution.materials_database_dispersive import get_meep_dispersive_medium
+                except ImportError:
+                    from materials_database_dispersive import get_meep_dispersive_medium
                 bg_material = get_meep_dispersive_medium(medium, Sigma, ft)
             except Exception:
                 bg_material = mp.Medium(epsilon=eps_bg, D_conductivity=Sigma if ft == mp.E_stuff else 0.0, B_conductivity=Sigma if ft == mp.H_stuff else 0.0)
@@ -681,7 +700,10 @@ def main():
     
     # Setup global crash handler for automatic logging and git push
     try:
-        from execution.crash_handler import setup_global_exception_handler
+        try:
+            from execution.crash_handler import setup_global_exception_handler
+        except ImportError:
+            from crash_handler import setup_global_exception_handler
         setup_global_exception_handler(args.task_idx, vars(args))
     except Exception as exc_err:
         pass
@@ -714,7 +736,10 @@ def main():
     
     # Setup immersion medium background permittivity if specified
     if args.medium and args.medium not in ["Vacuum", "None"]:
-        from execution.materials_database_dispersive import IMMERSION_MEDIA
+        try:
+            from execution.materials_database_dispersive import IMMERSION_MEDIA
+        except ImportError:
+            from materials_database_dispersive import IMMERSION_MEDIA
         if args.medium in IMMERSION_MEDIA and args.eps_bg == 1.0:
             args.eps_bg = IMMERSION_MEDIA[args.medium]["eps_static"]
     r_tip_um = args.r_tip / 1000.0

@@ -8,7 +8,15 @@ semiconductors (Silicon), and immersion screening liquids/dielectrics.
 Addresses Nature Reviewer Issue 2:
 Replaces idealized lossless tuning with realistic experimental optical constants,
 interband transitions, and complex dissipation along the imaginary frequency axis xi.
-"""
+import sys
+import os
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+CUR_DIR = os.path.dirname(os.path.abspath(__file__))
+if CUR_DIR not in sys.path:
+    sys.path.insert(0, CUR_DIR)
 
 import numpy as np
 
@@ -139,11 +147,17 @@ def get_dielectric_tensor_imag(material_name, xi_meep, theta_deg=0.0):
         eps_z = np.full_like(eps_x, 4.5)
     elif material_name == "Gold":
         # Brendel-Bormann model for Au
-        from execution.run_pfa_model import get_epsilon_imag
+        try:
+            from execution.run_pfa_model import get_epsilon_imag
+        except ImportError:
+            from run_pfa_model import get_epsilon_imag
         eps_iso = np.array([get_epsilon_imag(x, "Gold") for x in np.atleast_1d(xi_meep)])
         eps_x = eps_y = eps_z = eps_iso[0] if np.isscalar(xi_meep) else eps_iso
     elif material_name == "Silicon":
-        from execution.run_pfa_model import get_epsilon_imag
+        try:
+            from execution.run_pfa_model import get_epsilon_imag
+        except ImportError:
+            from run_pfa_model import get_epsilon_imag
         eps_iso = np.array([get_epsilon_imag(x, "Silicon") for x in np.atleast_1d(xi_meep)])
         eps_x = eps_y = eps_z = eps_iso[0] if np.isscalar(xi_meep) else eps_iso
     elif material_name in IMMERSION_MEDIA:
