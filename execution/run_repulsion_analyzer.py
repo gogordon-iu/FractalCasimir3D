@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """
-Vacuum Casimir Repulsion Campaign: Phase 1 Results Analyzer
-------------------------------------------------------------
-Analyzes the 36 Phase 1 screening tasks across the 4 symmetry-breaking archetypes:
-1. Corrugated Top (N=3) vs. Flat Bottom (N=1)
-2. Dual-Scale Multi-Tier Corrugations (N=3 vs. N=2)
-3. Perforated Carpet Waveguide Cutoff (N=3 vs. N=1)
-4. Orthogonal Ridge Crossing (N=3 vs. N=3, theta ~ 90 deg)
+Vacuum Casimir Repulsion Campaign: Phase 1 Results Analyzer (Archetypes 1 & 2)
+------------------------------------------------------------------------------
+Analyzes the 36 Phase 1 screening tasks across the two focused symmetry-breaking archetypes:
+1. Archetype 1: Corrugated Top (N=3) vs. Flat Bottom (N=1) [18 Tasks, d in (50, 100, 200) nm]
+2. Archetype 2: Dual-Scale Multi-Tier Corrugations (N=3 vs. N=2) [18 Tasks, d in (50, 100, 200) nm]
 
 Evaluates first-principles Casimir pressure:
     P = (F_both - F_self) / A_eff
@@ -53,7 +51,7 @@ def get_expected_output_path(cfg):
     d = float(cfg["d"])
     N = int(cfg["N_top"])
     N_bot = int(cfg.get("N_bot", 1))
-    corr = bool(cfg.get("corrugated", False))
+    corr = bool(cfg.get("corrugated", True))
     alpha = float(cfg.get("corrugation_angle", 75.0))
     rtip = float(cfg.get("r_tip_nm", 0.0))
     med = cfg.get("medium", "Vacuum")
@@ -71,7 +69,7 @@ def get_expected_output_path(cfg):
 
 def main():
     print("================================================================================")
-    print("VACUUM CASIMIR REPULSION ANALYZER: ASYMMETRY & RIDGE CROSSING SCREENING")
+    print("VACUUM CASIMIR REPULSION ANALYZER: ARCHETYPES 1 & 2 SCREENING")
     print("================================================================================")
 
     config_files = sorted(glob.glob("sweep_configs_repulsion/config_*.json"))
@@ -102,12 +100,9 @@ def main():
             except Exception:
                 pass
         else:
-            # Fallback: check checkpoint files if final file not yet aggregated
+            # Checkpoint fallback check if final subtracted file not yet written
             rtip_str = f"_rtip_{float(cfg.get('r_tip_nm', 0.0)):.1f}" if (cfg.get("corrugated") and float(cfg.get("r_tip_nm", 0.0)) > 0) else ""
-            if cfg.get("corrugated"):
-                geom_tag = f"_corr_al_{float(cfg.get('corrugation_angle', 75.0)):.1f}{rtip_str}"
-            else:
-                geom_tag = "_planar"
+            geom_tag = f"_corr_al_{float(cfg.get('corrugation_angle', 75.0)):.1f}{rtip_str}" if cfg.get("corrugated") else "_planar"
             chk_tag = f"v3_d_{float(cfg['d']):.4f}_Ntop_{cfg['N_top']}_Nbot_{cfg.get('N_bot', 1)}_mat_{cfg['material']}_res_{cfg['resolution']}_th_{float(cfg['theta']):.1f}{geom_tag}_L_{float(cfg.get('L', 2.0)):.2f}"
             chk_b = f".tmp/chk_{chk_tag}_both.json"
             chk_s = f".tmp/chk_{chk_tag}_self.json"
@@ -151,9 +146,7 @@ def main():
     # Print summary grouped by Archetype
     archetypes = [
         ("corrugated_over_flat", "1. Corrugated Top (N=3) vs. Flat Bottom (N=1)"),
-        ("hierarchical_corrugations", "2. Hierarchical Corrugations (N=3 vs. N=2)"),
-        ("perforated_carpet_cutoff", "3. Perforated Carpet Cutoff (N=3 vs. N=1)"),
-        ("orthogonal_ridge_crossing", "4. Orthogonal Ridge Crossing (N=3 vs. N=3)")
+        ("hierarchical_corrugations", "2. Hierarchical Corrugations (N=3 vs. N=2)")
     ]
 
     for arch_key, arch_title in archetypes:
@@ -191,9 +184,9 @@ def main():
     os.makedirs("Papers/Fractal_Casimir_Nature_EM/tables", exist_ok=True)
     tex_path = "Papers/Fractal_Casimir_Nature_EM/tables/table_repulsion_screening.tex"
     with open(tex_path, "w") as f:
-        f.write("% Auto-generated Vacuum Casimir Repulsion Screening Table\n")
+        f.write("% Auto-generated Vacuum Casimir Repulsion Screening Table (Archetypes 1 & 2)\n")
         f.write("\\begin{table}[htbp]\n\\centering\n")
-        f.write("\\caption{Phase 1: Vacuum Casimir Repulsion Screening Across 4 Symmetry-Breaking Archetypes ($\\epsilon_{\\rm bg}=1.0$).}\n")
+        f.write("\\caption{Phase 1: Vacuum Casimir Repulsion Screening Across Archetypes 1 and 2 ($\\epsilon_{\\rm bg}=1.0$).}\n")
         f.write("\\label{tab:repulsion_screening}\n")
         f.write("\\begin{tabular}{ccccccc}\n\\toprule\n")
         f.write("\\textbf{Archetype} & $N_{\\rm top}$ & $N_{\\rm bot}$ & \\textbf{Gap $d$} & \\textbf{Twist $\\theta$} & \\textbf{Pressure $P$ (Pa)} & \\textbf{Regime} \\\\\n\\midrule\n")
@@ -203,7 +196,7 @@ def main():
                 reg_str = "\\textbf{Repulsive ($P>0$)}" if m["pressure_Pa"] > 0 else "Attractive"
             else:
                 reg_str = "Pending"
-            f.write(f"{m['archetype'][:15]} & {m['N_top']} & {m['N_bot']} & ${m['d_um']*1000:.0f}\\text{{ nm}}$ & ${m['theta_deg']:.1f}^\\circ$ & {p_str} & {reg_str} \\\\\n")
+            f.write(f"{m['archetype'][:18]} & {m['N_top']} & {m['N_bot']} & ${m['d_um']*1000:.0f}\\text{{ nm}}$ & ${m['theta_deg']:.1f}^\\circ$ & {p_str} & {reg_str} \\\\\n")
         f.write("\\bottomrule\n\\end{tabular}\n\\end{table}\n")
     print(f"Generated Publication Table: '{tex_path}'.")
 
@@ -212,19 +205,23 @@ def main():
         os.makedirs("Papers/Fractal_Casimir_Nature_EM/figures", exist_ok=True)
         fig_path = "Papers/Fractal_Casimir_Nature_EM/figures/fig_repulsion_screening.png"
         plt.figure(figsize=(9, 5.5))
-        colors = {"corrugated_over_flat": "#1f77b4", "hierarchical_corrugations": "#ff7f0e", "perforated_carpet_cutoff": "#2ca02c", "orthogonal_ridge_crossing": "#d62728"}
+        colors = {"corrugated_over_flat": "#1f77b4", "hierarchical_corrugations": "#ff7f0e"}
+        markers = {0.05: "o", 0.10: "s", 0.20: "^"}
         
         for arch_key, arch_title in archetypes:
             sub = [m for m in completed if m["archetype"] == arch_key and m["pressure_Pa"] is not None]
             if sub:
-                xs = [m["theta_deg"] for m in sub]
-                ys = [m["pressure_Pa"] for m in sub]
-                plt.scatter(xs, ys, s=60, color=colors.get(arch_key, "black"), label=arch_title[:32], alpha=0.8)
+                for d_val, marker in markers.items():
+                    sub_d = [m for m in sub if abs(m["d_um"] - d_val) < 1e-4]
+                    if sub_d:
+                        xs = [m["theta_deg"] for m in sub_d]
+                        ys = [m["pressure_Pa"] for m in sub_d]
+                        plt.scatter(xs, ys, s=70, color=colors.get(arch_key, "black"), marker=marker, label=f"{arch_title[:28]} (d={int(d_val*1000)}nm)", alpha=0.85)
 
         plt.axhline(0, color="red", linestyle="--", linewidth=1.5, label="Zero Pressure Boundary (P=0)")
         plt.xlabel(r"Twist Angle $\theta$ (degrees)", fontsize=12)
         plt.ylabel(r"Casimir Pressure $P$ (Pa)", fontsize=12)
-        plt.title("Vacuum Casimir Screening: Identification of Repulsive Regime ($P > 0$)", fontsize=13, pad=12)
+        plt.title("Vacuum Casimir Repulsion Screening: Archetypes 1 & 2 ($P > 0$ Search)", fontsize=13, pad=12)
         plt.legend(frameon=True, fontsize=9)
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
