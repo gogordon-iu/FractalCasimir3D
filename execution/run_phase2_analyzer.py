@@ -59,6 +59,11 @@ def get_expected_output_path(cfg):
     eps_bg = float(cfg.get("eps_bg", 1.0))
     L = float(cfg.get("L", 2.0))
     
+    if med and med not in ["Vacuum", "None"]:
+        from execution.materials_database_dispersive import IMMERSION_MEDIA
+        if med in IMMERSION_MEDIA and eps_bg == 1.0:
+            eps_bg = IMMERSION_MEDIA[med]["eps_static"]
+
     rtip_str = f"_rtip_{rtip:.1f}" if (corr and rtip > 0.0) else ""
     med_str = f"_med_{med}" if med and med not in ["Vacuum", "None"] else ""
     nbot_str = f"_corrugated_al_{alpha:.1f}{rtip_str}{med_str}_Nbot_{N_bot}" if corr else (f"_sieve_Nbot_{N_bot}" if sieve else (f"_Nbot_{N_bot}" if N_bot > 1 else ""))
@@ -141,7 +146,7 @@ def main():
         r_vals = np.array([m["r_tip_nm"] for m in tip_75])
         p_vals = np.array([m["pressure_Pa"] for m in tip_75])
         poly = np.polyfit(r_vals, p_vals, 1)
-        print(f"\n* Richardson Extrapolation (r_tip -> 0 nm): P_0 = {poly[1]:+.6f} Pa (Strictly Positive & Non-Singular!)")
+        print(f"\n* Richardson Extrapolation (r_tip -> 0 nm): P_0 = {poly[1]:+.6f} Pa (Finite & Non-Singular!)")
 
     # Generate Figure 1
     os.makedirs("Papers/Fractal_Casimir_Nature_EM/figures", exist_ok=True)
@@ -157,7 +162,7 @@ def main():
     plt.axhline(0, color="gray", ls=":")
     plt.xlabel(r"Tip Rounding Radius $r_{\rm tip}$ (nm)", fontsize=12)
     plt.ylabel(r"Casimir Pressure $P$ (Pa)", fontsize=12)
-    plt.title("Figure 1: Invariance of Casimir Repulsion to Physical Tip Rounding", fontsize=13, pad=12)
+    plt.title("Figure 1: Invariance of Casimir Pressure to Physical Tip Rounding", fontsize=13, pad=12)
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     fig_path = "Papers/Fractal_Casimir_Nature_EM/figures/fig1_tip_convergence.png"
@@ -177,7 +182,7 @@ def main():
         f.write("\\textbf{Wall Slope $\\alpha$} & \\textbf{Tip Radius $r_{\\rm tip}$} & \\textbf{Separation $d$} & \\textbf{Pressure $P$ (Pa)} & \\textbf{Singularity Check} \\\\\n\\midrule\n")
         for m in matched[:18]:
             p_str = f"${m['pressure_Pa']:+9.6f}$ Pa" if m["pressure_Pa"] is not None else "Pending"
-            reg_str = "\\checkmark Finite Non-Singular" if (m["pressure_Pa"] is not None and m["pressure_Pa"] > 0) else "Pending"
+            reg_str = "\\checkmark Finite Non-Singular" if (m["pressure_Pa"] is not None and math.isfinite(m["pressure_Pa"])) else "Pending"
             f.write(f"${m['corrugation_angle']:.1f}^\\circ$ & ${m['r_tip_nm']:.1f}\\text{{ nm}}$ & ${m['d_um']*1000:.0f}\\text{{ nm}}$ & {p_str} & {reg_str} \\\\\n")
         f.write("\\bottomrule\n\\end{tabular}\n\\end{table}\n")
     print(f"Generated Phase 2 Table: '{tex_path}'.")
