@@ -279,6 +279,20 @@ def main():
     with open("results_phase3/phase3_summary.json", "w") as f:
         json.dump(matched, f, indent=4)
     print("Saved Phase 3 summary to 'results_phase3/phase3_summary.json'.")
+
+    # Auto-sync results to GitHub
+    from execution.git_sync import git_sync_results
+    git_sync_results(
+        "phase3",
+        [
+            "results_phase3/phase3_summary.json",
+            "Papers/Fractal_Casimir_Nature_EM/tables/table_sweet_spot_repulsion.tex",
+            "Papers/Fractal_Casimir_Nature_EM/figures/fig2_sweet_spot_contour.png",
+            "Papers/Fractal_Casimir_Nature_EM/figures/fig3_phase_diagram.png"
+        ],
+        len(completed),
+        len(matched)
+    )
     print("================================================================================")
 
 if __name__ == "__main__":

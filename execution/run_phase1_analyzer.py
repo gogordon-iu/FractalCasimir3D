@@ -185,6 +185,18 @@ def main():
     with open("results_phase1/phase1_summary.json", "w") as f:
         json.dump(matched, f, indent=4)
     print("Saved Phase 1 summary to 'results_phase1/phase1_summary.json'.")
+
+    # Auto-sync results to GitHub
+    from execution.git_sync import git_sync_results
+    git_sync_results(
+        "phase1",
+        [
+            "results_phase1/phase1_summary.json",
+            "Papers/Fractal_Casimir_Nature_EM/tables/table_phase1_baselines.tex"
+        ],
+        len(completed),
+        len(matched)
+    )
     print("================================================================================")
 
 if __name__ == "__main__":

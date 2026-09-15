@@ -392,6 +392,21 @@ def main():
     plt.close()
     print(f"Generated Figure 3: '{fig3_path}'.")
 
+    # Auto-sync results to GitHub
+    from execution.git_sync import git_sync_results
+    git_sync_results(
+        "unified_campaign",
+        [
+            summary_path,
+            tex_path,
+            fig1_path,
+            fig2_path,
+            fig3_path
+        ],
+        len(all_records),
+        292
+    )
+
     print("================================================================================")
     print("UNIFIED NATURE CAMPAIGN ANALYSIS COMPLETE!")
     print("================================================================================")
