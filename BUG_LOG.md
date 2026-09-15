@@ -23,3 +23,7 @@
 ## [2026-09-12] Filename Mismatches and Stale HPC Cache Reuse
 - **Bug**: Caller sweep scripts omitted parameters (`_L_`, `_al_`, `_eps_`) leading to file lookups failing, while unversioned cache files in `.tmp/` risked reusing flawed geometry results on the cluster.
 - **Solution**: Added versioned `v2_` cache/checkpoint tags with a `--no-cache` bypass option, and aligned all filename patterns across sweep analyzers.
+
+## [2026-09-14] Standalone Script Execution ModuleNotFoundError for execution Package
+- **Bug**: Invoking analyzer scripts directly via `python execution/run_phase*.py` set `sys.path[0]` to `execution/`, causing canonical package imports like `from execution.git_sync import git_sync_results` to fail with `ModuleNotFoundError`.
+- **Solution**: Injected canonical `REPO_ROOT` into `sys.path` at the top of all analyzer scripts and anchored subprocess execution paths to `REPO_ROOT` without fallback imports.
