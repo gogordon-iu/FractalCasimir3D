@@ -63,11 +63,12 @@ MAT=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['mater
 NTOP=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['N_top'])")
 NBOT=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['N_bot'])")
 RTIP=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['r_tip_nm'])")
+NMAX=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE')).get('nmax', 3))")
 CLUTCH=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE')).get('clutch', True))")
 
 echo "Executing Quantum Clutch Simulation"
 echo "Label: $LABEL"
-echo "Params: d=$D_UM um, N_top=$NTOP, N_bot=$NBOT, mat=$MAT, res=$RES, theta=$THETA deg, alpha=$ALPHA deg, r_tip=$RTIP nm, eps=$EPS"
+echo "Params: d=$D_UM um, N_top=$NTOP, N_bot=$NBOT, mat=$MAT, res=$RES, nmax=$NMAX, theta=$THETA deg, alpha=$ALPHA deg, r_tip=$RTIP nm, eps=$EPS"
 
 EXTRA_ARGS=""
 if [ "$CLUTCH" = "True" ] || [ "$CLUTCH" = "true" ]; then
@@ -82,6 +83,7 @@ bash execution/run_meep_wrapper.sh srun -n 128 $PYTHON_EXEC execution/run_meep_s
     --theta $THETA \
     --material $MAT \
     --res $RES \
+    --nmax $NMAX \
     --eps-bg $EPS \
     --config all \
     --no-cache \

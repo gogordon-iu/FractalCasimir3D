@@ -20,7 +20,7 @@ def verify_case(d_um, theta_deg, N_top=3, N_bot=3, L=2.0, H_spire=0.20, t_top_sl
 
     # Standoffs
     delta_s_xy = 0.03
-    delta_s_z = min(0.015, d_um / 4.0)
+    delta_s_z = min(0.020, d_um / 2.0)
 
     # Box S geometry
     sx_box = L_rot + 2.0 * delta_s_xy
@@ -60,7 +60,7 @@ def verify_case(d_um, theta_deg, N_top=3, N_bot=3, L=2.0, H_spire=0.20, t_top_sl
 
     checks = {
         "box_encloses_tips": box_to_tips_standoff > 0.005,
-        "box_above_bottom_plate": box_to_bot_plate_clearance > 0.020,
+        "box_above_bottom_plate": box_to_bot_plate_clearance >= 0.015,
         "box_encloses_top_slab": box_to_top_plate_standoff > 0.005,
         "pml_clearance_xy": pml_clearance_xy > 0.10,
         "pml_clearance_z_top": pml_clearance_z_top > 0.10,

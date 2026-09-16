@@ -353,14 +353,17 @@ def get_casimir_material(material_name, Sigma, ft, theta=0.0, eps_bg=1.0):
         **cond_attr
     )
 
-def get_optimal_subgroups(M, num_tasks):
+def get_optimal_subgroups(M, num_tasks, max_safe_K=None):
     """
     Finds the largest divisor of M that is less than or equal to num_tasks,
-    while ensuring each subgroup has at least 8 processes (or M if M < 8)
-    to prevent memory bandwidth starvation.
+    while ensuring each subgroup has at least 16 processes (or M if M < 16)
+    and does not exceed memory constraints.
     """
     min_cores_per_subgroup = 16
     max_K = max(1, M // min_cores_per_subgroup)
+    if max_safe_K is not None:
+        max_K = min(max_K, max_safe_K)
+        max_K = max(1, max_K)
     
     divisors = [i for i in range(1, M + 1) if M % i == 0]
     valid_divisors = [d for d in divisors if d <= num_tasks and d <= max_K]
@@ -394,7 +397,7 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     
     # Integration surface S standoffs
     delta_s_xy = 0.03
-    delta_s_z = min(0.015, d / 4.0) if clutch else min(0.02, d / 4.0)
+    delta_s_z = min(0.020, d / 2.0) if clutch else min(0.02, d / 4.0)
 
     # Cell size: ensure buffer exists between rotated plate and PML
     sx = L_rot + 2.0 * (dpml + buffer)
@@ -715,6 +718,7 @@ def main():
     parser.add_argument("--corrugation-angle", type=float, default=45.0, help="Wall slope angle in degrees for corrugation pyramids (default: 45.0).")
     parser.add_argument("--r-tip", type=float, default=0.0, help="Tip rounding radius in nm for corrugation pyramids (default: 0.0).")
     parser.add_argument("--medium", type=str, default=None, choices=[None, "Vacuum", "Teflon_AF", "Ethanol", "Bromobenzene", "Glycerol", "Cyclohexane"], help="Liquid immersion or background dielectric medium.")
+    parser.add_argument("--subgroups", type=int, default=None, help="Explicitly specify number of parallel subgroups (e.g. 1, 2, 4).")
     parser.add_argument("--no-cache", action="store_true", help="Ignore cached checkpoint and result files, forcing complete recomputation.")
     args = parser.parse_args()
     
@@ -731,10 +735,25 @@ def main():
     if args.task_idx >= 0 or args.no_subgroups or total_ranks <= 1:
         K = 1
         subgroup_index = 0
+    elif args.subgroups is not None:
+        K = max(1, min(args.subgroups, total_ranks))
+        subgroup_index = mp.divide_parallel_processes(K) if (K > 1 and mp.count_processors() > 1) else 0
     else:
         if mp.count_processors() > 1:
             M = mp.count_processors()
-            K = get_optimal_subgroups(M, num_tasks)
+            # Estimate memory footprint to guarantee no cluster node OOM
+            theta_rad = np.radians(args.theta)
+            L_rot = args.L * (abs(np.cos(theta_rad)) + abs(np.sin(theta_rad)))
+            dpml = 0.2
+            buffer = 0.15
+            sx = L_rot + 2.0 * (dpml + buffer)
+            sy = sx
+            sz = 2.0 * (args.d / 2.0 + 0.32) + 2.0 * (dpml + buffer)
+            est_cells = (sx * args.res) * (sy * args.res) * (sz * args.res)
+            est_mem_gb = (est_cells * 9600.0) / (1024.0**3)
+            # Cap total node memory below 180 GB (BigRed 200 node limit is 240 GB)
+            max_safe_K = max(1, int(180.0 / max(1.0, est_mem_gb)))
+            K = get_optimal_subgroups(M, num_tasks, max_safe_K=max_safe_K)
             subgroup_index = mp.divide_parallel_processes(K) if K > 1 else 0
         else:
             K = min(total_ranks, num_tasks)
