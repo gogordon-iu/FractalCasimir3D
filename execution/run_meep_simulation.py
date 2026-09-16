@@ -741,18 +741,33 @@ def main():
     else:
         if mp.count_processors() > 1:
             M = mp.count_processors()
-            # Estimate memory footprint to guarantee no cluster node OOM
+            # Dynamically query available physical node RAM from the OS kernel (/proc/meminfo)
+            usable_ram_gb = 180.0
+            try:
+                with open("/proc/meminfo", "r") as f_mem:
+                    for m_line in f_mem:
+                        if m_line.startswith("MemTotal:"):
+                            tot_mem_gb = float(m_line.split()[1]) / (1024.0 * 1024.0)
+                            usable_ram_gb = tot_mem_gb * 0.75  # 75% for MEEP subgroups, 25% safety margin for OS/MPI
+                            break
+            except Exception:
+                pass
+
             theta_rad = np.radians(args.theta)
             L_rot = args.L * (abs(np.cos(theta_rad)) + abs(np.sin(theta_rad)))
-            dpml = 0.2
+            dpml = 0.20
             buffer = 0.15
             sx = L_rot + 2.0 * (dpml + buffer)
             sy = sx
-            sz = 2.0 * (args.d / 2.0 + 0.32) + 2.0 * (dpml + buffer)
+            t_top_geom = (0.20 + 0.10) if args.clutch else (0.75 if args.corrugated else 0.10)
+            delta_sz_geom = min(0.020, args.d / 2.0) if args.clutch else min(0.02, args.d / 4.0)
+            sz = 2.0 * (args.d / 2.0 + t_top_geom + delta_sz_geom) + 2.0 * (dpml + buffer)
             est_cells = (sx * args.res) * (sy * args.res) * (sz * args.res)
+            # 3D MEEP FDTD Yee cell state vectors (E, D, H, B, PML, susceptibilities) ~ 9.6 KB/cell
             est_mem_gb = (est_cells * 9600.0) / (1024.0**3)
-            # Cap total node memory below 180 GB (BigRed 200 node limit is 240 GB)
-            max_safe_K = max(1, int(180.0 / max(1.0, est_mem_gb)))
+            
+            # Dynamically cap concurrent subgroups K so total RAM stays within the node's safe allocation
+            max_safe_K = max(1, int(usable_ram_gb / max(1.0, est_mem_gb)))
             K = get_optimal_subgroups(M, num_tasks, max_safe_K=max_safe_K)
             subgroup_index = mp.divide_parallel_processes(K) if K > 1 else 0
         else:
