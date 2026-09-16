@@ -372,42 +372,76 @@ def get_optimal_subgroups(M, num_tasks, max_safe_K=None):
     return max(valid_divisors)
 
 
+def compute_plate_thicknesses(clutch=False, corrugated=False, corrugation_angle=45.0, stepped_sieve=False):
+    """
+    Computes physical plate thicknesses from geometry parameters:
+    - Top plate: active fractal structure height + backing substrate slab.
+    - Bottom plate: membrane or perforated substrate thickness.
+    """
+    if clutch:
+        H_spire = 0.20  # Spire height (microns)
+        t_top_slab = 0.10  # Backing substrate slab (microns)
+        t_top = H_spire + t_top_slab
+        t_bottom = 0.05  # Perforated sieve membrane (microns)
+    elif corrugated:
+        H_corr = 0.75 if corrugation_angle >= 60.0 else 0.50
+        t_top = H_corr
+        t_bottom = H_corr
+        H_spire = 0.0
+        t_top_slab = 0.0
+    elif stepped_sieve:
+        t_top = 0.10
+        t_bottom = 0.40
+        H_spire = 0.0
+        t_top_slab = 0.0
+    else:
+        t_top = 0.10
+        t_bottom = 0.10
+        H_spire = 0.0
+        t_top_slab = 0.0
+    return t_top, t_bottom, H_spire, t_top_slab
+
+
+def compute_domain_dimensions(L, theta, d, t_top, t_bottom, dpml=0.20, buffer=0.15, clutch=False):
+    """
+    Calculates 3D cell bounds (sx, sy, sz) and integration standoffs (delta_s_xy, delta_s_z).
+    Integration box bottom face is placed at the exact mathematical midpoint of gap d (z = 0)
+    via delta_s_z = d / 2.0, providing equal vacuum clearance to both plates.
+    """
+    theta_rad = np.radians(theta)
+    L_rot = L * (abs(np.cos(theta_rad)) + abs(np.sin(theta_rad)))
+    
+    # Delta standoff: delta_s_z = d / 2.0 centers the bottom face of S exactly at z = 0
+    delta_s_xy = 0.03
+    delta_s_z = d / 2.0
+    
+    sx = L_rot + 2.0 * (dpml + buffer)
+    sy = sx
+    
+    if clutch:
+        z_top_max = d / 2.0 + t_top + delta_s_z
+        sz = 2.0 * z_top_max + 2.0 * (dpml + buffer)
+    else:
+        sz = d + t_top + t_bottom + 2.0 * (dpml + buffer)
+        
+    return sx, sy, sz, delta_s_xy, delta_s_z, L_rot
+
+
 def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108, N_bottom=1, stepped_sieve=False, sieve_depths=[0.30, 0.15, 0.05], corrugated=False, corrugation_angle=45.0, r_tip=0.0, medium=None, clutch=False):
     """
     Runs a 3D FDTD simulation for a single configuration, utilizing subgroups
     to run different polarizations and moments in parallel.
     """
     # 1. Computational Cell and Geometry parameters
-    if clutch:
-        H_spire = 0.20
-        t_top_slab = 0.10
-        t_top = H_spire + t_top_slab
-        t_bottom = 0.05
-    else:
-        t_top = (0.75 if corrugation_angle >= 60.0 else 0.50) if corrugated else 0.10  # top plate thickness (750 nm for 60-deg, 500 nm for 45-deg)
-        t_bottom = (0.75 if corrugation_angle >= 60.0 else 0.50) if corrugated else (0.40 if stepped_sieve else 0.10)  # bottom substrate thickness
+    t_top, t_bottom, H_spire, t_top_slab = compute_plate_thicknesses(
+        clutch=clutch, corrugated=corrugated, corrugation_angle=corrugation_angle, stepped_sieve=stepped_sieve
+    )
     dpml = 0.2  # PML thickness in microns
     buffer = 0.15  # buffer between plates and PML
     
-    # Bounding footprint for plate of size L rotated by theta in the xy-plane:
-    theta_rad = np.radians(theta)
-    C_env = abs(np.cos(theta_rad))
-    S_env = abs(np.sin(theta_rad))
-    L_rot = L * (C_env + S_env)
-    
-    # Integration surface S standoffs
-    delta_s_xy = 0.03
-    delta_s_z = min(0.020, d / 2.0) if clutch else min(0.02, d / 4.0)
-
-    # Cell size: ensure buffer exists between rotated plate and PML
-    sx = L_rot + 2.0 * (dpml + buffer)
-    sy = L_rot + 2.0 * (dpml + buffer)
-    if clutch:
-        z_top_max = d / 2.0 + t_top + delta_s_z
-        sz = 2.0 * z_top_max + 2.0 * (dpml + buffer)
-    else:
-        sz = d + t_top + t_bottom + 2.0 * (dpml + buffer)
-    
+    sx, sy, sz, delta_s_xy, delta_s_z, L_rot = compute_domain_dimensions(
+        L, theta, d, t_top, t_bottom, dpml=dpml, buffer=buffer, clutch=clutch
+    )
     cell_size = mp.Vector3(sx, sy, sz)
     
     # Global conductivity scaling
@@ -753,15 +787,12 @@ def main():
             except Exception:
                 pass
 
-            theta_rad = np.radians(args.theta)
-            L_rot = args.L * (abs(np.cos(theta_rad)) + abs(np.sin(theta_rad)))
-            dpml = 0.20
-            buffer = 0.15
-            sx = L_rot + 2.0 * (dpml + buffer)
-            sy = sx
-            t_top_geom = (0.20 + 0.10) if args.clutch else (0.75 if args.corrugated else 0.10)
-            delta_sz_geom = min(0.020, args.d / 2.0) if args.clutch else min(0.02, args.d / 4.0)
-            sz = 2.0 * (args.d / 2.0 + t_top_geom + delta_sz_geom) + 2.0 * (dpml + buffer)
+            t_top_geom, t_bot_geom, _, _ = compute_plate_thicknesses(
+                clutch=args.clutch, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, stepped_sieve=args.stepped_sieve
+            )
+            sx, sy, sz, _, _, _ = compute_domain_dimensions(
+                args.L, args.theta, args.d, t_top_geom, t_bot_geom, dpml=0.20, buffer=0.15, clutch=args.clutch
+            )
             est_cells = (sx * args.res) * (sy * args.res) * (sz * args.res)
             # 3D MEEP FDTD Yee cell state vectors (E, D, H, B, PML, susceptibilities) ~ 9.6 KB/cell
             est_mem_gb = (est_cells * 9600.0) / (1024.0**3)

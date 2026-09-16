@@ -46,7 +46,7 @@ def main():
                 "medium": "Vacuum",
                 "eps_bg": 1.0,
                 "L": 2.0,
-                "resolution": 50,
+                "resolution": 60,
                 "nmax": 3
             }
             task_list.append(task)
