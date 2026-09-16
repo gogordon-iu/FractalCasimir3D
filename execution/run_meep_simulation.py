@@ -369,14 +369,20 @@ def get_optimal_subgroups(M, num_tasks):
     return max(valid_divisors)
 
 
-def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108, N_bottom=1, stepped_sieve=False, sieve_depths=[0.30, 0.15, 0.05], corrugated=False, corrugation_angle=45.0, r_tip=0.0, medium=None):
+def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108, N_bottom=1, stepped_sieve=False, sieve_depths=[0.30, 0.15, 0.05], corrugated=False, corrugation_angle=45.0, r_tip=0.0, medium=None, clutch=False):
     """
     Runs a 3D FDTD simulation for a single configuration, utilizing subgroups
     to run different polarizations and moments in parallel.
     """
     # 1. Computational Cell and Geometry parameters
-    t_top = (0.75 if corrugation_angle >= 60.0 else 0.50) if corrugated else 0.10  # top plate thickness (750 nm for 60-deg, 500 nm for 45-deg)
-    t_bottom = (0.75 if corrugation_angle >= 60.0 else 0.50) if corrugated else (0.40 if stepped_sieve else 0.10)  # bottom substrate thickness
+    if clutch:
+        H_spire = 0.20
+        t_top_slab = 0.10
+        t_top = H_spire + t_top_slab
+        t_bottom = 0.05
+    else:
+        t_top = (0.75 if corrugation_angle >= 60.0 else 0.50) if corrugated else 0.10  # top plate thickness (750 nm for 60-deg, 500 nm for 45-deg)
+        t_bottom = (0.75 if corrugation_angle >= 60.0 else 0.50) if corrugated else (0.40 if stepped_sieve else 0.10)  # bottom substrate thickness
     dpml = 0.2  # PML thickness in microns
     buffer = 0.15  # buffer between plates and PML
     
@@ -386,10 +392,18 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     S_env = abs(np.sin(theta_rad))
     L_rot = L * (C_env + S_env)
     
+    # Integration surface S standoffs
+    delta_s_xy = 0.03
+    delta_s_z = min(0.015, d / 4.0) if clutch else min(0.02, d / 4.0)
+
     # Cell size: ensure buffer exists between rotated plate and PML
     sx = L_rot + 2.0 * (dpml + buffer)
     sy = L_rot + 2.0 * (dpml + buffer)
-    sz = d + t_top + t_bottom + 2.0 * (dpml + buffer)
+    if clutch:
+        z_top_max = d / 2.0 + t_top + delta_s_z
+        sz = 2.0 * z_top_max + 2.0 * (dpml + buffer)
+    else:
+        sz = d + t_top + t_bottom + 2.0 * (dpml + buffer)
     
     cell_size = mp.Vector3(sx, sy, sz)
     
@@ -405,8 +419,6 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     }
     
     # Integration surface S enclosing the top prefractal plate
-    delta_s_xy = 0.03
-    delta_s_z = min(0.02, d / 4.0)
     sx_box = L_rot + 2.0 * delta_s_xy
     sy_box = L_rot + 2.0 * delta_s_xy
     sz_box = t_top + 2.0 * delta_s_z
@@ -460,7 +472,13 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
                 size=mp.Vector3(L, L, t_bottom),
                 material=bottom_plate_material
             ))
-            if corrugated:
+            if clutch:
+                from execution.fractal_clutch_geometry import generate_anisotropic_sieve_apertures
+                slots_bottom = generate_anisotropic_sieve_apertures(
+                    N_bottom, L, d, t_bottom=t_bottom, material=bg_material
+                )
+                geometry.extend(slots_bottom)
+            elif corrugated:
                 corrugations_bottom = generate_fractal_corrugations(
                     N_bottom, L, 0.0, 0.0, -d/2.0, is_top_plate=False,
                     angle=corrugation_angle, theta=0.0,
@@ -484,27 +502,43 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
             e2 = mp.Vector3(-S, C, 0.0)
             e3 = mp.Vector3(0.0, 0.0, 1.0)
             
-            geometry.append(mp.Block(
-                center=mp.Vector3(0.0, 0.0, d/2.0 + t_top/2.0),
-                size=mp.Vector3(L, L, t_top),
-                e1=e1,
-                e2=e2,
-                e3=e3,
-                material=top_plate_material
-            ))
-            if corrugated:
-                corrugations_top = generate_fractal_corrugations(
-                    N, L, 0.0, 0.0, d/2.0, is_top_plate=True,
-                    angle=corrugation_angle, theta=theta,
-                    max_depth=0.85 * t_top, material=bg_material, r_tip=r_tip
+            if clutch:
+                from execution.fractal_clutch_geometry import generate_menger_spire_array
+                geometry.append(mp.Block(
+                    center=mp.Vector3(0.0, 0.0, d/2.0 + H_spire + t_top_slab/2.0),
+                    size=mp.Vector3(L, L, t_top_slab),
+                    e1=e1,
+                    e2=e2,
+                    e3=e3,
+                    material=top_plate_material
+                ))
+                spires_top = generate_menger_spire_array(
+                    N, L, d, H_spire=H_spire, alpha=corrugation_angle,
+                    r_tip=r_tip, theta=theta, material=top_plate_material
                 )
-                geometry.extend(corrugations_top)
-            elif N > 1:
-                # Subtract holes recursively
-                holes = generate_carpet_holes(N, L, 0.0, 0.0, t_top + 0.01, material=bg_material, theta=theta)
-                for hole in holes:
-                    hole.center = mp.Vector3(hole.center.x, hole.center.y, d/2.0 + t_top/2.0)
-                geometry.extend(holes)
+                geometry.extend(spires_top)
+            else:
+                geometry.append(mp.Block(
+                    center=mp.Vector3(0.0, 0.0, d/2.0 + t_top/2.0),
+                    size=mp.Vector3(L, L, t_top),
+                    e1=e1,
+                    e2=e2,
+                    e3=e3,
+                    material=top_plate_material
+                ))
+                if corrugated:
+                    corrugations_top = generate_fractal_corrugations(
+                        N, L, 0.0, 0.0, d/2.0, is_top_plate=True,
+                        angle=corrugation_angle, theta=theta,
+                        max_depth=0.85 * t_top, material=bg_material, r_tip=r_tip
+                    )
+                    geometry.extend(corrugations_top)
+                elif N > 1:
+                    # Subtract holes recursively
+                    holes = generate_carpet_holes(N, L, 0.0, 0.0, t_top + 0.01, material=bg_material, theta=theta)
+                    for hole in holes:
+                        hole.center = mp.Vector3(hole.center.x, hole.center.y, d/2.0 + t_top/2.0)
+                    geometry.extend(holes)
             
         # Setup Simulation on the subgroup communicator
         sim = mp.Simulation(
@@ -677,6 +711,7 @@ def main():
     parser.add_argument("--stepped-sieve", action="store_true", help="Enable 3D Stepped Fractal Sieve for bottom plate (Frontier 1).")
     parser.add_argument("--sieve-depths", type=float, nargs="+", default=[0.30, 0.15, 0.05], help="Cavity depths in um for 3D stepped sieve levels.")
     parser.add_argument("--corrugated", action="store_true", help="Enable 3D Interlocking Fractal Corrugations (Frontier 2).")
+    parser.add_argument("--clutch", action="store_true", help="Enable Dual-Fractal Quantum Clutch mode (Menger-Weierstrass Spire top plate vs Anisotropic Sierpinski Sieve bottom plate).")
     parser.add_argument("--corrugation-angle", type=float, default=45.0, help="Wall slope angle in degrees for corrugation pyramids (default: 45.0).")
     parser.add_argument("--r-tip", type=float, default=0.0, help="Tip rounding radius in nm for corrugation pyramids (default: 0.0).")
     parser.add_argument("--medium", type=str, default=None, choices=[None, "Vacuum", "Teflon_AF", "Ethanol", "Bromobenzene", "Glycerol", "Cyclohexane"], help="Liquid immersion or background dielectric medium.")
@@ -713,7 +748,7 @@ def main():
         pass
         
     if global_rank == 0:
-        print(f"Starting simulation: d={args.d} um, N_top={args.N}, N_bottom={args.N_bottom}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}, config={args.config}, stepped_sieve={args.stepped_sieve}, corrugated={args.corrugated}")
+        print(f"Starting simulation: d={args.d} um, N_top={args.N}, N_bottom={args.N_bottom}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}, config={args.config}, clutch={args.clutch}, stepped_sieve={args.stepped_sieve}, corrugated={args.corrugated}")
         print(f"Parallel configuration: {total_ranks} processes running {K} parallel moment partitions.")
     
     # Setup immersion medium background permittivity if specified
@@ -724,9 +759,11 @@ def main():
     r_tip_um = args.r_tip / 1000.0
 
     # Checkpointing and cache tags (version 3 with unambiguous geometry separation)
-    rtip_str = f"_rtip_{args.r_tip:.1f}" if (args.corrugated and args.r_tip > 0.0) else ""
+    rtip_str = f"_rtip_{args.r_tip:.1f}" if ((args.corrugated or args.clutch) and args.r_tip > 0.0) else ""
     med_str = f"_med_{args.medium}" if args.medium and args.medium not in ["Vacuum", "None"] else ""
-    if args.corrugated:
+    if args.clutch:
+        geom_tag = f"_clutch_al_{args.corrugation_angle:.1f}{rtip_str}"
+    elif args.corrugated:
         geom_tag = f"_corr_al_{args.corrugation_angle:.1f}{rtip_str}"
     elif args.stepped_sieve:
         geom_tag = "_sieve"
@@ -737,7 +774,16 @@ def main():
     chk_self = f".tmp/chk_{task_chk_tag}_self.json"
     
     # Early exit if final output already exists
-    nbot_str = f"_corrugated_al_{args.corrugation_angle:.1f}{rtip_str}{med_str}_Nbot_{args.N_bottom}" if args.corrugated else (f"_sieve_Nbot_{args.N_bottom}" if args.stepped_sieve else (f"_Nbot_{args.N_bottom}" if args.N_bottom > 1 else ""))
+    if args.clutch:
+        nbot_str = f"_clutch_al_{args.corrugation_angle:.1f}{rtip_str}_Nbot_{args.N_bottom}"
+    elif args.corrugated:
+        nbot_str = f"_corrugated_al_{args.corrugation_angle:.1f}{rtip_str}{med_str}_Nbot_{args.N_bottom}"
+    elif args.stepped_sieve:
+        nbot_str = f"_sieve_Nbot_{args.N_bottom}"
+    elif args.N_bottom > 1:
+        nbot_str = f"_Nbot_{args.N_bottom}"
+    else:
+        nbot_str = ""
     out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
     
     check_file = None
@@ -767,9 +813,9 @@ def main():
                 if global_rank == 0:
                     print(f"Loaded cached 'both' force: {f_both:.6e} from {chk_both}")
             except Exception:
-                f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium)
+                f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch)
         else:
-            f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium)
+            f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch)
             if global_rank == 0:
                 os.makedirs(".tmp", exist_ok=True)
                 with open(chk_both, "w") as f:
@@ -783,9 +829,9 @@ def main():
                 if global_rank == 0:
                     print(f"Loaded cached 'self' force: {f_self:.6e} from {chk_self}")
             except Exception:
-                f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium)
+                f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch)
         else:
-            f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium)
+            f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch)
             if global_rank == 0:
                 os.makedirs(".tmp", exist_ok=True)
                 with open(chk_self, "w") as f:
@@ -890,7 +936,8 @@ def main():
                         "d_um": args.d,
                         "N": args.N,
                         "N_bottom": args.N_bottom,
-                        "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
+                        "clutch": args.clutch,
+                        "corrugation_angle": args.corrugation_angle if (args.corrugated or args.clutch) else 0.0,
                         "r_tip_nm": args.r_tip,
                         "medium": args.medium if args.medium else "Vacuum",
                         "material": args.material,
