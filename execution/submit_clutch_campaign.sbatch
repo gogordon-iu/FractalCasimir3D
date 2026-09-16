@@ -4,7 +4,7 @@
 #SBATCH -A r01540
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
-#SBATCH --time=04:00:00
+#SBATCH --time=12:00:00
 #SBATCH --array=1-10%5
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu
