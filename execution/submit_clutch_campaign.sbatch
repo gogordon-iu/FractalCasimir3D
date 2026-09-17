@@ -4,7 +4,7 @@
 #SBATCH -A r01540
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
-#SBATCH --time=12:00:00
+#SBATCH --time=24:00:00
 #SBATCH --array=1-10%5
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu
@@ -86,7 +86,7 @@ bash execution/run_meep_wrapper.sh srun -n 128 $PYTHON_EXEC execution/run_meep_s
     --nmax $NMAX \
     --eps-bg $EPS \
     --config all \
-    --no-cache \
+    --no-subgroups \
     $EXTRA_ARGS
 
 EXIT_CODE=$?

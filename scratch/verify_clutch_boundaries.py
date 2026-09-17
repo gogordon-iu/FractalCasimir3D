@@ -20,7 +20,7 @@ def verify_case(d_um, theta_deg, N_top=3, N_bot=3, L=2.0, H_spire=0.20, t_top_sl
 
     # Standoffs
     delta_s_xy = 0.03
-    delta_s_z = min(0.020, d_um / 2.0)
+    delta_s_z = d_um / 2.0
 
     # Box S geometry
     sx_box = L_rot + 2.0 * delta_s_xy

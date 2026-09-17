@@ -702,12 +702,14 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
             for i in range(K):
                 temp_file = f".tmp/temp_force_{task_tag}_{config}_subgroup_{i}.json"
                 wait_count = 0
-                while not os.path.exists(temp_file) and wait_count < 7200:
+                while not os.path.exists(temp_file) and wait_count < 60:
                     time.sleep(0.5)
                     wait_count += 1
+                if not os.path.exists(temp_file):
+                    raise RuntimeError(f"Subgroup {i} failed to write {temp_file} within 30s. A worker process likely died.")
                 success = False
                 retry_count = 0
-                while not success and retry_count < 100:
+                while not success and retry_count < 50:
                     try:
                         if os.path.exists(temp_file):
                             with open(temp_file, "r") as f:
@@ -717,6 +719,8 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
                     except (json.JSONDecodeError, PermissionError):
                         time.sleep(0.1)
                         retry_count += 1
+                if not success:
+                    raise RuntimeError(f"Failed to read force from {temp_file} after retries.")
                 try:
                     if os.path.exists(temp_file):
                         os.remove(temp_file)
