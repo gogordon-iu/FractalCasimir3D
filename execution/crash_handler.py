@@ -12,11 +12,12 @@ import traceback
 import subprocess
 import datetime
 
-CRASH_LOG_DIR = ".tmp/crash_logs"
-MASTER_CRASH_FILE = ".tmp/master_crash_report.json"
+CRASH_LOG_DIR = "cluster_diagnostics/crash_logs"
+MASTER_CRASH_FILE = "cluster_diagnostics/master_crash_report.json"
 
 def ensure_dirs():
     os.makedirs(CRASH_LOG_DIR, exist_ok=True)
+    os.makedirs("cluster_diagnostics", exist_ok=True)
     os.makedirs(".tmp", exist_ok=True)
 
 def log_crash_and_push(task_id, error_type, details, config_info=None):

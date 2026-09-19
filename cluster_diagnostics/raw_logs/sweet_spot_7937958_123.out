@@ -1,0 +1,24 @@
+==================================================
+SLURM ARRAY TASK ID: 123 / 224
+Running on node: x1000c4s1b1n1
+Start time: Thu Aug 13 03:19:49 AM EDT 2026
+==================================================
+Reading parameters from sweep_configs_sweet_spot/config_123.json...
+Executing 3D FDTD Simulation: Alpha=80.0 deg, Theta=82.0 deg, d=0.2 um, L=2.0 um, Res=40...
+==================================================
+RUNNING CRASH-PROOF MEEP SIMULATION WRAPPER
+==================================================
+Executing: /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python execution/run_meep_simulation.py --L 2.0 --d 0.2 --N 3 --N-bottom 3 --corrugated --corrugation-angle 80.0 --theta 82.0 --material Phosphorene_tuned --res 40 --eps-bg 2.1 --config all --task-idx 123
+Starting simulation: d=0.2 um, N_top=3, N_bottom=3, material=Phosphorene_tuned, resolution=40, nmax=3, theta=82.0, eps_bg=2.1, config=all, stepped_sieve=False, corrugated=True
+Parallel configuration: 1 processes divided into 1 subgroups of size 1 processes each.
+
+Elapsed run time = 0.0216 s
+Command failed with exit status 1.
+==================================================
+[CRASH DETECTED] Task 123 exited with status code 1
+==================================================
+
+[CRASH HANDLER] Logged crash details to '.tmp/crash_logs/crash_task_123_20260813_032021.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+[CRASH HANDLER] Successfully pushed crash log to GitHub!
+Task 123 complete at Thu Aug 13 03:20:28 AM EDT 2026.

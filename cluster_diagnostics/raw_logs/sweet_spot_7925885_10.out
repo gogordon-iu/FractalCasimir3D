@@ -1,0 +1,18 @@
+==================================================
+SLURM ARRAY TASK ID: 10 / 224
+Running on node: x1000c6s6b0n0
+Start time: Sun Aug  9 05:32:47 PM EDT 2026
+==================================================
+Reading parameters from sweep_configs_sweet_spot/config_010.json...
+Executing 3D FDTD Simulation: Alpha=70.0 deg, Theta=82.0 deg, d=0.15 um, L=2.0 um, Res=40...
+==================================================
+RUNNING CRASH-PROOF MEEP SIMULATION WRAPPER
+==================================================
+Executing: /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python execution/run_meep_simulation.py --L 2.0 --d 0.15 --N 3 --N-bottom 3 --corrugated --corrugation-angle 70.0 --theta 82.0 --material Phosphorene_tuned --res 40 --eps-bg 2.1 --config all --task-idx 10
+Starting simulation: d=0.15 um, N_top=3, N_bottom=3, material=Phosphorene_tuned, resolution=40, nmax=3, theta=82.0, eps_bg=2.1, config=all, stepped_sieve=False, corrugated=True
+Parallel configuration: 1 processes divided into 1 subgroups of size 1 processes each.
+Simulation task complete. Saved to .tmp/meep_d_0.1500_N_3_corrugated_Nbot_3_Phosphorene_tuned_res_40_theta_82.0_eps_2.1_L_2.00_task_10.json
+
+Elapsed run time = 840.9437 s
+Command succeeded cleanly.
+Task 10 complete at Sun Aug  9 05:46:50 PM EDT 2026.

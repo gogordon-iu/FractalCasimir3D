@@ -1,0 +1,72 @@
+==================================================
+SLURM ARRAY TASK ID: 120 / 224
+Running on node: x1000c3s5b1n0
+Start time: Sun Aug  9 08:24:48 PM EDT 2026
+==================================================
+Reading parameters from sweep_configs_sweet_spot/config_120.json...
+Executing 3D FDTD Simulation: Alpha=80.0 deg, Theta=82.0 deg, d=0.05 um, L=2.0 um, Res=40...
+==================================================
+RUNNING CRASH-PROOF MEEP SIMULATION WRAPPER
+==================================================
+Executing: /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python execution/run_meep_simulation.py --L 2.0 --d 0.05 --N 3 --N-bottom 3 --corrugated --corrugation-angle 80.0 --theta 82.0 --material Phosphorene_tuned --res 40 --eps-bg 2.1 --config all --task-idx 120
+Starting simulation: d=0.05 um, N_top=3, N_bottom=3, material=Phosphorene_tuned, resolution=40, nmax=3, theta=82.0, eps_bg=2.1, config=all, stepped_sieve=False, corrugated=True
+Parallel configuration: 1 processes divided into 1 subgroups of size 1 processes each.
+
+Elapsed run time = 0.0074 s
+Command failed with exit status 1.
+==================================================
+[CRASH DETECTED] Task 120 exited with status code 1
+==================================================
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	results_twist_L_0.30_20260701_175212/
+	results_twist_L_0.30_20260702_063402/
+	results_twist_L_0.40_20260701_200312/
+	results_twist_L_0.40_20260702_081450/
+	results_twist_L_0.40_20260702_093143/
+	results_twist_L_0.40_20260702_093145/
+	results_twist_L_0.50_20260701_173609/
+	results_twist_L_0.50_20260701_223307/
+	results_twist_L_0.50_20260702_100649/
+	results_twist_L_0.50_20260702_153659/
+	results_twist_L_0.50_20260702_153930/
+	results_twist_L_0.60_20260701_233710/
+	results_twist_L_0.60_20260702_003645/
+	results_twist_L_0.60_20260702_121210/
+	results_twist_L_0.60_20260702_153702/
+	results_twist_L_0.60_20260702_153931/
+	results_twist_L_0.80_20260710_023306/
+	results_twist_L_0.80_20260710_060552/
+	results_twist_L_0.80_20260713_124139/
+	results_twist_L_1.00_20260710_023307/
+	results_twist_L_1.00_20260710_060553/
+	results_twist_L_1.00_20260713_124140/
+	results_twist_L_1.20_20260710_023308/
+	results_twist_L_1.20_20260710_060554/
+	results_twist_L_1.20_20260713_124141/
+	results_twist_L_1.40_20260710_023309/
+	results_twist_L_1.40_20260710_060555/
+	results_twist_L_1.40_20260713_124142/
+	results_twist_L_1.40_20260713_132043/
+	results_twist_L_1.60_20260715_013710/
+	results_twist_L_1.60_20260715_201240/
+	results_twist_L_1.60_20260715_230654/
+	results_twist_L_1.80_20260715_013711/
+	results_twist_L_1.80_20260715_201241/
+	results_twist_L_1.80_20260715_230656/
+	results_twist_L_2.00_20260715_013712/
+	results_twist_L_2.00_20260715_201242/
+	results_twist_L_2.00_20260715_230657/
+	results_twist_L_2.00_20260716_085348/
+	results_twist_L_2.00_20260717_170933/
+	results_twist_L_4.00_20260720_145217/
+
+nothing added to commit but untracked files present (use "git add" to track)
+
+[CRASH HANDLER] Logged crash details to '.tmp/crash_logs/crash_task_120_20260809_202450.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+[CRASH HANDLER] Successfully pushed crash log to GitHub!
+Task 120 complete at Sun Aug  9 08:24:51 PM EDT 2026.
