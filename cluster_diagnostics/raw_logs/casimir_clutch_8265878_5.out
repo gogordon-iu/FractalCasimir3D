@@ -1,0 +1,80 @@
+================================================================================
+CASIMIR_CLUTCH TASK: 5 / 10
+Host: x1000c7s5b0n1
+Started: Wed Sep 16 01:35:25 PM EDT 2026
+================================================================================
+Reading task parameters from sweep_configs_clutch/config_005.json...
+Executing Quantum Clutch Simulation
+Label: Clutch: Menger Spire (N=3) vs Sierpinski Sieve (N=3), d=40nm, th=90.0deg
+Params: d=0.04 um, N_top=3, N_bot=3, mat=Gold, res=60, nmax=3, theta=90.0 deg, alpha=75.0 deg, r_tip=5.0 nm, eps=1.0
+==================================================
+RUNNING CRASH-PROOF MEEP SIMULATION WRAPPER
+==================================================
+Executing: srun -n 128 /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python execution/run_meep_simulation.py --L 2.0 --d 0.04 --N 3 --N-bottom 3 --theta 90.0 --material Gold --res 60 --nmax 3 --eps-bg 1.0 --config all --no-cache --clutch --corrugation-angle 75.0 --r-tip 5.0
+
+Elapsed run time = 0.0524 s
+Starting simulation: d=0.04 um, N_top=3, N_bottom=3, material=Gold, resolution=60, nmax=3, theta=90.0, eps_bg=1.0, config=all, clutch=True, stepped_sieve=False, corrugated=False
+Parallel configuration: 128 processes running 108 parallel moment partitions.
+
+Elapsed run time = 0.0550 s
+
+Elapsed run time = 0.0550 s
+
+Elapsed run time = 0.0549 s
+
+Elapsed run time = 0.0551 s
+
+Elapsed run time = 0.0550 s
+
+Elapsed run time = 0.0552 s
+
+Elapsed run time = 0.0552 s
+
+Elapsed run time = 0.0552 s
+
+Elapsed run time = 0.0551 s
+
+Elapsed run time = 0.0555 s
+
+Elapsed run time = 0.0552 s
+
+Elapsed run time = 0.0553 s
+
+Elapsed run time = 0.0554 s
+
+Elapsed run time = 0.0553 s
+
+Elapsed run time = 0.0555 s
+
+Elapsed run time = 0.0555 s
+
+Elapsed run time = 0.0551 s
+
+Elapsed run time = 0.0554 s
+
+Elapsed run time = 0.0554 s
+
+Elapsed run time = 14068.5699 s
+
+Elapsed run time = 14079.7980 s
+
+Elapsed run time = 14097.3042 s
+
+Elapsed run time = 14235.1265 s
+
+Elapsed run time = 20809.4000 s
+
+Elapsed run time = 20826.4681 s
+
+Elapsed run time = 20858.1997 s
+
+Elapsed run time = 20858.3126 s
+
+Elapsed run time = 21117.4918 s
+
+Elapsed run time = 21134.6644 s
+
+Elapsed run time = 21150.1984 s
+
+Elapsed run time = 21174.8520 s
+  [BOTH][Rank 0] Done moment 1/1 (task 0): force_integral=-6.119281e-02

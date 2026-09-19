@@ -1,0 +1,78 @@
+================================================================================
+CASIMIR_CLUTCH TASK: 6 / 10
+Host: x1002c7s4b0n0
+Started: Wed Sep 16 04:02:38 AM EDT 2026
+================================================================================
+Reading task parameters from sweep_configs_clutch/config_006.json...
+Executing Quantum Clutch Simulation
+Label: Clutch: Menger Spire (N=3) vs Sierpinski Sieve (N=3), d=80nm, th=0.0deg
+Params: d=0.08 um, N_top=3, N_bot=3, mat=Gold, res=80, theta=0.0 deg, alpha=75.0 deg, r_tip=5.0 nm, eps=1.0
+==================================================
+RUNNING CRASH-PROOF MEEP SIMULATION WRAPPER
+==================================================
+Executing: srun -n 128 /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python execution/run_meep_simulation.py --L 2.0 --d 0.08 --N 3 --N-bottom 3 --theta 0.0 --material Gold --res 80 --eps-bg 1.0 --config all --no-cache --clutch --corrugation-angle 75.0 --r-tip 5.0
+
+Elapsed run time = 0.0209 s
+
+Elapsed run time = 0.0214 s
+
+Elapsed run time = 0.0213 s
+
+Elapsed run time = 0.0214 s
+
+Elapsed run time = 0.0215 s
+
+Elapsed run time = 0.0215 s
+
+Elapsed run time = 0.0216 s
+
+Elapsed run time = 0.0208 s
+Starting simulation: d=0.08 um, N_top=3, N_bottom=3, material=Gold, resolution=80, nmax=3, theta=0.0, eps_bg=1.0, config=all, clutch=True, stepped_sieve=False, corrugated=False
+Parallel configuration: 128 processes running 108 parallel moment partitions.
+
+Elapsed run time = 0.0230 s
+
+Elapsed run time = 0.0226 s
+
+Elapsed run time = 0.0229 s
+
+Elapsed run time = 0.0232 s
+
+Elapsed run time = 0.0226 s
+
+Elapsed run time = 0.0231 s
+
+Elapsed run time = 0.0228 s
+
+Elapsed run time = 0.0233 s
+
+Elapsed run time = 0.0234 s
+
+Elapsed run time = 0.0235 s
+
+Elapsed run time = 0.0234 s
+
+Elapsed run time = 0.0231 s
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+[CRASH HANDLER] Logged crash details to '.tmp/crash_logs/crash_task_-1_20260916_040514.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+[CRASH HANDLER] Logged crash details to '.tmp/crash_logs/crash_task_-1_20260916_040521.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+Command failed with exit status 137.
+==================================================
+[CRASH DETECTED] Task 6 exited with status code 137
+==================================================
+
+[CRASH HANDLER] Logged crash details to '.tmp/crash_logs/crash_task_6_20260916_040538.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+[CRASH HANDLER] Successfully pushed crash log to GitHub!
+Clutch Task 6 (Clutch: Menger Spire (N=3) vs Sierpinski Sieve (N=3), d=80nm, th=0.0deg) completed with exit code 137 at Wed Sep 16 04:05:39 AM EDT 2026.

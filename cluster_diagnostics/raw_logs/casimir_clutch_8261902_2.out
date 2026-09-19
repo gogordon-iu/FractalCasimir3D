@@ -1,0 +1,64 @@
+================================================================================
+CASIMIR_CLUTCH TASK: 2 / 10
+Host: x1002c7s4b0n0
+Started: Wed Sep 16 03:57:43 AM EDT 2026
+================================================================================
+Reading task parameters from sweep_configs_clutch/config_002.json...
+Executing Quantum Clutch Simulation
+Label: Clutch: Menger Spire (N=3) vs Sierpinski Sieve (N=3), d=40nm, th=30.0deg
+Params: d=0.04 um, N_top=3, N_bot=3, mat=Gold, res=80, theta=30.0 deg, alpha=75.0 deg, r_tip=5.0 nm, eps=1.0
+==================================================
+RUNNING CRASH-PROOF MEEP SIMULATION WRAPPER
+==================================================
+Executing: srun -n 128 /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python execution/run_meep_simulation.py --L 2.0 --d 0.04 --N 3 --N-bottom 3 --theta 30.0 --material Gold --res 80 --eps-bg 1.0 --config all --no-cache --clutch --corrugation-angle 75.0 --r-tip 5.0
+
+Elapsed run time = 0.1211 s
+Starting simulation: d=0.04 um, N_top=3, N_bottom=3, material=Gold, resolution=80, nmax=3, theta=30.0, eps_bg=1.0, config=all, clutch=True, stepped_sieve=False, corrugated=False
+Parallel configuration: 128 processes running 108 parallel moment partitions.
+
+Elapsed run time = 0.1238 s
+
+Elapsed run time = 0.1239 s
+
+Elapsed run time = 0.1238 s
+
+Elapsed run time = 0.1236 s
+
+Elapsed run time = 0.1235 s
+
+Elapsed run time = 0.1242 s
+
+Elapsed run time = 0.1244 s
+
+Elapsed run time = 0.1245 s
+
+Elapsed run time = 0.1241 s
+
+Elapsed run time = 0.1245 s
+
+Elapsed run time = 0.1240 s
+
+Elapsed run time = 0.1241 s
+
+Elapsed run time = 0.1242 s
+
+Elapsed run time = 0.1241 s
+
+Elapsed run time = 0.1242 s
+
+Elapsed run time = 0.1243 s
+
+Elapsed run time = 0.1241 s
+
+Elapsed run time = 0.1242 s
+
+Elapsed run time = 0.1243 s
+Command failed with exit status 137.
+==================================================
+[CRASH DETECTED] Task 2 exited with status code 137
+==================================================
+
+[CRASH HANDLER] Logged crash details to '.tmp/crash_logs/crash_task_2_20260916_040236.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+[CRASH HANDLER] Successfully pushed crash log to GitHub!
+Clutch Task 2 (Clutch: Menger Spire (N=3) vs Sierpinski Sieve (N=3), d=40nm, th=30.0deg) completed with exit code 137 at Wed Sep 16 04:02:37 AM EDT 2026.

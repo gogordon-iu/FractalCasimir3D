@@ -1,0 +1,64 @@
+================================================================================
+CASIMIR_CLUTCH TASK: 7 / 10
+Host: x1001c4s0b1n1
+Started: Fri Sep 18 03:12:44 PM EDT 2026
+================================================================================
+Reading task parameters from sweep_configs_clutch/config_007.json...
+Executing Quantum Clutch Simulation
+Label: Clutch: Menger Spire (N=3) vs Sierpinski Sieve (N=3), d=80nm, th=30.0deg
+Params: d=0.08 um, N_top=3, N_bot=3, mat=Gold, res=60, nmax=3, theta=30.0 deg, alpha=75.0 deg, r_tip=5.0 nm, eps=1.0
+==================================================
+RUNNING CRASH-PROOF MEEP SIMULATION WRAPPER
+==================================================
+Executing: srun -n 128 /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python execution/run_meep_simulation.py --L 2.0 --d 0.08 --N 3 --N-bottom 3 --theta 30.0 --material Gold --res 60 --nmax 3 --eps-bg 1.0 --config all --no-cache --clutch --corrugation-angle 75.0 --r-tip 5.0
+Starting simulation: d=0.08 um, N_top=3, N_bottom=3, material=Gold, resolution=60, nmax=3, theta=30.0, eps_bg=1.0, config=all, clutch=True, stepped_sieve=False, corrugated=False
+Parallel configuration: 128 processes running 108 parallel moment partitions.
+
+Elapsed run time = 0.1514 s
+
+Elapsed run time = 0.1526 s
+
+Elapsed run time = 0.1528 s
+
+Elapsed run time = 0.1526 s
+
+Elapsed run time = 0.1527 s
+
+Elapsed run time = 0.1531 s
+
+Elapsed run time = 0.1530 s
+
+Elapsed run time = 0.1539 s
+
+Elapsed run time = 0.1530 s
+
+Elapsed run time = 0.1521 s
+
+Elapsed run time = 0.1534 s
+
+Elapsed run time = 0.1538 s
+
+Elapsed run time = 0.1536 s
+
+Elapsed run time = 0.1536 s
+
+Elapsed run time = 0.1533 s
+
+Elapsed run time = 0.1534 s
+
+Elapsed run time = 0.1542 s
+
+Elapsed run time = 0.1537 s
+
+Elapsed run time = 0.1525 s
+
+Elapsed run time = 0.1540 s
+
+Elapsed run time = 32467.6965 s
+
+Elapsed run time = 32652.1081 s
+
+Elapsed run time = 40329.8544 s
+
+Elapsed run time = 40425.0237 s
+  [BOTH][Rank 0] Done moment 1/1 (task 0): force_integral=+2.177952e-01
