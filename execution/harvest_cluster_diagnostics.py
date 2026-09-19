@@ -66,22 +66,32 @@ def query_slurm_accounting(job_ids=None):
     return records
 
 def scan_for_log_files():
-    """Scans .tmp, root, and cluster paths for relevant log and error files."""
+    """Scans .tmp, root, and cluster paths for clutch simulation logs and crash reports."""
     candidate_files = []
+    clutch_patterns = [
+        "casimir_clutch_*.out", "casimir_clutch_*.err",
+        "*8261902*", "*8265878*", "*8280830*",
+        "temp_force_*clutch*.json", "crash_task_*.log",
+        "crash_logs/*.log"
+    ]
     
     # Check .tmp directory
     tmp_dir = os.path.join(REPO_ROOT, ".tmp")
     if os.path.exists(tmp_dir):
-        for pattern in ["*.out", "*.err", "*.log", "temp_force_*.json", "chk_*.json", "crash_logs/*.log"]:
+        for pattern in clutch_patterns:
             candidate_files.extend(glob.glob(os.path.join(tmp_dir, pattern)))
 
     # Check root repo
-    for pattern in ["*.out", "*.err", "slurm-*.out"]:
+    for pattern in ["casimir_clutch_*.out", "casimir_clutch_*.err", "slurm-*.out"]:
         candidate_files.extend(glob.glob(os.path.join(REPO_ROOT, pattern)))
+
+    # Check cluster_diagnostics/crash_logs
+    if os.path.exists(CRASH_DIR):
+        candidate_files.extend(glob.glob(os.path.join(CRASH_DIR, "*.log")))
 
     # Check cluster_diagnostics/raw_logs
     if os.path.exists(RAW_LOGS_DIR):
-        for pattern in ["*.out", "*.err", "*.log"]:
+        for pattern in ["casimir_clutch_*.out", "casimir_clutch_*.err", "*.log"]:
             candidate_files.extend(glob.glob(os.path.join(RAW_LOGS_DIR, pattern)))
 
     return sorted(list(set(candidate_files)))
