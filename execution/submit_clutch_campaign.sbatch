@@ -91,4 +91,8 @@ bash execution/run_meep_wrapper.sh srun -n 128 $PYTHON_EXEC execution/run_meep_s
 
 EXIT_CODE=$?
 echo "Clutch Task $SLURM_ARRAY_TASK_ID ($LABEL) completed with exit code $EXIT_CODE at $(date)."
+
+mkdir -p cluster_diagnostics/raw_logs
+cp -f .tmp/casimir_clutch_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* cluster_diagnostics/raw_logs/ 2>/dev/null || true
+
 exit $EXIT_CODE
