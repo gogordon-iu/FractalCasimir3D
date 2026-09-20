@@ -7,7 +7,6 @@ if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
 import meep as mp
-mp.quiet(True)
 mp.verbosity(0)
 import numpy as np
 import ctypes
@@ -671,65 +670,18 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     if K == 1:
         return total_force
 
-    # Sum the force over all subgroups using MPI reduction or file-based aggregation fallback
+    # Sum the force over all subgroups using direct MPI reduction
     try:
         from mpi4py import MPI
         comm = MPI.COMM_WORLD
         if comm.Get_size() > 1 and mp.count_processors() > 1:
             global_force_sum = comm.allreduce(total_force, op=MPI.SUM)
             subgroup_size = comm.Get_size() / K
-            final_force = global_force_sum / subgroup_size
-            return final_force
-        else:
-            raise RuntimeError("Use file aggregation for multi-process Slurm launch")
-    except Exception:
-        import time
-        global_rank = int(os.environ.get("SLURM_PROCID", 0))
-        slurm_job = os.environ.get("SLURM_ARRAY_JOB_ID", os.environ.get("SLURM_JOB_ID", "local"))
-        slurm_task = os.environ.get("SLURM_ARRAY_TASK_ID", "0")
-        task_tag = f"job_{slurm_job}_task_{slurm_task}_N_{N}_Nbot_{N_bottom}_d_{d:.4f}_th_{theta:.1f}_al_{corrugation_angle:.1f}_mat_{material}_L_{L:.2f}"
-        
-        # Subgroup master writes its total_force
-        if subgroup_index < K:
-            os.makedirs(".tmp", exist_ok=True)
-            temp_file = f".tmp/temp_force_{task_tag}_{config}_subgroup_{subgroup_index}.json"
-            with open(temp_file, "w") as f:
-                json.dump({"force": float(total_force)}, f)
-                
-        # Global rank 0 waits and sums
-        if global_rank == 0:
-            final_force = 0.0
-            for i in range(K):
-                temp_file = f".tmp/temp_force_{task_tag}_{config}_subgroup_{i}.json"
-                wait_count = 0
-                while not os.path.exists(temp_file) and wait_count < 60:
-                    time.sleep(0.5)
-                    wait_count += 1
-                if not os.path.exists(temp_file):
-                    raise RuntimeError(f"Subgroup {i} failed to write {temp_file} within 30s. A worker process likely died.")
-                success = False
-                retry_count = 0
-                while not success and retry_count < 50:
-                    try:
-                        if os.path.exists(temp_file):
-                            with open(temp_file, "r") as f:
-                                data = json.load(f)
-                                final_force += data["force"]
-                            success = True
-                    except (json.JSONDecodeError, PermissionError):
-                        time.sleep(0.1)
-                        retry_count += 1
-                if not success:
-                    raise RuntimeError(f"Failed to read force from {temp_file} after retries.")
-                try:
-                    if os.path.exists(temp_file):
-                        os.remove(temp_file)
-                except OSError:
-                    pass
-        else:
-            final_force = 0.0
-            
-    return final_force
+            return global_force_sum / subgroup_size
+    except ImportError:
+        pass
+
+    return total_force
 
 
 def main():
@@ -764,8 +716,9 @@ def main():
     try:
         from execution.crash_handler import setup_global_exception_handler
         setup_global_exception_handler(args.task_idx, vars(args))
-    except Exception as exc_err:
-        pass
+    except (ImportError, RuntimeError, OSError) as exc_err:
+        import sys
+        print(f"Note: Global exception handler setup skipped: {exc_err}", file=sys.stderr)
     global_rank = int(os.environ.get("SLURM_PROCID", 0))
     total_ranks = int(os.environ.get("SLURM_NTASKS", 1))
     num_tasks = 36 * args.nmax
@@ -788,8 +741,8 @@ def main():
                             tot_mem_gb = float(m_line.split()[1]) / (1024.0 * 1024.0)
                             usable_ram_gb = tot_mem_gb * 0.75  # 75% for MEEP subgroups, 25% safety margin for OS/MPI
                             break
-            except Exception:
-                pass
+            except (OSError, ValueError, IndexError):
+                usable_ram_gb = 180.0
 
             t_top_geom, t_bot_geom, _, _ = compute_plate_thicknesses(
                 clutch=args.clutch, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, stepped_sieve=args.stepped_sieve
@@ -813,7 +766,7 @@ def main():
         from mpi4py import MPI
         if MPI.COMM_WORLD.Get_size() > 1 and mp.count_processors() > 1:
             global_rank = MPI.COMM_WORLD.Get_rank()
-    except Exception:
+    except ImportError:
         pass
         
     if global_rank == 0:
@@ -827,9 +780,10 @@ def main():
             args.eps_bg = IMMERSION_MEDIA[args.medium]["eps_static"]
     r_tip_um = args.r_tip / 1000.0
 
-    # Checkpointing and cache tags (version 3 with unambiguous geometry separation)
+    # Checkpointing and cache tags (version 4 for verified clutch geometry, version 3 for others)
     rtip_str = f"_rtip_{args.r_tip:.1f}" if ((args.corrugated or args.clutch) and args.r_tip > 0.0) else ""
     med_str = f"_med_{args.medium}" if args.medium and args.medium not in ["Vacuum", "None"] else ""
+    chk_version = "v4" if args.clutch else "v3"
     if args.clutch:
         geom_tag = f"_clutch_al_{args.corrugation_angle:.1f}{rtip_str}"
     elif args.corrugated:
@@ -838,7 +792,7 @@ def main():
         geom_tag = "_sieve"
     else:
         geom_tag = "_planar"
-    task_chk_tag = f"v3_d_{args.d:.4f}_Ntop_{args.N}_Nbot_{args.N_bottom}_mat_{args.material}_res_{args.res}_th_{args.theta:.1f}{geom_tag}{med_str}_L_{args.L:.2f}"
+    task_chk_tag = f"{chk_version}_d_{args.d:.4f}_Ntop_{args.N}_Nbot_{args.N_bottom}_mat_{args.material}_res_{args.res}_th_{args.theta:.1f}{geom_tag}{med_str}_L_{args.L:.2f}"
     chk_both = f".tmp/chk_{task_chk_tag}_both.json"
     chk_self = f".tmp/chk_{task_chk_tag}_self.json"
     
@@ -867,8 +821,9 @@ def main():
                 if global_rank == 0:
                     print(f"Task already complete! Found cached result in {check_file} (F_sub={cached_res['force_subtracted']:.6e}). Skipping.")
                 return
-        except Exception:
-            pass
+        except (json.JSONDecodeError, OSError, KeyError) as err:
+            if global_rank == 0:
+                print(f"Warning: Corrupted cache file {check_file} ({err}). Recomputing.")
 
     # We run the cases for vacuum subtraction with checkpoint resume:
     f_both = 0.0
@@ -881,7 +836,9 @@ def main():
                     f_both = float(json.load(f)["force"])
                 if global_rank == 0:
                     print(f"Loaded cached 'both' force: {f_both:.6e} from {chk_both}")
-            except Exception:
+            except (json.JSONDecodeError, OSError, KeyError, ValueError) as err:
+                if global_rank == 0:
+                    print(f"Warning: Corrupted checkpoint {chk_both} ({err}). Recomputing.")
                 f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch)
         else:
             f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch)
@@ -897,7 +854,9 @@ def main():
                     f_self = float(json.load(f)["force"])
                 if global_rank == 0:
                     print(f"Loaded cached 'self' force: {f_self:.6e} from {chk_self}")
-            except Exception:
+            except (json.JSONDecodeError, OSError, KeyError, ValueError) as err:
+                if global_rank == 0:
+                    print(f"Warning: Corrupted checkpoint {chk_self} ({err}). Recomputing.")
                 f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch)
         else:
             f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch)
@@ -1025,7 +984,8 @@ def main():
                         "d_um": args.d,
                         "N": args.N,
                         "N_bottom": args.N_bottom,
-                        "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
+                        "clutch": args.clutch,
+                        "corrugation_angle": args.corrugation_angle if (args.corrugated or args.clutch) else 0.0,
                         "r_tip_nm": args.r_tip,
                         "medium": args.medium if args.medium else "Vacuum",
                         "material": args.material,

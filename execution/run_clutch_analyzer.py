@@ -70,13 +70,13 @@ def main():
                     f_sub = data.get("force_subtracted")
                     f_both = data.get("force_both")
                     f_self = data.get("force_self")
-            except Exception:
-                pass
+            except (json.JSONDecodeError, OSError, KeyError) as err:
+                print(f"Warning: Corrupted result file {expected_fp} ({err}).")
         else:
-            # Checkpoint fallback check
+            # Checkpoint fallback check (strictly require v4 verified geometry checkpoints)
             rtip_str = f"_rtip_{float(cfg.get('r_tip_nm', 5.0)):.1f}" if float(cfg.get('r_tip_nm', 5.0)) > 0 else ""
             geom_tag = f"_clutch_al_{float(cfg.get('corrugation_angle', 75.0)):.1f}{rtip_str}"
-            chk_tag = f"v3_d_{float(cfg['d']):.4f}_Ntop_{cfg['N_top']}_Nbot_{cfg.get('N_bot', 3)}_mat_{cfg['material']}_res_{cfg['resolution']}_th_{float(cfg['theta']):.1f}{geom_tag}_L_{float(cfg.get('L', 2.0)):.2f}"
+            chk_tag = f"v4_d_{float(cfg['d']):.4f}_Ntop_{cfg['N_top']}_Nbot_{cfg.get('N_bot', 3)}_mat_{cfg['material']}_res_{cfg['resolution']}_th_{float(cfg['theta']):.1f}{geom_tag}_L_{float(cfg.get('L', 2.0)):.2f}"
             chk_b = f".tmp/chk_{chk_tag}_both.json"
             chk_s = f".tmp/chk_{chk_tag}_self.json"
             if os.path.exists(chk_b) and os.path.exists(chk_s):
@@ -89,8 +89,8 @@ def main():
                         f_sub = fb_val - fs_val
                         A_eff = get_effective_area(cfg["N_top"], cfg.get("L", 2.0))
                         p_val = f_sub / A_eff
-                except Exception:
-                    pass
+                except (json.JSONDecodeError, OSError, KeyError) as err:
+                    print(f"Warning: Corrupted checkpoint pair {chk_b} / {chk_s} ({err}).")
 
         matched.append({
             "task_id": cfg["task_id"],
@@ -208,7 +208,7 @@ def main():
             plt.savefig(fig_path, dpi=300)
             plt.close()
             print(f"Generated Clutch Characteristic Figure: '{fig_path}'.")
-        except Exception as e:
+        except (ImportError, RuntimeError, OSError) as e:
             print(f"[Note] Skipping matplotlib figure generation on cluster: {e}")
 
     # Auto-sync to GitHub
@@ -224,7 +224,7 @@ def main():
             len(completed),
             len(matched)
         )
-    except Exception as e:
+    except (ImportError, subprocess.SubprocessError, OSError) as e:
         print(f"[Git Auto-Sync Note] {e}")
 
     print("=" * 80)

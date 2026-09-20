@@ -27,3 +27,25 @@
 ## [2026-09-14] Standalone Script Execution ModuleNotFoundError for execution Package
 - **Bug**: Invoking analyzer scripts directly via `python execution/run_phase*.py` set `sys.path[0]` to `execution/`, causing canonical package imports like `from execution.git_sync import git_sync_results` to fail with `ModuleNotFoundError`.
 - **Solution**: Injected canonical `REPO_ROOT` into `sys.path` at the top of all analyzer scripts and anchored subprocess execution paths to `REPO_ROOT` without fallback imports.
+
+## [2026-09-19] Blender 4.5 Render Engine Enum TypeError in Headless Visualizer
+- **Bug**: Attempting to set `scene.render.engine = "BLENDER_EEVEE"` crashed in Blender 4.5 with a `TypeError` due to the removal of legacy Eevee in favor of the Eevee Next architecture.
+- **Solution**: Set `scene.render.engine = "BLENDER_EEVEE_NEXT"` for all headless render passes.
+
+## [2026-09-19] Tertiary (N=3) Spire Offset Misalignment in Dual-Fractal Quantum Clutch
+- **Bug**: The y-offsets of Level 3 spires in `generate_menger_spire_array` mistakenly scaled by the spire base width (`w1_base/3.0`) instead of the spatial grid division (`L/9.0`), causing all 24 tertiary spires to miss the sieve apertures and collide with solid substrate walls.
+- **Solution**: Replaced the spire-width factor with the correct geometric sub-strip grid spacing `w2_grid = (L / 3.0) / 3.0` in `generate_menger_spire_array`, restoring exact 1:1 mathematical alignment with the sieve apertures.
+
+## [2026-09-19] File-Polling Sleep Loops and Blind Exception Swallowing in MEEP Simulation Engine
+- **Bug**: Subgroup force aggregation in `run_meep_simulation.py` relied on worker subgroups writing temporary JSON files and polling them in a `time.sleep(0.5)` loop, while blind `except Exception: pass` blocks masked corrupted checkpoint data and system failures.
+- **Solution**: Replaced the disk file-polling loop with direct return and MPI `allreduce` reduction, and replaced all blind `except Exception: pass` blocks with specific exception handlers and diagnostic logging.
+
+## [2026-09-19] Synthetic Force Fallback Injection in Postprocessing Pipeline
+- **Bug**: `postprocess_and_plot.py` called `get_fallback_data` to inject artificial phenomenological Casimir forces with synthetic geometric corrections whenever FDTD simulation data was absent.
+- **Solution**: Excised `get_fallback_data`, introduced a pure analytical Lifshitz PFA calculator, and explicitly flagged missing simulation data rather than fabricating artificial forces.
+
+## [2026-09-19] MEEP 1.30.0 mp.quiet(True) Deprecation RuntimeWarning
+- **Bug**: `mp.quiet(True)` in `run_meep_simulation.py` triggered a `RuntimeWarning: quiet has been deprecated; use the Verbosity class instead` on modern MEEP environments.
+- **Solution**: Removed all legacy `mp.quiet(True)` invocations in favor of standard `mp.verbosity(0)`.
+
+

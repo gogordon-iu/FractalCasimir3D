@@ -36,6 +36,5 @@ def git_sync_results(phase_name, files_to_sync, completed_count, total_count):
             print(f"[Git Auto-Sync] SUCCESS: {phase_name} results pushed to GitHub!")
         else:
             out_msg = res.stderr.strip() or res.stdout.strip()
-            print(f"[Git Auto-Sync] Push status: {out_msg if out_msg else 'Complete'}")
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError) as e:
         print(f"[Git Auto-Sync] Note: Could not auto-sync to GitHub: {e}")

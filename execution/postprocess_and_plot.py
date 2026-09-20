@@ -26,31 +26,20 @@ def compute_sha256(filepath):
             sha256.update(chunk)
     return sha256.hexdigest()
 
-def get_fallback_data(d, N, material, T):
+def compute_pfa_force(d, N, material, T=0):
     """
-    Physical fallback model for Casimir force if FDTD simulation data is missing.
-    Matches the infinite-plate PFA scaling.
+    Analytical Proximity Force Approximation (PFA) baseline for prefractal generation N.
+    Derived strictly from Lifshitz theory force density integrated over the fractal plate area.
     """
     area = ((8.0 / 9.0)**(N - 1)) * (0.3**2)
-    # Lifshitz force density density approximation
     if material == "PEC":
         f_dens = - (np.pi**2) / (240.0 * d**4)
     elif material == "Gold":
         f_dens = - (np.pi**2) / (240.0 * d**4) * 0.72
-    else: # Silicon
+    else:  # Silicon
         f_dens = - (np.pi**2) / (240.0 * d**4) * 0.35
         
     f_pfa = f_dens * area
-    
-    # 2. Geometric correction factor (pairwise breakdown at sharp fractal edges)
-    alpha = 0.08 * (N - 1)
-    beta = 0.45
-    lamb = 0.3 # cutoff length scale in microns
-    
-    if N > 1:
-        eta = - alpha * (d / 0.3)**beta * np.exp(-d / lamb)
-    else:
-        eta = - 0.02 * (d / 0.3)**0.2 * np.exp(-d / lamb)
     
     if T > 0:
         thermal_wavelength = 7.6 * (300.0 / T)
@@ -58,8 +47,7 @@ def get_fallback_data(d, N, material, T):
     else:
         t_factor = 1.0
         
-    f_exact = f_pfa * (1.0 + eta) * t_factor
-    return f_exact, f_pfa
+    return f_pfa * t_factor
 
 def get_eta(d, N):
     """Theoretical edge-correction deviation from PFA due to fractal boundaries."""
@@ -119,7 +107,7 @@ def main():
                             if key not in meep_data or res >= meep_res[key]:
                                 meep_data[key] = data["force_subtracted"]
                                 meep_res[key] = res
-                    except Exception as e:
+                    except (json.JSONDecodeError, OSError, KeyError) as e:
                         print(f"Error reading {filename}: {e}")
                     
     # Establish simulated separations and build simulation lookup table
@@ -139,8 +127,7 @@ def main():
                         val = force_val
                         break
                 if val is None:
-                    f_exact, _ = get_fallback_data(d, N, mat, 0)
-                    val = f_exact
+                    print(f"Notice: Missing FDTD simulation data for material={mat}, N={N}, d={d:.4f} um.")
                 sim_forces[mat][N].append(val)
                 
     # Interpolate the N=1 FDTD simulation baseline in log-log space to define the finite-size corrected baseline
@@ -148,6 +135,9 @@ def main():
     baselines = {}
     ratios = {}
     for mat in materials:
+        if any(v is None for v in sim_forces[mat][1]):
+            print(f"Notice: Incomplete N=1 baseline simulation data for material {mat}. Skipping interpolation.")
+            continue
         log_abs_F1 = np.log(np.abs(sim_forces[mat][1]))
         
         # Log-log baseline interpolator
@@ -207,7 +197,7 @@ def main():
                     f_pts = [pt["force_val"] for pt in pts]
                     pfa_force_N1 = np.interp(d * 1000.0, d_nm_pts, f_pts)
                 if pfa_force_N1 is None:
-                    _, pfa_force_N1 = get_fallback_data(d, 1, mat, T)
+                    pfa_force_N1 = compute_pfa_force(d, 1, mat, T)
                 
                 # 1. Append N=0 (Infinite Plates, no edge effects)
                 compiled_dataset["data"].append({
@@ -250,7 +240,7 @@ def main():
                         f_pts = [pt["force_val"] for pt in pts]
                         pfa_force = np.interp(d * 1000.0, d_nm_pts, f_pts)
                     if pfa_force is None:
-                        _, pfa_force = get_fallback_data(d, N, mat, T)
+                        pfa_force = compute_pfa_force(d, N, mat, T)
                         
                     compiled_dataset["data"].append({
                         "material": mat,

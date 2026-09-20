@@ -65,7 +65,8 @@ def log_crash_and_push(task_id, error_type, details, config_info=None):
             try:
                 with open(MASTER_CRASH_FILE, "r") as f:
                     master_data = json.load(f)
-            except Exception:
+            except (json.JSONDecodeError, OSError) as err:
+                print(f"[CRASH HANDLER WARNING] Corrupted master crash file ({err}). Resetting.")
                 master_data = []
                 
         master_data.append(crash_data)
@@ -80,7 +81,7 @@ def log_crash_and_push(task_id, error_type, details, config_info=None):
         subprocess.run(["git", "push"], check=False)
         print(f"[CRASH HANDLER] Successfully pushed crash log to GitHub!")
         
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as e:
         print(f"[CRASH HANDLER ERROR] Failed to log/push crash: {e}")
 
 def setup_global_exception_handler(task_id, config_info=None):
@@ -107,7 +108,7 @@ def setup_global_exception_handler(task_id, config_info=None):
     for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGABRT):
         try:
             signal.signal(sig, handle_signal)
-        except Exception:
+        except (ValueError, OSError, RuntimeError):
             pass
 
 if __name__ == "__main__":
