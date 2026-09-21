@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=128
 #SBATCH --time=12:00:00
 #SBATCH --array=1-10%5
-#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-type=BEGIN,END,FAIL,TIME_LIMIT
 #SBATCH --mail-user=gogordon@iu.edu
 #SBATCH -o .tmp/casimir_clutch_%A_%a.out
 #SBATCH -e .tmp/casimir_clutch_%A_%a.err
@@ -97,6 +97,13 @@ echo "Clutch Task $SLURM_ARRAY_TASK_ID ($LABEL) finished with exit code $EXIT_CO
 
 mkdir -p cluster_diagnostics/raw_logs
 cp -f .tmp/casimir_clutch_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* cluster_diagnostics/raw_logs/ 2>/dev/null || true
+
+# Sync task progress, email notification, update dashboard, and git push
+$PYTHON_EXEC execution/sync_task_progress.py \
+    --task-id $SLURM_ARRAY_TASK_ID \
+    --label "$LABEL" \
+    --config-file "$CONFIG_FILE" \
+    --exit-code $EXIT_CODE || true
 
 COMPLETE_FLAG=".tmp/task_${CFG_INDEX}_complete.flag"
 PENDING_FLAG=".tmp/task_${CFG_INDEX}_pending.flag"

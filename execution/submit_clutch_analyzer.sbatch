@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=16
 #SBATCH --time=01:00:00
-#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-type=BEGIN,END,FAIL,TIME_LIMIT
 #SBATCH --mail-user=gogordon@iu.edu
 #SBATCH -o .tmp/clutch_analyzer_%j.out
 #SBATCH -e .tmp/clutch_analyzer_%j.err
@@ -42,6 +42,9 @@ cd /N/project/gorengor_werewolf/FractalCasimir3D
 
 echo "Executing Quantum Clutch Analyzer & Generating Verification Tables/Figures..."
 $PYTHON_EXEC execution/run_clutch_analyzer.py
+
+# Update final master dashboard and push to GitHub
+$PYTHON_EXEC -c "import sys, os; sys.path.insert(0, os.getcwd()); from execution.sync_task_progress import update_master_dashboard, resilient_git_sync; update_master_dashboard(); resilient_git_sync('results(clutch): 100% campaign complete - final figures, tables, and summary pushed')" || true
 
 echo "Harvesting logs and pushing final diagnostics to GitHub..."
 $PYTHON_EXEC execution/harvest_cluster_diagnostics.py 2>/dev/null || true

@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --time=12:00:00
-#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-type=BEGIN,END,FAIL,TIME_LIMIT
 #SBATCH --mail-user=gogordon@iu.edu
 #SBATCH -o .tmp/clutch_conv_nmax3_%j.out
 #SBATCH -e .tmp/clutch_conv_nmax3_%j.err
@@ -68,6 +68,12 @@ echo "Convergence test finished with exit code $EXIT_CODE at $(date)."
 
 mkdir -p cluster_diagnostics/raw_logs
 cp -f .tmp/clutch_conv_nmax3_${SLURM_JOB_ID}.* cluster_diagnostics/raw_logs/ 2>/dev/null || true
+
+# Sync task progress, email notification, update dashboard, and git push
+$PYTHON_EXEC execution/sync_task_progress.py \
+    --task-id 999 \
+    --label "Clutch_Conv_nmax3_th_0.0" \
+    --exit-code $EXIT_CODE || true
 
 COMPLETE_FLAG=".tmp/task_999_complete.flag"
 PENDING_FLAG=".tmp/task_999_pending.flag"
