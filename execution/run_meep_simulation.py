@@ -854,7 +854,8 @@ def main():
         geom_tag = "_sieve"
     else:
         geom_tag = "_planar"
-    task_chk_tag = f"{chk_version}_d_{args.d:.4f}_Ntop_{args.N}_Nbot_{args.N_bottom}_mat_{args.material}_res_{args.res}_th_{args.theta:.1f}{geom_tag}{med_str}_L_{args.L:.2f}"
+    nmax_tag = f"_nmax_{args.nmax}" if args.nmax != 1 else ""
+    task_chk_tag = f"{chk_version}_d_{args.d:.4f}_Ntop_{args.N}_Nbot_{args.N_bottom}_mat_{args.material}_res_{args.res}_th_{args.theta:.1f}{geom_tag}{med_str}_L_{args.L:.2f}{nmax_tag}"
     chk_both = f".tmp/chk_{task_chk_tag}_both.json"
     chk_self = f".tmp/chk_{task_chk_tag}_self.json"
     
@@ -869,7 +870,7 @@ def main():
         nbot_str = f"_Nbot_{args.N_bottom}"
     else:
         nbot_str = ""
-    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
+    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}{nmax_tag}.json"
     
     check_file = None
     if not args.no_cache and os.path.exists(out_file):
@@ -1039,7 +1040,7 @@ def main():
                         }
                 else:
                     if args.config == "all":
-                        out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
+                        out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}{nmax_tag}.json"
                         result = {
                             "d_um": args.d,
                             "N": args.N,
@@ -1050,6 +1051,7 @@ def main():
                             "medium": args.medium if args.medium else "Vacuum",
                             "material": args.material,
                             "resolution": args.res,
+                            "nmax": args.nmax,
                             "theta_deg": args.theta,
                             "eps_bg": args.eps_bg,
                             "L": args.L,
@@ -1059,7 +1061,7 @@ def main():
                             "pressure_Pa": float((f_both - f_self) / A_eff)
                         }
                     else:
-                        out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}.json"
+                        out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}{nmax_tag}_config_{args.config}.json"
                         result = {
                             "d_um": args.d,
                             "N": args.N,
@@ -1070,6 +1072,7 @@ def main():
                             "medium": args.medium if args.medium else "Vacuum",
                             "material": args.material,
                             "resolution": args.res,
+                            "nmax": args.nmax,
                             "theta_deg": args.theta,
                             "eps_bg": args.eps_bg,
                             "L": args.L,

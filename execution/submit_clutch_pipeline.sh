@@ -59,9 +59,12 @@ echo -e "\n[Step 3/6] Checking cache and checkpoint options..."
 mkdir -p .tmp cluster_diagnostics/raw_logs results_clutch Papers/Fractal_Casimir_Nature_EM/tables Papers/Fractal_Casimir_Nature_EM/figures
 
 CLEAN_MODE=false
+WITH_CONVERGENCE=false
 for arg in "$@"; do
     if [ "$arg" = "--clean" ]; then
         CLEAN_MODE=true
+    elif [ "$arg" = "--with-convergence" ]; then
+        WITH_CONVERGENCE=true
     fi
 done
 
@@ -69,7 +72,7 @@ if [ "$CLEAN_MODE" = "true" ]; then
     echo "  [Clean Mode] Purging existing clutch cache, moments checkpoints, and task flags..."
     rm -f .tmp/chk_*clutch*.json .tmp/chk_moments_*clutch*.json
     rm -f .tmp/meep_*clutch*.json .tmp/task_*_complete.flag .tmp/task_*_pending.flag
-    rm -f .tmp/casimir_clutch_*.out .tmp/casimir_clutch_*.err .tmp/clutch_analyzer_*.out .tmp/clutch_analyzer_*.err
+    rm -f .tmp/casimir_clutch_*.out .tmp/casimir_clutch_*.err .tmp/clutch_analyzer_*.out .tmp/clutch_analyzer_*.err .tmp/clutch_conv_nmax3_*.out .tmp/clutch_conv_nmax3_*.err
 else
     echo "  [Resume Mode] Preserving existing moment checkpoints in .tmp/ (pass --clean to wipe and restart from scratch)."
 fi
@@ -104,23 +107,45 @@ if [ -z "$JOB_ID" ]; then
 fi
 echo "  Successfully queued Quantum Clutch Array Job ID: $JOB_ID"
 
+CONV_ID="None"
+if [ "$WITH_CONVERGENCE" = "true" ]; then
+    echo -e "\n[Optional] Submitting parallel Moment Multipole Convergence Test (nmax=3 on Task 1)..."
+    CONV_OUTPUT=$(sbatch execution/submit_clutch_convergence_nmax3.sbatch)
+    echo "  $CONV_OUTPUT"
+    CONV_ID=$(echo "$CONV_OUTPUT" | awk '{print $NF}')
+    echo "  Convergence Verification Job ID: $CONV_ID"
+fi
+
 echo "================================================================================"
 echo "QUANTUM CLUTCH PIPELINE ENQUEUED SUCCESSFULLY (12-HOUR AUTO-RESUBMIT CHAIN)"
 echo "================================================================================"
-echo "Initial Array Job ID: $JOB_ID (10 tasks, concurrency 5)"
+echo "Initial Array Job ID: $JOB_ID (10 tasks, concurrency 5, nmax=1)"
+if [ "$WITH_CONVERGENCE" = "true" ]; then
+echo "Convergence Job ID:   $CONV_ID (Task 1, nmax=3 multipole convergence)"
+fi
 echo "Walltime / Block:     12:00:00 per iteration (graceful checkpointing at 11h)"
 echo "Auto-Chaining:        Each task self-resubmits until all moments are 100% complete."
 echo "Automated Analyzer:   submit_clutch_analyzer.sbatch triggers automatically upon"
 echo "                      verified 100% completion of all 10 tasks."
+if [ "$WITH_CONVERGENCE" = "true" ]; then
+echo "Moment Analyzer:      analyze_moment_convergence.py triggers automatically upon"
+echo "                      verified 100% completion of nmax=3 test."
+fi
 echo ""
 echo "To monitor cluster queue:"
 echo "  squeue -u \$USER"
 echo ""
 echo "To inspect live task logs:"
 echo "  tail -f .tmp/casimir_clutch_${JOB_ID}_1.out"
+if [ "$WITH_CONVERGENCE" = "true" ]; then
+echo "  tail -f .tmp/clutch_conv_nmax3_${CONV_ID}.out"
+fi
 echo ""
 echo "To check task progress flags:"
 echo "  ls -l .tmp/task_*.flag"
+echo ""
+echo "To check moment convergence status at any time:"
+echo "  \"$PYTHON_EXEC\" execution/analyze_moment_convergence.py"
 echo ""
 echo "To manually harvest diagnostics and push to GitHub at any time:"
 echo "  bash execution/push_all_cluster_logs.sh"
