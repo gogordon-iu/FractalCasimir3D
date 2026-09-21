@@ -1,0 +1,82 @@
+================================================================================
+CASIMIR_CLUTCH TASK: 3 / 10
+Host: x1000c3s2b0n0
+Started: Sun Sep 20 04:51:23 AM EDT 2026
+================================================================================
+Reading task parameters from sweep_configs_clutch/config_003.json...
+Executing Quantum Clutch Simulation
+Label: Clutch: Menger Spire (N=3) vs Sierpinski Sieve (N=3), d=40nm, th=45.0deg
+Params: d=0.04 um, N_top=3, N_bot=3, mat=Gold, res=60, nmax=3, theta=45.0 deg, alpha=75.0 deg, r_tip=5.0 nm, eps=1.0
+==================================================
+RUNNING CRASH-PROOF MEEP SIMULATION WRAPPER
+==================================================
+Executing: srun -n 128 /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python execution/run_meep_simulation.py --L 2.0 --d 0.04 --N 3 --N-bottom 3 --theta 45.0 --material Gold --res 60 --nmax 3 --eps-bg 1.0 --config all --no-subgroups --clutch --corrugation-angle 75.0 --r-tip 5.0
+Starting simulation: d=0.04 um, N_top=3, N_bottom=3, material=Gold, resolution=60, nmax=3, theta=45.0, eps_bg=1.0, config=all, clutch=True, stepped_sieve=False, corrugated=False
+Parallel configuration: 128 processes running 1 parallel moment partitions.
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260920_045328.log'.
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260920_045328.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260920_045328.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260920_045334.log'.
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260920_045334.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260920_045340.log'.
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260920_045340.log'.
+[CRASH HANDLER WARNING] Corrupted master crash file (Expecting value: line 1 column 1 (char 0)). Resetting.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260920_045345.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260920_045345.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260920_045351.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260920_045351.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+Command failed with exit status 1.
+==================================================
+[CRASH DETECTED] Task 3 exited with status code 1
+==================================================
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_3_20260920_045357.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+[CRASH HANDLER] Successfully pushed crash log to GitHub!
+Clutch Task 3 (Clutch: Menger Spire (N=3) vs Sierpinski Sieve (N=3), d=40nm, th=45.0deg) completed with exit code 1 at Sun Sep 20 04:53:58 AM EDT 2026.
