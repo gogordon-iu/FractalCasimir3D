@@ -1,0 +1,68 @@
+================================================================================
+CASIMIR_CLUTCH TASK: 8 / 10
+Host: x1000c2s2b1n1
+Started: Mon Sep 21 05:17:28 PM EDT 2026
+================================================================================
+Reading task parameters from sweep_configs_clutch/config_008.json...
+Executing Quantum Clutch Simulation
+Label: Clutch: Menger Spire (N=3) vs Sierpinski Sieve (N=3), d=80nm, th=45.0deg
+Params: d=0.08 um, N_top=3, N_bot=3, mat=Gold, res=60, nmax=1, theta=45.0 deg, alpha=75.0 deg, r_tip=5.0 nm, eps=1.0
+==================================================
+RUNNING CRASH-PROOF MEEP SIMULATION WRAPPER
+==================================================
+Executing: srun -n 128 /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python execution/run_meep_simulation.py --L 2.0 --d 0.08 --N 3 --N-bottom 3 --theta 45.0 --material Gold --res 60 --nmax 1 --eps-bg 1.0 --config all --no-subgroups --T-run 12.0 --max-walltime-hours 11.0 --campaign-task-id 8 --clutch --corrugation-angle 75.0 --r-tip 5.0
+Starting simulation: d=0.08 um, N_top=3, N_bottom=3, material=Gold, resolution=60, nmax=1, theta=45.0, eps_bg=1.0, config=all, clutch=True, stepped_sieve=False, corrugated=False
+Parallel configuration: 128 processes running 1 parallel moment partitions.
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260921_172208.log'.
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260921_172208.log'.
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260921_172208.log'.
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260921_172208.log'.
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260921_172208.log'.
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260921_172208.log'.
+[CRASH HANDLER WARNING] Corrupted master crash file (Expecting value: line 1 column 1 (char 0)). Resetting.
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_-1_20260921_172208.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+
+CRITICAL SIGNAL RECEIVED IN TASK -1: SIGTERM
+Command failed with exit status 1.
+==================================================
+[CRASH DETECTED] Task 8 exited with status code 1
+==================================================
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_8_20260921_172210.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+[main 60505d2] CRASH LOG: Task 8 failed on x1000c2s2b1n1 (ExitCode_1)
+ 2 files changed, 106 insertions(+)
+ create mode 100644 cluster_diagnostics/crash_logs/crash_task_8_20260921_172210.log
+[CRASH HANDLER] Successfully pushed crash log to GitHub!
+Clutch Task 8 (Clutch: Menger Spire (N=3) vs Sierpinski Sieve (N=3), d=80nm, th=45.0deg) finished with exit code 1 at Mon Sep 21 05:22:12 PM EDT 2026.
+Synchronizing progress and pushing reports for Task 8 (exit code 1)...
