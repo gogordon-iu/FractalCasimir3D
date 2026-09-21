@@ -74,33 +74,6 @@ def find_moments_count(task_id, nmax=1):
 
     return both_done + self_done
 
-def send_progress_email(to_email, subject, body):
-    """Sends email via mail or sendmail if available on the system."""
-    mail_bin = shutil.which("mail") or shutil.which("mailx")
-    if mail_bin:
-        try:
-            p = subprocess.Popen([mail_bin, "-s", subject, to_email], stdin=subprocess.PIPE, text=True)
-            p.communicate(input=body)
-            if p.returncode == 0:
-                print(f"[Email Notification] Successfully sent email to {to_email} via {mail_bin}.")
-                return
-        except Exception as e:
-            print(f"[Email Notification] mail tool error: {e}")
-
-    sendmail_bin = shutil.which("sendmail") or "/usr/sbin/sendmail"
-    if os.path.exists(sendmail_bin):
-        try:
-            msg = f"To: {to_email}\nSubject: {subject}\nFrom: BigRed200-Clutch <root@bigred200.uits.iu.edu>\n\n{body}\n"
-            p = subprocess.Popen([sendmail_bin, "-t", "-oi"], stdin=subprocess.PIPE, text=True)
-            p.communicate(input=msg)
-            if p.returncode == 0:
-                print(f"[Email Notification] Successfully sent email to {to_email} via {sendmail_bin}.")
-                return
-        except Exception as e:
-            print(f"[Email Notification] sendmail error: {e}")
-
-    print("[Email Notification] System mail utility not available. Relying on Slurm --mail-type directive.")
-
 def resilient_git_sync(commit_msg):
     """Performs git add, commit, fetch, rebase, and push with retries."""
     lock_file = os.path.join(REPO_ROOT, ".git", "index.lock")
@@ -301,7 +274,6 @@ def main():
     parser.add_argument("--label", type=str, default="", help="Task label")
     parser.add_argument("--config-file", type=str, default="", help="Path to config JSON")
     parser.add_argument("--exit-code", type=int, default=0, help="Simulation process exit code")
-    parser.add_argument("--email-to", type=str, default="gogordon@iu.edu", help="Email recipient")
     args = parser.parse_args()
 
     ensure_dirs()
@@ -373,32 +345,11 @@ def main():
     # Update master dashboard
     dashboard_data, dashboard_md = update_master_dashboard()
 
-    # Compose notification email
-    subject = f"[BigRed 200] Clutch Task {args.task_id} ({args.label}): {status} [{moments_done}/{total_m} moments, {pct:.1f}%]"
-    body = f"""================================================================================
-FRACTAL CASIMIR 3D: QUANTUM CLUTCH PROGRESS UPDATE
-================================================================================
-Task ID:           {args.task_id}
-Label:             {args.label}
-Status:            {status}
-Moments Evaluated: {moments_done} / {total_m} ({pct:.1f}%)
-Net Force:         {f'{f_net:+.6e}' if f_net is not None else 'In Progress'}
-Casimir Pressure:  {f'{p_val:+.4e} Pa' if p_val is not None else 'In Progress'}
-Timestamp:         {now_str}
-Exit Code:         {args.exit_code}
+    print(f"[Task Progress] Task {args.task_id} ({args.label}): {status} [{moments_done}/{total_m} moments ({pct:.1f}%)]")
+    if f_net is not None:
+        print(f"  -> Force: {f_net:+.6e}, Pressure: {p_val:+.4e} Pa")
 
-Continuation Status:
-{'- 100% Complete. Final results recorded in results_clutch/' if status == 'COMPLETE' else '- 12-hour block completed. Continuation job automatically queued to resume seamlessly.'}
-
---------------------------------------------------------------------------------
-CAMPAIGN DASHBOARD SUMMARY ({dashboard_data['completed_tasks_count']}/{dashboard_data['total_tasks_count']} Tasks Complete, {dashboard_data['overall_progress_percent']}% Total Moments):
---------------------------------------------------------------------------------
-{dashboard_md}
-================================================================================
-"""
-    send_progress_email(args.email_to, subject, body)
-
-    # Git commit and push
+    # Git commit and push with elaborated reports and dashboard
     commit_msg = f"progress(clutch): Task {args.task_id} ({args.label}) {status} [{moments_done}/{total_m} moments ({pct:.1f}%)]"
     resilient_git_sync(commit_msg)
 

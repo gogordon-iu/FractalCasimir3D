@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --time=12:00:00
-#SBATCH --mail-type=BEGIN,END,FAIL,TIME_LIMIT
+#SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu
 #SBATCH -o .tmp/clutch_conv_nmax3_%j.out
 #SBATCH -e .tmp/clutch_conv_nmax3_%j.err
@@ -43,6 +43,24 @@ export PYTHONPATH="/N/project/gorengor_werewolf/FractalCasimir3D:${PYTHONPATH}"
 cd /N/project/gorengor_werewolf/FractalCasimir3D
 mkdir -p .tmp cluster_diagnostics/raw_logs results_clutch
 
+SYNCED=false
+sync_and_push() {
+    if [ "$SYNCED" = "true" ]; then
+        return
+    fi
+    SYNCED=true
+    local code=${1:-$?}
+    echo "Synchronizing progress and pushing reports for Convergence Task 999 (exit code $code)..."
+    mkdir -p cluster_diagnostics/raw_logs
+    cp -f .tmp/clutch_conv_nmax3_${SLURM_JOB_ID}.* cluster_diagnostics/raw_logs/ 2>/dev/null || true
+
+    $PYTHON_EXEC execution/sync_task_progress.py \
+        --task-id 999 \
+        --label "Clutch_Conv_nmax3_th_0.0" \
+        --exit-code $code || true
+}
+trap 'sync_and_push $?' EXIT TERM INT
+
 echo "Executing Quantum Clutch n_max=3 Convergence Simulation (216 FDTD moments)..."
 bash execution/run_meep_wrapper.sh srun -n 128 $PYTHON_EXEC execution/run_meep_simulation.py \
     --L 2.0 \
@@ -66,14 +84,7 @@ bash execution/run_meep_wrapper.sh srun -n 128 $PYTHON_EXEC execution/run_meep_s
 EXIT_CODE=$?
 echo "Convergence test finished with exit code $EXIT_CODE at $(date)."
 
-mkdir -p cluster_diagnostics/raw_logs
-cp -f .tmp/clutch_conv_nmax3_${SLURM_JOB_ID}.* cluster_diagnostics/raw_logs/ 2>/dev/null || true
-
-# Sync task progress, email notification, update dashboard, and git push
-$PYTHON_EXEC execution/sync_task_progress.py \
-    --task-id 999 \
-    --label "Clutch_Conv_nmax3_th_0.0" \
-    --exit-code $EXIT_CODE || true
+sync_and_push $EXIT_CODE
 
 COMPLETE_FLAG=".tmp/task_999_complete.flag"
 PENDING_FLAG=".tmp/task_999_pending.flag"

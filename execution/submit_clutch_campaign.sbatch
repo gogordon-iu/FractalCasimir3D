@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=128
 #SBATCH --time=12:00:00
 #SBATCH --array=1-10%5
-#SBATCH --mail-type=BEGIN,END,FAIL,TIME_LIMIT
+#SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu
 #SBATCH -o .tmp/casimir_clutch_%A_%a.out
 #SBATCH -e .tmp/casimir_clutch_%A_%a.err
@@ -70,6 +70,25 @@ echo "Executing Quantum Clutch Simulation"
 echo "Label: $LABEL"
 echo "Params: d=$D_UM um, N_top=$NTOP, N_bot=$NBOT, mat=$MAT, res=$RES, nmax=$NMAX, theta=$THETA deg, alpha=$ALPHA deg, r_tip=$RTIP nm, eps=$EPS"
 
+SYNCED=false
+sync_and_push() {
+    if [ "$SYNCED" = "true" ]; then
+        return
+    fi
+    SYNCED=true
+    local code=${1:-$?}
+    echo "Synchronizing progress and pushing reports for Task $SLURM_ARRAY_TASK_ID (exit code $code)..."
+    mkdir -p cluster_diagnostics/raw_logs
+    cp -f .tmp/casimir_clutch_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* cluster_diagnostics/raw_logs/ 2>/dev/null || true
+
+    $PYTHON_EXEC execution/sync_task_progress.py \
+        --task-id $SLURM_ARRAY_TASK_ID \
+        --label "$LABEL" \
+        --config-file "$CONFIG_FILE" \
+        --exit-code $code || true
+}
+trap 'sync_and_push $?' EXIT TERM INT
+
 EXTRA_ARGS=""
 if [ "$CLUTCH" = "True" ] || [ "$CLUTCH" = "true" ]; then
     EXTRA_ARGS="$EXTRA_ARGS --clutch --corrugation-angle $ALPHA --r-tip $RTIP"
@@ -95,15 +114,7 @@ bash execution/run_meep_wrapper.sh srun -n 128 $PYTHON_EXEC execution/run_meep_s
 EXIT_CODE=$?
 echo "Clutch Task $SLURM_ARRAY_TASK_ID ($LABEL) finished with exit code $EXIT_CODE at $(date)."
 
-mkdir -p cluster_diagnostics/raw_logs
-cp -f .tmp/casimir_clutch_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* cluster_diagnostics/raw_logs/ 2>/dev/null || true
-
-# Sync task progress, email notification, update dashboard, and git push
-$PYTHON_EXEC execution/sync_task_progress.py \
-    --task-id $SLURM_ARRAY_TASK_ID \
-    --label "$LABEL" \
-    --config-file "$CONFIG_FILE" \
-    --exit-code $EXIT_CODE || true
+sync_and_push $EXIT_CODE
 
 COMPLETE_FLAG=".tmp/task_${CFG_INDEX}_complete.flag"
 PENDING_FLAG=".tmp/task_${CFG_INDEX}_pending.flag"
