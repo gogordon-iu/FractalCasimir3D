@@ -54,14 +54,25 @@ else
     echo "  No previous clutch jobs active in queue."
 fi
 
-# 3. Prepare required directories and purge stale clutch cache/checkpoints
-echo -e "\n[Step 3/6] Purging stale clutch cache and previous task outputs..."
+# 3. Prepare required directories and manage clutch cache/checkpoints
+echo -e "\n[Step 3/6] Checking cache and checkpoint options..."
 mkdir -p .tmp cluster_diagnostics/raw_logs results_clutch Papers/Fractal_Casimir_Nature_EM/tables Papers/Fractal_Casimir_Nature_EM/figures
 
-# Purge previous clutch cache and checkpoints to guarantee clean first-principles execution
-rm -f .tmp/chk_*clutch*.json
-rm -f .tmp/meep_*clutch*.json
-rm -f .tmp/casimir_clutch_*.out .tmp/casimir_clutch_*.err .tmp/clutch_analyzer_*.out .tmp/clutch_analyzer_*.err
+CLEAN_MODE=false
+for arg in "$@"; do
+    if [ "$arg" = "--clean" ]; then
+        CLEAN_MODE=true
+    fi
+done
+
+if [ "$CLEAN_MODE" = "true" ]; then
+    echo "  [Clean Mode] Purging existing clutch cache, moments checkpoints, and task flags..."
+    rm -f .tmp/chk_*clutch*.json .tmp/chk_moments_*clutch*.json
+    rm -f .tmp/meep_*clutch*.json .tmp/task_*_complete.flag .tmp/task_*_pending.flag
+    rm -f .tmp/casimir_clutch_*.out .tmp/casimir_clutch_*.err .tmp/clutch_analyzer_*.out .tmp/clutch_analyzer_*.err
+else
+    echo "  [Resume Mode] Preserving existing moment checkpoints in .tmp/ (pass --clean to wipe and restart from scratch)."
+fi
 
 # 4. Detect Python executable in BigRed 200 conda environment
 echo -e "\n[Step 4/6] Detecting Python environment..."
@@ -78,10 +89,10 @@ fi
 echo "  Using Python: $PYTHON_EXEC"
 
 # 5. Generate/verify task configuration files
-echo -e "\n[Step 5/6] Generating 10-task Quantum Clutch configuration suite..."
-"$PYTHON_EXEC" execution/generate_clutch_campaign.py
+echo -e "\n[Step 5/6] Generating 10-task Quantum Clutch configuration suite (R=60, nmax=1)..."
+"$PYTHON_EXEC" execution/generate_clutch_campaign.py --res 60 --nmax 1
 
-# 6. Submit Slurm array and chain automated post-processing analyzer
+# 6. Submit initial Slurm array
 echo -e "\n[Step 6/6] Submitting Slurm Array 'submit_clutch_campaign.sbatch'..."
 JOB_OUTPUT=$(sbatch execution/submit_clutch_campaign.sbatch)
 echo "  $JOB_OUTPUT"
@@ -93,22 +104,23 @@ if [ -z "$JOB_ID" ]; then
 fi
 echo "  Successfully queued Quantum Clutch Array Job ID: $JOB_ID"
 
-echo -e "\nChaining automated post-simulation analyzer 'submit_clutch_analyzer.sbatch'..."
-ANALYZER_OUTPUT=$(sbatch --dependency="afterany:$JOB_ID" execution/submit_clutch_analyzer.sbatch)
-echo "  $ANALYZER_OUTPUT"
-ANALYZER_ID=$(echo "$ANALYZER_OUTPUT" | awk '{print $NF}')
-
 echo "================================================================================"
-echo "QUANTUM CLUTCH PIPELINE ENQUEUED SUCCESSFULLY"
+echo "QUANTUM CLUTCH PIPELINE ENQUEUED SUCCESSFULLY (12-HOUR AUTO-RESUBMIT CHAIN)"
 echo "================================================================================"
-echo "Campaign Array Job ID: $JOB_ID (10 tasks, concurrency 5)"
-echo "Chained Analyzer ID:   $ANALYZER_ID (triggers automatically upon array completion)"
+echo "Initial Array Job ID: $JOB_ID (10 tasks, concurrency 5)"
+echo "Walltime / Block:     12:00:00 per iteration (graceful checkpointing at 11h)"
+echo "Auto-Chaining:        Each task self-resubmits until all moments are 100% complete."
+echo "Automated Analyzer:   submit_clutch_analyzer.sbatch triggers automatically upon"
+echo "                      verified 100% completion of all 10 tasks."
 echo ""
 echo "To monitor cluster queue:"
 echo "  squeue -u \$USER"
 echo ""
 echo "To inspect live task logs:"
 echo "  tail -f .tmp/casimir_clutch_${JOB_ID}_1.out"
+echo ""
+echo "To check task progress flags:"
+echo "  ls -l .tmp/task_*.flag"
 echo ""
 echo "To manually harvest diagnostics and push to GitHub at any time:"
 echo "  bash execution/push_all_cluster_logs.sh"

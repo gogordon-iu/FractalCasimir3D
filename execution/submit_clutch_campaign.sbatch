@@ -4,7 +4,7 @@
 #SBATCH -A r01540
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
-#SBATCH --time=24:00:00
+#SBATCH --time=12:00:00
 #SBATCH --array=1-10%5
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu
@@ -63,7 +63,7 @@ MAT=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['mater
 NTOP=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['N_top'])")
 NBOT=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['N_bot'])")
 RTIP=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['r_tip_nm'])")
-NMAX=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE')).get('nmax', 3))")
+NMAX=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE')).get('nmax', 1))")
 CLUTCH=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE')).get('clutch', True))")
 
 echo "Executing Quantum Clutch Simulation"
@@ -87,12 +87,54 @@ bash execution/run_meep_wrapper.sh srun -n 128 $PYTHON_EXEC execution/run_meep_s
     --eps-bg $EPS \
     --config all \
     --no-subgroups \
+    --T-run 12.0 \
+    --max-walltime-hours 11.0 \
+    --campaign-task-id $SLURM_ARRAY_TASK_ID \
     $EXTRA_ARGS
 
 EXIT_CODE=$?
-echo "Clutch Task $SLURM_ARRAY_TASK_ID ($LABEL) completed with exit code $EXIT_CODE at $(date)."
+echo "Clutch Task $SLURM_ARRAY_TASK_ID ($LABEL) finished with exit code $EXIT_CODE at $(date)."
 
 mkdir -p cluster_diagnostics/raw_logs
 cp -f .tmp/casimir_clutch_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* cluster_diagnostics/raw_logs/ 2>/dev/null || true
 
-exit $EXIT_CODE
+COMPLETE_FLAG=".tmp/task_${CFG_INDEX}_complete.flag"
+PENDING_FLAG=".tmp/task_${CFG_INDEX}_pending.flag"
+
+if [ -f "$COMPLETE_FLAG" ]; then
+    echo "================================================================================"
+    echo "[TASK COMPLETE] Task $SLURM_ARRAY_TASK_ID ($LABEL) is 100% completed!"
+    echo "================================================================================"
+
+    # Check if all 10 tasks in the campaign are complete
+    ALL_TASKS_COMPLETE=true
+    for tid in {1..10}; do
+        t_idx=$(printf "%03d" $tid)
+        if [ ! -f ".tmp/task_${t_idx}_complete.flag" ]; then
+            ALL_TASKS_COMPLETE=false
+            break
+        fi
+    done
+
+    if [ "$ALL_TASKS_COMPLETE" = "true" ]; then
+        echo "================================================================================"
+        echo "ALL 10 QUANTUM CLUTCH TASKS ARE 100% COMPLETE!"
+        echo "Triggering post-simulation analyzer: sbatch execution/submit_clutch_analyzer.sbatch"
+        echo "================================================================================"
+        sbatch execution/submit_clutch_analyzer.sbatch || true
+    else
+        echo "Remaining tasks in progress. Awaiting full campaign completion."
+    fi
+
+elif [ -f "$PENDING_FLAG" ]; then
+    echo "================================================================================"
+    echo "[AUTO-RESUBMIT] Task $SLURM_ARRAY_TASK_ID reached 12-hour limit with pending moments."
+    echo "Checkpoints safely preserved. Launching continuation job for Task $SLURM_ARRAY_TASK_ID..."
+    echo "================================================================================"
+    RESUBMIT_OUT=$(sbatch --array=${SLURM_ARRAY_TASK_ID} execution/submit_clutch_campaign.sbatch)
+    echo "  Continuity Job Queued: $RESUBMIT_OUT"
+else
+    echo "Notice: Simulation exited with code $EXIT_CODE. Checking checkpoint status."
+fi
+
+exit 0

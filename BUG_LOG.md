@@ -44,8 +44,9 @@
 - **Bug**: `postprocess_and_plot.py` called `get_fallback_data` to inject artificial phenomenological Casimir forces with synthetic geometric corrections whenever FDTD simulation data was absent.
 - **Solution**: Excised `get_fallback_data`, introduced a pure analytical Lifshitz PFA calculator, and explicitly flagged missing simulation data rather than fabricating artificial forces.
 
-## [2026-09-19] MEEP 1.30.0 mp.quiet(True) Deprecation RuntimeWarning
-- **Bug**: `mp.quiet(True)` in `run_meep_simulation.py` triggered a `RuntimeWarning: quiet has been deprecated; use the Verbosity class instead` on modern MEEP environments.
-- **Solution**: Removed all legacy `mp.quiet(True)` invocations in favor of standard `mp.verbosity(0)`.
+## [2026-09-21] 24-Hour Slurm Walltime Timeout & Coarse Checkpointing in High-Resolution Runs
+- **Bug**: Simulations at $R=60$ timed out after 24 hours because `Courant=0.1` inflated time steps 5x and checkpoints were only saved after completing all 108 moments, discarding intermediate progress on job termination.
+- **Solution**: Set `Courant=0.5` ($5\times$ speedup), reduced unnecessary runtime to $T_{\text{run}}=12.0$, implemented granular per-moment JSON checkpointing with an 11-hour walltime guard, and enabled automated self-resubmission of 12-hour job chains until completion.
+
 
 

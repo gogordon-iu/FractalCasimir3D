@@ -12,6 +12,7 @@ import numpy as np
 import ctypes
 import argparse
 import json
+import time
 
 def get_src_index(n):
     """Cantor pairing function decoder."""
@@ -426,10 +427,11 @@ def compute_domain_dimensions(L, theta, d, t_top, t_bottom, dpml=0.20, buffer=0.
     return sx, sy, sz, delta_s_xy, delta_s_z, L_rot
 
 
-def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=30.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108, N_bottom=1, stepped_sieve=False, sieve_depths=[0.30, 0.15, 0.05], corrugated=False, corrugation_angle=45.0, r_tip=0.0, medium=None, clutch=False):
+def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=12.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108, N_bottom=1, stepped_sieve=False, sieve_depths=[0.30, 0.15, 0.05], corrugated=False, corrugation_angle=45.0, r_tip=0.0, medium=None, clutch=False, task_chk_tag=None, max_walltime_hours=11.0, no_cache=False):
     """
     Runs a 3D FDTD simulation for a single configuration, utilizing subgroups
     to run different polarizations and moments in parallel.
+    Features granular per-moment checkpointing and walltime budget limit guarding.
     """
     # 1. Computational Cell and Geometry parameters
     t_top, t_bottom, H_spire, t_top_slab = compute_plate_thicknesses(
@@ -472,7 +474,27 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     
     total_force = 0.0
     num_tasks = 36 * n_max
+    is_g0 = (int(os.environ.get("SLURM_PROCID", 0)) == 0)
     
+    # Checkpoint & walltime tracking setup
+    start_time = time.time()
+    max_walltime_sec = (max_walltime_hours * 3600.0) if (max_walltime_hours is not None and max_walltime_hours > 0) else None
+    moments_chk_file = None
+    completed_moments = {}
+    
+    if task_chk_tag:
+        moments_chk_file = f".tmp/chk_moments_{task_chk_tag}_{config}.json"
+        if os.path.exists(moments_chk_file) and not no_cache:
+            try:
+                with open(moments_chk_file, "r") as f_chk:
+                    chk_data = json.load(f_chk)
+                completed_moments = {int(k): float(v) for k, v in chk_data.get("completed_moments", {}).items()}
+                if is_g0:
+                    print(f"[{config.upper()}] Loaded {len(completed_moments)} cached moments from {moments_chk_file}", flush=True)
+            except Exception as chk_err:
+                if is_g0:
+                    print(f"Warning: Corrupted moments checkpoint {moments_chk_file} ({chk_err}). Starting fresh.", flush=True)
+                completed_moments = {}
     
     # Each subgroup runs its assigned slice of tasks in parallel
     if task_idx_override >= 0:
@@ -480,7 +502,26 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     else:
         tasks_to_run = [t for t in list(range(subgroup_index, num_tasks, K)) if moment_start <= t < moment_end]
         
+    all_completed = True
     for cur_idx, task_idx in enumerate(tasks_to_run):
+        # 1. Skip if already completed in checkpoint
+        if task_idx in completed_moments:
+            force_val = completed_moments[task_idx]
+            total_force += force_val
+            if is_g0:
+                print(f"  [{config.upper()}][Rank {subgroup_index}] Skipped moment {cur_idx+1}/{len(tasks_to_run)} (task {task_idx}) [CACHED]: force_integral={force_val:+.6e}", flush=True)
+            continue
+            
+        # 2. Check walltime guard before starting next moment
+        if max_walltime_sec is not None:
+            elapsed_sec = time.time() - start_time
+            if elapsed_sec >= max_walltime_sec:
+                if is_g0:
+                    print(f"\n[WALLTIME GUARD] Elapsed {elapsed_sec/3600:.2f}h >= budget limit ({max_walltime_hours:.2f}h).", flush=True)
+                    print(f"[WALLTIME GUARD] Safely pausing simulation before moment {cur_idx+1}/{len(tasks_to_run)} (task {task_idx}).", flush=True)
+                all_completed = False
+                break
+                
         p = task_idx // (n_max * 6)
         n = task_idx % (n_max * 6)
         
@@ -583,7 +624,7 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
             resolution=resolution,
             boundary_layers=[mp.PML(dpml)],
             default_material=bg_material,
-            Courant=0.1,
+            Courant=0.5,
             eps_averaging=True
         )
         
@@ -662,13 +703,31 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
             force_integral += np.imag(gt_arr[step] * dt * side_orientation * f_temp)
             
         total_force += force_integral
-        is_g0 = (int(os.environ.get("SLURM_PROCID", 0)) == 0)
+        completed_moments[task_idx] = float(force_integral)
+        
+        # Atomically save updated moments checkpoint on Rank 0
+        if is_g0 and moments_chk_file:
+            os.makedirs(os.path.dirname(moments_chk_file) or ".", exist_ok=True)
+            tmp_chk_path = f"{moments_chk_file}.tmp_{os.getpid()}"
+            try:
+                with open(tmp_chk_path, "w") as f_chk:
+                    json.dump({
+                        "task_chk_tag": task_chk_tag,
+                        "config": config,
+                        "total_tasks": len(tasks_to_run),
+                        "num_completed": len(completed_moments),
+                        "completed_moments": {str(k): v for k, v in completed_moments.items()}
+                    }, f_chk, indent=4)
+                os.replace(tmp_chk_path, moments_chk_file)
+            except Exception as save_err:
+                print(f"Warning: Failed to save moments checkpoint: {save_err}", flush=True)
+
         if is_g0 or len(tasks_to_run) > 1:
             print(f"  [{config.upper()}][Rank {subgroup_index}] Done moment {cur_idx+1}/{len(tasks_to_run)} (task {task_idx}): force_integral={force_integral:+.6e}", flush=True)
         
-    # If K is 1 (non-MPI mode or single subgroup), return total_force immediately
+    # If K is 1 (non-MPI mode or single subgroup), return total_force and completion status immediately
     if K == 1:
-        return total_force
+        return total_force, all_completed
 
     # Sum the force over all subgroups using direct MPI reduction
     try:
@@ -676,12 +735,13 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
         comm = MPI.COMM_WORLD
         if comm.Get_size() > 1 and mp.count_processors() > 1:
             global_force_sum = comm.allreduce(total_force, op=MPI.SUM)
+            global_all_comp = comm.allreduce(1 if all_completed else 0, op=MPI.MIN)
             subgroup_size = comm.Get_size() / K
-            return global_force_sum / subgroup_size
+            return global_force_sum / subgroup_size, bool(global_all_comp)
     except ImportError:
         pass
 
-    return total_force
+    return total_force, all_completed
 
 
 def main():
@@ -694,7 +754,7 @@ def main():
     parser.add_argument("--nmax", type=int, default=3, help="Max moments index limit.")
     parser.add_argument("--theta", type=float, default=0.0, help="Twist angle of top plate in degrees.")
     parser.add_argument("--eps-bg", type=float, default=1.0, help="Dielectric constant of the background medium.")
-    parser.add_argument("--T-run", type=float, default=30.0, help="Total simulation runtime in dimensionless time units.")
+    parser.add_argument("--T-run", type=float, default=12.0, help="Total simulation runtime in dimensionless time units.")
     parser.add_argument("--config", type=str, default="all", choices=["both", "self", "all"], help="Simulation configuration (both plates, self plate only, or all).")
     parser.add_argument("--task-idx", type=int, default=-1, help="Specific task index to run (0-35). If -1, run all using subgroups.")
     parser.add_argument("--L", type=float, default=0.3, help="Plate width/length in microns.")
@@ -710,6 +770,8 @@ def main():
     parser.add_argument("--medium", type=str, default=None, choices=[None, "Vacuum", "Teflon_AF", "Ethanol", "Bromobenzene", "Glycerol", "Cyclohexane"], help="Liquid immersion or background dielectric medium.")
     parser.add_argument("--subgroups", type=int, default=None, help="Explicitly specify number of parallel subgroups (e.g. 1, 2, 4).")
     parser.add_argument("--no-cache", action="store_true", help="Ignore cached checkpoint and result files, forcing complete recomputation.")
+    parser.add_argument("--max-walltime-hours", type=float, default=11.0, help="Maximum execution time in hours before pausing cleanly for checkpointing (default: 11.0).")
+    parser.add_argument("--campaign-task-id", type=int, default=-1, help="Campaign array task ID (1-10) for progress tracking flags.")
     args = parser.parse_args()
     
     # Setup global crash handler for automatic logging and git push
@@ -828,6 +890,8 @@ def main():
     # We run the cases for vacuum subtraction with checkpoint resume:
     f_both = 0.0
     f_self = 0.0
+    both_done = True
+    self_done = True
     
     if args.config in ["all", "both"]:
         if not args.no_cache and os.path.exists(chk_both):
@@ -839,15 +903,19 @@ def main():
             except (json.JSONDecodeError, OSError, KeyError, ValueError) as err:
                 if global_rank == 0:
                     print(f"Warning: Corrupted checkpoint {chk_both} ({err}). Recomputing.")
-                f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch)
+                f_both, both_done = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch, task_chk_tag=task_chk_tag, max_walltime_hours=args.max_walltime_hours, no_cache=args.no_cache)
+                if both_done and global_rank == 0:
+                    os.makedirs(".tmp", exist_ok=True)
+                    with open(chk_both, "w") as f:
+                        json.dump({"force": float(f_both)}, f)
         else:
-            f_both = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch)
-            if global_rank == 0:
+            f_both, both_done = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch, task_chk_tag=task_chk_tag, max_walltime_hours=args.max_walltime_hours, no_cache=args.no_cache)
+            if both_done and global_rank == 0:
                 os.makedirs(".tmp", exist_ok=True)
                 with open(chk_both, "w") as f:
                     json.dump({"force": float(f_both)}, f)
 
-    if args.config in ["all", "self"]:
+    if both_done and args.config in ["all", "self"]:
         if not args.no_cache and os.path.exists(chk_self):
             try:
                 with open(chk_self, "r") as f:
@@ -857,90 +925,58 @@ def main():
             except (json.JSONDecodeError, OSError, KeyError, ValueError) as err:
                 if global_rank == 0:
                     print(f"Warning: Corrupted checkpoint {chk_self} ({err}). Recomputing.")
-                f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch)
+                f_self, self_done = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch, task_chk_tag=task_chk_tag, max_walltime_hours=args.max_walltime_hours, no_cache=args.no_cache)
+                if self_done and global_rank == 0:
+                    os.makedirs(".tmp", exist_ok=True)
+                    with open(chk_self, "w") as f:
+                        json.dump({"force": float(f_self)}, f)
         else:
-            f_self = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch)
-            if global_rank == 0:
+            f_self, self_done = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch, task_chk_tag=task_chk_tag, max_walltime_hours=args.max_walltime_hours, no_cache=args.no_cache)
+            if self_done and global_rank == 0:
                 os.makedirs(".tmp", exist_ok=True)
                 with open(chk_self, "w") as f:
                     json.dump({"force": float(f_self)}, f)
+    elif not both_done:
+        self_done = False
         
-    # Save output to .tmp folder
+    task_fully_completed = (both_done if args.config in ["all", "both"] else True) and (self_done if args.config in ["all", "self"] else True)
+    
+    # Save output and update completion/pending flags
     if global_rank == 0:
         os.makedirs(".tmp", exist_ok=True)
-        A_eff = get_effective_area(args.N, args.L)
-        is_partial = (args.moment_start > 0 or args.moment_end < num_tasks)
-        if is_partial:
-            # Write partial moment results
-            if args.config == "all":
-                for cfg, force_val in [("both", f_both), ("self", f_self)]:
-                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{cfg}_moments_{args.moment_start}_{args.moment_end}.json"
-                    result = {
-                        "d_um": args.d,
-                        "N": args.N,
-                        "N_bottom": args.N_bottom,
-                        "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
-                        "r_tip_nm": args.r_tip,
-                        "medium": args.medium if args.medium else "Vacuum",
-                        "material": args.material,
-                        "resolution": args.res,
-                        "theta_deg": args.theta,
-                        "eps_bg": args.eps_bg,
-                        "L": args.L,
-                        "config": cfg,
-                        "moment_start": args.moment_start,
-                        "moment_end": args.moment_end,
-                        "force": float(force_val)
-                    }
-                    with open(out_file, "w") as f:
-                        json.dump(result, f, indent=4)
-                    print(f"Partial simulation task complete. Saved to {out_file}")
-            else:
-                out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}_moments_{args.moment_start}_{args.moment_end}.json"
-                result = {
-                    "d_um": args.d,
-                    "N": args.N,
-                    "N_bottom": args.N_bottom,
-                    "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
-                    "r_tip_nm": args.r_tip,
-                    "medium": args.medium if args.medium else "Vacuum",
-                    "material": args.material,
-                    "resolution": args.res,
-                    "theta_deg": args.theta,
-                    "eps_bg": args.eps_bg,
-                    "L": args.L,
-                    "config": args.config,
-                    "moment_start": args.moment_start,
-                    "moment_end": args.moment_end,
-                    "force": float(f_both if args.config == "both" else f_self)
-                }
-                with open(out_file, "w") as f:
-                    json.dump(result, f, indent=4)
-                print(f"Partial simulation task complete. Saved to {out_file}")
-        else:
-            if args.task_idx >= 0:
+        flag_complete = f".tmp/task_{args.campaign_task_id:03d}_complete.flag" if args.campaign_task_id > 0 else f".tmp/{task_chk_tag}_complete.flag"
+        flag_pending = f".tmp/task_{args.campaign_task_id:03d}_pending.flag" if args.campaign_task_id > 0 else f".tmp/{task_chk_tag}_pending.flag"
+
+        if task_fully_completed:
+            A_eff = get_effective_area(args.N, args.L)
+            is_partial = (args.moment_start > 0 or args.moment_end < num_tasks)
+            if is_partial:
+                # Write partial moment results
                 if args.config == "all":
-                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_task_{args.task_idx}.json"
-                    result = {
-                        "d_um": args.d,
-                        "N": args.N,
-                        "N_bottom": args.N_bottom,
-                        "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
-                        "r_tip_nm": args.r_tip,
-                        "medium": args.medium if args.medium else "Vacuum",
-                        "material": args.material,
-                        "resolution": args.res,
-                        "theta_deg": args.theta,
-                        "eps_bg": args.eps_bg,
-                        "L": args.L,
-                        "task_idx": args.task_idx,
-                        "force_both": float(f_both),
-                        "force_self": float(f_self),
-                        "force_subtracted": float(f_both - f_self),
-                        "pressure_Pa": float((f_both - f_self) / A_eff)
-                    }
+                    for cfg, force_val in [("both", f_both), ("self", f_self)]:
+                        out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{cfg}_moments_{args.moment_start}_{args.moment_end}.json"
+                        result = {
+                            "d_um": args.d,
+                            "N": args.N,
+                            "N_bottom": args.N_bottom,
+                            "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
+                            "r_tip_nm": args.r_tip,
+                            "medium": args.medium if args.medium else "Vacuum",
+                            "material": args.material,
+                            "resolution": args.res,
+                            "theta_deg": args.theta,
+                            "eps_bg": args.eps_bg,
+                            "L": args.L,
+                            "config": cfg,
+                            "moment_start": args.moment_start,
+                            "moment_end": args.moment_end,
+                            "force": float(force_val)
+                        }
+                        with open(out_file, "w") as f:
+                            json.dump(result, f, indent=4)
+                        print(f"Partial simulation task complete. Saved to {out_file}")
                 else:
-                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}_task_{args.task_idx}.json"
+                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}_moments_{args.moment_start}_{args.moment_end}.json"
                     result = {
                         "d_um": args.d,
                         "N": args.N,
@@ -954,61 +990,120 @@ def main():
                         "eps_bg": args.eps_bg,
                         "L": args.L,
                         "config": args.config,
-                        "task_idx": args.task_idx,
+                        "moment_start": args.moment_start,
+                        "moment_end": args.moment_end,
                         "force": float(f_both if args.config == "both" else f_self)
                     }
+                    with open(out_file, "w") as f:
+                        json.dump(result, f, indent=4)
+                    print(f"Partial simulation task complete. Saved to {out_file}")
             else:
-                if args.config == "all":
-                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
-                    result = {
-                        "d_um": args.d,
-                        "N": args.N,
-                        "N_bottom": args.N_bottom,
-                        "clutch": args.clutch,
-                        "corrugation_angle": args.corrugation_angle if (args.corrugated or args.clutch) else 0.0,
-                        "r_tip_nm": args.r_tip,
-                        "medium": args.medium if args.medium else "Vacuum",
-                        "material": args.material,
-                        "resolution": args.res,
-                        "theta_deg": args.theta,
-                        "eps_bg": args.eps_bg,
-                        "L": args.L,
-                        "force_both": float(f_both),
-                        "force_self": float(f_self),
-                        "force_subtracted": float(f_both - f_self),
-                        "pressure_Pa": float((f_both - f_self) / A_eff)
-                    }
+                if args.task_idx >= 0:
+                    if args.config == "all":
+                        out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_task_{args.task_idx}.json"
+                        result = {
+                            "d_um": args.d,
+                            "N": args.N,
+                            "N_bottom": args.N_bottom,
+                            "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
+                            "r_tip_nm": args.r_tip,
+                            "medium": args.medium if args.medium else "Vacuum",
+                            "material": args.material,
+                            "resolution": args.res,
+                            "theta_deg": args.theta,
+                            "eps_bg": args.eps_bg,
+                            "L": args.L,
+                            "task_idx": args.task_idx,
+                            "force_both": float(f_both),
+                            "force_self": float(f_self),
+                            "force_subtracted": float(f_both - f_self),
+                            "pressure_Pa": float((f_both - f_self) / A_eff)
+                        }
+                    else:
+                        out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}_task_{args.task_idx}.json"
+                        result = {
+                            "d_um": args.d,
+                            "N": args.N,
+                            "N_bottom": args.N_bottom,
+                            "corrugation_angle": args.corrugation_angle if args.corrugated else 0.0,
+                            "r_tip_nm": args.r_tip,
+                            "medium": args.medium if args.medium else "Vacuum",
+                            "material": args.material,
+                            "resolution": args.res,
+                            "theta_deg": args.theta,
+                            "eps_bg": args.eps_bg,
+                            "L": args.L,
+                            "config": args.config,
+                            "task_idx": args.task_idx,
+                            "force": float(f_both if args.config == "both" else f_self)
+                        }
                 else:
-                    out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}.json"
-                    result = {
-                        "d_um": args.d,
-                        "N": args.N,
-                        "N_bottom": args.N_bottom,
-                        "clutch": args.clutch,
-                        "corrugation_angle": args.corrugation_angle if (args.corrugated or args.clutch) else 0.0,
-                        "r_tip_nm": args.r_tip,
-                        "medium": args.medium if args.medium else "Vacuum",
-                        "material": args.material,
-                        "resolution": args.res,
-                        "theta_deg": args.theta,
-                        "eps_bg": args.eps_bg,
-                        "L": args.L,
-                        f"force_{args.config}": float(f_both if args.config == "both" else f_self)
-                    }
-            
-            with open(out_file, "w") as f:
-                json.dump(result, f, indent=4)
+                    if args.config == "all":
+                        out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}.json"
+                        result = {
+                            "d_um": args.d,
+                            "N": args.N,
+                            "N_bottom": args.N_bottom,
+                            "clutch": args.clutch,
+                            "corrugation_angle": args.corrugation_angle if (args.corrugated or args.clutch) else 0.0,
+                            "r_tip_nm": args.r_tip,
+                            "medium": args.medium if args.medium else "Vacuum",
+                            "material": args.material,
+                            "resolution": args.res,
+                            "theta_deg": args.theta,
+                            "eps_bg": args.eps_bg,
+                            "L": args.L,
+                            "force_both": float(f_both),
+                            "force_self": float(f_self),
+                            "force_subtracted": float(f_both - f_self),
+                            "pressure_Pa": float((f_both - f_self) / A_eff)
+                        }
+                    else:
+                        out_file = f".tmp/meep_d_{args.d:.4f}_N_{args.N}{nbot_str}_{args.material}_res_{args.res}_theta_{args.theta:.1f}_eps_{args.eps_bg:.1f}_L_{args.L:.2f}_config_{args.config}.json"
+                        result = {
+                            "d_um": args.d,
+                            "N": args.N,
+                            "N_bottom": args.N_bottom,
+                            "clutch": args.clutch,
+                            "corrugation_angle": args.corrugation_angle if (args.corrugated or args.clutch) else 0.0,
+                            "r_tip_nm": args.r_tip,
+                            "medium": args.medium if args.medium else "Vacuum",
+                            "material": args.material,
+                            "resolution": args.res,
+                            "theta_deg": args.theta,
+                            "eps_bg": args.eps_bg,
+                            "L": args.L,
+                            f"force_{args.config}": float(f_both if args.config == "both" else f_self)
+                        }
                 
-            if args.config == "all":
-                if args.task_idx >= 0:
-                    print(f"Simulation task complete. Saved to {out_file}")
+                with open(out_file, "w") as f:
+                    json.dump(result, f, indent=4)
+                    
+                if args.config == "all":
+                    if args.task_idx >= 0:
+                        print(f"Simulation task complete. Saved to {out_file}")
+                    else:
+                        print(f"Simulation complete. Subtracted force: {f_both - f_self:.6e}. Saved to {out_file}")
                 else:
-                    print(f"Simulation complete. Subtracted force: {f_both - f_self:.6e}. Saved to {out_file}")
-            else:
-                if args.task_idx >= 0:
-                    print(f"Simulation task complete. Saved to {out_file}")
-                else:
-                    print(f"Simulation complete. {args.config} force: {f_both if args.config == 'both' else f_self:.6e}. Saved to {out_file}")
+                    if args.task_idx >= 0:
+                        print(f"Simulation task complete. Saved to {out_file}")
+                    else:
+                        print(f"Simulation complete. {args.config} force: {f_both if args.config == 'both' else f_self:.6e}. Saved to {out_file}")
+
+            # Mark task as 100% complete and clear any pending flag
+            with open(flag_complete, "w") as f:
+                json.dump({"status": "complete", "timestamp": time.time(), "task_id": args.campaign_task_id, "out_file": out_file}, f, indent=4)
+            if os.path.exists(flag_pending):
+                try:
+                    os.remove(flag_pending)
+                except OSError:
+                    pass
+        else:
+            # Task reached walltime budget with pending moments; write pending flag for continuation
+            with open(flag_pending, "w") as f:
+                json.dump({"status": "pending", "timestamp": time.time(), "task_id": args.campaign_task_id, "both_done": both_done, "self_done": self_done}, f, indent=4)
+            print(f"\n[STATUS: PENDING] Task {args.campaign_task_id} reached walltime budget limit ({args.max_walltime_hours:.1f}h).")
+            print(f"[STATUS: PENDING] Checkpointed progress safely recorded on disk. Ready for continuation job.")
 
 if __name__ == "__main__":
     main()

@@ -14,11 +14,17 @@ Parameter Grid:
 
 import json
 import os
+import argparse
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_DIR = os.path.join(REPO_ROOT, "sweep_configs_clutch")
 
 def main():
+    parser = argparse.ArgumentParser(description="Generate Fractal Quantum Clutch Campaign configurations.")
+    parser.add_argument("--res", type=int, default=60, help="Grid resolution px/um (default: 60).")
+    parser.add_argument("--nmax", type=int, default=1, help="Max moments index limit (default: 1 for baseline screening).")
+    args = parser.parse_args()
+
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     gaps = [0.04, 0.08]  # um (40 nm, 80 nm)
@@ -46,8 +52,8 @@ def main():
                 "medium": "Vacuum",
                 "eps_bg": 1.0,
                 "L": 2.0,
-                "resolution": 60,
-                "nmax": 3
+                "resolution": args.res,
+                "nmax": args.nmax
             }
             task_list.append(task)
             
