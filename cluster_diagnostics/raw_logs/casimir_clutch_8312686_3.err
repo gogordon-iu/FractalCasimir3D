@@ -254,10 +254,12 @@ Warning: grid volume is not an integer number of pixels; cell size will be round
 Warning: grid volume is not an integer number of pixels; cell size will be rounded to nearest pixel.
 Warning: grid volume is not an integer number of pixels; cell size will be rounded to nearest pixel.
 Warning: grid volume is not an integer number of pixels; cell size will be rounded to nearest pixel.
-slurmstepd: error: Detected 13 oom_kill events in StepId=8306822.0. Some of the step tasks have been OOM Killed.
-srun: error: nid0065: tasks 19,22,27,29,51,55,61,73,77,83,89,91,103,105,126: Out Of Memory
-srun: Terminating StepId=8306822.0
-slurmstepd: error: *** STEP 8306822.0 ON nid0065 CANCELLED AT 2026-09-21T17:13:37 ***
+slurmstepd: error: Detected 7 oom_kill events in StepId=8312689.0. Some of the step tasks have been OOM Killed.
+srun: error: nid0359: tasks 7,13,22,37,41,63,77,109,117,123-124: Out Of Memory
+srun: Terminating StepId=8312689.0
+slurmstepd: error: *** STEP 8312689.0 ON nid0359 CANCELLED AT 2026-09-22T19:51:17 ***
+srun: error: slurm_send_node_msg: [socket:[2096942]] slurm_bufs_sendto(msg_type=RESPONSE_SLURM_RC) failed: Unexpected missing socket error
+srun: error: Task 83 reported exit for a second time.
 fatal: Unable to create '/N/project/gorengor_werewolf/FractalCasimir3D/.git/index.lock': File exists.
 
 Another git process seems to be running in this repository, e.g.
@@ -273,15 +275,3 @@ are terminated then try again. If it still fails, a git process
 may have crashed in this repository earlier:
 remove the file manually to continue.
 Everything up-to-date
-fatal: Unable to create '/N/project/gorengor_werewolf/FractalCasimir3D/.git/index.lock': File exists.
-
-Another git process seems to be running in this repository, e.g.
-an editor opened by 'git commit'. Please make sure all processes
-are terminated then try again. If it still fails, a git process
-may have crashed in this repository earlier:
-remove the file manually to continue.
-From https://github.com/gogordon-iu/FractalCasimir3D
- * branch            main       -> FETCH_HEAD
-fatal: No rebase in progress?
-From https://github.com/gogordon-iu/FractalCasimir3D
- * branch            main       -> FETCH_HEAD
