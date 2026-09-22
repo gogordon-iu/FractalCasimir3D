@@ -84,8 +84,6 @@ bash execution/run_meep_wrapper.sh srun -n 128 $PYTHON_EXEC execution/run_meep_s
 EXIT_CODE=$?
 echo "Convergence test finished with exit code $EXIT_CODE at $(date)."
 
-sync_and_push $EXIT_CODE
-
 COMPLETE_FLAG=".tmp/task_999_complete.flag"
 PENDING_FLAG=".tmp/task_999_pending.flag"
 
@@ -100,10 +98,12 @@ elif [ -f "$PENDING_FLAG" ]; then
     echo "[AUTO-RESUBMIT] Convergence run reached 12-hour limit with pending moments."
     echo "Checkpoints safely preserved. Launching continuation job for n_max=3 test..."
     echo "================================================================================"
-    RESUBMIT_OUT=$(sbatch execution/submit_clutch_convergence_nmax3.sbatch)
+    RESUBMIT_OUT=$(sbatch execution/submit_clutch_convergence_nmax3.sbatch 2>&1) || true
     echo "  Continuity Job Queued: $RESUBMIT_OUT"
 else
     echo "Notice: Simulation exited with code $EXIT_CODE."
 fi
+
+sync_and_push $EXIT_CODE
 
 exit 0
