@@ -48,5 +48,13 @@
 - **Bug**: Simulations at $R=60$ timed out after 24 hours because `Courant=0.1` inflated time steps 5x and checkpoints were only saved after completing all 108 moments, discarding intermediate progress on job termination.
 - **Solution**: Set `Courant=0.5` ($5\times$ speedup), reduced unnecessary runtime to $T_{\text{run}}=12.0$, implemented granular per-moment JSON checkpointing with an 11-hour walltime guard, and enabled automated self-resubmission of 12-hour job chains until completion.
 
+## [2026-09-22] Multi-Rank Git Index Lock Contention During Slurm Crash Handling
+- **Bug**: When an MPI step crashed or was terminated by Slurm, all 128 ranks invoked `crash_handler.py` simultaneously, corrupting `master_crash_report.json` and crashing with `.git/index.lock` collisions.
+- **Solution**: Restricted crash logging and git auto-sync strictly to MPI Rank 0 in `crash_handler.py`, ensuring atomic JSON updates and clean single-process git commits.
+
+## [2026-09-23] Non-Existent `largemem` Partition on Big Red 200 & Angled FDTD Memory OOM
+- **Bug**: Slurm scripts requested `#SBATCH -p largemem` for angled tasks ($\theta=30^\circ, 45^\circ, 60^\circ$) exceeding 240 GB RAM, but Big Red 200 has no `largemem` queue because all 640 compute nodes have identical 256 GB RAM.
+- **Solution**: Routed angled tasks to the `general` partition across 2 nodes (`--nodes=2 --ntasks-per-node=128 --mem=0`), distributing the 285 GB Yee grid across 512 GB of aggregated RAM (142.7 GB/node) over the Cray Slingshot interconnect.
+
 
 
