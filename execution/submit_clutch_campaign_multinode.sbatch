@@ -3,10 +3,10 @@
 #SBATCH -p general
 #SBATCH -A r01540
 #SBATCH --nodes=2
-#SBATCH --ntasks-per-node=128
+#SBATCH --ntasks-per-node=64
+#SBATCH --cpus-per-task=2
 #SBATCH --time=12:00:00
-#SBATCH --mem=0
-#SBATCH --array=2-4,7-9%3
+#SBATCH --array=2-4,7-9%2
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu
 #SBATCH -o .tmp/clutch_multinode_%A_%a.out
@@ -15,7 +15,7 @@
 echo "================================================================================"
 echo "CASIMIR_CLUTCH MULTI-NODE TASK: $SLURM_ARRAY_TASK_ID / 10"
 echo "Target: Angled Tasks (theta = 30, 45, 60 deg, R = 60, N = 3, RAM ~285 GB)"
-echo "Nodes: 2 (256 cores, 512 GB aggregate RAM across Cray Slingshot-10 fabric)"
+echo "Topology: 2 nodes, 64 ranks/node, 2 cpus/rank (3.75 GB RAM/rank, 142 GB/node)"
 echo "Host: $(hostname)"
 echo "Started: $(date)"
 echo "================================================================================"
@@ -97,10 +97,10 @@ if [ "$CLUTCH" = "True" ] || [ "$CLUTCH" = "true" ]; then
     EXTRA_ARGS="$EXTRA_ARGS --clutch --corrugation-angle $ALPHA --r-tip $RTIP"
 fi
 
-TOTAL_CORES=$((SLURM_NNODES * 128))
-echo "Launching Meep across $SLURM_NNODES nodes ($TOTAL_CORES MPI ranks)..."
+TOTAL_RANKS=$((SLURM_NNODES * 64))
+echo "Launching Meep across $SLURM_NNODES nodes ($TOTAL_RANKS MPI ranks, 64 ranks/node, 2 cpus/rank)..."
 
-bash execution/run_meep_wrapper.sh srun -n $TOTAL_CORES $PYTHON_EXEC execution/run_meep_simulation.py \
+bash execution/run_meep_wrapper.sh srun -n $TOTAL_RANKS --ntasks-per-node=64 -c 2 $PYTHON_EXEC execution/run_meep_simulation.py \
     --L $L_UM \
     --d $D_UM \
     --N $NTOP \
