@@ -1,12 +1,15 @@
 #!/bin/bash
 # ==============================================================================
-# SUBMIT REMAINING QUANTUM CLUTCH TASKS (TASKS 1-5, 7-9)
+# SUBMIT & RESUME ALL QUANTUM CLUTCH SCREENING TASKS (TASKS 1-10)
 # ==============================================================================
-# Launches the remaining screening tasks without disturbing Tasks 6, 10, or 999
-# which are already actively computing on the cluster.
+# Dispatches all 10 screening tasks with automatic checkpoint resumption:
+#   - Task 1: 0/72 moments (Clean start)
+#   - Task 5: 17/72 moments (Resumes from moment 18)
+#   - Task 6: 38/72 moments (Resumes from moment 39)
+#   - Task 10: 36/72 moments (Resumes from moment 37)
+#   - Tasks 2, 3, 4, 7, 8, 9: Angled tasks on 2-node distributed general partition
 #
-# Task 5 automatically resumes from moment 18 (17 moments already checkpointed).
-# All tasks self-resubmit every 12 hours until 100% complete.
+# Does not disturb Task 999 (nmax=3 convergence) which is actively running.
 # ==============================================================================
 
 set -euo pipefail
@@ -20,7 +23,7 @@ else
 fi
 
 echo "================================================================================"
-echo "LAUNCHING REMAINING CLUTCH TASKS: 1, 2, 3, 4, 5, 7, 8, 9 (CONCURRENCY 3)"
+echo "LAUNCHING / RESUMING ALL 10 CLUTCH SCREENING TASKS (TASKS 1-10)"
 echo "================================================================================"
 echo "Working Directory: $(pwd)"
 echo "Timestamp:         $(date)"
@@ -30,22 +33,22 @@ rm -f .git/index.lock .git/refs/remotes/origin/main.lock 2>/dev/null || true
 git fetch origin main 2>/dev/null || true
 git pull origin main 2>/dev/null || true
 
-# 1. Submit Cardinal Tasks (1, 5) to general partition (1 node, 128 cores, 171-181 GB RAM fits in 240 GB node limit)
-echo -e "\n[1/2] Submitting Cardinal Tasks (Task 1: th=0.0 deg, Task 5: th=90.0 deg) to 'general' partition (1 node)..."
-echo "  Note: Task 5 will automatically resume from its 17 checkpointed moments."
-JOB_OUT_GEN=$(sbatch --array=1,5%2 execution/submit_clutch_campaign.sbatch)
+# 1. Submit Cardinal Tasks (1, 5, 6, 10) to general partition (1 node, 128 cores per task)
+echo -e "\n[1/2] Submitting Cardinal Tasks (Tasks 1, 5, 6, 10: th=0.0, 90.0 deg) to 'general' partition (1 node each)..."
+echo "  Note: Tasks 5, 6, 10 will automatically resume from their checkpointed moments."
+JOB_OUT_GEN=$(sbatch --array=1,5,6,10%2 execution/submit_clutch_campaign.sbatch)
 echo "  $JOB_OUT_GEN"
 JOB_ID_GEN=$(echo "$JOB_OUT_GEN" | awk '{print $NF}')
 
-# 2. Submit Angled Tasks (2, 3, 4, 7, 8, 9) to general partition across 2 nodes (256 cores, 512 GB RAM distributed)
+# 2. Submit Angled Tasks (2, 3, 4, 7, 8, 9) across 2 nodes (256 cores, 512 GB RAM distributed)
 echo -e "\n[2/2] Submitting Angled Tasks (Tasks 2, 3, 4, 7, 8, 9: th=30, 45, 60 deg) across 2 nodes (512 GB distributed RAM)..."
-JOB_OUT_MULTI=$(sbatch --array=2-4,7-9%3 execution/submit_clutch_campaign_multinode.sbatch)
+JOB_OUT_MULTI=$(sbatch --array=2-4,7-9%2 execution/submit_clutch_campaign_multinode.sbatch)
 echo "  $JOB_OUT_MULTI"
 JOB_ID_MULTI=$(echo "$JOB_OUT_MULTI" | awk '{print $NF}')
 
 echo ""
 echo "Successfully enqueued:"
-echo "  - Cardinal Tasks (Tasks 1, 5) [1 Node, 128 cores]:  Job ID $JOB_ID_GEN"
-echo "  - Angled Tasks   (Tasks 2-4, 7-9) [2 Nodes, 256 cores]: Job ID $JOB_ID_MULTI"
+echo "  - Cardinal Tasks (Tasks 1, 5, 6, 10) [1 Node, 128 cores]:  Job ID $JOB_ID_GEN"
+echo "  - Angled Tasks   (Tasks 2-4, 7-9)    [2 Nodes, 256 cores]: Job ID $JOB_ID_MULTI"
 echo "To monitor queue: squeue -u \$USER"
 echo "================================================================================"
