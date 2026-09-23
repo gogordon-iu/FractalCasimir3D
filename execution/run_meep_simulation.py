@@ -427,7 +427,7 @@ def compute_domain_dimensions(L, theta, d, t_top, t_bottom, dpml=0.20, buffer=0.
     return sx, sy, sz, delta_s_xy, delta_s_z, L_rot
 
 
-def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=12.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108, N_bottom=1, stepped_sieve=False, sieve_depths=[0.30, 0.15, 0.05], corrugated=False, corrugation_angle=45.0, r_tip=0.0, medium=None, clutch=False, task_chk_tag=None, max_walltime_hours=11.0, no_cache=False):
+def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0, eps_bg=1.0, subgroup_index=0, K=1, T_run=12.0, task_idx_override=-1, L=0.3, moment_start=0, moment_end=108, N_bottom=1, stepped_sieve=False, sieve_depths=[0.30, 0.15, 0.05], corrugated=False, corrugation_angle=45.0, r_tip=0.0, medium=None, clutch=False, task_chk_tag=None, max_walltime_hours=11.0, no_cache=False, global_start_time=None):
     """
     Runs a 3D FDTD simulation for a single configuration, utilizing subgroups
     to run different polarizations and moments in parallel.
@@ -476,8 +476,8 @@ def run_simulation(d, N, material, resolution, n_max=5, config="both", theta=0.0
     num_tasks = 36 * n_max
     is_g0 = (int(os.environ.get("SLURM_PROCID", 0)) == 0)
     
-    # Checkpoint & walltime tracking setup
-    start_time = time.time()
+    # Checkpoint & walltime tracking setup (preserves global start across both and self)
+    start_time = global_start_time if global_start_time is not None else time.time()
     max_walltime_sec = (max_walltime_hours * 3600.0) if (max_walltime_hours is not None and max_walltime_hours > 0) else None
     moments_chk_file = None
     completed_moments = {}
@@ -831,6 +831,7 @@ def main():
     except ImportError:
         pass
         
+    overall_start_time = time.time()
     if global_rank == 0:
         print(f"Starting simulation: d={args.d} um, N_top={args.N}, N_bottom={args.N_bottom}, material={args.material}, resolution={args.res}, nmax={args.nmax}, theta={args.theta}, eps_bg={args.eps_bg}, config={args.config}, clutch={args.clutch}, stepped_sieve={args.stepped_sieve}, corrugated={args.corrugated}")
         print(f"Parallel configuration: {total_ranks} processes running {K} parallel moment partitions.")
@@ -904,13 +905,13 @@ def main():
             except (json.JSONDecodeError, OSError, KeyError, ValueError) as err:
                 if global_rank == 0:
                     print(f"Warning: Corrupted checkpoint {chk_both} ({err}). Recomputing.")
-                f_both, both_done = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch, task_chk_tag=task_chk_tag, max_walltime_hours=args.max_walltime_hours, no_cache=args.no_cache)
+                f_both, both_done = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch, task_chk_tag=task_chk_tag, max_walltime_hours=args.max_walltime_hours, no_cache=args.no_cache, global_start_time=overall_start_time)
                 if both_done and global_rank == 0:
                     os.makedirs(".tmp", exist_ok=True)
                     with open(chk_both, "w") as f:
                         json.dump({"force": float(f_both)}, f)
         else:
-            f_both, both_done = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch, task_chk_tag=task_chk_tag, max_walltime_hours=args.max_walltime_hours, no_cache=args.no_cache)
+            f_both, both_done = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="both", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch, task_chk_tag=task_chk_tag, max_walltime_hours=args.max_walltime_hours, no_cache=args.no_cache, global_start_time=overall_start_time)
             if both_done and global_rank == 0:
                 os.makedirs(".tmp", exist_ok=True)
                 with open(chk_both, "w") as f:
@@ -926,13 +927,13 @@ def main():
             except (json.JSONDecodeError, OSError, KeyError, ValueError) as err:
                 if global_rank == 0:
                     print(f"Warning: Corrupted checkpoint {chk_self} ({err}). Recomputing.")
-                f_self, self_done = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch, task_chk_tag=task_chk_tag, max_walltime_hours=args.max_walltime_hours, no_cache=args.no_cache)
+                f_self, self_done = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch, task_chk_tag=task_chk_tag, max_walltime_hours=args.max_walltime_hours, no_cache=args.no_cache, global_start_time=overall_start_time)
                 if self_done and global_rank == 0:
                     os.makedirs(".tmp", exist_ok=True)
                     with open(chk_self, "w") as f:
                         json.dump({"force": float(f_self)}, f)
         else:
-            f_self, self_done = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch, task_chk_tag=task_chk_tag, max_walltime_hours=args.max_walltime_hours, no_cache=args.no_cache)
+            f_self, self_done = run_simulation(args.d, args.N, args.material, args.res, args.nmax, config="self", theta=args.theta, eps_bg=args.eps_bg, subgroup_index=subgroup_index, K=K, T_run=args.T_run, task_idx_override=args.task_idx, L=args.L, moment_start=args.moment_start, moment_end=args.moment_end, N_bottom=args.N_bottom, stepped_sieve=args.stepped_sieve, sieve_depths=args.sieve_depths, corrugated=args.corrugated, corrugation_angle=args.corrugation_angle, r_tip=r_tip_um, medium=args.medium, clutch=args.clutch, task_chk_tag=task_chk_tag, max_walltime_hours=args.max_walltime_hours, no_cache=args.no_cache, global_start_time=overall_start_time)
             if self_done and global_rank == 0:
                 os.makedirs(".tmp", exist_ok=True)
                 with open(chk_self, "w") as f:

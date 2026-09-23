@@ -22,6 +22,10 @@ def ensure_dirs():
 
 def log_crash_and_push(task_id, error_type, details, config_info=None):
     try:
+        rank = int(os.environ.get("SLURM_PROCID", os.environ.get("PMI_RANK", os.environ.get("OMPI_COMM_WORLD_RANK", 0))))
+        if rank != 0:
+            return
+            
         ensure_dirs()
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         hostname = os.uname().nodename if hasattr(os, "uname") else os.environ.get("COMPUTERNAME", "unknown_host")
@@ -75,9 +79,15 @@ def log_crash_and_push(task_id, error_type, details, config_info=None):
 
         # 3. Auto-commit and push crash log to GitHub
         print(f"[CRASH HANDLER] Auto-syncing crash report to GitHub...")
+        if os.path.exists(".git/index.lock"):
+            try:
+                os.remove(".git/index.lock")
+            except OSError:
+                pass
         subprocess.run(["git", "add", crash_filepath, MASTER_CRASH_FILE], check=False)
         msg = f"CRASH LOG: Task {task_id} failed on {hostname} ({error_type})"
         subprocess.run(["git", "commit", "-m", msg], check=False)
+        subprocess.run(["git", "pull", "--rebase", "origin", "main"], check=False)
         subprocess.run(["git", "push"], check=False)
         print(f"[CRASH HANDLER] Successfully pushed crash log to GitHub!")
         
