@@ -1,0 +1,32 @@
+================================================================================
+CASIMIR_CLUTCH MULTI-NODE TASK: 7 / 10
+Target: Angled Tasks (theta = 30, 45, 60 deg, R = 60, N = 3, RAM ~285 GB)
+Nodes: 2 (256 cores, 512 GB aggregate RAM across Cray Slingshot-10 fabric)
+Host: x1001c5s4b1n0
+Started: Wed Sep 23 03:45:24 PM EDT 2026
+================================================================================
+Reading task parameters from sweep_configs_clutch/config_007.json...
+Executing Quantum Clutch Simulation on 2 Distributed Nodes (general partition, 512 GB total RAM)
+Label: Clutch: Menger Spire (N=3) vs Sierpinski Sieve (N=3), d=80nm, th=30.0deg
+Params: d=0.08 um, N_top=3, N_bot=3, mat=Gold, res=60, nmax=1, theta=30.0 deg, alpha=75.0 deg, r_tip=5.0 nm, eps=1.0
+Launching Meep across 2 nodes (256 MPI ranks)...
+==================================================
+RUNNING CRASH-PROOF MEEP SIMULATION WRAPPER
+==================================================
+Executing: srun -n 256 /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python execution/run_meep_simulation.py --L 2.0 --d 0.08 --N 3 --N-bottom 3 --theta 30.0 --material Gold --res 60 --nmax 1 --eps-bg 1.0 --config all --no-subgroups --T-run 12.0 --max-walltime-hours 11.0 --campaign-task-id 7 --clutch --corrugation-angle 75.0 --r-tip 5.0
+Starting simulation: d=0.08 um, N_top=3, N_bottom=3, material=Gold, resolution=60, nmax=1, theta=30.0, eps_bg=1.0, config=all, clutch=True, stepped_sieve=False, corrugated=False
+Parallel configuration: 256 processes running 1 parallel moment partitions.
+Command failed with exit status 1.
+==================================================
+[CRASH DETECTED] Task 7 exited with status code 1
+==================================================
+
+[CRASH HANDLER] Logged crash details to 'cluster_diagnostics/crash_logs/crash_task_7_20260923_154815.log'.
+[CRASH HANDLER] Auto-syncing crash report to GitHub...
+[main 4fe9641] CRASH LOG: Task 7 failed on x1001c5s4b1n0 (ExitCode_1)
+ 2 files changed, 24 insertions(+)
+ create mode 100644 cluster_diagnostics/crash_logs/crash_task_7_20260923_154815.log
+[CRASH HANDLER] Successfully pushed crash log to GitHub!
+Clutch Multi-Node Task 7 (Clutch: Menger Spire (N=3) vs Sierpinski Sieve (N=3), d=80nm, th=30.0deg) finished with exit code 1 at Wed Sep 23 03:48:17 PM EDT 2026.
+Notice: Simulation exited with code 1. Checking checkpoint status.
+Synchronizing progress and pushing reports for Task 7 (exit code 1)...
