@@ -59,3 +59,7 @@
 ## [2026-09-23] Process Density OOM on Multi-Node Big Red 200 Allocation
 - **Bug**: Setting `--ntasks-per-node=128` on a 2-node job packed 128 ranks on Node 1 with only 1.875 GB RAM/rank, causing Node 1 to crash at 284 GB when the expanded $3.7\text{M}$ cell Yee grid required 2.22 GB per rank.
 - **Solution**: Decoupled process density using `--nodes=2 --ntasks-per-node=64 --cpus-per-task=2`, allocating 3.75 GB RAM per rank and capping each node at 142 GB (59% of node capacity).
+
+## [2026-09-24] Task Progress Checkpoint Glob Over-Matching and Inflation
+- **Bug**: In `sync_task_progress.py`, the moment-counting glob `chk_moments_*_th_{th:.1f}_*.json` lacked gap $d$ and multipole cutoff $n_{\max}$ filtering, causing Task 1 ($d=40\text{ nm}, \theta=0^\circ$) to match Task 999's ($n_{\max}=3$) 80-moment checkpoint and report an inflated $96/72$ moments ($133\%$).
+- **Solution**: Constrained checkpoint pattern matching to exact gap $d$, rotation $\theta$, and $n_{\max}$ cutoff tags, accounted for fully finished configs via `chk_v4_*` headers, and capped completed moments at 100%.

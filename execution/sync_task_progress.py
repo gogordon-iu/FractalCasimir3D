@@ -44,35 +44,75 @@ def ensure_dirs():
         os.makedirs(d, exist_ok=True)
 
 def find_moments_count(task_id, nmax=1):
-    """Counts completed moments from .tmp/chk_moments_* files."""
+    """Counts completed moments from .tmp/chk_moments_* and .tmp/chk_v4_* files."""
     if task_id == 999:
-        pattern = os.path.join(REPO_ROOT, ".tmp", "chk_moments_*_nmax_3_*.json")
+        d = 0.04
+        th = 0.0
+        nmax_val = 3
+        moments_per_config = 108
     else:
         cfg_file = os.path.join(REPO_ROOT, "sweep_configs_clutch", f"config_{task_id:03d}.json")
         th = 0.0
+        d = 0.04
+        nmax_val = 1
+        moments_per_config = 36
         if os.path.exists(cfg_file):
             try:
-                th = float(json.load(open(cfg_file)).get("theta", 0.0))
+                cfg_data = json.load(open(cfg_file))
+                th = float(cfg_data.get("theta", 0.0))
+                d = float(cfg_data.get("d", 0.04))
+                nmax_val = int(cfg_data.get("nmax", 1))
             except Exception:
                 pass
-        pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_moments_*_th_{th:.1f}_*.json")
 
-    files = glob.glob(pattern)
     both_done = 0
     self_done = 0
-    for f in files:
-        if "_both.json" in f:
-            try:
-                both_done = max(both_done, len(json.load(open(f)).get("completed_moments", {})))
-            except Exception:
-                pass
-        elif "_self.json" in f:
-            try:
-                self_done = max(self_done, len(json.load(open(f)).get("completed_moments", {})))
-            except Exception:
-                pass
 
-    return both_done + self_done
+    for cfg_type in ["both", "self"]:
+        # 1. First check if the fully-completed config checkpoint exists
+        # e.g. .tmp/chk_v4_d_0.0400_*_th_0.0_*_both.json
+        if nmax_val > 1:
+            full_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_*_d_{d:.4f}_*th_{th:.1f}_*_nmax_{nmax_val}_{cfg_type}.json")
+        else:
+            full_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_*_d_{d:.4f}_*th_{th:.1f}_*_{cfg_type}.json")
+
+        full_candidates = [
+            f for f in glob.glob(full_pattern)
+            if "chk_moments_" not in os.path.basename(f)
+            and (nmax_val > 1 or "_nmax_" not in os.path.basename(f))
+        ]
+
+        if full_candidates:
+            done_count = moments_per_config
+        else:
+            # 2. Check intermediate moment checkpoints
+            if nmax_val > 1:
+                mom_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_moments_*_d_{d:.4f}_*th_{th:.1f}_*_nmax_{nmax_val}_{cfg_type}.json")
+            else:
+                mom_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_moments_*_d_{d:.4f}_*th_{th:.1f}_*_{cfg_type}.json")
+
+            mom_candidates = [
+                f for f in glob.glob(mom_pattern)
+                if (nmax_val > 1 or "_nmax_" not in os.path.basename(f))
+            ]
+
+            done_count = 0
+            for mf in mom_candidates:
+                try:
+                    with open(mf, "r") as f_in:
+                        data = json.load(f_in)
+                    done_count = max(done_count, len(data.get("completed_moments", {})))
+                except Exception:
+                    pass
+
+        if cfg_type == "both":
+            both_done = done_count
+        else:
+            self_done = done_count
+
+    total_done = both_done + self_done
+    max_total = moments_per_config * 2
+    return min(total_done, max_total)
 
 def resilient_git_sync(commit_msg):
     """Performs git add, commit, fetch, rebase, and push with retries."""
