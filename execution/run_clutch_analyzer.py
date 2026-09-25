@@ -62,35 +62,65 @@ def main():
         f_both = None
         f_self = None
 
-        if os.path.exists(expected_fp):
+        d_val = float(cfg["d"])
+        th_val = float(cfg["theta"])
+        tid = cfg["task_id"]
+
+        # Search candidates in results_clutch/results_json and .tmp
+        patterns = [
+            os.path.join(REPO_ROOT, "results_clutch", "results_json", f"meep_d_{d_val:.4f}_*theta_{th_val:.1f}_*.json"),
+            os.path.join(REPO_ROOT, ".tmp", f"meep_d_{d_val:.4f}_*theta_{th_val:.1f}_*.json"),
+            expected_fp
+        ]
+        found_f = None
+        for pat in patterns:
+            matches = [m for m in glob.glob(pat) if "moments_" not in os.path.basename(m) and "config_" not in os.path.basename(m)]
+            if matches:
+                found_f = matches[0]
+                break
+
+        if found_f and os.path.exists(found_f):
             try:
-                with open(expected_fp, "r") as out_f:
+                with open(found_f, "r") as out_f:
                     data = json.load(out_f)
                     p_val = data.get("pressure_Pa")
                     f_sub = data.get("force_subtracted")
                     f_both = data.get("force_both")
                     f_self = data.get("force_self")
             except (json.JSONDecodeError, OSError, KeyError) as err:
-                print(f"Warning: Corrupted result file {expected_fp} ({err}).")
+                print(f"Warning: Corrupted result file {found_f} ({err}).")
         else:
-            # Checkpoint fallback check (strictly require v4 verified geometry checkpoints)
-            rtip_str = f"_rtip_{float(cfg.get('r_tip_nm', 5.0)):.1f}" if float(cfg.get('r_tip_nm', 5.0)) > 0 else ""
-            geom_tag = f"_clutch_al_{float(cfg.get('corrugation_angle', 75.0)):.1f}{rtip_str}"
-            chk_tag = f"v4_d_{float(cfg['d']):.4f}_Ntop_{cfg['N_top']}_Nbot_{cfg.get('N_bot', 3)}_mat_{cfg['material']}_res_{cfg['resolution']}_th_{float(cfg['theta']):.1f}{geom_tag}_L_{float(cfg.get('L', 2.0)):.2f}"
-            chk_b = f".tmp/chk_{chk_tag}_both.json"
-            chk_s = f".tmp/chk_{chk_tag}_self.json"
-            if os.path.exists(chk_b) and os.path.exists(chk_s):
+            # Check progress status file
+            status_f = os.path.join(REPO_ROOT, "results_clutch", "progress", f"task_{tid:03d}_status.json")
+            if os.path.exists(status_f):
                 try:
-                    with open(chk_b) as fb, open(chk_s) as fs:
-                        fb_val = json.load(fb)["force"]
-                        fs_val = json.load(fs)["force"]
-                        f_both = fb_val
-                        f_self = fs_val
-                        f_sub = fb_val - fs_val
-                        A_eff = get_effective_area(cfg["N_top"], cfg.get("L", 2.0))
-                        p_val = f_sub / A_eff
-                except (json.JSONDecodeError, OSError, KeyError) as err:
-                    print(f"Warning: Corrupted checkpoint pair {chk_b} / {chk_s} ({err}).")
+                    with open(status_f, "r") as sf:
+                        s_data = json.load(sf)
+                        if s_data.get("status") == "COMPLETE" and s_data.get("pressure_Pa") is not None:
+                            p_val = s_data.get("pressure_Pa")
+                            f_sub = s_data.get("net_force")
+                except (json.JSONDecodeError, OSError) as err:
+                    pass
+
+            if p_val is None:
+                # Checkpoint fallback check (strictly require v4 verified geometry checkpoints)
+                rtip_str = f"_rtip_{float(cfg.get('r_tip_nm', 5.0)):.1f}" if float(cfg.get('r_tip_nm', 5.0)) > 0 else ""
+                geom_tag = f"_clutch_al_{float(cfg.get('corrugation_angle', 75.0)):.1f}{rtip_str}"
+                chk_tag = f"v4_d_{d_val:.4f}_Ntop_{cfg['N_top']}_Nbot_{cfg.get('N_bot', 3)}_mat_{cfg['material']}_res_{cfg['resolution']}_th_{th_val:.1f}{geom_tag}_L_{float(cfg.get('L', 2.0)):.2f}"
+                chk_b = f".tmp/chk_{chk_tag}_both.json"
+                chk_s = f".tmp/chk_{chk_tag}_self.json"
+                if os.path.exists(chk_b) and os.path.exists(chk_s):
+                    try:
+                        with open(chk_b) as fb, open(chk_s) as fs:
+                            fb_val = json.load(fb)["force"]
+                            fs_val = json.load(fs)["force"]
+                            f_both = fb_val
+                            f_self = fs_val
+                            f_sub = fb_val - fs_val
+                            A_eff = get_effective_area(cfg["N_top"], cfg.get("L", 2.0))
+                            p_val = f_sub / A_eff
+                    except (json.JSONDecodeError, OSError, KeyError) as err:
+                        print(f"Warning: Corrupted checkpoint pair {chk_b} / {chk_s} ({err}).")
 
         matched.append({
             "task_id": cfg["task_id"],
