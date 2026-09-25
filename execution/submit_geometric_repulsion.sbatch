@@ -61,10 +61,11 @@ MAT=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['mater
 RES=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['resolution'])")
 NMAX=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['nmax'])")
 
+THRESHOLD=$($PYTHON_EXEC -c "print(f'{float($W_APERTURE) / 4.0:.4f}')")
 echo "Configuration $CONFIG_FILE loaded:"
 echo "  W_aperture: ${W_APERTURE} um, t_plate: ${T_PLATE} um"
 echo "  H_needle: ${H_NEEDLE} um, w_needle: ${W_NEEDLE} um"
-echo "  z_tip: ${Z_TIP} um (W/4 threshold = $(echo "$W_APERTURE / 4.0" | bc -l) um)"
+echo "  z_tip: ${Z_TIP} um (W/4 threshold = ${THRESHOLD} um)"
 echo "  Material: $MAT, Resolution: $RES"
 echo "================================================================================"
 
@@ -79,7 +80,8 @@ bash execution/run_meep_wrapper.sh srun -n 128 $PYTHON_EXEC execution/run_geomet
     --res $RES \
     --nmax $NMAX \
     --config all \
-    --T-run 12.0
+    --T-run 12.0 \
+    --max-walltime-hours 3.5
 
 EXIT_CODE=$?
 echo "Task $SLURM_ARRAY_TASK_ID finished with exit code $EXIT_CODE at $(date)."

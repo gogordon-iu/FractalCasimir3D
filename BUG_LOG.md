@@ -63,3 +63,11 @@
 ## [2026-09-24] Task Progress Checkpoint Glob Over-Matching and Inflation
 - **Bug**: In `sync_task_progress.py`, the moment-counting glob `chk_moments_*_th_{th:.1f}_*.json` lacked gap $d$ and multipole cutoff $n_{\max}$ filtering, causing Task 1 ($d=40\text{ nm}, \theta=0^\circ$) to match Task 999's ($n_{\max}=3$) 80-moment checkpoint and report an inflated $96/72$ moments ($133\%$).
 - **Solution**: Constrained checkpoint pattern matching to exact gap $d$, rotation $\theta$, and $n_{\max}$ cutoff tags, accounted for fully finished configs via `chk_v4_*` headers, and capped completed moments at 100%.
+
+## [2026-09-25] Non-Existent Casimir Source Methods in Geometric Repulsion FDTD Engine
+- **Bug**: `run_geometric_repulsion_meep.py` called fictitious wrapper methods (`casimir_source_correlator`, `casimir_init`, `casimir_force_moment`), while missing Wick-rotated Casimir conductivity $\Sigma$ in the background medium and aperture cavity.
+- **Solution**: Replaced fictitious calls with verified `mp.CustomSource` time-stepping loop, `sim.fields.casimir_stress_dct_integral`, and applied Wick-rotated `bg_material` with $\Sigma$ damping to both the background and aperture void.
+
+## [2026-09-25] Missing Dimensionless Force-to-Pressure Conversion Constant in Needle Stress Evaluation
+- **Bug**: Pressure calculation in `run_geometric_repulsion_meep.py` divided dimensionless Meep force directly by physical meters squared without the $\hbar c / a^4 = 0.031615\text{ Pa}$ normalization factor.
+- **Solution**: Multiplied dimensionless force by $\text{MEEP\_TO\_PA} = 0.031615$ over dimensionless needle area and introduced explicit femtoNewton force conversion ($\hbar c / a^2 \times 10^{15}$).
