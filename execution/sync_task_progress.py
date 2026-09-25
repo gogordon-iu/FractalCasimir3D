@@ -350,20 +350,41 @@ def main():
     f_net = None
     p_val = None
     if status == "COMPLETE":
-        # Look for result file
-        res_files = glob.glob(os.path.join(REPO_ROOT, ".tmp", f"meep_*_N_3_*_L_2.00*.json"))
-        for rf in res_files:
-            if (args.task_id == 999 and "_nmax_3" in rf) or (args.task_id != 999 and "_nmax_3" not in rf):
-                try:
-                    data = json.load(open(rf))
-                    f_net = data.get("force_subtracted")
-                    p_val = data.get("pressure_Pa")
-                    # Copy result file to tracked directory
-                    dest_f = os.path.join(REPO_ROOT, "results_clutch", "results_json", os.path.basename(rf))
-                    shutil.copy2(rf, dest_f)
-                    break
-                except Exception:
-                    pass
+        # Look for result file matching this task's d, theta, and nmax
+        cfg_file = args.config_file or os.path.join(REPO_ROOT, "sweep_configs_clutch", f"config_{args.task_id:03d}.json")
+        th_val = 0.0
+        d_val = 0.04
+        if os.path.exists(cfg_file):
+            try:
+                cfg_data = json.load(open(cfg_file))
+                th_val = float(cfg_data.get("theta", 0.0))
+                d_val = float(cfg_data.get("d", 0.04))
+            except Exception:
+                pass
+
+        if args.task_id == 999:
+            res_pattern = os.path.join(REPO_ROOT, ".tmp", f"meep_d_{d_val:.4f}_*theta_{th_val:.1f}_*_nmax_3.json")
+        else:
+            res_pattern = os.path.join(REPO_ROOT, ".tmp", f"meep_d_{d_val:.4f}_*theta_{th_val:.1f}_*.json")
+
+        res_candidates = [
+            f for f in glob.glob(res_pattern)
+            if "config_" not in os.path.basename(f)
+            and "moments_" not in os.path.basename(f)
+            and (args.task_id == 999 or "_nmax_" not in os.path.basename(f))
+        ]
+
+        for rf in res_candidates:
+            try:
+                data = json.load(open(rf))
+                f_net = data.get("force_subtracted")
+                p_val = data.get("pressure_Pa")
+                # Copy result file to tracked directory
+                dest_f = os.path.join(REPO_ROOT, "results_clutch", "results_json", os.path.basename(rf))
+                shutil.copy2(rf, dest_f)
+                break
+            except Exception:
+                pass
 
     # Save task status json
     task_status = {
