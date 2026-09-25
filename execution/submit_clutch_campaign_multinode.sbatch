@@ -113,7 +113,7 @@ bash execution/run_meep_wrapper.sh srun -n $TOTAL_RANKS --ntasks-per-node=64 -c 
     --config all \
     --no-subgroups \
     --T-run 12.0 \
-    --max-walltime-hours 11.0 \
+    --max-walltime-hours 10.5 \
     --campaign-task-id $SLURM_ARRAY_TASK_ID \
     $EXTRA_ARGS
 
