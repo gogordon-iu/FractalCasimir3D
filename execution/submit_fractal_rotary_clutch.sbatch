@@ -5,14 +5,14 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --time=08:00:00
-#SBATCH --array=1-6%2
+#SBATCH --array=1-8%2
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu
 #SBATCH -o .tmp/fractal_clutch_%A_%a.out
 #SBATCH -e .tmp/fractal_clutch_%A_%a.err
 
 echo "================================================================================"
-echo "DUAL-FRACTAL ROTARY VACUUM CASIMIR CLUTCH: TASK $SLURM_ARRAY_TASK_ID / 6"
+echo "DUAL-FRACTAL ROTARY VACUUM CASIMIR CLUTCH: TASK $SLURM_ARRAY_TASK_ID / 8"
 echo "Host: $(hostname)"
 echo "Started: $(date)"
 echo "================================================================================"

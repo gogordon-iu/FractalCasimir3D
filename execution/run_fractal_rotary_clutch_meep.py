@@ -62,9 +62,10 @@ MEEP_TO_PA = 0.031615
 MEEP_FORCE_TO_SI = 3.1615e-14
 
 
-def get_fractal_clutch_elements(N, L, W1=0.35, w1=0.04):
+def get_fractal_clutch_elements(N, L, W1=0.25, w1=0.035):
     """
     Computes exact self-similar fractal coordinates for both plates.
+    Guarantees strict C4 symmetry and zero aperture-to-aperture overlap.
     Returns:
         elements: list of dicts with keys:
             level, cx, cy, W_aperture, w_needle
@@ -84,7 +85,7 @@ def get_fractal_clutch_elements(N, L, W1=0.35, w1=0.04):
             "w_needle": w1
         })
 
-    # Level 2 (if N >= 2): Secondary self-similar aperture/needle pairs
+    # Level 2 (if N >= 2): Secondary self-similar aperture/needle pairs on diagonals
     if N >= 2:
         W2 = W1 / 3.0
         w2 = w1 / 3.0
@@ -100,37 +101,45 @@ def get_fractal_clutch_elements(N, L, W1=0.35, w1=0.04):
                 "w_needle": w2
             })
 
-    # Level 3 (if N >= 3): Tertiary nano-aperture/needle pairs
+    # Level 3 (if N >= 3): Tertiary nano-aperture/needle pairs on inner concentric rings
     if N >= 3:
         W3 = W1 / 9.0
         w3 = w1 / 9.0
-        r3_offsets = [-W2, +W2]
+        r3 = r1 / 3.0
+        # Axial tertiary elements at inner radius r3 = r1 / 3
         for ang in axial_angles:
             rad = np.radians(ang)
-            base_x = r1 * np.cos(rad)
-            base_y = r1 * np.sin(rad)
-            for off in r3_offsets:
-                perp_rad = rad + np.pi / 2.0
-                elements.append({
-                    "level": 3,
-                    "cx": base_x + off * np.cos(perp_rad),
-                    "cy": base_y + off * np.sin(perp_rad),
-                    "W_aperture": W3,
-                    "w_needle": w3
-                })
+            elements.append({
+                "level": 3,
+                "cx": r3 * np.cos(rad),
+                "cy": r3 * np.sin(rad),
+                "W_aperture": W3,
+                "w_needle": w3
+            })
+        # Diagonal tertiary elements at inner diagonal radius r3_diag = (r1 / 3) * sqrt(2)
+        diag_angles = [45.0, 135.0, 225.0, 315.0]
+        for ang in diag_angles:
+            rad = np.radians(ang)
+            elements.append({
+                "level": 3,
+                "cx": r3 * np.sqrt(2.0) * np.cos(rad),
+                "cy": r3 * np.sqrt(2.0) * np.sin(rad),
+                "W_aperture": W3,
+                "w_needle": w3
+            })
 
     return elements
 
 
 def run_fractal_rotary_clutch_simulation(
-    N_fractal=2,            # Prefractal generation (1, 2, or 3)
+    N_fractal=1,            # Prefractal generation (1, 2, or 3)
     theta_deg=0.0,          # Relative rotation angle (degrees)
     L_fractal=1.05,         # Fractal base domain span (microns)
-    W1_aperture=0.35,       # Primary aperture diameter (microns)
-    w1_needle=0.04,         # Primary needle width (microns)
+    W1_aperture=0.25,       # Primary aperture diameter (microns)
+    w1_needle=0.035,        # Primary needle width (microns)
     H_needle=0.25,          # Needle height (microns)
     t_plate=0.025,          # Stator membrane thickness (microns)
-    z_tip=0.015,            # Tip clearance above stator surface (microns)
+    z_tip=0.01722,          # Tip clearance above stator surface (microns)
     material="Gold",        # Metallic material
     resolution=80,          # Yee grid resolution (pixels/micron)
     n_max=1,                # Multipole cutoff (36 moments per polarization)
@@ -428,15 +437,15 @@ def run_fractal_rotary_clutch_simulation(
 
 def main():
     parser = argparse.ArgumentParser(description="Dual-Fractal Rotary Vacuum Casimir Clutch (Levin-Johnson Mechanism)")
-    parser.add_argument("--task-id", type=int, default=1, help="Task index (1-6)")
-    parser.add_argument("--N-fractal", type=int, default=2, help="Prefractal generation N (1, 2, or 3)")
+    parser.add_argument("--task-id", type=int, default=1, help="Task index (1-8)")
+    parser.add_argument("--N-fractal", type=int, default=1, help="Prefractal generation N (1, 2, or 3)")
     parser.add_argument("--theta", type=float, default=0.0, help="Relative rotation angle theta (deg)")
     parser.add_argument("--L-fractal", type=float, default=1.05, help="Base fractal domain span L (um)")
-    parser.add_argument("--W1-aperture", type=float, default=0.35, help="Primary aperture diameter W1 (um)")
-    parser.add_argument("--w1-needle", type=float, default=0.04, help="Primary needle width w1 (um)")
+    parser.add_argument("--W1-aperture", type=float, default=0.25, help="Primary aperture diameter W1 (um)")
+    parser.add_argument("--w1-needle", type=float, default=0.035, help="Primary needle width w1 (um)")
     parser.add_argument("--H-needle", type=float, default=0.25, help="Needle height (um)")
     parser.add_argument("--t-plate", type=float, default=0.025, help="Stator membrane thickness (um)")
-    parser.add_argument("--z-tip", type=float, default=0.015, help="Tip clearance above stator (um)")
+    parser.add_argument("--z-tip", type=float, default=0.01722, help="Tip clearance above stator (um)")
     parser.add_argument("--material", type=str, default="Gold", help="Plate and needle material")
     parser.add_argument("--res", type=int, default=80, help="Yee grid resolution (pixels/um)")
     parser.add_argument("--nmax", type=int, default=1, help="Multipole cutoff")
@@ -451,9 +460,12 @@ def main():
     global_rank = int(os.environ.get("SLURM_PROCID", 0))
     is_g0 = (global_rank == 0)
     if is_g0:
+        f_area = 1.0 - (8.0 / 9.0) ** args.N_fractal
+        d_avg = (1.0 - f_area) * args.z_tip + f_area * (args.z_tip + args.t_plate)
         print("=" * 85)
         print(f"DUAL-FRACTAL ROTARY VACUUM CASIMIR CLUTCH (Generation N = {args.N_fractal})")
         print(f"Task ID: {args.task_id} | Rotation Angle theta: {args.theta:.1f} deg")
+        print(f"Invariant Average Distance <d>: {d_avg*1e3:.2f} nm (Tip clearance z_tip: {args.z_tip*1e3:.2f} nm)")
         print(f"Fractal Span L: {args.L_fractal*1e3:.1f} nm, Primary Aperture W1: {args.W1_aperture*1e3:.1f} nm")
         print(f"Primary Needle Width w1: {args.w1_needle*1e3:.1f} nm, Height H: {args.H_needle*1e3:.1f} nm")
         print(f"Tip Clearance z_tip: {args.z_tip*1e3:.1f} nm (W1/4 threshold = {args.W1_aperture*250:.1f} nm)")
@@ -491,11 +503,15 @@ def main():
         # Normal pressure on primary needle cross-section A_rotor = 4 * w1^2
         pressure_Pa = (f1_net / (args.w1_needle ** 2)) * MEEP_TO_PA
 
+        f_area = 1.0 - (8.0 / 9.0) ** args.N_fractal
+        d_avg_um = (1.0 - f_area) * args.z_tip + f_area * (args.z_tip + args.t_plate)
+
         result_data = {
             "task_id": args.task_id,
             "architecture": "dual_fractal_rotary_casimir_clutch",
             "N_fractal": args.N_fractal,
             "theta_deg": float(args.theta),
+            "d_average_nm": float(d_avg_um * 1e3),
             "L_fractal_nm": float(args.L_fractal * 1e3),
             "W1_aperture_nm": float(args.W1_aperture * 1e3),
             "w1_needle_nm": float(args.w1_needle * 1e3),
