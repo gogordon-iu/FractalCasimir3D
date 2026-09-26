@@ -1,0 +1,574 @@
+================================================================================
+CASIMIR_CLUTCH MULTI-NODE TASK: 9 / 10
+Target: Angled Tasks (theta = 30, 45, 60 deg, R = 60, N = 3, RAM ~285 GB)
+Topology: 2 nodes, 64 ranks/node, 2 cpus/rank (3.75 GB RAM/rank, 142 GB/node)
+Host: x1000c2s3b1n0
+Started: Sat Sep 26 04:00:39 PM EDT 2026
+================================================================================
+Reading task parameters from sweep_configs_clutch/config_009.json...
+Executing Quantum Clutch Simulation on 2 Distributed Nodes (general partition, 512 GB total RAM)
+Label: Clutch: Menger Spire (N=3) vs Sierpinski Sieve (N=3), d=80nm, th=60.0deg
+Params: d=0.08 um, N_top=3, N_bot=3, mat=Gold, res=60, nmax=1, theta=60.0 deg, alpha=75.0 deg, r_tip=5.0 nm, eps=1.0
+Launching Meep across 2 nodes (128 MPI ranks, 64 ranks/node, 2 cpus/rank)...
+==================================================
+RUNNING CRASH-PROOF MEEP SIMULATION WRAPPER
+==================================================
+Executing: srun -n 128 --ntasks-per-node=64 -c 2 /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python execution/run_meep_simulation.py --L 2.0 --d 0.08 --N 3 --N-bottom 3 --theta 60.0 --material Gold --res 60 --nmax 1 --eps-bg 1.0 --config all --no-subgroups --T-run 12.0 --max-walltime-hours 10.5 --campaign-task-id 9 --clutch --corrugation-angle 75.0 --r-tip 5.0
+Starting simulation: d=0.08 um, N_top=3, N_bottom=3, material=Gold, resolution=60, nmax=1, theta=60.0, eps_bg=1.0, config=all, clutch=True, stepped_sieve=False, corrugated=False
+Parallel configuration: 128 processes running 1 parallel moment partitions.
+Loaded cached 'both' force: 1.216526e+03 from .tmp/chk_v4_d_0.0800_Ntop_3_Nbot_3_mat_Gold_res_60_th_60.0_clutch_al_75.0_rtip_5.0_L_2.00_both.json
+[SELF] Loaded 34 cached moments from .tmp/chk_moments_v4_d_0.0800_Ntop_3_Nbot_3_mat_Gold_res_60_th_60.0_clutch_al_75.0_rtip_5.0_L_2.00_self.json
+  [SELF][Rank 0] Skipped moment 1/36 (task 0) [CACHED]: force_integral=+2.323108e-01
+  [SELF][Rank 0] Skipped moment 2/36 (task 1) [CACHED]: force_integral=+2.323108e-01
+  [SELF][Rank 0] Skipped moment 3/36 (task 2) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 4/36 (task 3) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 5/36 (task 4) [CACHED]: force_integral=-4.125610e+02
+  [SELF][Rank 0] Skipped moment 6/36 (task 5) [CACHED]: force_integral=+4.295564e+02
+  [SELF][Rank 0] Skipped moment 7/36 (task 6) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 8/36 (task 7) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 9/36 (task 8) [CACHED]: force_integral=+7.267978e-01
+  [SELF][Rank 0] Skipped moment 10/36 (task 9) [CACHED]: force_integral=+7.267978e-01
+  [SELF][Rank 0] Skipped moment 11/36 (task 10) [CACHED]: force_integral=-1.907812e+03
+  [SELF][Rank 0] Skipped moment 12/36 (task 11) [CACHED]: force_integral=+1.751551e+03
+  [SELF][Rank 0] Skipped moment 13/36 (task 12) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 14/36 (task 13) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 15/36 (task 14) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 16/36 (task 15) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 17/36 (task 16) [CACHED]: force_integral=+2.640528e+03
+  [SELF][Rank 0] Skipped moment 18/36 (task 17) [CACHED]: force_integral=-3.063618e+03
+  [SELF][Rank 0] Skipped moment 19/36 (task 18) [CACHED]: force_integral=+6.930096e-01
+  [SELF][Rank 0] Skipped moment 20/36 (task 19) [CACHED]: force_integral=+6.930096e-01
+  [SELF][Rank 0] Skipped moment 21/36 (task 20) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 22/36 (task 21) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 23/36 (task 22) [CACHED]: force_integral=-1.668656e+03
+  [SELF][Rank 0] Skipped moment 24/36 (task 23) [CACHED]: force_integral=+1.710490e+03
+  [SELF][Rank 0] Skipped moment 25/36 (task 24) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 26/36 (task 25) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 27/36 (task 26) [CACHED]: force_integral=+6.934336e-01
+  [SELF][Rank 0] Skipped moment 28/36 (task 27) [CACHED]: force_integral=+6.934336e-01
+  [SELF][Rank 0] Skipped moment 29/36 (task 28) [CACHED]: force_integral=-1.668537e+03
+  [SELF][Rank 0] Skipped moment 30/36 (task 29) [CACHED]: force_integral=+1.710488e+03
+  [SELF][Rank 0] Skipped moment 31/36 (task 30) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 32/36 (task 31) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 33/36 (task 32) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 34/36 (task 33) [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 35/36 (task 34): force_integral=+5.284936e+03
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3466.5189 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3468.7309 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3478.6568 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3484.6792 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3503.7483 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+Simulation complete. Subtracted force: -1.977042e+00. Saved to .tmp/meep_d_0.0800_N_3_clutch_al_75.0_rtip_5.0_Nbot_3_Gold_res_60_theta_60.0_eps_1.0_L_2.00.json
+
+Elapsed run time = 3515.8949 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3516.1103 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3525.5623 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3528.0380 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3529.7621 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3531.4482 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3532.1176 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3532.6336 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3534.1397 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3534.5600 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3535.8899 s
+
+Elapsed run time = 3535.8976 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3536.6402 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3536.6863 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3537.0417 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3537.6144 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3537.6402 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3537.6697 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3537.8757 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3537.9205 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3538.3829 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3538.5031 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3540.9662 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3542.4175 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3543.1596 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3543.2679 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3543.3093 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3543.9110 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3543.9279 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3543.9658 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3544.0646 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3544.0829 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3544.2796 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3544.9597 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3544.9984 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3545.2155 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3545.3788 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3546.7245 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3547.5252 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3547.6209 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3547.7434 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3548.1711 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3548.2303 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3548.7709 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3548.7936 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3548.8771 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3549.2573 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3549.4018 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3549.5922 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3549.6864 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3549.6975 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3549.9431 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3550.0687 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3550.1112 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3551.4828 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3551.6372 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3551.8253 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3552.0387 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3552.0507 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3552.3126 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3552.3893 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3552.6304 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3553.5761 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3556.9967 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3557.1929 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3560.2956 s
+
+Elapsed run time = 3560.2987 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3560.3575 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3560.5004 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3560.6343 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3560.7373 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3561.1457 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3561.8420 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3562.8489 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3563.1478 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3563.3895 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3563.4053 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3563.4746 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3563.5021 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3564.5712 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3564.8874 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3565.0445 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3565.1737 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3565.5153 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3565.7548 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3566.5899 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3566.6876 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3566.7220 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3569.2436 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3570.7623 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3571.0994 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3571.2553 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3572.5893 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3572.8415 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3572.8944 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3572.9522 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3572.9803 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3573.1079 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3573.4654 s
+
+Elapsed run time = 3573.4748 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3573.8587 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3573.9805 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3574.0246 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3574.1522 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3574.3207 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3574.3786 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3574.7891 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3574.9501 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3575.0610 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3575.2435 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3575.5765 s
+
+Elapsed run time = 3575.5885 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3575.5941 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3575.6267 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3575.9795 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3576.2814 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3576.5248 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3576.6025 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3576.9124 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3577.2301 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3577.7679 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3578.5880 s
+  [SELF][Rank 0] Done moment 36/36 (task 35): force_integral=-3.592552e+03
+
+Elapsed run time = 3578.7419 s
+Command succeeded cleanly.
+Clutch Multi-Node Task 9 (Clutch: Menger Spire (N=3) vs Sierpinski Sieve (N=3), d=80nm, th=60.0deg) finished with exit code 0 at Sat Sep 26 05:00:32 PM EDT 2026.
+================================================================================
+[TASK COMPLETE] Task 9 (Clutch: Menger Spire (N=3) vs Sierpinski Sieve (N=3), d=80nm, th=60.0deg) is 100% completed!
+================================================================================
+Remaining tasks in progress. Awaiting full campaign completion.
+Synchronizing progress and pushing reports for Task 9 (exit code 0)...
