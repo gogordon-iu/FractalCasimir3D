@@ -63,12 +63,13 @@ Z_TIP=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['z_t
 MAT=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['material'])")
 RES=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['resolution'])")
 NMAX=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['nmax'])")
+T_RUN=$($PYTHON_EXEC -c "import json; print(json.load(open('$CONFIG_FILE'))['T_run'])")
 
 echo "Configuration $CONFIG_FILE loaded:"
 echo "  Generation N: ${N_FRACTAL}, Rotation theta: ${THETA} deg"
 echo "  Fractal span L: ${L_FRACTAL} um, Primary aperture W1: ${W1_APERTURE} um"
 echo "  Primary needle w1: ${W1_NEEDLE} um, H: ${H_NEEDLE} um, z_tip: ${Z_TIP} um"
-echo "  Material: $MAT, Resolution: $RES"
+echo "  Material: $MAT, Resolution: $RES, T_run: $T_RUN"
 echo "================================================================================"
 
 bash execution/run_meep_wrapper.sh srun -n 128 $PYTHON_EXEC execution/run_fractal_rotary_clutch_meep.py \
@@ -85,7 +86,7 @@ bash execution/run_meep_wrapper.sh srun -n 128 $PYTHON_EXEC execution/run_fracta
     --res $RES \
     --nmax $NMAX \
     --config all \
-    --T-run 12.0 \
+    --T-run $T_RUN \
     --max-walltime-hours 7.5
 
 EXIT_CODE=$?

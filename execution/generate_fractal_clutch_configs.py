@@ -33,12 +33,10 @@ if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
 
-def calculate_area_fraction(N: int) -> float:
-    """Exact Sierpinski carpet void area fraction: f_N = 1 - (8/9)^N."""
-    assert N >= 0, f"N must be non-negative, got {N}"
-    if N == 0:
-        return 0.0
-    return 1.0 - (8.0 / 9.0) ** N
+from execution.run_fractal_rotary_clutch_meep import (
+    get_fractal_clutch_elements,
+    compute_plate_area_fraction
+)
 
 
 def calculate_standoff(d_average: float, feature_depth: float, area_fraction: float) -> float:
@@ -74,7 +72,8 @@ def build_fractal_clutch_suite(
     task_id = 1
 
     for N in generations:
-        f_area = calculate_area_fraction(N)
+        elements = get_fractal_clutch_elements(N, L_fractal_um, W1=W1_aperture_um, w1=w1_needle_um)
+        f_area = compute_plate_area_fraction(elements, L_fractal_um)
         z_tip = calculate_standoff(d_average_um, t_plate_um, f_area)
 
         for theta in angles:

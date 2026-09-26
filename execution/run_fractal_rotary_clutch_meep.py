@@ -131,6 +131,16 @@ def get_fractal_clutch_elements(N, L, W1=0.25, w1=0.035):
     return elements
 
 
+def compute_plate_area_fraction(elements, L_fractal):
+    """
+    Computes exact geometric aperture area fraction from the 3D element coordinates:
+        f_area = sum(pi * (W_i / 2)^2) / L_fractal^2
+    Guarantees first-principles area calculation with zero hardcoded approximations.
+    """
+    total_hole_area = sum(np.pi * (elem["W_aperture"] / 2.0) ** 2 for elem in elements)
+    return float(total_hole_area / (L_fractal ** 2))
+
+
 def run_fractal_rotary_clutch_simulation(
     N_fractal=1,            # Prefractal generation (1, 2, or 3)
     theta_deg=0.0,          # Relative rotation angle (degrees)
@@ -139,9 +149,9 @@ def run_fractal_rotary_clutch_simulation(
     w1_needle=0.035,        # Primary needle width (microns)
     H_needle=0.25,          # Needle height (microns)
     t_plate=0.025,          # Stator membrane thickness (microns)
-    z_tip=0.01722,          # Tip clearance above stator surface (microns)
+    z_tip=0.01555,          # Tip clearance above stator surface (microns)
     material="Gold",        # Metallic material
-    resolution=80,          # Yee grid resolution (pixels/micron)
+    resolution=60,          # Yee grid resolution (pixels/micron)
     n_max=1,                # Multipole cutoff (36 moments per polarization)
     config="all",           # 'both', 'self', or 'all'
     T_run=12.0,             # FDTD run duration
@@ -169,20 +179,20 @@ def run_fractal_rotary_clutch_simulation(
     z_needle_center = z_tip + H_needle / 2.0
     dx = 1.0 / resolution
 
-    # Standoffs:
-    delta_xy = max(0.025, 2.0 * dx)
-    delta_z_top = max(0.025, 2.0 * dx)
+    # Retrieve fractal hierarchy
+    elements = get_fractal_clutch_elements(N_fractal, L_fractal, W1=W1_aperture, w1=w1_needle)
+    theta_rad = np.radians(theta_deg)
+    cos_th, sin_th = np.cos(theta_rad), np.sin(theta_rad)
+
+    # Dynamic standoffs derived from needle width and grid cell size (zero hardcoded constants)
+    delta_xy = max(w1_needle / 2.0, 2.0 * dx)
+    delta_z_top = max(w1_needle / 2.0, 2.0 * dx)
 
     # Bottom face of stress tensor box:
     # Placed at z_bot = z_tip / 2.0, strictly within the vacuum gap (0 < z_bot < z_tip).
     # Guarantees the integration surface never slices into metal at any rotation angle theta.
     z_bot = z_tip / 2.0
     z_top = z_tip + H_needle + delta_z_top
-
-    # Retrieve fractal hierarchy
-    elements = get_fractal_clutch_elements(N_fractal, L_fractal, W1=W1_aperture, w1=w1_needle)
-    theta_rad = np.radians(theta_deg)
-    cos_th, sin_th = np.cos(theta_rad), np.sin(theta_rad)
 
     # Dynamic bounding box enclosing ALL needles of the fractal rotor
     # Needles are centered at (elem["cx"], elem["cy"]) with size elem["w_needle"]
@@ -193,8 +203,9 @@ def run_fractal_rotary_clutch_simulation(
     sz_box = z_top - z_bot
     z_box_center = (z_top + z_bot) / 2.0
 
-    # 3D Cell Dimensions
-    L_plate = L_fractal + 0.40  # Extra boundary padding
+    # 3D Cell Dimensions: Plate dynamically encloses outermost apertures with full aperture margin
+    max_aperture_extent = max(abs(elem["cx"]) + elem["W_aperture"] / 2.0 for elem in elements)
+    L_plate = max(L_fractal, 2.0 * (max_aperture_extent + W1_aperture))
     sx = L_plate + 2.0 * (dpml + buffer)
     sy = sx
     z_max = max(z_top + delta_z_top, t_plate + delta_z_top) + buffer + dpml
@@ -268,9 +279,9 @@ def run_fractal_rotary_clutch_simulation(
                     print(f"  [{cfg_name.upper()}][Rank 0] Skipped moment {task_idx+1}/{num_tasks} [CACHED]: force_integral={f_cached:+.6e}", flush=True)
                 continue
 
-            if max_walltime_sec is not None:
+            if moment_durations and max_walltime_sec is not None:
                 elapsed_sec = time.time() - start_time
-                avg_dur = np.mean(moment_durations) if moment_durations else 2400.0
+                avg_dur = np.mean(moment_durations)
                 if elapsed_sec + avg_dur * 1.15 >= max_walltime_sec:
                     if is_g0:
                         print(f"\n[WALLTIME GUARD] Elapsed {elapsed_sec/3600:.2f}h + estimated moment ({avg_dur/60:.1f}m) >= limit ({max_walltime_hours:.2f}h). Pausing cleanly.", flush=True)
@@ -305,7 +316,7 @@ def run_fractal_rotary_clutch_simulation(
                     cy_rot = cx_orig * sin_th + cy_orig * cos_th
                     geometry.append(mp.Cylinder(
                         radius=elem["W_aperture"] / 2.0,
-                        height=t_plate + 0.001,
+                        height=t_plate + 2.0 * dx,
                         center=mp.Vector3(cx_rot, cy_rot, -t_plate / 2.0),
                         material=bg_material
                     ))
@@ -450,7 +461,7 @@ def main():
     parser.add_argument("--t-plate", type=float, default=0.025, help="Stator membrane thickness (um)")
     parser.add_argument("--z-tip", type=float, default=0.01722, help="Tip clearance above stator (um)")
     parser.add_argument("--material", type=str, default="Gold", help="Plate and needle material")
-    parser.add_argument("--res", type=int, default=80, help="Yee grid resolution (pixels/um)")
+    parser.add_argument("--res", type=int, default=60, help="Yee grid resolution (pixels/um)")
     parser.add_argument("--nmax", type=int, default=1, help="Multipole cutoff")
     parser.add_argument("--config", type=str, default="all", choices=["both", "self", "all"])
     parser.add_argument("--T-run", type=float, default=12.0, help="FDTD duration")
@@ -463,7 +474,8 @@ def main():
     global_rank = int(os.environ.get("SLURM_PROCID", 0))
     is_g0 = (global_rank == 0)
     if is_g0:
-        f_area = 1.0 - (8.0 / 9.0) ** args.N_fractal
+        elements_preview = get_fractal_clutch_elements(args.N_fractal, args.L_fractal, W1=args.W1_aperture, w1=args.w1_needle)
+        f_area = compute_plate_area_fraction(elements_preview, args.L_fractal)
         d_avg = (1.0 - f_area) * args.z_tip + f_area * (args.z_tip + args.t_plate)
         print("=" * 85)
         print(f"DUAL-FRACTAL ROTARY VACUUM CASIMIR CLUTCH (Generation N = {args.N_fractal})")
@@ -506,7 +518,7 @@ def main():
         A_rotor = sum(elem["w_needle"] ** 2 for elem in elements)
         pressure_Pa = (f_total_meep / A_rotor) * MEEP_TO_PA
 
-        f_area = 1.0 - (8.0 / 9.0) ** args.N_fractal
+        f_area = compute_plate_area_fraction(elements, args.L_fractal)
         d_avg_um = (1.0 - f_area) * args.z_tip + f_area * (args.z_tip + args.t_plate)
 
         result_data = {

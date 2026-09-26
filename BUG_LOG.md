@@ -76,3 +76,8 @@
 - **Bug**: The clutch configuration generator set an impractical Yee resolution of $R=160$ to place 2 grid cells across the $12.56\text{ nm}$ gap, which would have required $\sim 60\text{ hours}$ per task ($50\times$ compute increase via $R^4$ scaling) and triggered Slurm's 8-hour walltime termination.
 - **Solution**: Reduced default resolution to the cluster-proven $R=60$ ($\Delta x = 16.67\text{ nm}$, $\sim 1.2\text{ hours}$ per task) with subpixel dielectric smoothing, and regenerated all sweep configurations.
 
+## [2026-09-26] Hardcoded Geometric Variables & Textbook Area Fraction Mismatch in Clutch Suite
+- **Bug**: Clutch scripts contained hardcoded standoffs (`0.025`), plate padding (`0.40`), cylinder overhangs (`0.001`), walltime estimation constants (`2400.0`), hardcoded `T_run=12.0` in Slurm, and used an idealized fractal formula $1-(8/9)^N$ that differed from the actual 3D aperture area.
+- **Solution**: Replaced all hardcoded parameters with dynamic functions derived directly from 3D element geometry (`compute_plate_area_fraction`), scaled standoffs and cylinder heights with resolution $dx$, and made Slurm and analysis scripts dynamically extract runtime parameters.
+
+

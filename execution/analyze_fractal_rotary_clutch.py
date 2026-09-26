@@ -66,53 +66,60 @@ def main():
     print(f"{'Task':<6}{'Gen N':<8}{'theta':<10}{'z_tip (nm)':<14}{'<d> (nm)':<12}{'F_total (fN)':<18}{'Pressure (Pa)':<18}{'Regime':<24}")
     print("-" * 110)
 
+    MEEP_FORCE_TO_FN = 3.1615e-14 * 1e15
+
     for d in sorted(data, key=lambda x: (x.get("N_fractal", 1), x.get("theta_deg", 0.0))):
         tid = d.get("task_id", 0)
         n_gen = d.get("N_fractal", 1)
         th = d.get("theta_deg", 0.0)
         ztip = d.get("z_tip_nm", 0.0)
         davg = d.get("d_average_nm", 20.0)
-        f_net_fN = d.get("force_total_fN", d.get("force_total_meep", 0.0) * 31.615)
+        f_net_fN = d.get("force_total_fN", d.get("force_total_meep", 0.0) * MEEP_FORCE_TO_FN)
         p = d.get("pressure_Pa", 0.0)
         regime_str = "++ FRACTAL REPULSION ++" if f_net_fN > 0 else "-- FRACTAL ATTRACTION --"
         print(f"{tid:<6}{n_gen:<8}{th:<10.1f}{ztip:<14.2f}{davg:<12.1f}{f_net_fN:<+18.4f}{p:<+18.4e}{regime_str:<24}")
 
     print("=" * 110)
 
+    # Dynamic geometry values
+    z_tip_n1 = data_n1[0].get("z_tip_nm", 0.0) if data_n1 else 0.0
+    z_tip_n3 = data_n3[0].get("z_tip_nm", 0.0) if data_n3 else 0.0
+    d_avg_val = data[0].get("d_average_nm", 20.0) if data else 20.0
+
     # Analyze N=1 series
     th_n1 = [d.get("theta_deg", 0.0) for d in data_n1]
-    f_n1 = [d.get("force_total_fN", d.get("force_total_meep", 0.0) * 31.615) for d in data_n1]
+    f_n1 = [d.get("force_total_fN", d.get("force_total_meep", 0.0) * MEEP_FORCE_TO_FN) for d in data_n1]
     p_n1 = [d.get("pressure_Pa", 0.0) for d in data_n1]
     th_clutch_n1 = find_zero_crossing(th_n1, f_n1) if len(th_n1) > 1 else None
 
     # Analyze N=3 series
     th_n3 = [d.get("theta_deg", 0.0) for d in data_n3]
-    f_n3 = [d.get("force_total_fN", d.get("force_total_meep", 0.0) * 31.615) for d in data_n3]
+    f_n3 = [d.get("force_total_fN", d.get("force_total_meep", 0.0) * MEEP_FORCE_TO_FN) for d in data_n3]
     p_n3 = [d.get("pressure_Pa", 0.0) for d in data_n3]
     th_clutch_n3 = find_zero_crossing(th_n3, f_n3) if len(th_n3) > 1 else None
 
     print("\n--- CLUTCH TRANSITION SUMMARY ---")
     if th_clutch_n1 is not None:
-        print(f"  Generation N=1: Neutral Clutch Angle theta_clutch = {th_clutch_n1:.2f} deg (z_tip = 17.22 nm, <d> = 20.0 nm)")
+        print(f"  Generation N=1: Neutral Clutch Angle theta_clutch = {th_clutch_n1:.2f} deg (z_tip = {z_tip_n1:.2f} nm, <d> = {d_avg_val:.1f} nm)")
     else:
         print("  Generation N=1: No zero crossing captured within completed angles.")
 
     if th_clutch_n3 is not None:
-        print(f"  Generation N=3: Neutral Clutch Angle theta_clutch = {th_clutch_n3:.2f} deg (z_tip = 12.56 nm, <d> = 20.0 nm)")
+        print(f"  Generation N=3: Neutral Clutch Angle theta_clutch = {th_clutch_n3:.2f} deg (z_tip = {z_tip_n3:.2f} nm, <d> = {d_avg_val:.1f} nm)")
     else:
         print("  Generation N=3: No zero crossing captured within completed angles.")
 
     # 1. Summary JSON
     summary_data = {
         "architecture": "dual_fractal_rotary_casimir_clutch_constant_d_avg",
-        "d_average_nm": 20.0,
+        "d_average_nm": float(d_avg_val),
         "N_1": {
-            "z_tip_nm": 17.22,
+            "z_tip_nm": float(z_tip_n1),
             "theta_clutch_deg": th_clutch_n1,
             "tasks": data_n1
         },
         "N_3": {
-            "z_tip_nm": 12.56,
+            "z_tip_nm": float(z_tip_n3),
             "theta_clutch_deg": th_clutch_n3,
             "tasks": data_n3
         }
@@ -164,10 +171,10 @@ def main():
     ax1.axhline(0, color="k", linestyle="--", linewidth=0.8, alpha=0.7)
     if th_n1 and f_n1:
         ax1.plot(th_n1, f_n1, "o-", color="#1f77b4", linewidth=1.6, markersize=5,
-                 label=r"$N=1$ ($z_{\mathrm{tip}}=17.2\,\mathrm{nm}$)")
+                 label=rf"$N=1$ ($z_{{\mathrm{{tip}}}}={z_tip_n1:.1f}\,\mathrm{{nm}}$)")
     if th_n3 and f_n3:
         ax1.plot(th_n3, f_n3, "s--", color="#d62728", linewidth=1.6, markersize=5,
-                 label=r"$N=3$ ($z_{\mathrm{tip}}=12.6\,\mathrm{nm}$)")
+                 label=rf"$N=3$ ($z_{{\mathrm{{tip}}}}={z_tip_n3:.1f}\,\mathrm{{nm}}$)")
 
     if th_clutch_n1 is not None:
         ax1.axvline(th_clutch_n1, color="#1f77b4", linestyle=":", linewidth=0.9, alpha=0.8)
@@ -223,9 +230,9 @@ def main():
         ax3.legend(loc="best", frameon=True)
     else:
         # Fallback layout showing invariant average distance formulation
-        ax3.text(0.5, 0.6, r"$\langle d \rangle = z_{\mathrm{tip}} + f_N \cdot h = 20.00\,\mathrm{nm}$",
+        ax3.text(0.5, 0.6, rf"$\langle d \rangle = z_{{\mathrm{{tip}}}} + f_N \cdot h = {d_avg_val:.2f}\,\mathrm{{nm}}$",
                  ha="center", va="center", fontsize=9, transform=ax3.transAxes)
-        ax3.text(0.5, 0.4, r"$N=1: z_{\mathrm{tip}} = 17.22\,\mathrm{nm}$" + "\n" + r"$N=3: z_{\mathrm{tip}} = 12.56\,\mathrm{nm}$",
+        ax3.text(0.5, 0.4, rf"$N=1: z_{{\mathrm{{tip}}}} = {z_tip_n1:.2f}\,\mathrm{{nm}}$" + "\n" + rf"$N=3: z_{{\mathrm{{tip}}}} = {z_tip_n3:.2f}\,\mathrm{{nm}}$",
                  ha="center", va="center", fontsize=8, transform=ax3.transAxes)
         ax3.set_title(r"(c) Invariant Average Distance Setup")
         ax3.axis("off")
