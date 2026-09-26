@@ -1,9 +1,9 @@
 # Quantum Clutch Simulation Campaign: Live Progress Dashboard
 
-**Last Updated:** `2026-09-26 09:23:23 UTC`  
+**Last Updated:** `2026-09-26 11:20:18 UTC`  
 **Completed Tasks:** `7 / 10` (`70.0%`)  
 **Overall Campaign Progress:** `666 / 720` moments (`92.5%`)  
-**Convergence Verification (n_max=3):** `PENDING` (120/216 moments, `55.6%`)  
+**Convergence Verification (n_max=3):** `PENDING` (140/216 moments, `64.8%`)  
 
 ## Main Campaign Tasks (n_max = 1, Resolution R = 60)
 
@@ -24,5 +24,5 @@
 
 | Task ID | Label | Cutoff | Status | Moments Done | Net Force | Pressure | Relative Error ($\Delta_{\text{trunc}}$) |
 | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Task 999 | `Conv_nmax3` | $n_{\max}=3$ | **PENDING** | 120/216 (55.6%) | -- | -- | See table_moment_convergence.tex |
+| Task 999 | `Conv_nmax3` | $n_{\max}=3$ | **PENDING** | 140/216 (64.8%) | -- | -- | See table_moment_convergence.tex |
 
