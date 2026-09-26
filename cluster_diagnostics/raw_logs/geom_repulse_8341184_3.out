@@ -1,0 +1,303 @@
+================================================================================
+GEOMETRIC VACUUM CASIMIR REPULSION: TASK 3 / 4
+Host: x1001c3s7b1n1
+Started: Sat Sep 26 06:28:29 AM EDT 2026
+================================================================================
+Configuration sweep_configs_geometric_repulsion/config_003.json loaded:
+  W_aperture: 0.35 um, t_plate: 0.025 um
+  H_needle: 0.25 um, w_needle: 0.04 um
+  z_tip: 0.03 um (W/4 threshold = 0.0875 um)
+  Material: Gold, Resolution: 80
+================================================================================
+==================================================
+RUNNING CRASH-PROOF MEEP SIMULATION WRAPPER
+==================================================
+Executing: srun -n 128 /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python execution/run_geometric_repulsion_meep.py --task-id 3 --W-aperture 0.35 --t-plate 0.025 --H-needle 0.25 --w-needle 0.04 --z-tip 0.03 --material Gold --res 80 --nmax 1 --config all --T-run 12.0 --max-walltime-hours 3.5
+================================================================================
+GEOMETRIC VACUUM CASIMIR REPULSION SOLVER (Levin-Johnson Mechanism)
+Task ID: 3
+Aperture Width W: 350.0 nm, Plate Thickness t: 25.0 nm
+Needle Height H: 250.0 nm, Width w: 40.0 nm
+Tip Clearance z_tip: 30.0 nm (W/4 threshold = 87.5 nm)
+Material: Gold, Resolution: 80 (dx = 12.50 nm)
+Repulsive Regime Expected: YES (z_tip < W/4)
+================================================================================
+  [BOTH][Rank 0] Done moment 1/36: force_integral=-3.841685e-01
+  [BOTH][Rank 0] Done moment 2/36: force_integral=-3.841685e-01
+  [BOTH][Rank 0] Done moment 3/36: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Done moment 4/36: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Done moment 5/36: force_integral=-6.172620e+02
+
+Elapsed run time = 13702.4446 s
+
+Elapsed run time = 13742.7551 s
+
+Elapsed run time = 13751.9657 s
+
+Elapsed run time = 13759.9835 s
+
+Elapsed run time = 13779.4163 s
+
+Elapsed run time = 13780.6092 s
+
+Elapsed run time = 13787.9103 s
+
+Elapsed run time = 13790.3046 s
+
+Elapsed run time = 13804.7714 s
+
+Elapsed run time = 13805.4310 s
+
+Elapsed run time = 13808.1457 s
+
+Elapsed run time = 13808.4170 s
+
+Elapsed run time = 13808.9214 s
+
+Elapsed run time = 13827.3666 s
+
+Elapsed run time = 13833.7984 s
+
+Elapsed run time = 13834.9988 s
+
+Elapsed run time = 13837.2917 s
+
+Elapsed run time = 13841.3894 s
+
+Elapsed run time = 13842.2114 s
+
+Elapsed run time = 13842.8233 s
+
+Elapsed run time = 13845.4933 s
+
+Elapsed run time = 13852.6133 s
+
+Elapsed run time = 13853.5554 s
+
+Elapsed run time = 13854.6402 s
+
+Elapsed run time = 13855.6141 s
+
+Elapsed run time = 13856.2300 s
+
+Elapsed run time = 13859.8859 s
+
+Elapsed run time = 13865.1999 s
+
+Elapsed run time = 13865.8926 s
+
+Elapsed run time = 13866.0603 s
+
+Elapsed run time = 13866.2606 s
+
+Elapsed run time = 13872.1887 s
+
+Elapsed run time = 13874.7619 s
+
+Elapsed run time = 13876.3957 s
+
+Elapsed run time = 13876.4347 s
+
+Elapsed run time = 13877.0648 s
+
+Elapsed run time = 13879.5789 s
+
+Elapsed run time = 13879.7633 s
+
+Elapsed run time = 13879.9165 s
+
+Elapsed run time = 13880.2985 s
+
+Elapsed run time = 13880.3496 s
+
+Elapsed run time = 13881.8069 s
+
+Elapsed run time = 13884.7515 s
+
+Elapsed run time = 13885.3278 s
+
+Elapsed run time = 13885.6895 s
+
+Elapsed run time = 13885.7395 s
+
+Elapsed run time = 13886.4287 s
+
+Elapsed run time = 13887.3495 s
+  [BOTH][Rank 0] Done moment 6/36: force_integral=+6.170539e+02
+
+[WALLTIME GUARD] Elapsed 3.86h >= limit (3.50h). Pausing cleanly.
+
+[WALLTIME GUARD] Elapsed 3.86h >= limit (3.50h). Pausing cleanly.
+
+================================================================================
+SIMULATION COMPLETE: GROUND-TRUTH CASIMIR FORCE EVALUATION
+Force Both (MEEP):  -9.764305e-01
+Force Self (MEEP):  +0.000000e+00
+Net Force (MEEP):   -9.764305e-01
+Net Force (fN):     -30.8698 fN  -->  [- ATTRACTIVE -]
+Pressure:           -1.9294e+01 Pa
+Results saved to:   results_geometric_repulsion/task_003_ztip_30nm.json
+================================================================================
+
+
+Elapsed run time = 13889.8600 s
+
+Elapsed run time = 13891.5145 s
+
+Elapsed run time = 13893.2415 s
+
+Elapsed run time = 13895.0573 s
+
+Elapsed run time = 13895.4887 s
+
+Elapsed run time = 13895.6739 s
+
+Elapsed run time = 13896.9274 s
+
+Elapsed run time = 13897.3172 s
+
+Elapsed run time = 13900.5360 s
+
+Elapsed run time = 13903.7749 s
+
+Elapsed run time = 13903.8885 s
+
+Elapsed run time = 13906.3071 s
+
+Elapsed run time = 13907.9197 s
+
+Elapsed run time = 13909.1571 s
+
+Elapsed run time = 13919.7027 s
+
+Elapsed run time = 13921.0507 s
+
+Elapsed run time = 13926.3902 s
+
+Elapsed run time = 13927.6620 s
+
+Elapsed run time = 13930.8327 s
+
+Elapsed run time = 13932.2320 s
+
+Elapsed run time = 13934.3323 s
+
+Elapsed run time = 13934.4675 s
+
+Elapsed run time = 13934.8524 s
+
+Elapsed run time = 13936.1718 s
+
+Elapsed run time = 13941.8211 s
+
+Elapsed run time = 13941.9121 s
+
+Elapsed run time = 13944.7392 s
+
+Elapsed run time = 13945.7821 s
+
+Elapsed run time = 13948.9366 s
+
+Elapsed run time = 13949.3230 s
+
+Elapsed run time = 13950.1125 s
+
+Elapsed run time = 13950.6444 s
+
+Elapsed run time = 13952.1387 s
+
+Elapsed run time = 13952.2512 s
+
+Elapsed run time = 13952.6043 s
+
+Elapsed run time = 13953.6108 s
+
+Elapsed run time = 13953.9561 s
+
+Elapsed run time = 13954.4471 s
+
+Elapsed run time = 13955.4384 s
+
+Elapsed run time = 13955.5533 s
+
+Elapsed run time = 13960.2090 s
+
+Elapsed run time = 13960.9344 s
+
+Elapsed run time = 13963.0016 s
+
+Elapsed run time = 13965.2825 s
+
+Elapsed run time = 13965.7853 s
+
+Elapsed run time = 13966.0585 s
+
+Elapsed run time = 13966.8837 s
+
+Elapsed run time = 13968.7229 s
+
+Elapsed run time = 13969.5116 s
+
+Elapsed run time = 13970.2147 s
+
+Elapsed run time = 13970.9992 s
+
+Elapsed run time = 13971.0397 s
+
+Elapsed run time = 13971.1578 s
+
+Elapsed run time = 13971.3162 s
+
+Elapsed run time = 13972.9937 s
+
+Elapsed run time = 13973.8163 s
+
+Elapsed run time = 13976.1296 s
+
+Elapsed run time = 13977.2571 s
+
+Elapsed run time = 13977.5332 s
+
+Elapsed run time = 13978.5243 s
+
+Elapsed run time = 13978.7605 s
+
+Elapsed run time = 13981.6262 s
+
+Elapsed run time = 13981.6823 s
+
+Elapsed run time = 13984.8632 s
+
+Elapsed run time = 13990.8840 s
+
+Elapsed run time = 13993.0302 s
+
+Elapsed run time = 13993.5822 s
+
+Elapsed run time = 13995.9778 s
+
+Elapsed run time = 13996.0371 s
+
+Elapsed run time = 14010.9864 s
+
+Elapsed run time = 14012.3839 s
+
+Elapsed run time = 14013.9046 s
+
+Elapsed run time = 14014.1221 s
+
+Elapsed run time = 14017.7273 s
+
+Elapsed run time = 14019.1927 s
+
+Elapsed run time = 14021.7646 s
+
+Elapsed run time = 14021.8748 s
+
+Elapsed run time = 14026.6871 s
+
+Elapsed run time = 14028.4928 s
+
+Elapsed run time = 14028.6592 s
+Command succeeded cleanly.
+Task 3 finished with exit code 0 at Sat Sep 26 10:22:21 AM EDT 2026.
