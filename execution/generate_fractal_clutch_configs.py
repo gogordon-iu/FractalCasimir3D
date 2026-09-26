@@ -62,7 +62,7 @@ def build_fractal_clutch_suite(
     H_needle_um: float = 0.25,       # Needle height: 250 nm
     material: str = "Gold",
     medium: str = "Vacuum",
-    resolution: int = 160,           # Production resolution: dx = 6.25 nm (resolves gap >= 2.0 cells)
+    resolution: int = 60,            # Cluster-proven resolution: dx = 16.67 nm (~1.2h/task on 128 cores)
     nmax: int = 1,
     T_run: float = 12.0
 ) -> list:
@@ -121,7 +121,7 @@ def build_fractal_clutch_suite(
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Generate Dual-Fractal Casimir Clutch Configuration Suite")
-    parser.add_argument("--res", type=int, default=160, help="Yee grid resolution (default: 160 px/um, dx=6.25 nm)")
+    parser.add_argument("--res", type=int, default=60, help="Yee grid resolution (default: 60 px/um, dx=16.67 nm, ~1.2h/task)")
     parser.add_argument("--d-avg", type=float, default=0.020, help="Target invariant average distance in um (default: 0.020)")
     parser.add_argument("--t-plate", type=float, default=0.025, help="Stator plate thickness in um (default: 0.025)")
     args = parser.parse_args()

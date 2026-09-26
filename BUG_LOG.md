@@ -71,3 +71,8 @@
 ## [2026-09-25] Missing Dimensionless Force-to-Pressure Conversion Constant in Needle Stress Evaluation
 - **Bug**: Pressure calculation in `run_geometric_repulsion_meep.py` divided dimensionless Meep force directly by physical meters squared without the $\hbar c / a^4 = 0.031615\text{ Pa}$ normalization factor.
 - **Solution**: Multiplied dimensionless force by $\text{MEEP\_TO\_PA} = 0.031615$ over dimensionless needle area and introduced explicit femtoNewton force conversion ($\hbar c / a^2 \times 10^{15}$).
+
+## [2026-09-26] Impractical Theoretical Grid Resolution ($R=160$) in Fractal Clutch Configuration Suite
+- **Bug**: The clutch configuration generator set an impractical Yee resolution of $R=160$ to place 2 grid cells across the $12.56\text{ nm}$ gap, which would have required $\sim 60\text{ hours}$ per task ($50\times$ compute increase via $R^4$ scaling) and triggered Slurm's 8-hour walltime termination.
+- **Solution**: Reduced default resolution to the cluster-proven $R=60$ ($\Delta x = 16.67\text{ nm}$, $\sim 1.2\text{ hours}$ per task) with subpixel dielectric smoothing, and regenerated all sweep configurations.
+
