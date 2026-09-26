@@ -62,7 +62,7 @@ def build_fractal_clutch_suite(
     H_needle_um: float = 0.25,       # Needle height: 250 nm
     material: str = "Gold",
     medium: str = "Vacuum",
-    resolution: int = 80,
+    resolution: int = 160,           # Production resolution: dx = 6.25 nm (resolves gap >= 2.0 cells)
     nmax: int = 1,
     T_run: float = 12.0
 ) -> list:
@@ -119,7 +119,18 @@ def build_fractal_clutch_suite(
 
 
 def main():
-    configs = build_fractal_clutch_suite()
+    import argparse
+    parser = argparse.ArgumentParser(description="Generate Dual-Fractal Casimir Clutch Configuration Suite")
+    parser.add_argument("--res", type=int, default=160, help="Yee grid resolution (default: 160 px/um, dx=6.25 nm)")
+    parser.add_argument("--d-avg", type=float, default=0.020, help="Target invariant average distance in um (default: 0.020)")
+    parser.add_argument("--t-plate", type=float, default=0.025, help="Stator plate thickness in um (default: 0.025)")
+    args = parser.parse_args()
+
+    configs = build_fractal_clutch_suite(
+        d_average_um=args.d_avg,
+        t_plate_um=args.t_plate,
+        resolution=args.res
+    )
     out_dir = os.path.join(REPO_ROOT, "sweep_configs_fractal_clutch")
     os.makedirs(out_dir, exist_ok=True)
 
@@ -133,7 +144,7 @@ def main():
         fname = os.path.join(out_dir, f"config_{tid:03d}.json")
         with open(fname, "w", newline="\n") as f_out:
             json.dump(cfg, f_out, indent=4)
-        print(f"Generated {fname}: N={cfg['N_fractal']}, theta={cfg['theta_deg']:.1f} deg, z_tip={cfg['z_tip_um']*1e3:.2f} nm, <d>={cfg['d_average_um']*1e3:.1f} nm")
+        print(f"Generated {fname}: N={cfg['N_fractal']}, theta={cfg['theta_deg']:.1f} deg, z_tip={cfg['z_tip_um']*1e3:.2f} nm, <d>={cfg['d_average_um']*1e3:.1f} nm, res={cfg['resolution']}")
 
     master_path = os.path.join(out_dir, "master_fractal_clutch_suite.json")
     with open(master_path, "w", newline="\n") as f_m:

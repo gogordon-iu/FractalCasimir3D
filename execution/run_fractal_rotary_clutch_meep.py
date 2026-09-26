@@ -179,10 +179,17 @@ def run_fractal_rotary_clutch_simulation(
     z_bot = z_tip / 2.0
     z_top = z_tip + H_needle + delta_z_top
 
-    # Primary Needle 1 is centered at (+r1, 0) where r1 = L_fractal / 3.0
-    r1 = L_fractal / 3.0
-    sx_box = w1_needle + 2.0 * delta_xy
-    sy_box = w1_needle + 2.0 * delta_xy
+    # Retrieve fractal hierarchy
+    elements = get_fractal_clutch_elements(N_fractal, L_fractal, W1=W1_aperture, w1=w1_needle)
+    theta_rad = np.radians(theta_deg)
+    cos_th, sin_th = np.cos(theta_rad), np.sin(theta_rad)
+
+    # Dynamic bounding box enclosing ALL needles of the fractal rotor
+    # Needles are centered at (elem["cx"], elem["cy"]) with size elem["w_needle"]
+    max_needle_x = max(abs(elem["cx"]) + elem["w_needle"] / 2.0 for elem in elements)
+    max_needle_y = max(abs(elem["cy"]) + elem["w_needle"] / 2.0 for elem in elements)
+    sx_box = 2.0 * (max_needle_x + delta_xy)
+    sy_box = 2.0 * (max_needle_y + delta_xy)
     sz_box = z_top - z_bot
     z_box_center = (z_top + z_bot) / 2.0
 
@@ -195,17 +202,17 @@ def run_fractal_rotary_clutch_simulation(
     cell_size = mp.Vector3(sx, sy, sz)
 
     # Damping conductivity Sigma for Wick rotation along imaginary frequency
-    d_eff = max(0.04, min(z_tip, (W1_aperture - w1_needle) / 2.0))
+    d_eff = min(z_tip, (W1_aperture - w1_needle) / 2.0)
     Sigma = 0.5 / d_eff
 
-    # 6 sides of bounding box S_1 enclosing Primary Needle 1 at (+r1, 0)
+    # 6 sides of bounding box S enclosing the ENTIRE rotor needle array centered at (0, 0)
     sides_info = [
-        {"center": mp.Vector3(r1 - sx_box / 2.0, 0.0, z_box_center), "size": mp.Vector3(0.0, sy_box, sz_box), "orientation": -1.0},
-        {"center": mp.Vector3(r1 + sx_box / 2.0, 0.0, z_box_center), "size": mp.Vector3(0.0, sy_box, sz_box), "orientation": +1.0},
-        {"center": mp.Vector3(r1, -sy_box / 2.0, z_box_center), "size": mp.Vector3(sx_box, 0.0, sz_box), "orientation": -1.0},
-        {"center": mp.Vector3(r1, +sy_box / 2.0, z_box_center), "size": mp.Vector3(sx_box, 0.0, sz_box), "orientation": +1.0},
-        {"center": mp.Vector3(r1, 0.0, z_bot), "size": mp.Vector3(sx_box, sy_box, 0.0), "orientation": -1.0},
-        {"center": mp.Vector3(r1, 0.0, z_top), "size": mp.Vector3(sx_box, sy_box, 0.0), "orientation": +1.0}
+        {"center": mp.Vector3(-sx_box / 2.0, 0.0, z_box_center), "size": mp.Vector3(0.0, sy_box, sz_box), "orientation": -1.0},
+        {"center": mp.Vector3(+sx_box / 2.0, 0.0, z_box_center), "size": mp.Vector3(0.0, sy_box, sz_box), "orientation": +1.0},
+        {"center": mp.Vector3(0.0, -sy_box / 2.0, z_box_center), "size": mp.Vector3(sx_box, 0.0, sz_box), "orientation": -1.0},
+        {"center": mp.Vector3(0.0, +sy_box / 2.0, z_box_center), "size": mp.Vector3(sx_box, 0.0, sz_box), "orientation": +1.0},
+        {"center": mp.Vector3(0.0, 0.0, z_bot), "size": mp.Vector3(sx_box, sy_box, 0.0), "orientation": -1.0},
+        {"center": mp.Vector3(0.0, 0.0, z_top), "size": mp.Vector3(sx_box, sy_box, 0.0), "orientation": +1.0}
     ]
 
     pol_list = [mp.Ex, mp.Ey, mp.Ez, mp.Hx, mp.Hy, mp.Hz]
@@ -219,10 +226,6 @@ def run_fractal_rotary_clutch_simulation(
     num_tasks = 36 * n_max
     start_time = time.time()
     max_walltime_sec = (max_walltime_hours * 3600.0) if (max_walltime_hours is not None and max_walltime_hours > 0) else None
-
-    # Retrieve fractal hierarchy
-    elements = get_fractal_clutch_elements(N_fractal, L_fractal, W1=W1_aperture, w1=w1_needle)
-    theta_rad = np.radians(theta_deg)
     cos_th, sin_th = np.cos(theta_rad), np.sin(theta_rad)
 
     def run_one_config(cfg_name):
@@ -493,15 +496,15 @@ def main():
     )
 
     if is_g0 and args.config == "all":
-        # Total force on the primary 4-needle C4 rotor: F_total = 4 * F_1
-        # When secondary needles are present (N >= 2), the total force scales across the fractal hierarchy
-        num_primary_needles = 4
-        f_total_meep = num_primary_needles * f1_net
+        # The integration box encloses the entire rotor array, so f1_net is the total rotor force
+        f_total_meep = f1_net
         f_total_N = f_total_meep * MEEP_FORCE_TO_SI
         f_total_fN = f_total_N * 1e15
 
-        # Normal pressure on primary needle cross-section A_rotor = 4 * w1^2
-        pressure_Pa = (f1_net / (args.w1_needle ** 2)) * MEEP_TO_PA
+        # Normal pressure on total rotor needle cross-section A_rotor = sum(w_i^2)
+        elements = get_fractal_clutch_elements(args.N_fractal, args.L_fractal, W1=args.W1_aperture, w1=args.w1_needle)
+        A_rotor = sum(elem["w_needle"] ** 2 for elem in elements)
+        pressure_Pa = (f_total_meep / A_rotor) * MEEP_TO_PA
 
         f_area = 1.0 - (8.0 / 9.0) ** args.N_fractal
         d_avg_um = (1.0 - f_area) * args.z_tip + f_area * (args.z_tip + args.t_plate)
@@ -520,7 +523,8 @@ def main():
             "z_tip_nm": float(args.z_tip * 1e3),
             "material": args.material,
             "resolution": args.res,
-            "force_single_meep": float(f1_net),
+            "num_needles": len(elements),
+            "A_rotor_um2": float(A_rotor),
             "force_total_meep": float(f_total_meep),
             "force_total_fN": float(f_total_fN),
             "pressure_Pa": float(pressure_Pa),
@@ -534,11 +538,10 @@ def main():
 
         print("\n" + "=" * 85)
         print("DUAL-FRACTAL CASIMIR CLUTCH SIMULATION COMPLETE")
-        print(f"Generation N: {args.N_fractal} | Rotation Angle theta: {args.theta:.1f} deg")
-        print(f"Primary Single-Needle Force (MEEP): {f1_net:+.6e}")
+        print(f"Generation N: {args.N_fractal} ({len(elements)} needles) | Rotation Angle theta: {args.theta:.1f} deg")
         print(f"Total Fractal Rotor Force (MEEP):   {f_total_meep:+.6e}")
         print(f"Total Fractal Rotor Force (fN):     {f_total_fN:+.4f} fN  -->  {'[+++ FRACTAL REPULSION (LEVITATING) +++]' if f_total_meep > 0 else '[- FRACTAL ATTRACTION (CLAMPING) -]'}")
-        print(f"Primary Needle Pressure:            {pressure_Pa:+.4e} Pa")
+        print(f"Rotor Normal Pressure:              {pressure_Pa:+.4e} Pa (on total A_rotor = {A_rotor*1e6:.1f} nm^2)")
         print(f"Results saved to:                   {out_dest}")
         print("=" * 85 + "\n", flush=True)
 
