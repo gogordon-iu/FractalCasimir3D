@@ -165,15 +165,21 @@ def query_slurm_jobs(user):
 def identify_campaign(job_name):
     """Identifies campaign metadata from job name."""
     clean_name = job_name.lower()
+    if "cantor" in clean_name:
+        return "cantor_forest", CAMPAIGNS["cantor_forest"]
+    if "fractal_clutch" in clean_name:
+        return "fractal_clutch", CAMPAIGNS["fractal_clutch"]
+    if "clutch" in clean_name:  # casimir_clutch, clutch_campaign
+        return "clutch_campaign", CAMPAIGNS["clutch_campaign"]
+    if "geom_repulse" in clean_name or "repulse" in clean_name or "repulsion" in clean_name:
+        return "geom_repulse", CAMPAIGNS["geom_repulse"]
+    if "control" in clean_name:
+        return "fractal_control", CAMPAIGNS["fractal_control"]
+    if "sweet" in clean_name:
+        return "sweet_spot", CAMPAIGNS["sweet_spot"]
     for key, meta in CAMPAIGNS.items():
         if key in clean_name or clean_name in key:
             return key, meta
-    if "cantor" in clean_name:
-        return "cantor_forest", CAMPAIGNS["cantor_forest"]
-    if "clutch" in clean_name:
-        return "fractal_clutch", CAMPAIGNS["fractal_clutch"]
-    if "repulse" in clean_name or "repulsion" in clean_name:
-        return "geom_repulse", CAMPAIGNS["geom_repulse"]
     return None, None
 
 
@@ -192,48 +198,10 @@ def load_task_config(campaign_meta, task_id):
     return None
 
 
-def get_moment_progress(campaign_key, task_id, cfg_data):
-    """Reads completed moments from .tmp/ checkpoints."""
-    if not cfg_data:
-        return 0, 72
-
-    N = cfg_data.get("N_fractal", 1)
-    th = cfg_data.get("theta_deg", cfg_data.get("theta", 0.0))
-    z_tip = cfg_data.get("z_tip_um", cfg_data.get("d", 0.015))
-    nmax = cfg_data.get("nmax", 1)
-    total_moments = 36 * nmax * 2  # 'both' + 'self'
-
-    done_moments = 0
-    # Scan both configurations
-    for cfg_type in ["both", "self"]:
-        # Check full config checkpoint
-        full_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_*{task_id:03d}*{cfg_type}.json")
-        matching_full = [f for f in glob.glob(full_pattern) if "chk_moments_" not in f]
-        if matching_full:
-            done_moments += 36 * nmax
-            continue
-
-        # Check incremental moments
-        mom_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_moments_*{task_id:03d}*{cfg_type}.json")
-        matching_mom = glob.glob(mom_pattern)
-        if not matching_mom:
-            # Fallback by theta and z_tip
-            mom_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_moments_*th_{th:.1f}*{cfg_type}.json")
-            matching_mom = glob.glob(mom_pattern)
-
-        for mf in matching_mom:
-            try:
-                with open(mf, "r") as f:
-                    cdata = json.load(f)
-                    done_moments += len(cdata.get("completed_moments", {}))
-            except Exception:
-                pass
-
-    return min(done_moments, total_moments), total_moments
-
-
 def get_latest_log_line(job_info):
     """Extracts the last non-empty line of the job's Slurm log."""
+    if not job_info:
+        return "Running FDTD time-stepping..."
     job_id = job_info["base_id"]
     task_id = job_info["task_id"]
     patterns = [
@@ -257,6 +225,147 @@ def get_latest_log_line(job_info):
             except Exception:
                 pass
     return "Running FDTD time-stepping..."
+
+
+def get_moment_progress(campaign_key, task_id, cfg_data, job_info=None):
+    """Accurately computes completed moments from results, checkpoints, and Slurm logs."""
+    if not cfg_data:
+        return 0, 72
+
+    N = cfg_data.get("N_fractal", cfg_data.get("N_top", 1))
+    th = cfg_data.get("theta_deg", cfg_data.get("theta", 0.0))
+    z_tip = cfg_data.get("z_tip_um", cfg_data.get("d", 0.015))
+    nmax = cfg_data.get("nmax", 1)
+    moments_per_cfg = 36 * nmax
+    total_moments = moments_per_cfg * 2  # 'both' + 'self'
+
+    # Check 1: If task result file is already written in campaign results dir
+    camp_meta = CAMPAIGNS.get(campaign_key)
+    if camp_meta and task_id is not None:
+        res_dir = os.path.join(REPO_ROOT, camp_meta["results_dir"])
+        done_pats = [
+            os.path.join(res_dir, f"task_{task_id:03d}_*.json"),
+            os.path.join(res_dir, f"task_{task_id}_*.json"),
+            os.path.join(res_dir, "results_json", f"*th_{th:.1f}*.json"),
+        ]
+        for pat in done_pats:
+            if glob.glob(pat):
+                return total_moments, total_moments
+
+    # Check 2: Checkpoint inspection with strict campaign-specific prefixes
+    done_moments = 0
+    for cfg_type in ["both", "self"]:
+        cfg_done = 0
+        if campaign_key == "cantor_forest":
+            full_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_cantor_task_{task_id:03d}_*_{cfg_type}.json")
+            mom_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_moments_cantor_task_{task_id:03d}_*_{cfg_type}.json")
+        elif campaign_key == "fractal_clutch":
+            full_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_fractal_clutch_N_{N}_th_{th:.1f}_*_{cfg_type}.json")
+            mom_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_moments_fractal_clutch_N_{N}_th_{th:.1f}_*_{cfg_type}.json")
+        elif campaign_key == "clutch_campaign":
+            d_val = float(cfg_data.get("d", 0.04))
+            full_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_v4_d_{d_val:.4f}_*th_{th:.1f}_*_{cfg_type}.json")
+            mom_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_moments_v4_d_{d_val:.4f}_*th_{th:.1f}_*_{cfg_type}.json")
+        elif campaign_key == "geom_repulse":
+            d_val = float(cfg_data.get("d", 0.05))
+            full_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_v3_d_{d_val:.4f}_*_{cfg_type}.json")
+            mom_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_moments_v3_d_{d_val:.4f}_*_{cfg_type}.json")
+        else:
+            full_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_{campaign_key}_task_{task_id:03d}_*_{cfg_type}.json")
+            mom_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_moments_{campaign_key}_task_{task_id:03d}_*_{cfg_type}.json")
+
+        matching_full = [f for f in glob.glob(full_pattern) if "chk_moments_" not in os.path.basename(f)]
+        if matching_full:
+            cfg_done = moments_per_cfg
+        else:
+            matching_mom = glob.glob(mom_pattern)
+            for mf in matching_mom:
+                try:
+                    with open(mf, "r") as f_mom:
+                        mdata = json.load(f_mom)
+                        m_len = len(mdata.get("completed_moments", {}))
+                        cfg_done = max(cfg_done, m_len)
+                except Exception:
+                    pass
+        done_moments += cfg_done
+
+    # Check 3: Live stdout log line parsing for real-time moment progress
+    if job_info:
+        log_line = get_latest_log_line(job_info)
+        m = re.search(r"Done moment (\d+)/(\d+)\s*\(Config:\s*(\w+)\)", log_line)
+        if m:
+            cur_m = int(m.group(1))
+            cfg_in_log = m.group(3).lower()
+            if cfg_in_log == "both":
+                log_done = cur_m
+            elif cfg_in_log == "self":
+                log_done = moments_per_cfg + cur_m
+            else:
+                log_done = cur_m
+            done_moments = max(done_moments, log_done)
+        elif "SIMULATION COMPLETE" in log_line or "COMPLETE" in log_line:
+            done_moments = total_moments
+
+    return min(done_moments, total_moments), total_moments
+
+
+def get_campaign_completed_data(ckey, cmeta):
+    """Returns list of completed task dicts for a campaign."""
+    res_dir = os.path.join(REPO_ROOT, cmeta["results_dir"])
+    if not os.path.exists(res_dir):
+        return []
+
+    # 1. Check CAMPAIGN_PROGRESS.json if present
+    if ckey == "clutch_campaign":
+        prog_json = os.path.join(res_dir, "CAMPAIGN_PROGRESS.json")
+        if os.path.exists(prog_json):
+            try:
+                with open(prog_json, "r") as fp:
+                    pdata = json.load(fp)
+                    tasks = pdata.get("tasks", [])
+                    completed = []
+                    task_items = tasks.values() if isinstance(tasks, dict) else tasks
+                    for tinfo in task_items:
+                        pct = tinfo.get("completion_pct", tinfo.get("pct_moments", 0))
+                        st = tinfo.get("status", "")
+                        if st in ["COMPLETE", "COMPLETED"] or pct >= 100:
+                            f_val = tinfo.get("net_force", tinfo.get("force_sub_fN", 0.0))
+                            p_val = tinfo.get("pressure_Pa", 0.0)
+                            reg = "REPULSIVE" if (p_val > 0 or f_val > 0) else "ATTRACTIVE"
+                            completed.append({
+                                "force_net_fN": f_val,
+                                "pressure_Pa": p_val,
+                                "regime": reg
+                            })
+                    if completed:
+                        return completed
+            except Exception:
+                pass
+
+    # 2. Check task_*.json or meep_*.json in res_dir and res_dir/results_json
+    patterns = [
+        os.path.join(res_dir, "task_*.json"),
+        os.path.join(res_dir, "meep_*.json"),
+        os.path.join(res_dir, "results_json", "meep_*.json"),
+        os.path.join(res_dir, "results_json", "task_*.json")
+    ]
+    files = []
+    for pat in patterns:
+        files.extend(glob.glob(pat))
+    files = list(set(files))
+
+    completed = []
+    for f in sorted(files):
+        base = os.path.basename(f)
+        if "summary" in base or "progress" in base or "manifest" in base:
+            continue
+        try:
+            with open(f, "r") as fp:
+                d = json.load(fp)
+                completed.append(d)
+        except Exception:
+            pass
+    return completed
 
 
 def render_dashboard():
@@ -311,7 +420,7 @@ def render_dashboard():
                 print(f"      Physics:  {C_CYAN}N={N}{C_RESET} ({n_pillars} pillars) | {C_CYAN}theta={th:.1f} deg{C_RESET} | {C_CYAN}z_tip={ztip:.2f} nm{C_RESET} | <d>={davg:.1f} nm | Mat: {mat} | R={res} px/um | Exp: {reg_color}{regime}{C_RESET}")
 
                 if state == "RUNNING":
-                    done_m, tot_m = get_moment_progress(camp_key, j["task_id"], cfg_data)
+                    done_m, tot_m = get_moment_progress(camp_key, j["task_id"], cfg_data, job_info=j)
                     pct = (done_m / float(tot_m)) * 100.0 if tot_m > 0 else 0.0
                     bar = make_bar(pct, width=24)
                     log_line = get_latest_log_line(j)
@@ -331,24 +440,19 @@ def render_dashboard():
     print("-" * 115)
 
     for ckey, cmeta in CAMPAIGNS.items():
-        res_dir = os.path.join(REPO_ROOT, cmeta["results_dir"])
-        completed_files = glob.glob(os.path.join(res_dir, "task_*.json"))
-        num_done = len(completed_files)
+        completed_items = get_campaign_completed_data(ckey, cmeta)
+        num_done = len(completed_items)
         total = cmeta["total_tasks"]
 
         repulsive_count = 0
-        for rf in completed_files:
-            try:
-                with open(rf, "r") as fp:
-                    rdata = json.load(fp)
-                    f_net = rdata.get("force_net_fN_per_cell", rdata.get("force_net_fN", 0.0))
-                    if f_net > 0:
-                        repulsive_count += 1
-            except Exception:
-                pass
+        for rdata in completed_items:
+            f_net = rdata.get("force_net_fN_per_cell", rdata.get("force_net_fN", rdata.get("force_sub_fN", rdata.get("force_net_meep", 0.0))))
+            regime = rdata.get("regime", "")
+            if f_net > 0 or "REPULSIVE" in str(regime).upper():
+                repulsive_count += 1
 
         # Check if active in queue
-        active_in_queue = sum(1 for j in jobs if ckey in j["name"].lower() or (j["name"].lower() in ckey))
+        active_in_queue = sum(1 for j in jobs if (identify_campaign(j["name"])[0] == ckey))
 
         if active_in_queue > 0:
             status_str = f"{C_GREEN}RUNNING ({active_in_queue} in queue){C_RESET}"
