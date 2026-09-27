@@ -80,4 +80,9 @@
 - **Bug**: Clutch scripts contained hardcoded standoffs (`0.025`), plate padding (`0.40`), cylinder overhangs (`0.001`), walltime estimation constants (`2400.0`), hardcoded `T_run=12.0` in Slurm, and used an idealized fractal formula $1-(8/9)^N$ that differed from the actual 3D aperture area.
 - **Solution**: Replaced all hardcoded parameters with dynamic functions derived directly from 3D element geometry (`compute_plate_area_fraction`), scaled standoffs and cylinder heights with resolution $dx$, and made Slurm and analysis scripts dynamically extract runtime parameters.
 
+## [2026-09-27] Checkpoint Glob False-Positive Overmatching in Cluster Monitor Dashboard
+- **Bug**: `monitor_all_casimir_runs.py` matched `.tmp/chk_*{task_id:03d}*{cfg_type}.json`, causing Task 5 (`005`) to match legacy sweet-spot checkpoints (`chk_v3_d_0.0500_...`) and artificially display 100% completion (72/72 moments) for actively executing tasks.
+- **Solution**: Implemented strict campaign-scoped checkpoint glob prefixes (`chk_cantor_task_*`, `chk_fractal_clutch_*`) and integrated live Slurm stdout log parsing (`Done moment M/36`) for ground-truth real-time progress tracking.
+
+
 
