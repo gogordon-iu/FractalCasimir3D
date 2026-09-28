@@ -250,7 +250,7 @@ def run_fractal_rotary_clutch_simulation(
                     data = json.load(f_chk)
                 if is_g0:
                     print(f"[{cfg_name.upper()}] Loaded cached force: {data['force']:.6e} from {chk_file}")
-                return float(data["force"])
+                return float(data["force"]), True
             except (json.JSONDecodeError, KeyError, ValueError) as err:
                 if is_g0:
                     print(f"[{cfg_name.upper()}] Notice: Stale/corrupt checkpoint {chk_file} ({err}). Recomputing.")
@@ -425,7 +425,8 @@ def run_fractal_rotary_clutch_simulation(
                     print(f"Warning: Failed writing incremental checkpoint: {write_err}", flush=True)
                 print(f"  [{cfg_name.upper()}][Rank 0] Done moment {task_idx+1}/{num_tasks}: force_integral={force_integral:+.6e} ({moment_durations[-1]:.1f}s)", flush=True)
 
-        if is_g0 and len(completed_moments) == num_tasks:
+        is_done = (len(completed_moments) == num_tasks)
+        if is_g0 and is_done:
             try:
                 with open(chk_file, "w") as f_out:
                     json.dump({"force": float(total_force)}, f_out, indent=4)
@@ -433,20 +434,25 @@ def run_fractal_rotary_clutch_simulation(
             except OSError as save_err:
                 print(f"Warning: Failed writing config checkpoint {chk_file}: {save_err}", flush=True)
 
-        return total_force
+        return total_force, is_done
 
     # Run requested configurations
     if config == "both":
-        f1_both = run_one_config("both")
-        return f1_both, 0.0, f1_both
+        f1_both, both_done = run_one_config("both")
+        return f1_both, 0.0, f1_both, both_done
     elif config == "self":
-        f1_self = run_one_config("self")
-        return 0.0, f1_self, 0.0
+        f1_self, self_done = run_one_config("self")
+        return 0.0, f1_self, 0.0, self_done
     else:  # 'all'
-        f1_both = run_one_config("both")
-        f1_self = run_one_config("self")
-        f1_sub = f1_both - f1_self
-        return f1_both, f1_self, f1_sub
+        f1_both, both_done = run_one_config("both")
+        if both_done:
+            f1_self, self_done = run_one_config("self")
+        else:
+            f1_self = 0.0
+            self_done = False
+        all_done = bool(both_done and self_done)
+        f1_sub = (f1_both - f1_self) if all_done else 0.0
+        return f1_both, f1_self, f1_sub, all_done
 
 
 def main():
@@ -488,7 +494,7 @@ def main():
         print(f"Predicted State: {'DISENGAGED (Repulsive Levitation)' if abs(args.theta) < 1e-3 or abs(args.theta - 90.0) < 1e-3 else ('ENGAGED (Attractive Clamping)' if abs(args.theta - 45.0) < 1e-3 else 'TRANSITIONAL')}")
         print("=" * 85, flush=True)
 
-    f1_both, f1_self, f1_net = run_fractal_rotary_clutch_simulation(
+    f1_both, f1_self, f1_net, all_done = run_fractal_rotary_clutch_simulation(
         N_fractal=args.N_fractal,
         theta_deg=args.theta,
         L_fractal=args.L_fractal,
@@ -506,6 +512,31 @@ def main():
         max_walltime_hours=args.max_walltime_hours,
         no_cache=args.no_cache
     )
+
+    if not all_done:
+        if is_g0:
+            print("\n" + "=" * 85)
+            print(f"[WALLTIME CHECKPOINT] Task {args.task_id} completed partial moments and cleanly checkpointed to .tmp/.")
+            print(f"Status: PENDING remaining moments. Follow-up segment will resume seamlessly.")
+            print("=" * 85 + "\n", flush=True)
+            flag_pending = f".tmp/clutch_task_{args.task_id:03d}_pending.flag"
+            try:
+                with open(flag_pending, "w") as fp:
+                    fp.write(f"pending:{time.time()}\n")
+            except OSError:
+                pass
+        return
+
+    if is_g0:
+        flag_complete = f".tmp/clutch_task_{args.task_id:03d}_complete.flag"
+        try:
+            with open(flag_complete, "w") as fp:
+                fp.write(f"complete:{time.time()}\n")
+            flag_pending = f".tmp/clutch_task_{args.task_id:03d}_pending.flag"
+            if os.path.exists(flag_pending):
+                os.remove(flag_pending)
+        except OSError:
+            pass
 
     if is_g0 and args.config == "all":
         # The integration box encloses the entire rotor array, so f1_net is the total rotor force

@@ -87,21 +87,29 @@ bash execution/run_meep_wrapper.sh srun -n 128 $PYTHON_EXEC execution/run_cantor
     --nmax $NMAX \
     --config all \
     --T-run $T_RUN \
-    --max-walltime-hours 7.5
+    --max-walltime-hours 7.2
 
 EXIT_CODE=$?
 echo "Task $SLURM_ARRAY_TASK_ID finished with exit code $EXIT_CODE at $(date)."
+
+COMPLETE_FLAG=".tmp/cantor_task_${CFG_INDEX}_complete.flag"
+PENDING_FLAG=".tmp/cantor_task_${CFG_INDEX}_pending.flag"
 
 # Auto-sync results to GitHub on Rank 0
 if [ $EXIT_CODE -eq 0 ]; then
     mkdir -p cluster_diagnostics/raw_logs
     cp -f .tmp/cantor_forest_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* cluster_diagnostics/raw_logs/ 2>/dev/null || true
     
-    rm -f .git/index.lock 2>/dev/null || true
-    git add results_cantor_forest/ cluster_diagnostics/raw_logs/
-    git commit -m "progress(cantor_forest): Task $SLURM_ARRAY_TASK_ID (N=$N_FRACTAL, theta=${THETA}deg) COMPLETE" || true
-    git pull origin main --no-edit -X ours 2>/dev/null || true
-    git push origin main 2>/dev/null || true
+    if [ -f "$COMPLETE_FLAG" ]; then
+        rm -f .git/index.lock 2>/dev/null || true
+        git add results_cantor_forest/ cluster_diagnostics/raw_logs/
+        git commit -m "progress(cantor_forest): Task $SLURM_ARRAY_TASK_ID (N=$N_FRACTAL, theta=${THETA}deg) COMPLETE" || true
+        git pull origin main --no-edit -X ours 2>/dev/null || true
+        git push origin main 2>/dev/null || true
+    elif [ -f "$PENDING_FLAG" ]; then
+        echo "Task $SLURM_ARRAY_TASK_ID paused at walltime guard. Resubmitting follow-up segment..."
+        sbatch --array=${SLURM_ARRAY_TASK_ID} execution/submit_cantor_forest.sbatch
+    fi
 fi
 
 exit $EXIT_CODE

@@ -173,7 +173,7 @@ def run_cantor_forest_simulation(
                     data = json.load(f_chk)
                 if is_g0:
                     print(f"[{cfg_name.upper()}] Loaded cached force: {data['force']:.6e} from {chk_file}")
-                return float(data["force"])
+                return float(data["force"]), True
             except (json.JSONDecodeError, KeyError, ValueError) as err:
                 if is_g0:
                     print(f"[{cfg_name.upper()}] Notice: Stale/corrupt checkpoint {chk_file} ({err}). Recomputing.")
@@ -362,7 +362,8 @@ def run_cantor_forest_simulation(
                     print(f"Warning: Failed writing incremental checkpoint: {write_err}", flush=True)
                 print(f"  [{cfg_name.upper()}][Rank 0] Done moment {task_idx+1}/{num_tasks}: force_integral={force_integral:+.6e} ({moment_durations[-1]:.1f}s)", flush=True)
 
-        if is_g0 and len(completed_moments) == num_tasks:
+        is_done = (len(completed_moments) == num_tasks)
+        if is_g0 and is_done:
             try:
                 with open(chk_file, "w") as f_out:
                     json.dump({"force": float(total_force)}, f_out, indent=4)
@@ -370,18 +371,25 @@ def run_cantor_forest_simulation(
             except OSError as save_err:
                 print(f"Warning: Failed writing config checkpoint {chk_file}: {save_err}", flush=True)
 
-        return total_force
+        return total_force, is_done
 
     # Run requested configurations
     if config == "both":
-        return run_one_config("both"), 0.0, 0.0
+        f_both, both_done = run_one_config("both")
+        return f_both, 0.0, 0.0, both_done
     elif config == "self":
-        return 0.0, run_one_config("self"), 0.0
+        f_self, self_done = run_one_config("self")
+        return 0.0, f_self, 0.0, self_done
     else:  # 'all'
-        f_both = run_one_config("both")
-        f_self = run_one_config("self")
-        f_sub = f_both - f_self
-        return f_both, f_self, f_sub
+        f_both, both_done = run_one_config("both")
+        if both_done:
+            f_self, self_done = run_one_config("self")
+        else:
+            f_self = 0.0
+            self_done = False
+        all_done = bool(both_done and self_done)
+        f_sub = (f_both - f_self) if all_done else 0.0
+        return f_both, f_self, f_sub, all_done
 
 
 def main():
@@ -432,7 +440,7 @@ def main():
         print(f"Material: {args.material} | Resolution: {args.res} (dx = {1000/args.res:.2f} nm)")
         print("=" * 80, flush=True)
 
-    f_both, f_self, f_net = run_cantor_forest_simulation(
+    f_both, f_self, f_net, all_done = run_cantor_forest_simulation(
         task_id=args.task_id,
         N_fractal=args.N_fractal,
         theta_deg=args.theta,
@@ -455,6 +463,31 @@ def main():
         max_walltime_hours=args.max_walltime_hours,
         no_cache=args.no_cache
     )
+
+    if not all_done:
+        if is_g0:
+            print("\n" + "=" * 80)
+            print(f"[WALLTIME CHECKPOINT] Task {args.task_id} completed partial moments and cleanly checkpointed to .tmp/.")
+            print(f"Status: PENDING remaining moments. Follow-up segment will resume seamlessly.")
+            print("=" * 80 + "\n", flush=True)
+            flag_pending = f".tmp/cantor_task_{args.task_id:03d}_pending.flag"
+            try:
+                with open(flag_pending, "w") as fp:
+                    fp.write(f"pending:{time.time()}\n")
+            except OSError:
+                pass
+        return
+
+    if is_g0:
+        flag_complete = f".tmp/cantor_task_{args.task_id:03d}_complete.flag"
+        try:
+            with open(flag_complete, "w") as fp:
+                fp.write(f"complete:{time.time()}\n")
+            flag_pending = f".tmp/cantor_task_{args.task_id:03d}_pending.flag"
+            if os.path.exists(flag_pending):
+                os.remove(flag_pending)
+        except OSError:
+            pass
 
     if is_g0 and args.config == "all":
         # Force in SI units per unit cell:

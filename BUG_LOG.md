@@ -84,5 +84,10 @@
 - **Bug**: `monitor_all_casimir_runs.py` matched `.tmp/chk_*{task_id:03d}*{cfg_type}.json`, causing Task 5 (`005`) to match legacy sweet-spot checkpoints (`chk_v3_d_0.0500_...`) and artificially display 100% completion (72/72 moments) for actively executing tasks.
 - **Solution**: Implemented strict campaign-scoped checkpoint glob prefixes (`chk_cantor_task_*`, `chk_fractal_clutch_*`) and integrated live Slurm stdout log parsing (`Done moment M/36`) for ground-truth real-time progress tracking.
 
+## [2026-09-28] Premature Final Result Serialization on Multi-Hour Walltime Guard Pause
+- **Bug**: In `run_cantor_forest_meep.py` and `run_fractal_rotary_clutch_meep.py`, when the 7.5-hour walltime guard paused execution after $\sim 35/72$ moments, `run_one_config()` returned the partial force sum without checking completion, causing `main()` to prematurely serialize incomplete results to `results_*/task_*.json` with uncalibrated free-space self-forces.
+- **Solution**: Enforced strict `all_done = (both_done and self_done)` completion guards before writing final result files, managed `.tmp/*_pending.flag` and `.tmp/*_complete.flag` states, and integrated automated follow-up segment resubmission in the Slurm array scripts.
+
+
 
 
