@@ -1,0 +1,127 @@
+================================================================================
+SIERPINSKI-CANTOR FOREST CASIMIR REPULSION: TASK 5 / 8
+Host: x1000c2s7b1n0
+Started: Mon Sep 28 10:02:26 AM EDT 2026
+================================================================================
+Configuration sweep_configs_cantor_forest/config_005.json loaded:
+  Generation N: 3, Rotation theta: 0.0 deg
+  Cell span L: 1.05 um, W1 aperture: 0.25 um, w1 pillar: 0.035 um, H: 0.25 um
+  Stator thickness t: 0.025 um, Tip clearance z_tip: 0.014942986546249738 um
+  Material: Gold, Resolution: 60, T_run: 12.0
+================================================================================
+==================================================
+RUNNING CRASH-PROOF MEEP SIMULATION WRAPPER
+==================================================
+Executing: srun -n 128 /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python execution/run_cantor_forest_meep.py --task-id 5 --N-fractal 3 --theta 0.0 --L-cell 1.05 --W1-aperture 0.25 --w1-pillar 0.035 --H-pillar 0.25 --t-plate 0.025 --z-tip 0.014942986546249738 --material Gold --res 60 --nmax 1 --config all --T-run 12.0 --max-walltime-hours 7.5
+================================================================================
+SIERPINSKI-CANTOR FOREST 3D FDTD CASIMIR REPULSION SOLVER
+Task ID: 5 | Generation N: 3 | Active Pillars: 73 | Rotation Theta: 0.0 deg
+Cell Span L: 1050.0 nm | Aperture W1: 250.0 nm | Pillar w1: 35.0 nm
+Pillar Height H: 250.0 nm | Membrane Thickness t: 25.0 nm
+Tip Clearance z_tip: 14.94 nm (W1/4 threshold = 62.5 nm)
+Corner Profile: Sharp 90-degree
+Backing Substrate: NO (Pillars Only)
+Flat Control: NO
+Material: Gold | Resolution: 60 (dx = 16.67 nm)
+================================================================================
+[BOTH] Loaded 35 cached moments from .tmp/chk_moments_cantor_task_005_N_3_th_0.0_ztip_0.0149_res_60_back_0_both.json
+  [BOTH][Rank 0] Skipped moment 1/36 [CACHED]: force_integral=-2.778192e-01
+  [BOTH][Rank 0] Skipped moment 2/36 [CACHED]: force_integral=-2.777836e-01
+  [BOTH][Rank 0] Skipped moment 3/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 4/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 5/36 [CACHED]: force_integral=-1.212145e+02
+  [BOTH][Rank 0] Skipped moment 6/36 [CACHED]: force_integral=+2.097993e+02
+  [BOTH][Rank 0] Skipped moment 7/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 8/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 9/36 [CACHED]: force_integral=-3.169378e-01
+  [BOTH][Rank 0] Skipped moment 10/36 [CACHED]: force_integral=-3.169023e-01
+  [BOTH][Rank 0] Skipped moment 11/36 [CACHED]: force_integral=-6.007868e+02
+  [BOTH][Rank 0] Skipped moment 12/36 [CACHED]: force_integral=+1.112021e+03
+  [BOTH][Rank 0] Skipped moment 13/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 14/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 15/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 16/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 17/36 [CACHED]: force_integral=+3.630420e+03
+  [BOTH][Rank 0] Skipped moment 18/36 [CACHED]: force_integral=-2.100062e+03
+  [BOTH][Rank 0] Skipped moment 19/36 [CACHED]: force_integral=+1.926676e-01
+  [BOTH][Rank 0] Skipped moment 20/36 [CACHED]: force_integral=+1.927213e-01
+  [BOTH][Rank 0] Skipped moment 21/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 22/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 23/36 [CACHED]: force_integral=-1.244264e+03
+  [BOTH][Rank 0] Skipped moment 24/36 [CACHED]: force_integral=+1.160474e+03
+  [BOTH][Rank 0] Skipped moment 25/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 26/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 27/36 [CACHED]: force_integral=+1.926676e-01
+  [BOTH][Rank 0] Skipped moment 28/36 [CACHED]: force_integral=+1.927213e-01
+  [BOTH][Rank 0] Skipped moment 29/36 [CACHED]: force_integral=-1.244264e+03
+  [BOTH][Rank 0] Skipped moment 30/36 [CACHED]: force_integral=+1.160474e+03
+  [BOTH][Rank 0] Skipped moment 31/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 32/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 33/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 34/36 [CACHED]: force_integral=+0.000000e+00
+  [BOTH][Rank 0] Skipped moment 35/36 [CACHED]: force_integral=+2.043749e+03
+  [BOTH][Rank 0] Done moment 36/36: force_integral=-3.286605e+03 (788.3s)
+[BOTH] Complete. Total force: +7.193228e+02
+[SELF] Loaded 1 cached moments from .tmp/chk_moments_cantor_task_005_N_3_th_0.0_ztip_0.0149_res_60_back_0_self.json
+  [SELF][Rank 0] Skipped moment 1/36 [CACHED]: force_integral=-1.601841e-01
+  [SELF][Rank 0] Done moment 2/36: force_integral=-1.601846e-01 (780.1s)
+  [SELF][Rank 0] Done moment 3/36: force_integral=+0.000000e+00 (774.9s)
+  [SELF][Rank 0] Done moment 4/36: force_integral=+0.000000e+00 (770.3s)
+  [SELF][Rank 0] Done moment 5/36: force_integral=-2.967655e+02 (773.2s)
+  [SELF][Rank 0] Done moment 6/36: force_integral=+2.098667e+02 (777.6s)
+  [SELF][Rank 0] Done moment 7/36: force_integral=+0.000000e+00 (775.2s)
+  [SELF][Rank 0] Done moment 8/36: force_integral=+0.000000e+00 (774.6s)
+  [SELF][Rank 0] Done moment 9/36: force_integral=-2.802650e-01 (774.1s)
+  [SELF][Rank 0] Done moment 10/36: force_integral=-2.802655e-01 (775.1s)
+  [SELF][Rank 0] Done moment 11/36: force_integral=-1.163796e+03 (774.3s)
+  [SELF][Rank 0] Done moment 12/36: force_integral=+1.112088e+03 (774.6s)
+  [SELF][Rank 0] Done moment 13/36: force_integral=+0.000000e+00 (768.2s)
+  [SELF][Rank 0] Done moment 14/36: force_integral=+0.000000e+00 (768.5s)
+  [SELF][Rank 0] Done moment 15/36: force_integral=+0.000000e+00 (768.1s)
+  [SELF][Rank 0] Done moment 16/36: force_integral=+0.000000e+00 (767.4s)
+  [SELF][Rank 0] Done moment 17/36: force_integral=+3.639678e+03 (768.5s)
+  [SELF][Rank 0] Done moment 18/36: force_integral=-2.100084e+03 (769.1s)
+  [SELF][Rank 0] Done moment 19/36: force_integral=-1.800719e-01 (767.1s)
+  [SELF][Rank 0] Done moment 20/36: force_integral=-1.800724e-01 (764.9s)
+  [SELF][Rank 0] Done moment 21/36: force_integral=+0.000000e+00 (765.0s)
+  [SELF][Rank 0] Done moment 22/36: force_integral=+0.000000e+00 (763.7s)
+  [SELF][Rank 0] Done moment 23/36: force_integral=-1.095084e+03 (766.2s)
+  [SELF][Rank 0] Done moment 24/36: force_integral=+1.160378e+03 (766.2s)
+  [SELF][Rank 0] Done moment 25/36: force_integral=+0.000000e+00 (764.6s)
+  [SELF][Rank 0] Done moment 26/36: force_integral=+0.000000e+00 (765.0s)
+  [SELF][Rank 0] Done moment 27/36: force_integral=-1.800719e-01 (763.8s)
+  [SELF][Rank 0] Done moment 28/36: force_integral=-1.800724e-01 (764.2s)
+  [SELF][Rank 0] Done moment 29/36: force_integral=-1.095084e+03 (766.1s)
+  [SELF][Rank 0] Done moment 30/36: force_integral=+1.160378e+03 (769.1s)
+  [SELF][Rank 0] Done moment 31/36: force_integral=+0.000000e+00 (769.6s)
+  [SELF][Rank 0] Done moment 32/36: force_integral=+0.000000e+00 (770.6s)
+  [SELF][Rank 0] Done moment 33/36: force_integral=+0.000000e+00 (770.8s)
+
+Elapsed run time = 26132.7027 s
+
+Elapsed run time = 26148.3223 s
+
+Elapsed run time = 26153.8896 s
+
+Elapsed run time = 26175.3822 s
+
+Elapsed run time = 26176.4453 s
+
+Elapsed run time = 26185.0124 s
+
+Elapsed run time = 26185.8542 s
+
+Elapsed run time = 26186.0942 s
+
+Elapsed run time = 26187.5249 s
+
+Elapsed run time = 26188.6626 s
+  [SELF][Rank 0] Done moment 34/36: force_integral=+0.000000e+00 (764.0s)
+
+[WALLTIME GUARD] Elapsed 7.27h + estimated moment (12.8m) >= limit (7.50h). Pausing cleanly.
+
+Elapsed run time = 26189.9093 s
+Command failed with exit status 143.
+==================================================
+[CRASH DETECTED] Task 5 exited with status code 143
+==================================================
