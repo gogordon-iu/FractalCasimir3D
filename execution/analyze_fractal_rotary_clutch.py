@@ -229,7 +229,7 @@ def main():
         ax3.grid(True, linestyle=":", alpha=0.5)
         ax3.legend(loc="best", frameon=True)
     else:
-        # Fallback layout showing invariant average distance formulation
+        # Annotation layout showing invariant average distance formulation
         ax3.text(0.5, 0.6, rf"$\langle d \rangle = z_{{\mathrm{{tip}}}} + f_N \cdot h = {d_avg_val:.2f}\,\mathrm{{nm}}$",
                  ha="center", va="center", fontsize=9, transform=ax3.transAxes)
         ax3.text(0.5, 0.4, rf"$N=1: z_{{\mathrm{{tip}}}} = {z_tip_n1:.2f}\,\mathrm{{nm}}$" + "\n" + rf"$N=3: z_{{\mathrm{{tip}}}} = {z_tip_n3:.2f}\,\mathrm{{nm}}$",

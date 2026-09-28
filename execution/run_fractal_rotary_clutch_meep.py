@@ -62,83 +62,10 @@ MEEP_TO_PA = 0.031615
 MEEP_FORCE_TO_SI = 3.1615e-14
 
 
-def get_fractal_clutch_elements(N, L, W1=0.25, w1=0.035):
-    """
-    Computes exact self-similar fractal coordinates for both plates.
-    Guarantees strict C4 symmetry and zero aperture-to-aperture overlap.
-    Returns:
-        elements: list of dicts with keys:
-            level, cx, cy, W_aperture, w_needle
-    """
-    elements = []
-    r1 = L / 3.0
-
-    # Level 1: 4 primary axial aperture/needle pairs (C4 symmetric)
-    axial_angles = [0.0, 90.0, 180.0, 270.0]
-    for ang in axial_angles:
-        rad = np.radians(ang)
-        elements.append({
-            "level": 1,
-            "cx": r1 * np.cos(rad),
-            "cy": r1 * np.sin(rad),
-            "W_aperture": W1,
-            "w_needle": w1
-        })
-
-    # Level 2 (if N >= 2): Secondary self-similar aperture/needle pairs on diagonals
-    if N >= 2:
-        W2 = W1 / 3.0
-        w2 = w1 / 3.0
-        r2_diag = r1 * np.sqrt(2.0)
-        diag_angles = [45.0, 135.0, 225.0, 315.0]
-        for ang in diag_angles:
-            rad = np.radians(ang)
-            elements.append({
-                "level": 2,
-                "cx": r2_diag * np.cos(rad),
-                "cy": r2_diag * np.sin(rad),
-                "W_aperture": W2,
-                "w_needle": w2
-            })
-
-    # Level 3 (if N >= 3): Tertiary nano-aperture/needle pairs on inner concentric rings
-    if N >= 3:
-        W3 = W1 / 9.0
-        w3 = w1 / 9.0
-        r3 = r1 / 3.0
-        # Axial tertiary elements at inner radius r3 = r1 / 3
-        for ang in axial_angles:
-            rad = np.radians(ang)
-            elements.append({
-                "level": 3,
-                "cx": r3 * np.cos(rad),
-                "cy": r3 * np.sin(rad),
-                "W_aperture": W3,
-                "w_needle": w3
-            })
-        # Diagonal tertiary elements at inner diagonal radius r3_diag = (r1 / 3) * sqrt(2)
-        diag_angles = [45.0, 135.0, 225.0, 315.0]
-        for ang in diag_angles:
-            rad = np.radians(ang)
-            elements.append({
-                "level": 3,
-                "cx": r3 * np.sqrt(2.0) * np.cos(rad),
-                "cy": r3 * np.sqrt(2.0) * np.sin(rad),
-                "W_aperture": W3,
-                "w_needle": w3
-            })
-
-    return elements
-
-
-def compute_plate_area_fraction(elements, L_fractal):
-    """
-    Computes exact geometric aperture area fraction from the 3D element coordinates:
-        f_area = sum(pi * (W_i / 2)^2) / L_fractal^2
-    Guarantees first-principles area calculation with zero hardcoded approximations.
-    """
-    total_hole_area = sum(np.pi * (elem["W_aperture"] / 2.0) ** 2 for elem in elements)
-    return float(total_hole_area / (L_fractal ** 2))
+from execution.fractal_rotary_clutch_geometry import (
+    get_fractal_clutch_elements,
+    compute_plate_area_fraction
+)
 
 
 def run_fractal_rotary_clutch_simulation(
@@ -154,11 +81,11 @@ def run_fractal_rotary_clutch_simulation(
     resolution=60,          # Yee grid resolution (pixels/micron)
     n_max=1,                # Multipole cutoff (36 moments per polarization)
     config="all",           # 'both', 'self', or 'all'
-    T_run=12.0,             # FDTD run duration
+    T_run=3.0,              # FDTD run duration
     dpml=0.20,              # PML thickness (microns)
     buffer=0.15,            # Vacuum buffer between objects and PML (microns)
     chk_tag="fractal_clutch", # Checkpoint file identifier
-    max_walltime_hours=7.5, # Walltime budget limit
+    max_walltime_hours=7.0, # Walltime budget limit
     no_cache=False
 ):
     """
@@ -245,28 +172,19 @@ def run_fractal_rotary_clutch_simulation(
 
         # Check full cache
         if not no_cache and os.path.exists(chk_file):
-            try:
-                with open(chk_file, "r") as f_chk:
-                    data = json.load(f_chk)
-                if is_g0:
-                    print(f"[{cfg_name.upper()}] Loaded cached force: {data['force']:.6e} from {chk_file}")
-                return float(data["force"]), True
-            except (json.JSONDecodeError, KeyError, ValueError) as err:
-                if is_g0:
-                    print(f"[{cfg_name.upper()}] Notice: Stale/corrupt checkpoint {chk_file} ({err}). Recomputing.")
+            with open(chk_file, "r") as f_chk:
+                data = json.load(f_chk)
+            if is_g0:
+                print(f"[{cfg_name.upper()}] Loaded cached force: {data['force']:.6e} from {chk_file}")
+            return float(data["force"]), True
 
         completed_moments = {}
         if not no_cache and os.path.exists(moments_chk):
-            try:
-                with open(moments_chk, "r") as f_mom:
-                    chk_data = json.load(f_mom)
-                completed_moments = {int(k): float(v) for k, v in chk_data.get("completed_moments", {}).items()}
-                if is_g0:
-                    print(f"[{cfg_name.upper()}] Loaded {len(completed_moments)} cached moments from {moments_chk}")
-            except (json.JSONDecodeError, KeyError, ValueError) as err:
-                if is_g0:
-                    print(f"[{cfg_name.upper()}] Notice: Stale/corrupt moments file {moments_chk} ({err}). Starting fresh.")
-                completed_moments = {}
+            with open(moments_chk, "r") as f_mom:
+                chk_data = json.load(f_mom)
+            completed_moments = {int(k): float(v) for k, v in chk_data.get("completed_moments", {}).items()}
+            if is_g0:
+                print(f"[{cfg_name.upper()}] Loaded {len(completed_moments)} cached moments from {moments_chk}")
 
         total_force = 0.0
         moment_durations = []
@@ -417,22 +335,16 @@ def run_fractal_rotary_clutch_simulation(
 
             if is_g0:
                 tmp_path = f"{moments_chk}.tmp_{os.getpid()}"
-                try:
-                    with open(tmp_path, "w") as f_chk:
-                        json.dump({"completed_moments": {str(k): v for k, v in completed_moments.items()}}, f_chk, indent=4)
-                    os.replace(tmp_path, moments_chk)
-                except OSError as write_err:
-                    print(f"Warning: Failed writing incremental checkpoint: {write_err}", flush=True)
+                with open(tmp_path, "w") as f_chk:
+                    json.dump({"completed_moments": {str(k): v for k, v in completed_moments.items()}}, f_chk, indent=4)
+                os.replace(tmp_path, moments_chk)
                 print(f"  [{cfg_name.upper()}][Rank 0] Done moment {task_idx+1}/{num_tasks}: force_integral={force_integral:+.6e} ({moment_durations[-1]:.1f}s)", flush=True)
 
         is_done = (len(completed_moments) == num_tasks)
         if is_g0 and is_done:
-            try:
-                with open(chk_file, "w") as f_out:
-                    json.dump({"force": float(total_force)}, f_out, indent=4)
-                print(f"[{cfg_name.upper()}] Complete. Single-needle force: {total_force:+.6e}")
-            except OSError as save_err:
-                print(f"Warning: Failed writing config checkpoint {chk_file}: {save_err}", flush=True)
+            with open(chk_file, "w") as f_out:
+                json.dump({"force": float(total_force)}, f_out, indent=4)
+            print(f"[{cfg_name.upper()}] Complete. Single-needle force: {total_force:+.6e}")
 
         return total_force, is_done
 
@@ -523,23 +435,17 @@ def main():
             print(f"Status: PENDING remaining moments. Follow-up segment will resume seamlessly.")
             print("=" * 85 + "\n", flush=True)
             flag_pending = f".tmp/clutch_task_{args.task_id:03d}_pending.flag"
-            try:
-                with open(flag_pending, "w") as fp:
-                    fp.write(f"pending:{time.time()}\n")
-            except OSError:
-                pass
+            with open(flag_pending, "w") as fp:
+                fp.write(f"pending:{time.time()}\n")
         return
 
     if is_g0:
         flag_complete = f".tmp/clutch_task_{args.task_id:03d}_complete.flag"
-        try:
-            with open(flag_complete, "w") as fp:
-                fp.write(f"complete:{time.time()}\n")
-            flag_pending = f".tmp/clutch_task_{args.task_id:03d}_pending.flag"
-            if os.path.exists(flag_pending):
-                os.remove(flag_pending)
-        except OSError:
-            pass
+        with open(flag_complete, "w") as fp:
+            fp.write(f"complete:{time.time()}\n")
+        flag_pending = f".tmp/clutch_task_{args.task_id:03d}_pending.flag"
+        if os.path.exists(flag_pending):
+            os.remove(flag_pending)
 
     if is_g0 and args.config == "all":
         # The integration box encloses the entire rotor array, so f1_net is the total rotor force

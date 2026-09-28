@@ -33,7 +33,7 @@ if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
 
-from execution.run_fractal_rotary_clutch_meep import (
+from execution.fractal_rotary_clutch_geometry import (
     get_fractal_clutch_elements,
     compute_plate_area_fraction
 )
