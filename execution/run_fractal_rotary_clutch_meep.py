@@ -470,12 +470,15 @@ def main():
     parser.add_argument("--res", type=int, default=60, help="Yee grid resolution (pixels/um)")
     parser.add_argument("--nmax", type=int, default=1, help="Multipole cutoff")
     parser.add_argument("--config", type=str, default="all", choices=["both", "self", "all"])
-    parser.add_argument("--T-run", type=float, default=12.0, help="FDTD duration")
-    parser.add_argument("--max-walltime-hours", type=float, default=7.5, help="Walltime limit budget")
+    parser.add_argument("--T-run", type=float, default=3.0, help="FDTD duration")
+    parser.add_argument("--max-walltime-hours", type=float, default=7.0, help="Walltime limit budget")
     parser.add_argument("--no-cache", action="store_true", help="Bypass cached checkpoints")
     args = parser.parse_args()
 
-    chk_tag = f"fractal_clutch_N_{args.N_fractal}_th_{args.theta:.1f}_ztip_{args.z_tip:.4f}_res_{args.res}"
+    chk_tag = (
+        f"fractal_clutch_task_{args.task_id:03d}_N_{args.N_fractal}_th_{args.theta:.1f}_"
+        f"ztip_{args.z_tip:.4f}_res_{args.res}_Trun_{args.T_run:.1f}"
+    )
 
     global_rank = int(os.environ.get("SLURM_PROCID", 0))
     is_g0 = (global_rank == 0)

@@ -62,7 +62,7 @@ def build_fractal_clutch_suite(
     medium: str = "Vacuum",
     resolution: int = 60,            # Cluster-proven resolution: dx = 16.67 nm (~1.2h/task on 128 cores)
     nmax: int = 1,
-    T_run: float = 12.0
+    T_run: float = 3.0
 ) -> list:
     """Constructs the list of 8 configuration dictionaries."""
     angles = [0.0, 30.0, 45.0, 90.0]
@@ -123,12 +123,14 @@ def main():
     parser.add_argument("--res", type=int, default=60, help="Yee grid resolution (default: 60 px/um, dx=16.67 nm, ~1.2h/task)")
     parser.add_argument("--d-avg", type=float, default=0.020, help="Target invariant average distance in um (default: 0.020)")
     parser.add_argument("--t-plate", type=float, default=0.025, help="Stator plate thickness in um (default: 0.025)")
+    parser.add_argument("--T-run", type=float, default=3.0, help="FDTD run duration in Meep time units (default: 3.0)")
     args = parser.parse_args()
 
     configs = build_fractal_clutch_suite(
         d_average_um=args.d_avg,
         t_plate_um=args.t_plate,
-        resolution=args.res
+        resolution=args.res,
+        T_run=args.T_run
     )
     out_dir = os.path.join(REPO_ROOT, "sweep_configs_fractal_clutch")
     os.makedirs(out_dir, exist_ok=True)

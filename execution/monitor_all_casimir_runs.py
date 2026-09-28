@@ -260,8 +260,8 @@ def get_moment_progress(campaign_key, task_id, cfg_data, job_info=None):
             full_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_cantor_task_{task_id:03d}_*_{cfg_type}.json")
             mom_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_moments_cantor_task_{task_id:03d}_*_{cfg_type}.json")
         elif campaign_key == "fractal_clutch":
-            full_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_fractal_clutch_N_{N}_th_{th:.1f}_*_{cfg_type}.json")
-            mom_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_moments_fractal_clutch_N_{N}_th_{th:.1f}_*_{cfg_type}.json")
+            full_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_fractal_clutch_task_{task_id:03d}_*_{cfg_type}.json")
+            mom_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_moments_fractal_clutch_task_{task_id:03d}_*_{cfg_type}.json")
         elif campaign_key == "clutch_campaign":
             d_val = float(cfg_data.get("d", 0.04))
             full_pattern = os.path.join(REPO_ROOT, ".tmp", f"chk_v4_d_{d_val:.4f}_*th_{th:.1f}_*_{cfg_type}.json")

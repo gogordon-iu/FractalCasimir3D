@@ -95,21 +95,19 @@ echo "Task $SLURM_ARRAY_TASK_ID finished with exit code $EXIT_CODE at $(date)."
 COMPLETE_FLAG=".tmp/clutch_task_${CFG_INDEX}_complete.flag"
 PENDING_FLAG=".tmp/clutch_task_${CFG_INDEX}_pending.flag"
 
-# Auto-sync results to GitHub on Rank 0
-if [ $EXIT_CODE -eq 0 ]; then
-    mkdir -p cluster_diagnostics/raw_logs
-    cp -f .tmp/fractal_clutch_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* cluster_diagnostics/raw_logs/ 2>/dev/null || true
-    
-    if [ -f "$COMPLETE_FLAG" ]; then
-        rm -f .git/index.lock 2>/dev/null || true
-        git add results_fractal_rotary_clutch/ cluster_diagnostics/raw_logs/
-        git commit -m "progress(fractal_clutch): Task $SLURM_ARRAY_TASK_ID (N=$N_FRACTAL, theta=${THETA}deg) COMPLETE" || true
-        git pull origin main --no-edit -X ours 2>/dev/null || true
-        git push origin main 2>/dev/null || true
-    elif [ -f "$PENDING_FLAG" ]; then
-        echo "Task $SLURM_ARRAY_TASK_ID paused at walltime guard. Resubmitting follow-up segment..."
-        sbatch --array=${SLURM_ARRAY_TASK_ID} execution/submit_fractal_rotary_clutch.sbatch
-    fi
+# Auto-sync results to GitHub or auto-resubmit if walltime paused
+mkdir -p cluster_diagnostics/raw_logs
+cp -f .tmp/fractal_clutch_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* cluster_diagnostics/raw_logs/ 2>/dev/null || true
+
+if [ -f "$COMPLETE_FLAG" ]; then
+    rm -f .git/index.lock 2>/dev/null || true
+    git add results_fractal_rotary_clutch/ cluster_diagnostics/raw_logs/
+    git commit -m "progress(fractal_clutch): Task $SLURM_ARRAY_TASK_ID (N=$N_FRACTAL, theta=${THETA}deg) COMPLETE" || true
+    git pull origin main --no-edit -X ours 2>/dev/null || true
+    git push origin main 2>/dev/null || true
+elif [ -f "$PENDING_FLAG" ]; then
+    echo "Task $SLURM_ARRAY_TASK_ID paused at walltime guard. Resubmitting follow-up segment..."
+    sbatch --array=${SLURM_ARRAY_TASK_ID} execution/submit_fractal_rotary_clutch.sbatch
 fi
 
 exit $EXIT_CODE

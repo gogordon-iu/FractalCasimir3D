@@ -88,6 +88,10 @@
 - **Bug**: In `run_cantor_forest_meep.py` and `run_fractal_rotary_clutch_meep.py`, when the 7.5-hour walltime guard paused execution after $\sim 35/72$ moments, `run_one_config()` returned the partial force sum without checking completion, causing `main()` to prematurely serialize incomplete results to `results_*/task_*.json` with uncalibrated free-space self-forces.
 - **Solution**: Enforced strict `all_done = (both_done and self_done)` completion guards before writing final result files, managed `.tmp/*_pending.flag` and `.tmp/*_complete.flag` states, and integrated automated follow-up segment resubmission in the Slurm array scripts.
 
+## [2026-09-28] Machine-Precision Wick Damping Waste ($T_{\text{run}}=12.0$) and Checkpoint Glob Ambiguity in Fractal Clutch
+- **Bug**: Tasks in the fractal clutch suite took over 25 hours because $T_{\text{run}}=12.0$ spent 75% of simulation steps evaluating numerical zero under the steep $\Sigma=33.3\,\mu\text{m}^{-1}$ Wick exponential envelope ($\exp(-2\Sigma t) \sim 10^{-88}$), while checkpoint filenames omitted task IDs and runtime tags.
+- **Solution**: Reduced default runtime to $T_{\text{run}}=3.0$ ($\exp(-200)$, achieving double-precision convergence with a $4\times$ speedup to finish in $\sim 6.2\text{ hours}$ within a single Slurm allocation), scoped all checkpoints with explicit `task_{id:03d}` and `Trun_{T_run:.1f}` identifiers, and aligned cluster monitoring patterns.
+
 
 
 
