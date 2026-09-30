@@ -27,11 +27,6 @@ Key Architectural Solutions:
 import math
 import numpy as np
 
-try:
-    import meep as mp
-except ImportError:
-    mp = None
-
 
 def get_cantor_radial_intervals(N: int, R_min: float, R_max: float) -> list:
     """
@@ -201,6 +196,8 @@ def generate_annular_sector_prism_vertices(
     Constructs an accurate 2D polygon approximating an annular sector for mp.Prism.
     Vertices wind counter-clockwise: outer arc (phi_start -> phi_end), then inner arc (phi_end -> phi_start).
     """
+    import meep as mp
+
     outer_angles = np.linspace(phi_start_rad, phi_end_rad, num_pts_per_arc)
     inner_angles = np.linspace(phi_end_rad, phi_start_rad, num_pts_per_arc)
 
@@ -209,13 +206,13 @@ def generate_annular_sector_prism_vertices(
     for phi in outer_angles:
         x = r_out * math.cos(phi)
         y = r_out * math.sin(phi)
-        vertices.append(mp.Vector3(x, y, 0.0) if mp else (x, y))
+        vertices.append(mp.Vector3(x, y, 0.0))
 
     # Inner arc
     for phi in inner_angles:
         x = r_in * math.cos(phi)
         y = r_in * math.sin(phi)
-        vertices.append(mp.Vector3(x, y, 0.0) if mp else (x, y))
+        vertices.append(mp.Vector3(x, y, 0.0))
 
     return vertices
 
@@ -226,18 +223,17 @@ def generate_concentric_stator_geometry(
     t_plate: float,
     plate_material,
     void_material,
-    num_sectors: int = 4,
-    sector_duty_cycle: float = 0.50,
+    num_sectors: int,
+    sector_duty_cycle: float,
     theta_deg: float = 0.0,
     is_flat_control: bool = False
 ) -> list:
     """
     Constructs the 3D MEEP geometry for the stator bottom plate:
-    1. Solid rectangular/circular membrane slab of thickness t_plate.
+    1. Solid rectangular membrane slab of thickness t_plate.
     2. Carves annular sector apertures of void_material (vacuum with Sigma) if not flat control.
     """
-    if mp is None:
-        raise RuntimeError("MEEP is required to construct geometric shapes.")
+    import meep as mp
 
     geometry = []
 
@@ -288,23 +284,35 @@ def generate_concentric_rotor_geometry(
     H_teeth: float,
     z_tip: float,
     rotor_material,
-    num_sectors: int = 4,
-    tooth_duty_cycle: float = 0.38,
+    num_sectors: int,
+    tooth_duty_cycle: float,
     theta_rotor_deg: float = 0.0,
     with_backing: bool = False,
     t_backing: float = 0.050,
-    L_plate: float = 3.0
+    L_plate: float = 3.0,
+    is_flat_control: bool = False,
+    R_max: float = 1.35
 ) -> list:
     """
     Constructs the 3D MEEP geometry for the top rotor plate:
     1. Concentric annular teeth extending downwards from z = z_tip + H_teeth to z = z_tip.
-    2. Optional solid backing substrate extending upwards from z = z_tip + H_teeth.
+    2. Solid flat cylinder for flat reference control.
+    3. Optional solid backing substrate extending upwards from z = z_tip + H_teeth.
     """
-    if mp is None:
-        raise RuntimeError("MEEP is required to construct geometric shapes.")
+    import meep as mp
 
     geometry = []
     z_center_teeth = z_tip + H_teeth / 2.0
+
+    if is_flat_control:
+        geometry.append(mp.Cylinder(
+            radius=R_max,
+            height=H_teeth,
+            axis=mp.Vector3(0.0, 0.0, 1.0),
+            center=mp.Vector3(0.0, 0.0, z_center_teeth),
+            material=rotor_material
+        ))
+        return geometry
 
     # Sector parameters: tooth arc length
     sector_pitch_rad = (2.0 * math.pi) / num_sectors

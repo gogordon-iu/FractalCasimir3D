@@ -93,6 +93,8 @@ def generate_all_configs(
                 "nmax": int(nmax),
                 "T_run": float(T_run),
                 "num_sectors": 4,
+                "sector_duty_cycle": 0.50,
+                "tooth_duty_cycle": 0.38,
                 "elements": elements
             }
 
@@ -138,6 +140,8 @@ def generate_all_configs(
             "nmax": int(nmax),
             "T_run": float(T_run),
             "num_sectors": 4,
+            "sector_duty_cycle": 0.50,
+            "tooth_duty_cycle": 0.38,
             "elements": ctrl_elements
         }
 
@@ -177,6 +181,8 @@ def generate_all_configs(
         "nmax": int(nmax),
         "T_run": float(T_run),
         "num_sectors": 4,
+        "sector_duty_cycle": 0.0,
+        "tooth_duty_cycle": 0.0,
         "elements": []
     }
     fname = os.path.join(out_dir, f"config_{task_id:03d}.json")

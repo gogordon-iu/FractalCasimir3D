@@ -29,14 +29,14 @@ echo "[PIPELINE] Submitting Slurm array job: execution/submit_concentric_ring.sb
 ARRAY_JOB_ID=$(sbatch --parsable execution/submit_concentric_ring.sbatch)
 echo "  ==> Submitted Array Job ID: ${ARRAY_JOB_ID}"
 
-# 3. Submit Postprocessing Plot Job chained after array completion
-echo "[PIPELINE] Submitting chained analysis job (dependency afterany:${ARRAY_JOB_ID})..."
-PLOT_JOB_ID=$(sbatch --dependency=afterany:${ARRAY_JOB_ID} --parsable execution/submit_concentric_ring_plot.sbatch)
+# 3. Submit Postprocessing Plot Job chained after all concentric_ring jobs complete
+echo "[PIPELINE] Submitting chained analysis job (dependency singleton on concentric_ring)..."
+PLOT_JOB_ID=$(sbatch --dependency=singleton --job-name=concentric_ring --parsable execution/submit_concentric_ring_plot.sbatch)
 echo "  ==> Submitted Postprocessing Job ID: ${PLOT_JOB_ID}"
 
 echo "================================================================================"
 echo "CAMPAIGN SUCCESSFULLY LAUNCHED ON BIGRED 200"
 echo "Array Job ID:          ${ARRAY_JOB_ID} (Tasks 1-17)"
-echo "Postprocessing Job ID: ${PLOT_JOB_ID} (Chained afterany)"
+echo "Postprocessing Job ID: ${PLOT_JOB_ID} (Chained singleton: concentric_ring)"
 echo "Monitor status with:   bash execution/status.sh"
 echo "================================================================================"

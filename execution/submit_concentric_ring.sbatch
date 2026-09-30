@@ -71,11 +71,12 @@ echo "Task $SLURM_ARRAY_TASK_ID finished with exit code $EXIT_CODE at $(date)."
 COMPLETE_FLAG=".tmp/concentric_ring_task_${CFG_INDEX}_complete.flag"
 PENDING_FLAG=".tmp/concentric_ring_task_${CFG_INDEX}_pending.flag"
 
+# Copy logs to cluster_diagnostics
+mkdir -p cluster_diagnostics/raw_logs
+cp -f .tmp/concentric_ring_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* cluster_diagnostics/raw_logs/ 2>/dev/null || true
+
 # Auto-sync results to GitHub on Rank 0
 if [ $EXIT_CODE -eq 0 ]; then
-    mkdir -p cluster_diagnostics/raw_logs
-    cp -f .tmp/concentric_ring_${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}.* cluster_diagnostics/raw_logs/ 2>/dev/null || true
-    
     if [ -f "$COMPLETE_FLAG" ]; then
         rm -f .git/index.lock 2>/dev/null || true
         git add results_concentric_ring/ cluster_diagnostics/raw_logs/
@@ -83,9 +84,22 @@ if [ $EXIT_CODE -eq 0 ]; then
         git pull origin main --no-edit -X ours 2>/dev/null || true
         git push origin main 2>/dev/null || true
     elif [ -f "$PENDING_FLAG" ]; then
-        echo "Task $SLURM_ARRAY_TASK_ID paused at walltime guard. Resubmitting follow-up segment..."
-        sbatch --array=${SLURM_ARRAY_TASK_ID} execution/submit_concentric_ring.sbatch
+        echo "Task $SLURM_ARRAY_TASK_ID paused at walltime guard. Saving progress and resubmitting follow-up segment..."
+        rm -f .git/index.lock 2>/dev/null || true
+        git add results_concentric_ring/ cluster_diagnostics/raw_logs/
+        git commit -m "checkpoint(concentric_ring): Task $SLURM_ARRAY_TASK_ID paused at walltime, resubmitting" || true
+        git pull origin main --no-edit -X ours 2>/dev/null || true
+        git push origin main 2>/dev/null || true
+
+        sbatch --job-name=concentric_ring --array=${SLURM_ARRAY_TASK_ID} execution/submit_concentric_ring.sbatch
     fi
+else
+    echo "Task $SLURM_ARRAY_TASK_ID exited with error code $EXIT_CODE."
+    rm -f .git/index.lock 2>/dev/null || true
+    git add cluster_diagnostics/raw_logs/
+    git commit -m "diagnostics(concentric_ring): Task $SLURM_ARRAY_TASK_ID error log (exit $EXIT_CODE)" || true
+    git pull origin main --no-edit -X ours 2>/dev/null || true
+    git push origin main 2>/dev/null || true
 fi
 
 exit $EXIT_CODE

@@ -110,6 +110,14 @@ CAMPAIGNS = {
         "log_pattern": ".tmp/sweet_spot_*.out",
         "total_tasks": 224,
         "moments_per_task": 72
+    },
+    "concentric_ring": {
+        "title": "Concentric Cantor-Ring Rotary Clutch ('The One Ring', 17 Tasks)",
+        "config_dir": "sweep_configs_concentric_ring",
+        "results_dir": "results_concentric_ring",
+        "log_pattern": ".tmp/concentric_ring_*.out",
+        "total_tasks": 17,
+        "moments_per_task": 72
     }
 }
 

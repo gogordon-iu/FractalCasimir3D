@@ -28,10 +28,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-try:
-    import meep as mp
-except ImportError:
-    mp = None
+import meep as mp
 
 from execution.concentric_ring_geometry import (
     get_cantor_ring_elements,
@@ -113,29 +110,29 @@ def run_concentric_ring_simulation(
     N_fractal: int,
     theta_deg: float,
     elements: list,
-    L_domain: float = 3.0,
-    R_min: float = 0.30,
-    R_max: float = 1.35,
-    H_teeth: float = 0.250,
-    t_plate: float = 0.025,
-    z_tip: float = 0.015,
-    is_control: bool = False,
-    is_flat_control: bool = False,
-    material: str = "Gold",
-    resolution: int = 60,
-    n_max: int = 1,
-    config: str = "all",
-    T_run: float = 12.0,
-    chk_tag: str = "",
-    max_walltime_hours: float = 7.2,
+    L_domain: float,
+    R_min: float,
+    R_max: float,
+    H_teeth: float,
+    t_plate: float,
+    z_tip: float,
+    is_control: bool,
+    is_flat_control: bool,
+    material: str,
+    resolution: int,
+    n_max: int,
+    config: str,
+    T_run: float,
+    chk_tag: str,
+    max_walltime_hours: float,
+    num_sectors: int,
+    sector_duty_cycle: float,
+    tooth_duty_cycle: float,
     no_cache: bool = False
 ):
     """
     Executes the 3D FDTD Casimir stress tensor calculation for the concentric ring architecture.
     """
-    if mp is None:
-        raise RuntimeError("Meep module not found. Run in the BigRed 200 meep environment.")
-
     global_rank = int(os.environ.get("SLURM_PROCID", 0))
     is_g0 = (global_rank == 0)
 
@@ -187,6 +184,7 @@ def run_concentric_ring_simulation(
     num_tasks = 36 * n_max
     start_time = time.time()
     max_walltime_sec = (max_walltime_hours * 3600.0) if (max_walltime_hours is not None and max_walltime_hours > 0) else None
+    all_moment_durations = []
 
     def run_one_config(cfg_name):
         chk_file = f".tmp/chk_{chk_tag}_{cfg_name}.json"
@@ -194,28 +192,19 @@ def run_concentric_ring_simulation(
 
         # Check full cache
         if not no_cache and os.path.exists(chk_file):
-            try:
-                with open(chk_file, "r") as f_chk:
-                    data = json.load(f_chk)
-                if is_g0:
-                    print(f"[{cfg_name.upper()}] Loaded cached force: {data['force']:.6e} from {chk_file}")
-                return float(data["force"]), True
-            except (json.JSONDecodeError, KeyError, ValueError) as err:
-                if is_g0:
-                    print(f"[{cfg_name.upper()}] Notice: Stale/corrupt checkpoint {chk_file} ({err}). Recomputing.")
+            with open(chk_file, "r") as f_chk:
+                data = json.load(f_chk)
+            if is_g0:
+                print(f"[{cfg_name.upper()}] Loaded cached force: {data['force']:.6e} from {chk_file}")
+            return float(data["force"]), True
 
         completed_moments = {}
         if not no_cache and os.path.exists(moments_chk):
-            try:
-                with open(moments_chk, "r") as f_mom:
-                    chk_data = json.load(f_mom)
-                completed_moments = {int(k): float(v) for k, v in chk_data.get("completed_moments", {}).items()}
-                if is_g0:
-                    print(f"[{cfg_name.upper()}] Loaded {len(completed_moments)} cached moments from {moments_chk}")
-            except (json.JSONDecodeError, KeyError, ValueError) as err:
-                if is_g0:
-                    print(f"[{cfg_name.upper()}] Notice: Stale/corrupt moments file {moments_chk} ({err}). Starting fresh.")
-                completed_moments = {}
+            with open(moments_chk, "r") as f_mom:
+                chk_data = json.load(f_mom)
+            completed_moments = {int(k): float(v) for k, v in chk_data["completed_moments"].items()}
+            if is_g0:
+                print(f"[{cfg_name.upper()}] Loaded {len(completed_moments)} cached moments from {moments_chk}")
 
         total_force = 0.0
         moment_durations = []
@@ -228,12 +217,12 @@ def run_concentric_ring_simulation(
                     print(f"  [{cfg_name.upper()}][Rank 0] Skipped moment {task_idx+1}/{num_tasks} [CACHED]: force_integral={f_cached:+.6e}", flush=True)
                 continue
 
-            if moment_durations and max_walltime_sec is not None:
+            if max_walltime_sec is not None:
                 elapsed_sec = time.time() - start_time
-                avg_dur = np.mean(moment_durations)
-                if elapsed_sec + avg_dur * 1.15 >= max_walltime_sec:
+                est_dur = np.mean(all_moment_durations) * 1.15 if all_moment_durations else 900.0
+                if elapsed_sec + est_dur >= max_walltime_sec:
                     if is_g0:
-                        print(f"\n[WALLTIME GUARD] Elapsed {elapsed_sec/3600:.2f}h + estimated moment ({avg_dur/60:.1f}m) >= limit ({max_walltime_hours:.2f}h). Pausing cleanly.", flush=True)
+                        print(f"\n[WALLTIME GUARD] Elapsed {elapsed_sec/3600:.2f}h + estimated moment ({est_dur/60:.1f}m) >= limit ({max_walltime_hours:.2f}h). Pausing cleanly.", flush=True)
                     break
 
             moment_start_time = time.time()
@@ -259,8 +248,8 @@ def run_concentric_ring_simulation(
                     t_plate=t_plate,
                     plate_material=mat_obj,
                     void_material=bg_material,
-                    num_sectors=4,
-                    sector_duty_cycle=0.50,
+                    num_sectors=num_sectors,
+                    sector_duty_cycle=sector_duty_cycle,
                     theta_deg=0.0,
                     is_flat_control=is_flat_control
                 )
@@ -272,11 +261,13 @@ def run_concentric_ring_simulation(
                 H_teeth=H_teeth,
                 z_tip=z_tip,
                 rotor_material=mat_obj,
-                num_sectors=4,
-                tooth_duty_cycle=0.38,
+                num_sectors=num_sectors,
+                tooth_duty_cycle=tooth_duty_cycle,
                 theta_rotor_deg=theta_deg,
                 with_backing=False,
-                L_plate=L_domain
+                L_plate=L_domain,
+                is_flat_control=is_flat_control,
+                R_max=R_max
             )
             geometry.extend(rotor_shapes)
 
@@ -358,26 +349,41 @@ def run_concentric_ring_simulation(
 
             total_force += force_integral
             completed_moments[task_idx] = float(force_integral)
-            moment_durations.append(time.time() - moment_start_time)
+            dur = time.time() - moment_start_time
+            moment_durations.append(dur)
+            all_moment_durations.append(dur)
 
             if is_g0:
                 tmp_path = f"{moments_chk}.tmp_{os.getpid()}"
-                try:
-                    with open(tmp_path, "w") as f_chk:
-                        json.dump({"completed_moments": {str(k): v for k, v in completed_moments.items()}}, f_chk, indent=4)
-                    os.replace(tmp_path, moments_chk)
-                except OSError as write_err:
-                    print(f"Warning: Failed writing incremental checkpoint: {write_err}", flush=True)
-                print(f"  [{cfg_name.upper()}][Rank 0] Done moment {task_idx+1}/{num_tasks}: force_integral={force_integral:+.6e} ({moment_durations[-1]:.1f}s)", flush=True)
+                with open(tmp_path, "w") as f_chk:
+                    json.dump({"completed_moments": {str(k): v for k, v in completed_moments.items()}}, f_chk, indent=4)
+                os.replace(tmp_path, moments_chk)
+                print(f"  [{cfg_name.upper()}][Rank 0] Done moment {task_idx+1}/{num_tasks}: force_integral={force_integral:+.6e} ({dur:.1f}s)", flush=True)
+
+                progress_file = f"results_concentric_ring/progress_task_{task_id:03d}.json"
+                prog_data = {
+                    "task_id": task_id,
+                    "architecture": "Concentric_Cantor_Ring",
+                    "N_fractal": N_fractal,
+                    "theta_deg": float(theta_deg),
+                    "status": "RUNNING",
+                    "current_config": cfg_name,
+                    "moments_done_config": len(completed_moments),
+                    "moments_total_config": num_tasks,
+                    "elapsed_sec": round(time.time() - start_time, 1),
+                    "last_moment_sec": round(dur, 1),
+                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+                }
+                tmp_prog = f"{progress_file}.tmp_{os.getpid()}"
+                with open(tmp_prog, "w") as fp_prog:
+                    json.dump(prog_data, fp_prog, indent=4)
+                os.replace(tmp_prog, progress_file)
 
         is_done = (len(completed_moments) == num_tasks)
         if is_g0 and is_done:
-            try:
-                with open(chk_file, "w") as f_out:
-                    json.dump({"force": float(total_force)}, f_out, indent=4)
-                print(f"[{cfg_name.upper()}] Complete. Total force: {total_force:+.6e}")
-            except OSError as save_err:
-                print(f"Warning: Failed writing config checkpoint {chk_file}: {save_err}", flush=True)
+            with open(chk_file, "w") as f_out:
+                json.dump({"force": float(total_force)}, f_out, indent=4)
+            print(f"[{cfg_name.upper()}] Complete. Total force: {total_force:+.6e}")
 
         return total_force, is_done
 
@@ -420,22 +426,25 @@ def main():
         else:
             raise FileNotFoundError(f"Configuration file {cfg_path} not found!")
 
-    task_id = cfg["task_id"]
-    N_fractal = cfg["N_fractal"]
-    theta_deg = cfg["theta_deg"]
+    task_id = int(cfg["task_id"])
+    N_fractal = int(cfg["N_fractal"])
+    theta_deg = float(cfg["theta_deg"])
     elements = cfg["elements"]
-    L_domain = cfg["L_domain_um"]
-    R_min = cfg["R_min_um"]
-    R_max = cfg["R_max_um"]
-    H_teeth = cfg["H_teeth_um"]
-    t_plate = cfg["t_plate_um"]
-    z_tip = cfg["z_tip_um"]
-    is_control = cfg.get("is_control", False)
-    is_flat_control = cfg.get("is_flat_control", False)
-    material = cfg.get("material", "Gold")
-    resolution = cfg.get("resolution", 60)
-    nmax = cfg.get("nmax", 1)
-    T_run = cfg.get("T_run", 12.0)
+    L_domain = float(cfg["L_domain_um"])
+    R_min = float(cfg["R_min_um"])
+    R_max = float(cfg["R_max_um"])
+    H_teeth = float(cfg["H_teeth_um"])
+    t_plate = float(cfg["t_plate_um"])
+    z_tip = float(cfg["z_tip_um"])
+    is_control = bool(cfg["is_control"])
+    is_flat_control = bool(cfg["is_flat_control"])
+    material = str(cfg["material"])
+    resolution = int(cfg["resolution"])
+    nmax = int(cfg["nmax"])
+    T_run = float(cfg["T_run"])
+    num_sectors = int(cfg["num_sectors"])
+    sector_duty_cycle = float(cfg["sector_duty_cycle"])
+    tooth_duty_cycle = float(cfg["tooth_duty_cycle"])
 
     chk_tag = (
         f"concentric_ring_task_{task_id:03d}_N_{N_fractal}_th_{theta_deg:.1f}_"
@@ -474,6 +483,9 @@ def main():
         T_run=T_run,
         chk_tag=chk_tag,
         max_walltime_hours=args.max_walltime_hours,
+        num_sectors=num_sectors,
+        sector_duty_cycle=sector_duty_cycle,
+        tooth_duty_cycle=tooth_duty_cycle,
         no_cache=args.no_cache
     )
 
@@ -482,6 +494,7 @@ def main():
 
     flag_pending = f".tmp/concentric_ring_task_{task_id:03d}_pending.flag"
     flag_complete = f".tmp/concentric_ring_task_{task_id:03d}_complete.flag"
+    progress_file = f"results_concentric_ring/progress_task_{task_id:03d}.json"
 
     if not all_done:
         if is_g0:
@@ -490,25 +503,44 @@ def main():
             print("Status: PENDING remaining moments. Follow-up segment will resume seamlessly.")
             print("=" * 80 + "\n", flush=True)
             if os.path.exists(flag_complete):
-                try:
-                    os.remove(flag_complete)
-                except OSError:
-                    pass
-            try:
-                with open(flag_pending, "w") as fp:
-                    fp.write(f"pending:{time.time()}\n")
-            except OSError:
-                pass
+                os.remove(flag_complete)
+            with open(flag_pending, "w") as fp:
+                fp.write(f"pending:{time.time()}\n")
+
+            prog_data = {
+                "task_id": task_id,
+                "architecture": "Concentric_Cantor_Ring",
+                "N_fractal": N_fractal,
+                "theta_deg": float(theta_deg),
+                "status": "PAUSED_WALLTIME",
+                "all_done": False,
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            tmp_prog = f"{progress_file}.tmp_{os.getpid()}"
+            with open(tmp_prog, "w") as fp_prog:
+                json.dump(prog_data, fp_prog, indent=4)
+            os.replace(tmp_prog, progress_file)
         return
 
     if is_g0:
-        try:
-            with open(flag_complete, "w") as fp:
-                fp.write(f"complete:{time.time()}\n")
-            if os.path.exists(flag_pending):
-                os.remove(flag_pending)
-        except OSError:
-            pass
+        with open(flag_complete, "w") as fp:
+            fp.write(f"complete:{time.time()}\n")
+        if os.path.exists(flag_pending):
+            os.remove(flag_pending)
+
+        prog_data = {
+            "task_id": task_id,
+            "architecture": "Concentric_Cantor_Ring",
+            "N_fractal": N_fractal,
+            "theta_deg": float(theta_deg),
+            "status": "COMPLETE",
+            "all_done": True,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        tmp_prog = f"{progress_file}.tmp_{os.getpid()}"
+        with open(tmp_prog, "w") as fp_prog:
+            json.dump(prog_data, fp_prog, indent=4)
+        os.replace(tmp_prog, progress_file)
 
     if is_g0 and args.config == "all":
         # Force conversions

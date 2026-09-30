@@ -38,7 +38,7 @@ def find_zero_crossing(th_vals, f_vals):
 
 def main():
     res_dir = os.path.join(REPO_ROOT, "results_concentric_ring")
-    files = sorted(glob.glob(os.path.join(res_dir, "task_*.json")))
+    files = sorted([f for f in glob.glob(os.path.join(res_dir, "task_*.json")) if "progress" not in os.path.basename(f)])
 
     if not files:
         print(f"No result files found in {res_dir}. Run the simulation on BigRed 200 first.")
@@ -47,12 +47,9 @@ def main():
 
     data = []
     for f in files:
-        try:
-            with open(f, "r") as f_in:
-                d = json.load(f_in)
-            data.append(d)
-        except (json.JSONDecodeError, OSError) as err:
-            print(f"Warning: Could not read {f}: {err}")
+        with open(f, "r") as f_in:
+            d = json.load(f_in)
+        data.append(d)
 
     if not data:
         print("No valid result JSON files loaded.")
