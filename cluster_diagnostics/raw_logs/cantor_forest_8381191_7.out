@@ -1,0 +1,336 @@
+================================================================================
+SIERPINSKI-CANTOR FOREST CASIMIR REPULSION: TASK 7 / 8
+Host: x1002c7s5b1n0
+Started: Wed Sep 30 02:28:23 PM EDT 2026
+================================================================================
+Configuration sweep_configs_cantor_forest/config_007.json loaded:
+  Generation N: 3, Rotation theta: 45.0 deg
+  Cell span L: 1.05 um, W1 aperture: 0.25 um, w1 pillar: 0.035 um, H: 0.25 um
+  Stator thickness t: 0.025 um, Tip clearance z_tip: 0.014942986546249738 um
+  Material: Gold, Resolution: 60, T_run: 12.0
+================================================================================
+==================================================
+RUNNING CRASH-PROOF MEEP SIMULATION WRAPPER
+==================================================
+Executing: srun -n 128 /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python execution/run_cantor_forest_meep.py --task-id 7 --N-fractal 3 --theta 45.0 --L-cell 1.05 --W1-aperture 0.25 --w1-pillar 0.035 --H-pillar 0.25 --t-plate 0.025 --z-tip 0.014942986546249738 --material Gold --res 60 --nmax 1 --config all --T-run 12.0 --max-walltime-hours 7.2
+================================================================================
+SIERPINSKI-CANTOR FOREST 3D FDTD CASIMIR REPULSION SOLVER
+Task ID: 7 | Generation N: 3 | Active Pillars: 73 | Rotation Theta: 45.0 deg
+Cell Span L: 1050.0 nm | Aperture W1: 250.0 nm | Pillar w1: 35.0 nm
+Pillar Height H: 250.0 nm | Membrane Thickness t: 25.0 nm
+Tip Clearance z_tip: 14.94 nm (W1/4 threshold = 62.5 nm)
+Corner Profile: Sharp 90-degree
+Backing Substrate: NO (Pillars Only)
+Flat Control: NO
+Material: Gold | Resolution: 60 (dx = 16.67 nm)
+================================================================================
+[BOTH] Loaded cached force: 7.261361e+02 from .tmp/chk_cantor_task_007_N_3_th_45.0_ztip_0.0149_res_60_back_0_both.json
+[SELF] Loaded 35 cached moments from .tmp/chk_moments_cantor_task_007_N_3_th_45.0_ztip_0.0149_res_60_back_0_self.json
+  [SELF][Rank 0] Skipped moment 1/36 [CACHED]: force_integral=-1.601841e-01
+  [SELF][Rank 0] Skipped moment 2/36 [CACHED]: force_integral=-1.601846e-01
+  [SELF][Rank 0] Skipped moment 3/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 4/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 5/36 [CACHED]: force_integral=-2.967655e+02
+  [SELF][Rank 0] Skipped moment 6/36 [CACHED]: force_integral=+2.098667e+02
+  [SELF][Rank 0] Skipped moment 7/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 8/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 9/36 [CACHED]: force_integral=-2.802650e-01
+  [SELF][Rank 0] Skipped moment 10/36 [CACHED]: force_integral=-2.802655e-01
+  [SELF][Rank 0] Skipped moment 11/36 [CACHED]: force_integral=-1.163796e+03
+  [SELF][Rank 0] Skipped moment 12/36 [CACHED]: force_integral=+1.112088e+03
+  [SELF][Rank 0] Skipped moment 13/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 14/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 15/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 16/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 17/36 [CACHED]: force_integral=+3.639678e+03
+  [SELF][Rank 0] Skipped moment 18/36 [CACHED]: force_integral=-2.100084e+03
+  [SELF][Rank 0] Skipped moment 19/36 [CACHED]: force_integral=-1.800719e-01
+  [SELF][Rank 0] Skipped moment 20/36 [CACHED]: force_integral=-1.800724e-01
+  [SELF][Rank 0] Skipped moment 21/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 22/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 23/36 [CACHED]: force_integral=-1.095084e+03
+  [SELF][Rank 0] Skipped moment 24/36 [CACHED]: force_integral=+1.160378e+03
+  [SELF][Rank 0] Skipped moment 25/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 26/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 27/36 [CACHED]: force_integral=-1.800719e-01
+  [SELF][Rank 0] Skipped moment 28/36 [CACHED]: force_integral=-1.800724e-01
+  [SELF][Rank 0] Skipped moment 29/36 [CACHED]: force_integral=-1.095084e+03
+  [SELF][Rank 0] Skipped moment 30/36 [CACHED]: force_integral=+1.160378e+03
+  [SELF][Rank 0] Skipped moment 31/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 32/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 33/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 34/36 [CACHED]: force_integral=+0.000000e+00
+  [SELF][Rank 0] Skipped moment 35/36 [CACHED]: force_integral=+2.035296e+03
+
+Elapsed run time = 709.2936 s
+
+Elapsed run time = 711.6640 s
+
+Elapsed run time = 712.9242 s
+
+Elapsed run time = 713.3050 s
+
+Elapsed run time = 714.2318 s
+
+Elapsed run time = 714.2705 s
+
+Elapsed run time = 714.5319 s
+
+Elapsed run time = 714.9959 s
+
+Elapsed run time = 716.2070 s
+
+Elapsed run time = 716.6839 s
+
+Elapsed run time = 718.0175 s
+
+Elapsed run time = 718.1879 s
+
+Elapsed run time = 718.5582 s
+
+Elapsed run time = 718.5885 s
+
+Elapsed run time = 719.2316 s
+
+Elapsed run time = 719.7571 s
+
+Elapsed run time = 779.8593 s
+
+Elapsed run time = 779.9075 s
+
+Elapsed run time = 780.1004 s
+
+Elapsed run time = 780.1129 s
+
+Elapsed run time = 780.1256 s
+
+Elapsed run time = 780.5531 s
+
+Elapsed run time = 780.5629 s
+
+Elapsed run time = 781.1692 s
+
+Elapsed run time = 781.1699 s
+
+Elapsed run time = 781.2459 s
+
+Elapsed run time = 781.2519 s
+
+Elapsed run time = 781.4341 s
+
+Elapsed run time = 781.4415 s
+
+Elapsed run time = 781.7132 s
+
+Elapsed run time = 781.7678 s
+
+Elapsed run time = 781.8504 s
+
+Elapsed run time = 782.0725 s
+
+Elapsed run time = 782.1094 s
+
+Elapsed run time = 782.1609 s
+
+Elapsed run time = 782.1767 s
+
+Elapsed run time = 782.2012 s
+
+Elapsed run time = 782.2087 s
+
+Elapsed run time = 782.3545 s
+
+Elapsed run time = 782.4537 s
+
+Elapsed run time = 782.6519 s
+
+Elapsed run time = 782.7338 s
+
+Elapsed run time = 782.7805 s
+
+Elapsed run time = 782.8436 s
+
+Elapsed run time = 782.8442 s
+
+Elapsed run time = 782.9433 s
+
+Elapsed run time = 783.1253 s
+
+Elapsed run time = 783.1258 s
+
+Elapsed run time = 783.2301 s
+
+Elapsed run time = 783.3184 s
+
+Elapsed run time = 783.5133 s
+
+Elapsed run time = 783.6650 s
+
+Elapsed run time = 783.7999 s
+
+Elapsed run time = 783.8327 s
+
+Elapsed run time = 783.9190 s
+
+Elapsed run time = 784.0142 s
+
+Elapsed run time = 784.0204 s
+
+Elapsed run time = 784.1059 s
+
+Elapsed run time = 784.3584 s
+
+Elapsed run time = 784.6085 s
+
+Elapsed run time = 784.7477 s
+  [SELF][Rank 0] Done moment 36/36: force_integral=-3.286561e+03 (782.0s)
+
+Elapsed run time = 784.9769 s
+
+Elapsed run time = 785.2174 s
+
+Elapsed run time = 785.2174 s
+
+Elapsed run time = 785.3080 s
+
+Elapsed run time = 785.3763 s
+
+Elapsed run time = 785.4878 s
+
+Elapsed run time = 785.6662 s
+
+Elapsed run time = 785.6918 s
+
+Elapsed run time = 785.7459 s
+
+Elapsed run time = 785.8275 s
+
+Elapsed run time = 785.8599 s
+
+Elapsed run time = 785.8954 s
+
+Elapsed run time = 785.9155 s
+
+Elapsed run time = 785.9286 s
+
+Elapsed run time = 785.9397 s
+
+Elapsed run time = 785.9788 s
+
+Elapsed run time = 786.1336 s
+
+Elapsed run time = 786.1597 s
+
+Elapsed run time = 786.6431 s
+
+Elapsed run time = 786.9471 s
+
+Elapsed run time = 787.0198 s
+
+Elapsed run time = 787.0460 s
+
+Elapsed run time = 787.0594 s
+
+Elapsed run time = 787.0631 s
+
+Elapsed run time = 787.2943 s
+
+Elapsed run time = 787.3287 s
+
+Elapsed run time = 787.3363 s
+
+Elapsed run time = 787.5648 s
+
+Elapsed run time = 787.5657 s
+
+Elapsed run time = 787.6122 s
+
+Elapsed run time = 787.6325 s
+
+Elapsed run time = 787.7101 s
+
+Elapsed run time = 787.7387 s
+
+Elapsed run time = 787.7806 s
+
+Elapsed run time = 787.7963 s
+
+Elapsed run time = 787.8076 s
+
+Elapsed run time = 787.8986 s
+
+Elapsed run time = 787.9531 s
+
+Elapsed run time = 788.0589 s
+
+Elapsed run time = 788.0719 s
+
+Elapsed run time = 788.1927 s
+
+Elapsed run time = 788.2253 s
+
+Elapsed run time = 789.4282 s
+
+Elapsed run time = 789.5367 s
+
+Elapsed run time = 789.6695 s
+
+Elapsed run time = 789.6988 s
+
+Elapsed run time = 789.9143 s
+
+Elapsed run time = 789.9438 s
+
+Elapsed run time = 790.0402 s
+
+Elapsed run time = 790.0497 s
+[SELF] Complete. Total force: +2.787098e+02
+
+================================================================================
+SIMULATION COMPLETE: SIERPINSKI-CANTOR FOREST CASIMIR EVALUATION
+Force Both (MEEP):          +7.261361e+02
+Force Self (MEEP):          +2.787098e+02
+Net Force (MEEP):           +4.474263e+02
+Net Force per Cell (fN):    +14145.3826 fN  --> [+++ CASIMIR REPULSION +++]
+Net Force per Cell (pN):    +14.1454 pN
+Casimir Pressure:           +1.2830e+01 Pa
+Chip Force (100x100 um):    +128.3028 nN (662,131 active pillars)
+Results saved to:           results_cantor_forest/task_007_N3_th_45deg.json
+================================================================================
+
+
+Elapsed run time = 800.1255 s
+
+Elapsed run time = 848.6903 s
+
+Elapsed run time = 849.5371 s
+
+Elapsed run time = 849.5731 s
+
+Elapsed run time = 849.7399 s
+
+Elapsed run time = 849.8308 s
+
+Elapsed run time = 850.5468 s
+
+Elapsed run time = 850.5577 s
+
+Elapsed run time = 850.5582 s
+
+Elapsed run time = 854.5199 s
+
+Elapsed run time = 854.6244 s
+
+Elapsed run time = 854.6814 s
+
+Elapsed run time = 854.8645 s
+
+Elapsed run time = 854.8904 s
+
+Elapsed run time = 854.9864 s
+
+Elapsed run time = 855.0270 s
+
+Elapsed run time = 855.1703 s
+Command succeeded cleanly.
+Task 7 finished with exit code 0 at Wed Sep 30 02:43:18 PM EDT 2026.
