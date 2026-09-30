@@ -86,6 +86,7 @@ def serialize_task(cfg_path):
     result_data = {
         "task_id": task_id,
         "architecture": "dual_fractal_rotary_casimir_clutch",
+        "actual_distance_nm": float(cfg.get("actual_distance_nm", 20.0 if task_id <= 8 else 30.0)),
         "N_fractal": N_fractal,
         "theta_deg": float(theta),
         "d_average_nm": float(d_avg_um * 1e3),

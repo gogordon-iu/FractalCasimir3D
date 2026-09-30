@@ -52,7 +52,7 @@ def calculate_standoff(d_average: float, feature_depth: float, area_fraction: fl
 
 
 def build_fractal_clutch_suite(
-    d_average_um: float = 0.020,     # Target invariant average distance: 20 nm
+    actual_distances_nm: list = [20.0, 30.0],
     t_plate_um: float = 0.025,       # Stator membrane thickness: 25 nm
     L_fractal_um: float = 1.05,      # Fractal base span: 1.05 um
     W1_aperture_um: float = 0.25,    # Primary aperture diameter: 250 nm
@@ -60,59 +60,86 @@ def build_fractal_clutch_suite(
     H_needle_um: float = 0.25,       # Needle height: 250 nm
     material: str = "Gold",
     medium: str = "Vacuum",
-    resolution: int = 60,            # Cluster-proven resolution: dx = 16.67 nm (~1.2h/task on 128 cores)
+    resolution: int = 60,            # Cluster-proven resolution: dx = 16.67 nm
     nmax: int = 1,
     T_run: float = 3.0
 ) -> list:
-    """Constructs the list of 8 configuration dictionaries."""
+    """
+    Constructs the list of 16 configuration dictionaries:
+    8 tasks for actual distance 20 nm (Tasks 1-8)
+    8 tasks for actual distance 30 nm (Tasks 9-16)
+    Each distance suite deduces the exact invariant average distance <d> from the actual distance,
+    ensuring N=1 and N=3 have strictly identical <d>.
+    """
     angles = [0.0, 30.0, 45.0, 90.0]
     generations = [1, 3]
+
+    elements_dict = {
+        N: get_fractal_clutch_elements(N, L_fractal_um, W1=W1_aperture_um, w1=w1_needle_um)
+        for N in generations
+    }
+    area_fraction_dict = {
+        N: compute_plate_area_fraction(elements_dict[N], L_fractal_um)
+        for N in generations
+    }
 
     configs = []
     task_id = 1
 
-    for N in generations:
-        elements = get_fractal_clutch_elements(N, L_fractal_um, W1=W1_aperture_um, w1=w1_needle_um)
-        f_area = compute_plate_area_fraction(elements, L_fractal_um)
-        z_tip = calculate_standoff(d_average_um, t_plate_um, f_area)
+    for d_act_nm in actual_distances_nm:
+        # Reference actual distance sets z_tip for N=1
+        ztip_n1 = d_act_nm * 1e-3
+        f_n1 = area_fraction_dict[1]
+        # Deduced invariant average distance
+        d_average_um = ztip_n1 + f_n1 * t_plate_um
 
-        for theta in angles:
-            if abs(theta) < 1e-3 or abs(theta - 90.0) < 1e-3:
-                expected_regime = "REPULSIVE"
-            elif abs(theta - 45.0) < 1e-3:
-                expected_regime = "ATTRACTIVE"
-            else:
-                expected_regime = "TRANSITION"
+        ztip_dict = {
+            1: ztip_n1,
+            3: d_average_um - area_fraction_dict[3] * t_plate_um
+        }
 
-            label = (
-                f"DualFractalClutch: N={N}, th={theta:.1f}deg, "
-                f"<d>={d_average_um*1e3:.1f}nm, z_tip={z_tip*1e3:.2f}nm, mat={material}"
-            )
+        for N in generations:
+            f_area = area_fraction_dict[N]
+            z_tip = ztip_dict[N]
 
-            cfg = {
-                "task_id": task_id,
-                "label": label,
-                "campaign": "dual_fractal_rotary_clutch_constant_d_avg",
-                "N_fractal": N,
-                "theta_deg": float(theta),
-                "d_average_um": float(d_average_um),
-                "feature_depth_um": float(t_plate_um),
-                "area_fraction": float(f_area),
-                "z_tip_um": float(z_tip),
-                "L_fractal_um": float(L_fractal_um),
-                "W1_aperture_um": float(W1_aperture_um),
-                "w1_needle_um": float(w1_needle_um),
-                "H_needle_um": float(H_needle_um),
-                "t_plate_um": float(t_plate_um),
-                "expected_regime": expected_regime,
-                "material": str(material),
-                "medium": str(medium),
-                "resolution": int(resolution),
-                "nmax": int(nmax),
-                "T_run": float(T_run)
-            }
-            configs.append(cfg)
-            task_id += 1
+            for theta in angles:
+                if abs(theta) < 1e-3 or abs(theta - 90.0) < 1e-3:
+                    expected_regime = "REPULSIVE"
+                elif abs(theta - 45.0) < 1e-3:
+                    expected_regime = "ATTRACTIVE"
+                else:
+                    expected_regime = "TRANSITION"
+
+                label = (
+                    f"DualFractalClutch: d_act={d_act_nm:.0f}nm, N={N}, th={theta:.1f}deg, "
+                    f"<d>={d_average_um*1e3:.2f}nm, z_tip={z_tip*1e3:.2f}nm, mat={material}"
+                )
+
+                cfg = {
+                    "task_id": task_id,
+                    "label": label,
+                    "campaign": "dual_fractal_rotary_clutch_constant_d_avg",
+                    "actual_distance_nm": float(d_act_nm),
+                    "N_fractal": N,
+                    "theta_deg": float(theta),
+                    "d_average_um": float(d_average_um),
+                    "feature_depth_um": float(t_plate_um),
+                    "area_fraction": float(f_area),
+                    "z_tip_um": float(z_tip),
+                    "L_fractal_um": float(L_fractal_um),
+                    "W1_aperture_um": float(W1_aperture_um),
+                    "w1_needle_um": float(w1_needle_um),
+                    "H_needle_um": float(H_needle_um),
+                    "t_plate_um": float(t_plate_um),
+                    "expected_regime": expected_regime,
+                    "material": str(material),
+                    "medium": str(medium),
+                    "resolution": int(resolution),
+                    "nmax": int(nmax),
+                    "T_run": float(T_run)
+                }
+                configs.append(cfg)
+                task_id += 1
 
     return configs
 
@@ -120,14 +147,13 @@ def build_fractal_clutch_suite(
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Generate Dual-Fractal Casimir Clutch Configuration Suite")
-    parser.add_argument("--res", type=int, default=60, help="Yee grid resolution (default: 60 px/um, dx=16.67 nm, ~1.2h/task)")
-    parser.add_argument("--d-avg", type=float, default=0.020, help="Target invariant average distance in um (default: 0.020)")
+    parser.add_argument("--res", type=int, default=60, help="Yee grid resolution (default: 60 px/um, dx=16.67 nm)")
     parser.add_argument("--t-plate", type=float, default=0.025, help="Stator plate thickness in um (default: 0.025)")
     parser.add_argument("--T-run", type=float, default=3.0, help="FDTD run duration in Meep time units (default: 3.0)")
     args = parser.parse_args()
 
     configs = build_fractal_clutch_suite(
-        d_average_um=args.d_avg,
+        actual_distances_nm=[20.0, 30.0],
         t_plate_um=args.t_plate,
         resolution=args.res,
         T_run=args.T_run
@@ -145,7 +171,7 @@ def main():
         fname = os.path.join(out_dir, f"config_{tid:03d}.json")
         with open(fname, "w", newline="\n") as f_out:
             json.dump(cfg, f_out, indent=4)
-        print(f"Generated {fname}: N={cfg['N_fractal']}, theta={cfg['theta_deg']:.1f} deg, z_tip={cfg['z_tip_um']*1e3:.2f} nm, <d>={cfg['d_average_um']*1e3:.1f} nm, res={cfg['resolution']}")
+        print(f"Generated {fname}: Task {tid:02d} | d_act={cfg['actual_distance_nm']:.0f} nm, N={cfg['N_fractal']}, theta={cfg['theta_deg']:.1f} deg, z_tip={cfg['z_tip_um']*1e3:.2f} nm, <d>={cfg['d_average_um']*1e3:.2f} nm")
 
     master_path = os.path.join(out_dir, "master_fractal_clutch_suite.json")
     with open(master_path, "w", newline="\n") as f_m:
