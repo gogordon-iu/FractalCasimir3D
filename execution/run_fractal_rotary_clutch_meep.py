@@ -111,6 +111,37 @@ def run_fractal_rotary_clutch_simulation(
     theta_rad = np.radians(theta_deg)
     cos_th, sin_th = np.cos(theta_rad), np.sin(theta_rad)
 
+    # Fast-path: Check cached checkpoints before initializing Meep structures
+    chk_both = f".tmp/chk_{chk_tag}_both.json"
+    chk_self = f".tmp/chk_{chk_tag}_self.json"
+    if not no_cache:
+        if config == "all" and os.path.exists(chk_both) and os.path.exists(chk_self):
+            with open(chk_both, "r") as fb, open(chk_self, "r") as fs:
+                f1_both = float(json.load(fb)["force"])
+                f1_self = float(json.load(fs)["force"])
+            if is_g0:
+                print(f"[BOTH] Loaded cached force: {f1_both:.6e} from {chk_both}")
+                print(f"[SELF] Loaded cached force: {f1_self:.6e} from {chk_self}")
+            return f1_both, f1_self, f1_both - f1_self, True
+        elif config == "both" and os.path.exists(chk_both):
+            with open(chk_both, "r") as fb:
+                f1_both = float(json.load(fb)["force"])
+            if is_g0:
+                print(f"[BOTH] Loaded cached force: {f1_both:.6e} from {chk_both}")
+            return f1_both, 0.0, f1_both, True
+        elif config == "self" and os.path.exists(chk_self):
+            with open(chk_self, "r") as fs:
+                f1_self = float(json.load(fs)["force"])
+            if is_g0:
+                print(f"[SELF] Loaded cached force: {f1_self:.6e} from {chk_self}")
+            return 0.0, f1_self, 0.0, True
+
+    if mp is None:
+        raise RuntimeError(
+            "Meep is not installed in this Python environment and full simulation is required. "
+            "Please run with the Meep Python environment: /N/u/gogordon/BigRed200/.conda/envs/meep/bin/python"
+        )
+
     # Dynamic standoffs derived from needle width and grid cell size (zero hardcoded constants)
     delta_xy = max(w1_needle / 2.0, 2.0 * dx)
     delta_z_top = max(w1_needle / 2.0, 2.0 * dx)
