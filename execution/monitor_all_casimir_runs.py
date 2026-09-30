@@ -55,6 +55,14 @@ C_DIM = "\033[2m"
 
 # Campaign mapping registry
 CAMPAIGNS = {
+    "concentric_ring": {
+        "title": "Concentric Cantor-Ring Clutch (17 Tasks)",
+        "config_dir": "sweep_configs_concentric_ring",
+        "results_dir": "results_concentric_ring",
+        "log_pattern": ".tmp/concentric_ring_*.out",
+        "total_tasks": 17,
+        "moments_per_task": 72
+    },
     "cantor_forest": {
         "title": "Sierpinski-Cantor Forest (8-Task Suite)",
         "config_dir": "sweep_configs_cantor_forest",
@@ -165,6 +173,8 @@ def query_slurm_jobs(user):
 def identify_campaign(job_name):
     """Identifies campaign metadata from job name."""
     clean_name = job_name.lower()
+    if "concentric" in clean_name or "ring" in clean_name:
+        return "concentric_ring", CAMPAIGNS["concentric_ring"]
     if "cantor" in clean_name:
         return "cantor_forest", CAMPAIGNS["cantor_forest"]
     if "fractal_clutch" in clean_name:
