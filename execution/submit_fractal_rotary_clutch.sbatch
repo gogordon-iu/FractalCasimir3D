@@ -5,14 +5,14 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=128
 #SBATCH --time=08:00:00
-#SBATCH --array=1-8%2
+#SBATCH --array=1-16%2
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu
 #SBATCH -o .tmp/fractal_clutch_%A_%a.out
 #SBATCH -e .tmp/fractal_clutch_%A_%a.err
 
 echo "================================================================================"
-echo "DUAL-FRACTAL ROTARY VACUUM CASIMIR CLUTCH: TASK $SLURM_ARRAY_TASK_ID / 8"
+echo "DUAL-FRACTAL ROTARY VACUUM CASIMIR CLUTCH: TASK $SLURM_ARRAY_TASK_ID / 16"
 echo "Host: $(hostname)"
 echo "Started: $(date)"
 echo "================================================================================"
@@ -46,6 +46,9 @@ mkdir -p .tmp cluster_diagnostics/raw_logs results_fractal_rotary_clutch
 
 CFG_INDEX=$(printf "%03d" $SLURM_ARRAY_TASK_ID)
 CONFIG_FILE="sweep_configs_fractal_clutch/config_${CFG_INDEX}.json"
+
+# Clear stale flags for this task index before starting
+rm -f .tmp/clutch_task_${CFG_INDEX}_complete.flag .tmp/clutch_task_${CFG_INDEX}_pending.flag 2>/dev/null || true
 
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "Error: Config file $CONFIG_FILE not found!"
