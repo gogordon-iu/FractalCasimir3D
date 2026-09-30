@@ -245,18 +245,35 @@ def get_meep_dispersive_medium(material_name, Sigma, ft, theta_deg=0.0):
             E_susceptibilities=susceptibilities,
             **cond_attr
         )
-    elif material_name == "Gold":
-        from meep.materials import Au
+    elif material_name in ["Gold", "Silicon"]:
+        from meep.materials import Au, cSi
+        base_medium = Au if material_name == "Gold" else cSi
+        new_sus = []
+        for sus in base_medium.E_susceptibilities:
+            freq = sus.frequency
+            gamma = sus.gamma
+            gamma_val = gamma + Sigma if ft == mp.E_stuff else gamma
+            if isinstance(sus, mp.DrudeSusceptibility):
+                if freq < 1e-5:
+                    sigma_val = sus.sigma_diag.x * (freq ** 2)
+                    freq_val = 1.0
+                else:
+                    sigma_val = sus.sigma_diag.x
+                    freq_val = freq
+                new_sus.append(mp.DrudeSusceptibility(
+                    frequency=freq_val,
+                    gamma=gamma_val,
+                    sigma=sigma_val
+                ))
+            elif isinstance(sus, mp.LorentzianSusceptibility):
+                new_sus.append(mp.LorentzianSusceptibility(
+                    frequency=freq,
+                    gamma=gamma_val,
+                    sigma=sus.sigma_diag.x
+                ))
         return mp.Medium(
-            epsilon=Au.epsilon_diag.x,
-            E_susceptibilities=Au.E_susceptibilities,
-            **cond_attr
-        )
-    elif material_name == "Silicon":
-        from meep.materials import cSi
-        return mp.Medium(
-            epsilon=cSi.epsilon_diag.x,
-            E_susceptibilities=cSi.E_susceptibilities,
+            epsilon=base_medium.epsilon_diag.x,
+            E_susceptibilities=new_sus,
             **cond_attr
         )
     elif material_name in IMMERSION_MEDIA:

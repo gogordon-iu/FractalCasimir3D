@@ -92,6 +92,6 @@
 - **Bug**: Tasks in the fractal clutch suite took over 25 hours because $T_{\text{run}}=12.0$ spent 75% of simulation steps evaluating numerical zero under the steep $\Sigma=33.3\,\mu\text{m}^{-1}$ Wick exponential envelope ($\exp(-2\Sigma t) \sim 10^{-88}$), while checkpoint filenames omitted task IDs and runtime tags.
 - **Solution**: Reduced default runtime to $T_{\text{run}}=3.0$ ($\exp(-200)$, achieving double-precision convergence with a $4\times$ speedup to finish in $\sim 6.2\text{ hours}$ within a single Slurm allocation), scoped all checkpoints with explicit `task_{id:03d}` and `Trun_{T_run:.1f}` identifiers, and aligned cluster monitoring patterns.
 
-
-
-
+## [2026-09-30] Unscaled Drude Susceptibility and Lorentzian Coercion Causing Field Overflow in Fractal Control Suite
+- **Bug**: In `run_fractal_control_simulation.py`, `build_meep_material` coerced all gold susceptibilities into `DrudeSusceptibility` without rescaling the tiny Drude frequency ($10^{-10}$) and astronomical oscillator strength ($10^{21}$), causing FDTD field polarization updates to overflow to `NaN or Inf` on the initial time steps.
+- **Solution**: Implemented proper distinction between Drude and Lorentzian susceptibilities, rescaled Drude parameters ($\omega_0 = 1.0, \sigma_{\rm rescaled} = \sigma \omega_0^2$) to order unity, and centered DCT basis functions with side-center offsets.

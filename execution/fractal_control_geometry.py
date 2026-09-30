@@ -272,7 +272,7 @@ def create_plate_blocks_meep(
             ry = cx * S + cy * C
             blocks.append(mp.Block(
                 center=mp.Vector3(rx, ry, z_cavity_center),
-                size=mp.Vector3(w, w, feature_depth + 0.001),
+                size=mp.Vector3(w, w, feature_depth),
                 e1=e1,
                 e2=e2,
                 e3=e3,
