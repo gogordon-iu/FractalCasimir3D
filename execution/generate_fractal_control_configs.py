@@ -40,7 +40,7 @@ def build_suite_configs(
     eps_bg: float = 1.0,
     resolution: int = 40,
     nmax: int = 1,
-    T_run: float = 12.0,
+    T_run: float = 3.5,
     shuffle_seed: int = 42
 ) -> list:
     """
@@ -118,7 +118,7 @@ def main():
     parser.add_argument("--eps-bg", type=float, default=1.0, help="Background permittivity (default: 1.0)")
     parser.add_argument("--resolution", type=int, default=40, help="FDTD Yee grid resolution (default: 40)")
     parser.add_argument("--nmax", type=int, default=1, help="Multipole moment cutoff multiplier (default: 1 -> 36 moments)")
-    parser.add_argument("--T-run", type=float, default=12.0, help="Simulation duration (default: 12.0)")
+    parser.add_argument("--T-run", type=float, default=3.5, help="Simulation duration (default: 3.5)")
     parser.add_argument("--shuffle-seed", type=int, default=42, help="Seed for reproducible element shuffling (default: 42)")
     parser.add_argument("--out-dir", type=str, default="sweep_configs_fractal_control", help="Output directory for configs")
 

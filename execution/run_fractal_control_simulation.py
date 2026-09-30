@@ -88,32 +88,46 @@ def compute_domain_dimensions(
 def build_meep_material(material_name: str, Sigma: float, ft, theta_deg: float, eps_bg: float, mp):
     """
     Constructs the MEEP Medium with Wick-rotated conductivity Sigma.
+    Properly handles Drude frequency rescaling and Lorentzian susceptibilities
+    to avoid numerical overflow (NaN/Inf) during FDTD time-stepping.
     """
     cond_attr = {"D_conductivity" if ft == mp.E_stuff else "B_conductivity": Sigma}
 
     if material_name == "PEC":
         return mp.Medium(epsilon=-1e20, **cond_attr)
 
-    if material_name == "Gold":
-        from meep.materials import Au
-        base = Au
+    if material_name in ["Gold", "Silicon"]:
+        from meep.materials import Au, cSi
+        base_medium = Au if material_name == "Gold" else cSi
         new_sus = []
-        for sus in base.E_susceptibilities:
-            gamma_val = sus.gamma + Sigma if ft == mp.E_stuff else sus.gamma
-            new_sus.append(mp.DrudeSusceptibility(
-                frequency=sus.frequency,
-                gamma=gamma_val,
-                sigma=sus.sigma_diag.x
-            ))
+        for sus in base_medium.E_susceptibilities:
+            freq = sus.frequency
+            gamma = sus.gamma
+            gamma_val = gamma + Sigma if ft == mp.E_stuff else gamma
+            if isinstance(sus, mp.DrudeSusceptibility):
+                # Rescale to avoid numerical overflow with 1e-10 frequency and 4e21 sigma
+                if freq < 1e-5:
+                    sigma_val = sus.sigma_diag.x * (freq ** 2)
+                    freq_val = 1.0
+                else:
+                    sigma_val = sus.sigma_diag.x
+                    freq_val = freq
+                new_sus.append(mp.DrudeSusceptibility(
+                    frequency=freq_val,
+                    gamma=gamma_val,
+                    sigma=sigma_val
+                ))
+            elif isinstance(sus, mp.LorentzianSusceptibility):
+                new_sus.append(mp.LorentzianSusceptibility(
+                    frequency=freq,
+                    gamma=gamma_val,
+                    sigma=sus.sigma_diag.x
+                ))
         return mp.Medium(
-            epsilon=base.epsilon_diag.x,
+            epsilon=base_medium.epsilon_diag.x,
             E_susceptibilities=new_sus,
             **cond_attr
         )
-
-    if material_name == "Silicon":
-        from meep.materials import cSi
-        return mp.Medium(epsilon=cSi.epsilon_diag.x, **cond_attr)
 
     if material_name in ["Phosphorene", "Phosphorene_tuned"]:
         eps_x, eps_y, eps_z = 2.0, 1.5, 1.2
@@ -283,17 +297,18 @@ def run_single_pass(
         else:
             mx, my, mz = m1, m2, 0
 
-        def make_amp_func(mx_val, my_val, mz_val, size_vec):
+        def make_amp_func(mx_val, my_val, mz_val, size_vec, center_vec):
             sx_v, sy_v, sz_v = size_vec.x, size_vec.y, size_vec.z
+            cx_v, cy_v, cz_v = center_vec.x, center_vec.y, center_vec.z
             Nx = (2.0 / sx_v if mx_val > 0 else 1.0 / sx_v) if sx_v > 1e-15 else 1.0
             Ny = (2.0 / sy_v if my_val > 0 else 1.0 / sy_v) if sy_v > 1e-15 else 1.0
             Nz = (2.0 / sz_v if mz_val > 0 else 1.0 / sz_v) if sz_v > 1e-15 else 1.0
             factor = np.sqrt(Nx * Ny * Nz)
 
             def amp_func(pt):
-                x = pt.x + 0.5 * sx_v
-                y = pt.y + 0.5 * sy_v
-                z = pt.z + 0.5 * sz_v
+                x = (pt.x - cx_v) + 0.5 * sx_v
+                y = (pt.y - cy_v) + 0.5 * sy_v
+                z = (pt.z - cz_v) + 0.5 * sz_v
                 kx = mx_val * np.pi / sx_v if sx_v > 1e-15 else 0.0
                 ky = my_val * np.pi / sy_v if sy_v > 1e-15 else 0.0
                 kz = mz_val * np.pi / sz_v if sz_v > 1e-15 else 0.0
@@ -308,7 +323,7 @@ def run_single_pass(
                 component=curr_pol,
                 center=side_center,
                 size=side_size,
-                amp_func=make_amp_func(mx, my, mz, side_size)
+                amp_func=make_amp_func(mx, my, mz, side_size, side_center)
             )
         ])
 
