@@ -2,10 +2,11 @@
 #SBATCH -J concentric_ring
 #SBATCH -p general
 #SBATCH -A r01540
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=128
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=64
+#SBATCH --cpus-per-task=2
 #SBATCH --time=08:00:00
-#SBATCH --array=1-17%3
+#SBATCH --array=1-17%2
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu
 #SBATCH -o .tmp/concentric_ring_%A_%a.out
@@ -13,6 +14,7 @@
 
 echo "================================================================================"
 echo "CONCENTRIC CANTOR-RING CASIMIR CLUTCH: TASK $SLURM_ARRAY_TASK_ID / 17"
+echo "Topology: 2 nodes, 64 ranks/node, 2 cpus/rank (3.75 GB RAM/rank, 512 GB total RAM)"
 echo "Host: $(hostname)"
 echo "Started: $(date)"
 echo "================================================================================"
@@ -59,7 +61,10 @@ echo "==========================================================================
 # Clear any stale flags before launching
 rm -f .tmp/concentric_ring_task_${CFG_INDEX}_complete.flag .tmp/concentric_ring_task_${CFG_INDEX}_pending.flag 2>/dev/null || true
 
-bash execution/run_meep_wrapper.sh srun -n 128 $PYTHON_EXEC execution/run_concentric_ring_meep.py \
+TOTAL_RANKS=$((SLURM_NNODES * 64))
+echo "Launching Meep across $SLURM_NNODES nodes ($TOTAL_RANKS MPI ranks, 64 ranks/node, 2 cpus/rank)..."
+
+bash execution/run_meep_wrapper.sh srun -n $TOTAL_RANKS --ntasks-per-node=64 -c 2 $PYTHON_EXEC execution/run_concentric_ring_meep.py \
     --config-file "$CONFIG_FILE" \
     --task-id $SLURM_ARRAY_TASK_ID \
     --config all \

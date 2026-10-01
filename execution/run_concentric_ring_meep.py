@@ -138,8 +138,8 @@ def run_concentric_ring_simulation(
     is_g0 = (global_rank == 0)
 
     # 1. Domain and Boundary Dimensions
-    dpml = 0.25
-    buffer = 0.15
+    dpml = 0.20
+    buffer = 0.10
     delta_xy = 0.05
     delta_z = max(0.005, z_tip / 3.0)
 
