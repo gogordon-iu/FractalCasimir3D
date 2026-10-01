@@ -22,6 +22,7 @@ import math
 import glob
 import json
 import argparse
+import ctypes
 import numpy as np
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -281,11 +282,15 @@ def run_concentric_ring_simulation(
                 eps_averaging=True
             )
 
+            sim.init_sim()
             dt = sim.Courant / resolution
-            T_steps = int(round(T_run / dt))
+            T_steps = int(T_run / dt)
 
-            raw_gt = sim.casimir_green_function(curr_pol, T_run, dt, Sigma)
-            data = np.array(raw_gt)
+            # Casimir Green's function time kernel g(t)
+            gt = mp.make_casimir_gfunc(T_run, dt, Sigma, curr_pol)
+            addr = int(gt)
+            double_ptr = ctypes.cast(addr, ctypes.POINTER(ctypes.c_double))
+            data = np.ctypeslib.as_array(double_ptr, shape=(T_steps * 2,))
             gt_arr = data[0::2] + 1j * data[1::2]
 
             s = n % 6

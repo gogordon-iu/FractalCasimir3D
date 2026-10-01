@@ -190,11 +190,13 @@ def generate_annular_sector_prism_vertices(
     r_out: float,
     phi_start_rad: float,
     phi_end_rad: float,
+    z_base: float = 0.0,
     num_pts_per_arc: int = 8
 ) -> list:
     """
     Constructs an accurate 2D polygon approximating an annular sector for mp.Prism.
     Vertices wind counter-clockwise: outer arc (phi_start -> phi_end), then inner arc (phi_end -> phi_start).
+    When center is omitted in mp.Prism, the z coordinates of the vertices define the base elevation of the prism.
     """
     import meep as mp
 
@@ -206,13 +208,13 @@ def generate_annular_sector_prism_vertices(
     for phi in outer_angles:
         x = r_out * math.cos(phi)
         y = r_out * math.sin(phi)
-        vertices.append(mp.Vector3(x, y, 0.0))
+        vertices.append(mp.Vector3(x, y, z_base))
 
     # Inner arc
     for phi in inner_angles:
         x = r_in * math.cos(phi)
         y = r_in * math.sin(phi)
-        vertices.append(mp.Vector3(x, y, 0.0))
+        vertices.append(mp.Vector3(x, y, z_base))
 
     return vertices
 
@@ -265,6 +267,7 @@ def generate_concentric_stator_geometry(
                 r_out=r_out,
                 phi_start_rad=phi_start,
                 phi_end_rad=phi_end,
+                z_base=-t_plate,
                 num_pts_per_arc=8
             )
 
@@ -272,7 +275,6 @@ def generate_concentric_stator_geometry(
                 vertices=poly_verts,
                 height=t_plate,
                 axis=mp.Vector3(0.0, 0.0, 1.0),
-                center=mp.Vector3(0.0, 0.0, -t_plate / 2.0),
                 material=void_material
             ))
 
@@ -334,6 +336,7 @@ def generate_concentric_rotor_geometry(
                 r_out=r_out,
                 phi_start_rad=phi_start,
                 phi_end_rad=phi_end,
+                z_base=z_tip,
                 num_pts_per_arc=8
             )
 
@@ -341,7 +344,6 @@ def generate_concentric_rotor_geometry(
                 vertices=poly_verts,
                 height=H_teeth,
                 axis=mp.Vector3(0.0, 0.0, 1.0),
-                center=mp.Vector3(0.0, 0.0, z_center_teeth),
                 material=rotor_material
             ))
 
