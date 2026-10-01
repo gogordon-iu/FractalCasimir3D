@@ -192,7 +192,7 @@ def main():
         if g_data:
             th = [d["theta_deg"] for d in g_data]
             f_chip = [d.get("chip_scale_100um", {}).get("force_net_nN", 0.0) for d in g_data]
-            ax3.plot(th, f_chip, markers[gname], color=colors[gname], linewidth=2.2, markersize=7, label=f"Cantor {gname} ($100\,\mu$m disk)")
+            ax3.plot(th, f_chip, markers[gname], color=colors[gname], linewidth=2.2, markersize=7, label=rf"Cantor {gname} ($100\,\mu$m disk)")
 
     ax3.axhspan(-0.001, 0.001, color="yellow", alpha=0.4, label=r"AFM Thermal Noise $\pm 1\,$pN")
     ax3.axhline(0, color="gray", linestyle="--", alpha=0.7)

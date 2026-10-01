@@ -100,3 +100,9 @@
 - **Bug**: In the Concentric Cantor-Ring suite, Task 017 (`SolidFlat_Plate_Ctrl`) passed empty element arrays producing an empty rotor geometry inside the stress integration surface, simulation scripts suppressed errors with `try-except` blocks, `monitor_all_casimir_runs.py` threw a KeyError due to missing campaign metadata, and walltime guards lacked inter-phase duration history.
 - **Solution**: Implemented a solid metallic cylinder rotor for flat reference control, excised all `try-except` blocks and fallback defaults across the suite, registered the `concentric_ring` campaign in the global cluster monitor, and tracked moment timings across phases with mid-run atomic progress serialization and automatic resubmission.
 
+## [2026-09-30] Concentric Ring Suite: Fictitious `casimir_green_function` AttributeError and `mp.Prism` Centroid Coordinate Collapse
+- **Bug**: In `run_concentric_ring_meep.py`, calling the non-existent method `sim.casimir_green_function` crashed with an `AttributeError` (exit code 1) on initialization, while passing `center` to `mp.Prism` in `concentric_ring_geometry.py` caused Meep to subtract each sector's 2D centroid, collapsing all polar sectors onto the origin.
+- **Solution**: Replaced the fictitious method with Meep's verified C++/SWIG `mp.make_casimir_gfunc` via `ctypes` pointer casting following `sim.init_sim()`, and omitted `center` from `mp.Prism` while defining base vertical coordinates `z_base` directly within the vertex vectors.
+
+
+
