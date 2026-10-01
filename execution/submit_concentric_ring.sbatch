@@ -6,6 +6,7 @@
 #SBATCH --ntasks-per-node=64
 #SBATCH --cpus-per-task=2
 #SBATCH --time=08:00:00
+#SBATCH --exclude=nid0394
 #SBATCH --array=1-17%2
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu

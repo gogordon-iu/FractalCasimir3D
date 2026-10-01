@@ -108,6 +108,6 @@
 - **Bug**: In `submit_concentric_ring.sbatch`, running 128 ranks on a single standard node with a $4.2\times 10^6$ Yee grid consumed 316.77 GB RAM, exceeding BigRed 200's 240 GB physical limit and triggering kernel cgroup OOM kills across all tasks.
 - **Solution**: Distributed execution across 2 nodes with 64 ranks/node and 2 cpus/rank (`#SBATCH --nodes=2 --ntasks-per-node=64 --cpus-per-task=2`), allocating 3.75 GB RAM/rank across 512 GB total RAM, and optimized boundary padding (`dpml=0.20`, `buffer=0.10`) reducing Yee grid volume to $3.2\times 10^6$ cells and node memory to $\sim 121\,\text{GB}$ (50% capacity).
 
-
-
-
+## [2026-10-01] Cray EX Hardware Bus Error (SIGBUS / Exit Code 143) on Node nid0394
+- **Bug**: Task 1 crashed during continuation with exit code 143 after 5 minutes because Cray compute node `nid0394` encountered a localized hardware memory bus error (`srun: error: nid0394: task 111: Bus error (core dumped)`).
+- **Solution**: Added `#SBATCH --exclude=nid0394` to `execution/submit_concentric_ring.sbatch` to permanently prevent Slurm from dispatching jobs onto the faulty node while preserving all 33 intact FDTD moment checkpoints for seamless continuation.
