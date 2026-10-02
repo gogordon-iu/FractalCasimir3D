@@ -249,10 +249,11 @@ def generate_concentric_stator_geometry(
     if is_flat_control:
         return geometry
 
-    # 2. Carve annular sector apertures
+    # 2. Carve annular sector apertures with clean numerical overhang through plate interfaces
     theta_rad = math.radians(theta_deg)
     sector_pitch_rad = (2.0 * math.pi) / num_sectors
     open_arc_rad = sector_pitch_rad * sector_duty_cycle
+    h_overhang = 0.002  # 2 nm overhang above and below slab for clean through-punching on Yee grid
 
     for elem in elements:
         r_in = elem["r_inner"]
@@ -267,13 +268,13 @@ def generate_concentric_stator_geometry(
                 r_out=r_out,
                 phi_start_rad=phi_start,
                 phi_end_rad=phi_end,
-                z_base=-t_plate,
+                z_base=-t_plate - h_overhang,
                 num_pts_per_arc=8
             )
 
             geometry.append(mp.Prism(
                 vertices=poly_verts,
-                height=t_plate,
+                height=t_plate + 2.0 * h_overhang,
                 axis=mp.Vector3(0.0, 0.0, 1.0),
                 material=void_material
             ))

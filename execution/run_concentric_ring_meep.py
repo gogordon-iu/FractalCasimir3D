@@ -140,18 +140,56 @@ def run_concentric_ring_simulation(
     # 1. Domain and Boundary Dimensions
     dpml = 0.20
     buffer = 0.10
-    delta_xy = 0.05
+    delta_xy = 0.03  # 30 nm lateral margin around active tooth cluster
     delta_z = max(0.005, z_tip / 3.0)
 
-    # Integration Box S enclosing rotor teeth:
-    # Outer radius enclosing all teeth: R_max
-    # Bounding box width: 2 * (R_max + delta_xy)
-    sx_box = 2.0 * (R_max + delta_xy)
-    sy_box = sx_box
-    z_bot = z_tip - delta_z
-    z_top = z_tip + H_teeth + delta_z
-    sz_box = z_top - z_bot
-    z_box_center = (z_top + z_bot) / 2.0
+    # 2. Integration Box S:
+    # For flat reference control, enclose full R_max disk.
+    # For structured concentric teeth, tightly enclose Sector 0 active teeth in Quadrant 1,
+    # exploiting 4-fold rotational symmetry (F_total = num_sectors * F_sector0).
+    # This prevents the empty 98% box volume and solid stator reflection from swamping the angular modulation.
+    if is_flat_control:
+        sx_box = 2.0 * (R_max + delta_xy)
+        sy_box = sx_box
+        z_bot = z_tip - delta_z
+        z_top = z_tip + H_teeth + delta_z
+        sz_box = z_top - z_bot
+        cx_box = 0.0
+        cy_box = 0.0
+        cz_box = (z_top + z_bot) / 2.0
+        num_sectors_scale = 1.0
+    else:
+        sector_pitch_rad = (2.0 * math.pi) / num_sectors
+        tooth_arc_rad = sector_pitch_rad * tooth_duty_cycle
+        arc_offset_rad = (sector_pitch_rad * 0.50 - tooth_arc_rad) / 2.0
+        theta_rad = math.radians(theta_deg)
+
+        phi_start = theta_rad + arc_offset_rad
+        phi_end = phi_start + tooth_arc_rad
+
+        r_mins = [e["r_tooth_in"] for e in elements]
+        r_maxs = [e["r_tooth_out"] for e in elements]
+        r_inner_all = min(r_mins)
+        r_outer_all = max(r_maxs)
+
+        phis = np.linspace(phi_start, phi_end, 30)
+        xs = np.concatenate([r_inner_all * np.cos(phis), r_outer_all * np.cos(phis)])
+        ys = np.concatenate([r_inner_all * np.sin(phis), r_outer_all * np.sin(phis)])
+
+        x_min = float(np.min(xs) - delta_xy)
+        x_max = float(np.max(xs) + delta_xy)
+        y_min = float(np.min(ys) - delta_xy)
+        y_max = float(np.max(ys) + delta_xy)
+        z_bot = float(z_tip - delta_z)
+        z_top = float(z_tip + H_teeth + delta_z)
+
+        sx_box = x_max - x_min
+        sy_box = y_max - y_min
+        sz_box = z_top - z_bot
+        cx_box = (x_min + x_max) / 2.0
+        cy_box = (y_min + y_max) / 2.0
+        cz_box = (z_bot + z_top) / 2.0
+        num_sectors_scale = float(num_sectors)  # 4-fold rotational symmetry scaling
 
     # Total Simulation Cell Size
     sx = L_domain + 2.0 * (dpml + buffer)
@@ -164,14 +202,14 @@ def run_concentric_ring_simulation(
     d_eff = max(0.010, z_tip)
     Sigma = 0.5 / d_eff
 
-    # 6 sides of bounding box S enclosing the rotor teeth ensemble
+    # 6 sides of tight bounding box S enclosing the active rotor teeth ensemble
     sides_info = [
-        {"center": mp.Vector3(-sx_box / 2.0, 0.0, z_box_center), "size": mp.Vector3(0.0, sy_box, sz_box), "orientation": -1.0},
-        {"center": mp.Vector3(+sx_box / 2.0, 0.0, z_box_center), "size": mp.Vector3(0.0, sy_box, sz_box), "orientation": +1.0},
-        {"center": mp.Vector3(0.0, -sy_box / 2.0, z_box_center), "size": mp.Vector3(sx_box, 0.0, sz_box), "orientation": -1.0},
-        {"center": mp.Vector3(0.0, +sy_box / 2.0, z_box_center), "size": mp.Vector3(sx_box, 0.0, sz_box), "orientation": +1.0},
-        {"center": mp.Vector3(0.0, 0.0, z_bot), "size": mp.Vector3(sx_box, sy_box, 0.0), "orientation": -1.0},
-        {"center": mp.Vector3(0.0, 0.0, z_top), "size": mp.Vector3(sx_box, sy_box, 0.0), "orientation": +1.0}
+        {"center": mp.Vector3(cx_box - sx_box / 2.0, cy_box, cz_box), "size": mp.Vector3(0.0, sy_box, sz_box), "orientation": -1.0},
+        {"center": mp.Vector3(cx_box + sx_box / 2.0, cy_box, cz_box), "size": mp.Vector3(0.0, sy_box, sz_box), "orientation": +1.0},
+        {"center": mp.Vector3(cx_box, cy_box - sy_box / 2.0, cz_box), "size": mp.Vector3(sx_box, 0.0, sz_box), "orientation": -1.0},
+        {"center": mp.Vector3(cx_box, cy_box + sy_box / 2.0, cz_box), "size": mp.Vector3(sx_box, 0.0, sz_box), "orientation": +1.0},
+        {"center": mp.Vector3(cx_box, cy_box, z_bot), "size": mp.Vector3(sx_box, sy_box, 0.0), "orientation": -1.0},
+        {"center": mp.Vector3(cx_box, cy_box, z_top), "size": mp.Vector3(sx_box, sy_box, 0.0), "orientation": +1.0}
     ]
 
     pol_list = [mp.Ex, mp.Ey, mp.Ez, mp.Hx, mp.Hy, mp.Hz]
@@ -309,17 +347,18 @@ def run_concentric_ring_simulation(
             else:
                 mx, my, mz = m1, m2, 0
 
-            def make_amp_func(mx_val, my_val, mz_val, size_vec):
+            def make_amp_func(mx_val, my_val, mz_val, size_vec, center_vec):
                 sx_v, sy_v, sz_v = size_vec.x, size_vec.y, size_vec.z
+                cx_v, cy_v, cz_v = center_vec.x, center_vec.y, center_vec.z
                 Nx = (2.0 / sx_v if mx_val > 0 else 1.0 / sx_v) if sx_v > 1e-15 else 1.0
                 Ny = (2.0 / sy_v if my_val > 0 else 1.0 / sy_v) if sy_v > 1e-15 else 1.0
                 Nz = (2.0 / sz_v if mz_val > 0 else 1.0 / sz_v) if sz_v > 1e-15 else 1.0
                 factor = np.sqrt(Nx * Ny * Nz)
 
                 def amp_func(pt):
-                    x = pt.x + 0.5 * sx_v
-                    y = pt.y + 0.5 * sy_v
-                    z = pt.z + 0.5 * sz_v
+                    x = (pt.x - cx_v) + 0.5 * sx_v
+                    y = (pt.y - cy_v) + 0.5 * sy_v
+                    z = (pt.z - cz_v) + 0.5 * sz_v
                     kx = mx_val * np.pi / sx_v if sx_v > 1e-15 else 0.0
                     ky = my_val * np.pi / sy_v if sy_v > 1e-15 else 0.0
                     kz = mz_val * np.pi / sz_v if sz_v > 1e-15 else 0.0
@@ -327,7 +366,7 @@ def run_concentric_ring_simulation(
                 return amp_func
 
             src_vol = mp.Volume(center=side_center, size=side_size, dims=3)
-            amp_fn = make_amp_func(mx, my, mz, side_size)
+            amp_fn = make_amp_func(mx, my, mz, side_size, side_center)
 
             sim.change_sources([
                 mp.Source(
@@ -385,12 +424,17 @@ def run_concentric_ring_simulation(
                 os.replace(tmp_prog, progress_file)
 
         is_done = (len(completed_moments) == num_tasks)
+        total_force_scaled = total_force * num_sectors_scale
         if is_g0 and is_done:
             with open(chk_file, "w") as f_out:
-                json.dump({"force": float(total_force)}, f_out, indent=4)
-            print(f"[{cfg_name.upper()}] Complete. Total force: {total_force:+.6e}")
+                json.dump({
+                    "force": float(total_force_scaled),
+                    "force_sector0": float(total_force),
+                    "num_sectors_scale": float(num_sectors_scale)
+                }, f_out, indent=4)
+            print(f"[{cfg_name.upper()}] Complete. Sector 0 force: {total_force:+.6e}, Total rotor force ({num_sectors_scale:.0f}x): {total_force_scaled:+.6e}")
 
-        return total_force, is_done
+        return total_force_scaled, is_done
 
     if config == "both":
         f_both, both_done = run_one_config("both")
@@ -452,7 +496,7 @@ def main():
     tooth_duty_cycle = float(cfg["tooth_duty_cycle"])
 
     chk_tag = (
-        f"concentric_ring_task_{task_id:03d}_N_{N_fractal}_th_{theta_deg:.1f}_"
+        f"v2_concentric_ring_task_{task_id:03d}_N_{N_fractal}_th_{theta_deg:.1f}_"
         f"ctrl_{int(is_control)}_flat_{int(is_flat_control)}_res_{resolution}"
     )
 

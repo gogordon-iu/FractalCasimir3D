@@ -111,3 +111,8 @@
 ## [2026-10-01] Cray EX Hardware Bus Error (SIGBUS / Exit Code 143) on Node nid0394
 - **Bug**: Task 1 crashed during continuation with exit code 143 after 5 minutes because Cray compute node `nid0394` encountered a localized hardware memory bus error (`srun: error: nid0394: task 111: Bus error (core dumped)`).
 - **Solution**: Added `#SBATCH --exclude=nid0394` to `execution/submit_concentric_ring.sbatch` to permanently prevent Slurm from dispatching jobs onto the faulty node while preserving all 33 intact FDTD moment checkpoints for seamless continuation.
+
+## [2026-10-02] Concentric Ring Suite: Full-Disk Integration Box Mode Orthogonality and Solid Stator Reflection
+- **Bug**: Integrating Casimir stress over a single oversized full-disk bounding box ($2.8\,\mu\text{m} \times 2.8\,\mu\text{m}$) caused the uniform $(0, 0)$ DCT mode to integrate identically to zero against the 4-fold rotor modulation while capturing a huge rotationally invariant reflection from the $88\%$ solid stator plate.
+- **Solution**: Replaced the full-disk box with a tight bounding box around Sector 0 active teeth scaled by 4-fold rotational symmetry ($F_{\text{rotor}} = 4 \times F_{\text{sector 0}}$), centered the DCT basis coordinates with local face offsets, added a 2 nm numerical overhang to stator aperture prisms, and versioned checkpoints with `v2_`.
+
