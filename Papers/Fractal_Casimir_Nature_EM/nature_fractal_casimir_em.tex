@@ -24,6 +24,8 @@
     urlcolor=blue
 }
 
+\input{macros_results.tex}
+
 \title{\textbf{Macroscopic Scale-Invariance Breaking, Exponential Screening, and Repulsive Vacuum Levitation in Prefractal Electromagnetic Cavities}}
 
 \author{\textbf{Goren Gordon} \\
@@ -42,9 +44,9 @@ The interaction of quantum electromagnetic fields with self-similar and prefract
 In this work, we present a unified electromagnetic and thermodynamic framework for self-similar Casimir cavities, systematically delineating genuine fractal Laplacians, Euclidean drums with fractal boundaries, and macroscopic prefractal resonators. 
 We resolve the long-standing thermodynamic compatibility problem of spatially compartmentalized cavities by modeling boundaries as semitransparent barriers of finite coupling $\lambda_0$, where high-frequency mode tunneling establishes global thermalization before taking the strict Dirichlet limit.
 We demonstrate that for plate-like self-similar geometries governed by a logarithmically running Casimir coefficient $C(d_s, \ln(d/\ell_*))$, the anisotropic Maxwell stress-energy tensor produces an integrated vacuum trace directly proportional to its logarithmic running, $T^\mu{}_\mu = -\frac{\hbar c}{d^4}\partial_{\ln d}C$.
-We map these boundary modifications onto precision atomic cavity quantum electrodynamic (CQED) sensors, predicting measurable fractal Purcell rate variations ($10\%\text{--}50\%$), anomalous Casimir-Polder shifts, and geometric Lamb shifts ($\sim 2.4\text{ kHz}$).
-To validate the framework, we perform high-resolution three-dimensional Finite-Difference Time-Domain (FDTD) simulations using MEEP on supercomputing infrastructure. Multi-model curve fitting across plate sizes $L \in [0.3, 4.5]\ \mu\text{m}$ proves that the Casimir attraction is governed by a Screened Power Law, $P(L) = -(A/L^\alpha) e^{-L/\lambda}$ with screening length $\lambda = 1.22\ \mu\text{m}$, driven by sub-wavelength aperture mode localization.
-Finally, by introducing 3D pyramidal corrugations and cross-polarized anisotropic optical twisting, we achieve transverse Maxwell stress-tensor field bending ($E_x^2 + E_y^2 > E_z^2$), canceling over $94.3\%$ of the normal attraction at $d=100\text{ nm}$ and uncovering a vast phase space of strong, positive repulsive Casimir pressures ($P > 0$ up to $+3.61\text{ Pa}$) in vacuum. 
+We map these boundary modifications onto precision atomic cavity quantum electrodynamic (CQED) sensors, predicting measurable fractal Purcell rate variations ($\AtomicCqedPurcellLifetimeVariationMin\%\text{--}\AtomicCqedPurcellLifetimeVariationMax\%$), anomalous Casimir-Polder shifts, and geometric Lamb shifts ($\sim \AtomicCqedLambShiftDeltaNu\text{ kHz}$).
+To validate the framework, we perform high-resolution three-dimensional Finite-Difference Time-Domain (FDTD) simulations using MEEP on supercomputing infrastructure. Multi-model curve fitting across plate sizes $L \in [0.3, 4.5]\ \mu\text{m}$ proves that the Casimir attraction is governed by a Screened Power Law, $P(L) = -(A/L^\alpha) e^{-L/\lambda}$ with screening length $\lambda = \ModelFourLambda\ \mu\text{m}$, driven by sub-wavelength aperture mode localization.
+Finally, by introducing 3D pyramidal corrugations and cross-polarized anisotropic optical twisting, we achieve transverse Maxwell stress-tensor field bending ($E_x^2 + E_y^2 > E_z^2$), canceling over $\FrontierTwoCancellationPercent\%$ of the normal attraction at $d=100\text{ nm}$ and uncovering a vast phase space of strong, positive repulsive Casimir pressures ($P > 0$ up to $+\SweetSpotOnePressure\text{ Pa}$) in vacuum. 
 We identify 13 stable nanomechanical levitation equilibrium heights ($d_{\rm eq}$ where $P=0$ and $\partial P/\partial d < 0$), providing an unpowered, frictionless quantum cushion for the permanent elimination of stiction in NEMS/MEMS devices.
 \end{abstract}
 
@@ -69,8 +71,8 @@ The scope and core contributions of this work are fourfold:
 \begin{enumerate}
     \item \textbf{Thermodynamic Reconciliation via Mode Tunneling}: We resolve the apparent paradox between structural compartmentalization (which assumes impenetrable Dirichlet boundaries to decouple modes) and thermodynamic equilibrium (which assumes uniform temperature $T$). By modeling boundaries as semitransparent $\delta$-potentials of finite coupling $\lambda_0 < \infty$, high-frequency virtual modes tunnel between adjacent compartments, establishing uniform thermal contact before taking the strict Dirichlet limit $\lambda_0 \to \infty$.
     \item \textbf{Electromagnetic Effective Trace Framework}: We prove that for any plate-like cavity governed by a scale-dependent Casimir coefficient $C(d_s, \ln(d/\ell_*))$, the anisotropic Maxwell stress-energy tensor generates an integrated vacuum trace $T^\mu{}_\mu = -\frac{\hbar c}{d^4} \partial_{\ln d}C$, acting as the direct macroscopic generator of discrete scale-invariance breaking. We prove that this observable is strictly independent of the conformal coupling parameter $\xi$.
-    \item \textbf{Atomic CQED Transducers}: We map the discrete scale invariance of the vacuum onto microscopic atomic sensors, calculating explicit analytical signatures for the fractal Purcell effect ($\Gamma/\Gamma_0$), the log-periodic Casimir-Polder potential ($U_{\rm CP}(z)$), and the geometric Lamb shift ($\delta E_{\rm Lamb} \approx 2.4\text{ kHz}$).
-    \item \textbf{Full 3D FDTD Discovery of Exponential Screening and Quantum Levitation}: Using high-resolution FDTD simulations on supercomputing clusters, we evaluate the Casimir force scaling across plate widths $L \in [0.3, 4.5]\ \mu\text{m}$. We discover that the force decays via a Screened Power Law ($P(L) \sim L^{-\alpha} e^{-L/\lambda}$ with $\lambda = 1.22\ \mu\text{m}$) due to sub-wavelength aperture mode localization. By combining 3D pyramidal corrugations with anisotropic cross-polarization, we demonstrate transverse stress-tensor field bending ($E_x^2 + E_y^2 > E_z^2$), canceling over $94.3\%$ of the normal attraction at $100\text{ nm}$ and achieving high-magnitude repulsive Casimir forces ($P > 0$ up to $+3.61\text{ Pa}$) and 13 stable nanomechanical levitation equilibrium heights in vacuum.
+    \item \textbf{Atomic CQED Transducers}: We map the discrete scale invariance of the vacuum onto microscopic atomic sensors, calculating explicit analytical signatures for the fractal Purcell effect ($\Gamma/\Gamma_0$), the log-periodic Casimir-Polder potential ($U_{\rm CP}(z)$), and the geometric Lamb shift ($\delta E_{\rm Lamb} \approx \AtomicCqedLambShiftDeltaNu\text{ kHz}$).
+    \item \textbf{Full 3D FDTD Discovery of Exponential Screening and Quantum Levitation}: Using high-resolution FDTD simulations on supercomputing clusters, we evaluate the Casimir force scaling across plate widths $L \in [0.3, 4.5]\ \mu\text{m}$. We discover that the force decays via a Screened Power Law ($P(L) \sim L^{-\alpha} e^{-L/\lambda}$ with $\lambda = \ModelFourLambda\ \mu\text{m}$) due to sub-wavelength aperture mode localization. By combining 3D pyramidal corrugations with anisotropic cross-polarization, we demonstrate transverse stress-tensor field bending ($E_x^2 + E_y^2 > E_z^2$), canceling over $\FrontierTwoCancellationPercent\%$ of the normal attraction at $100\text{ nm}$ and achieving high-magnitude repulsive Casimir forces ($P > 0$ up to $+\SweetSpotOnePressure\text{ Pa}$) and 13 stable nanomechanical levitation equilibrium heights in vacuum.
 \end{enumerate}
 
 The paper is structured as follows. Section~\ref{sec:prior} reviews spectral geometry, thermodynamics, and the mode-tunneling reconciliation. Section~\ref{sec:novel} derives the effective trace framework and proves conformal parameter independence. Section~\ref{sec:atomic_probes} formulates the CQED atomic sensors and the Conformal Breathing Box Gedankenexperiment. Section~\ref{sec:fdtd_methodology} details the 3D FDTD numerical methodology and segmented checkpointing engine. Section~\ref{sec:numerical_results} presents the scaling results and multi-model exponential screening discovery. Section~\ref{sec:asymmetric_repulsion} analyzes Lifshitz phase-reversal mechanics in asymmetric cavities. Section~\ref{sec:wild_frontiers} investigates 3D topographic frontiers, transverse field bending, and the ultimate hybrid parameter sweeps. Section~\ref{sec:repulsion_physics} presents the nanomechanical levitation equilibrium analysis and the tunable quantum clutch. Section~\ref{sec:experimental} details experimental fabrication metrics, followed by our discussion and conclusions in Section~\ref{sec:conclusion}.
@@ -315,7 +317,7 @@ For an atom with static polarizability $\alpha(0)$ situated at distance $z$ from
 U_{\rm CP}(z) = -\frac{\hbar c \,\alpha(0)}{8\pi z^4} \left[ 1 + C\!\left(d_s, \ln\frac{z}{\ell_*}\right) \right].
 \label{eq:CP_fractal}
 \end{equation}
-For a hydrogen atom at $z = 50\text{ nm}$, the baseline flat-plate potential is $U_{\rm CP} \approx 10^{-5}\text{ eV}$. A $10\%$ fractal modulation imposes an energy shift $\Delta U_{\rm CP} \approx 10^{-6}\text{ eV}$. Modern optical tweezers and Rydberg atom spectroscopy achieve energy resolutions below the pico-electronvolt scale ($< 10^{-12}\text{ eV}$) \cite{safronova2018}, making this log-periodic potential readily detectable.
+For a hydrogen atom at $z = 50\text{ nm}$, the baseline flat-plate potential is $U_{\rm CP} \approx 10^{-5}\text{ eV}$. A $10\%$ fractal modulation imposes an energy shift $\Delta U_{\rm CP} \approx \AtomicCqedCpShift\text{ eV}$. Modern optical tweezers and Rydberg atom spectroscopy achieve energy resolutions below the pico-electronvolt scale ($< 10^{-12}\text{ eV}$) \cite{safronova2018}, making this log-periodic potential readily detectable.
 
 \paragraph{The Fractal Purcell Effect.}
 The spontaneous emission decay rate $\Gamma$ of the atomic $2p \to 1s$ transition is proportional to the Local Density of States (LDOS) \cite{purcell1946}. Driven by the spectral Weyl law for self-similar geometries, the emission rate relative to the free-space rate $\Gamma_0$ is:
@@ -323,7 +325,7 @@ The spontaneous emission decay rate $\Gamma$ of the atomic $2p \to 1s$ transitio
 \frac{\Gamma_{2p \to 1s}}{\Gamma_0} \approx \left(\frac{L_s \omega_{12}}{c}\right)^{d_s-3} G\!\left(\ln \frac{\omega_{12} L_s}{c}\right).
 \label{eq:Purcell_fractal}
 \end{equation}
-Because the $100\text{ nm}$ gap matches the Lyman-$\alpha$ wavelength, the geometric modulation function $G$ induces an order-unity modification to the LDOS, resulting in a predicted $10\%\text{ to }50\%$ variation in the excited-state lifetime. Modern fluorescence lifetime imaging microscopy (FLIM) resolves lifetime variations below $0.1\%$ \cite{lodahl2015}, providing an immediate experimental signature.
+Because the $100\text{ nm}$ gap matches the Lyman-$\alpha$ wavelength, the geometric modulation function $G$ induces an order-unity modification to the LDOS, resulting in a predicted $\AtomicCqedPurcellLifetimeVariationMin\%\text{ to }\AtomicCqedPurcellLifetimeVariationMax\%$ variation in the excited-state lifetime. Modern fluorescence lifetime imaging microscopy (FLIM) resolves lifetime variations below $0.1\%$ \cite{lodahl2015}, providing an immediate experimental signature.
 
 \paragraph{Geometric Lamb Shift.}
 Applying the non-relativistic Bethe formula \cite{bethe1947}, the geometric modification to the Lamb shift $\delta E_{\rm Lamb}$ is obtained by integrating over the boundary-modified virtual mode spectrum:
@@ -331,7 +333,7 @@ Applying the non-relativistic Bethe formula \cite{bethe1947}, the geometric modi
 \delta E_{\rm Lamb} \approx \frac{2\alpha_{\rm EM}}{3\pi m_e^2 c^2} \int dk \, k \, |\langle 2s | \mathbf{p} | 1s \rangle|^2 \rho_{\rm frac}(k, d_s, \ell_*).
 \label{eq:Lamb_fractal}
 \end{equation}
-The truncation of virtual photon modes by the prefractal apertures yields an anomalous frequency shift $\delta \nu_{\rm Lamb} \approx 2.4\text{ kHz}$ ($\delta E_{\rm Lamb} \approx 10^{-11}\text{ eV}$). State-of-the-art two-photon 1S-2S spectroscopy in atomic hydrogen achieves frequency uncertainties below $10\text{ Hz}$ \cite{parthey2011}, placing the geometric Lamb shift well within reach of current laboratory precision.
+The truncation of virtual photon modes by the prefractal apertures yields an anomalous frequency shift $\delta \nu_{\rm Lamb} \approx \AtomicCqedLambShiftDeltaNu\text{ kHz}$ ($\delta E_{\rm Lamb} \approx \AtomicCqedLambShiftDeltaE\text{ eV}$). State-of-the-art two-photon 1S-2S spectroscopy in atomic hydrogen achieves frequency uncertainties below $10\text{ Hz}$ \cite{parthey2011}, placing the geometric Lamb shift well within reach of current laboratory precision.
 
 \paragraph{Relativistic Electron Scattering.}
 For a high-energy electron scattering off the atom ($e^- + \text{H} \to e^- + \text{H}$), the boundary-induced scale-invariance breaking introduces a conformal geometric correction $\delta_{\rm trace}$ to the differential cross-section:
@@ -339,7 +341,7 @@ For a high-energy electron scattering off the atom ($e^- + \text{H} \to e^- + \t
 \frac{\Delta \sigma}{\sigma_0} = \kappa \left( \alpha_{\rm EM} \frac{\lambda_e^4}{d^4} \,\partial_{\ln d} C\!\left(d_s,\ln\frac{d}{\ell_*}\right) \right),
 \label{eq:Scattering_cross_section}
 \end{equation}
-yielding a fractional deviation $\Delta\sigma/\sigma_0 \approx 3 \times 10^{-19}$.
+yielding a fractional deviation $\Delta\sigma/\sigma_0 \approx \AtomicCqedScatteringDeviation$.
 
 
 \section{3D FDTD Numerical Simulation Methodology}
@@ -414,10 +416,10 @@ Using the complete $R=40$ dataset, we executed non-linear least-squares fits acr
 
 The resulting best-fit parameters are:
 \begin{itemize}
-    \item \textbf{Model 1}: $A = 0.641077$, $\alpha = 0.652603$, $B = +0.241057$.
-    \item \textbf{Model 2}: $A = 0.357367$, $\alpha = 1.016236$.
-    \item \textbf{Model 3}: $A_1 = 0.310783$, $\alpha_1 = 1.016245$, $A_2 = 0.046584$, $\alpha_2 = 1.016187$.
-    \item \textbf{Model 4}: $A = 0.876660$, $\alpha = 0.426889$, $\lambda = 1.223087\ \mu\text{m}$.
+    \item \textbf{Model 1}: $A = \ModelOneA$, $\alpha = \ModelOneAlpha$, $B = +\ModelOneB$.
+    \item \textbf{Model 2}: $A = \ModelTwoA$, $\alpha = \ModelTwoAlpha$.
+    \item \textbf{Model 3}: $A_1 = \ModelThreeAone$, $\alpha_1 = \ModelThreeAlphaone$, $A_2 = \ModelThreeAtwo$, $\alpha_2 = \ModelThreeAlphatwo$.
+    \item \textbf{Model 4}: $A = \ModelFourA$, $\alpha = \ModelFourAlpha$, $\lambda = \ModelFourLambda\ \mu\text{m}$.
 \end{itemize}
 
 \begin{table}[htbp]
@@ -437,19 +439,19 @@ The resulting best-fit parameters are:
 4.00 & -0.034166 & -0.018364 & -0.087354 & -0.087353 & -0.018429 \\
 4.50 & -0.027400 & +0.000829 & -0.077499 & -0.077499 & -0.011644 \\
 \midrule
-\textbf{SSR} & --- & \textbf{0.00928379} & \textbf{0.03148498} & \textbf{0.03148498} & \textbf{0.00440022} \\
+\textbf{SSR} & --- & \textbf{\ModelOneSsr} & \textbf{\ModelTwoSsr} & \textbf{\ModelThreeSsr} & \textbf{\ModelFourSsr} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Physical Discovery of Geometric Exponential Screening}
 
-As shown in Table~\ref{tab:fit_comparison}, \textbf{Model 4 (Screened Power Law) provides the superior fit}, achieving a Sum of Squared Residuals ($\text{SSR} = 0.004400$) that is \textbf{more than $2.1\times$ lower than Model 1} ($\text{SSR} = 0.009284$) and \textbf{$7.1\times$ lower than Model 2} ($\text{SSR} = 0.031485$).
+As shown in Table~\ref{tab:fit_comparison}, \textbf{Model 4 (Screened Power Law) provides the superior fit}, achieving a Sum of Squared Residuals ($\text{SSR} = \ModelFourSsr$) that is \textbf{more than $2.1\times$ lower than Model 1} ($\text{SSR} = \ModelOneSsr$) and \textbf{$7.1\times$ lower than Model 2} ($\text{SSR} = \ModelTwoSsr$).
 
 This result clarifies the scaling mechanics of prefractal cavities:
 \begin{enumerate}
     \item \textbf{Sub-Wavelength Mode Localization}: As the plate width $L$ increases, the largest fractal holes ($W_1 = L/3 = 1.5\ \mu\text{m}$ at $L=4.5\ \mu\text{m}$) become substantially larger than both the cavity gap ($d = 100\text{ nm}$) and the dominant virtual photon wavelengths ($\lambda_{\rm dom} \approx 2\pi d \approx 628\text{ nm}$).
-    \item \textbf{Proximity Screening}: In this regime, electromagnetic modes become localized inside individual sub-wavelength apertures, screening the non-local global boundary conditions. The screening length $\lambda = 1.223\ \mu\text{m}$ represents the crossover scale where non-local fractal diffraction transitions into localized aperture screening.
+    \item \textbf{Proximity Screening}: In this regime, electromagnetic modes become localized inside individual sub-wavelength apertures, screening the non-local global boundary conditions. The screening length $\lambda = \ModelFourLambda\ \mu\text{m}$ represents the crossover scale where non-local fractal diffraction transitions into localized aperture screening.
     \item \textbf{Frictionless Asymptotic Zero-Force Interface}: Rather than crossing zero into repulsion under symmetric planar scaling, the attractive Casimir force decays exponentially ($e^{-L/\lambda}$) toward zero, providing an engineered pathway to an asymptotic zero-force interface.
 \end{enumerate}
 
@@ -489,13 +491,13 @@ Because $r_1 < 0$ and $r_2 > 0$, the reflection product $r_1 r_2$ becomes strict
 \toprule
 \textbf{Separation Gap $d$ (nm)} & \textbf{Calculated Pressure $P(d)$ (Pa)} & \textbf{Casimir Regime} \\
 \midrule
-100 & $-3.95 \times 10^{-3}$ & ATTRACTIVE ($P < 0$) \\
-\textbf{150} & $\mathbf{+3.40 \times 10^{-3}}$ & \textbf{REPULSIVE ($P > 0$)} \\
-\textbf{200} & $\mathbf{+3.76 \times 10^{-3}}$ & \textbf{REPULSIVE ($P > 0$)} \\
-\textbf{250} & $\mathbf{+3.05 \times 10^{-3}}$ & \textbf{REPULSIVE ($P > 0$)} \\
-\textbf{300} & $\mathbf{+2.31 \times 10^{-3}}$ & \textbf{REPULSIVE ($P > 0$)} \\
-\textbf{400} & $\mathbf{+1.29 \times 10^{-3}}$ & \textbf{REPULSIVE ($P > 0$)} \\
-\textbf{500} & $\mathbf{+7.48 \times 10^{-4}}$ & \textbf{REPULSIVE ($P > 0$)} \\
+100 & $\LifshitzDOnezerozeroPressure$ & ATTRACTIVE ($P < 0$) \\
+\textbf{150} & $\mathbf{+\LifshitzDOnefivezeroPressure}$ & \textbf{REPULSIVE ($P > 0$)} \\
+\textbf{200} & $\mathbf{+\LifshitzDTwozerozeroPressure}$ & \textbf{REPULSIVE ($P > 0$)} \\
+\textbf{250} & $\mathbf{+\LifshitzDTwofivezeroPressure}$ & \textbf{REPULSIVE ($P > 0$)} \\
+\textbf{300} & $\mathbf{+\LifshitzDThreezerozeroPressure}$ & \textbf{REPULSIVE ($P > 0$)} \\
+\textbf{400} & $\mathbf{+\LifshitzDFourzerozeroPressure}$ & \textbf{REPULSIVE ($P > 0$)} \\
+\textbf{500} & $\mathbf{+\LifshitzDFivezerozeroPressure}$ & \textbf{REPULSIVE ($P > 0$)} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -506,17 +508,17 @@ To test the Lifshitz phase-reversal model against full 3D vector Maxwell dynamic
 
 The compiled 3D FDTD results are:
 \begin{itemize}
-    \item \textbf{Force (Both Plates)}: $F_{\rm both} = -0.583529$
-    \item \textbf{Force (Self Plate Only)}: $F_{\rm self} = -0.538354$
-    \item \textbf{Subtracted Net Force}: $F_{\rm net} = -0.045175$
-    \item \textbf{Effective Plate Area}: $A_{\rm eff} = 3.160494\ \mu\text{m}^2$
-    \item \textbf{Consolidated Normal Pressure}: $P = \mathbf{-0.014294\text{ Pa}}$
+    \item \textbf{Force (Both Plates)}: $F_{\rm both} = \AsymmetricCavityFBoth$
+    \item \textbf{Force (Self Plate Only)}: $F_{\rm self} = \AsymmetricCavityFSelf$
+    \item \textbf{Subtracted Net Force}: $F_{\rm net} = \AsymmetricCavityFNet$
+    \item \textbf{Effective Plate Area}: $A_{\rm eff} = \AsymmetricCavityAEff\ \mu\text{m}^2$
+    \item \textbf{Consolidated Normal Pressure}: $P = \mathbf{\AsymmetricCavityPressure\text{ Pa}}$
 \end{itemize}
 
 \textbf{Key Physical Findings}:
 \begin{enumerate}
-    \item \textbf{$8.25\times$ Suppression of Attraction}: Compared to the symmetric $d = 100\text{ nm}$ baseline ($P = -0.118022\text{ Pa}$), increasing the gap to $d = 250\text{ nm}$ with the macro-cavity suppresses attractive Casimir pressure by an extraordinary \textbf{$8.25\times$}.
-    \item \textbf{Finite Thickness Effects}: The residual attraction ($-0.0143\text{ Pa}$) compared to the idealized Lifshitz calculation ($+0.00305\text{ Pa}$) arises from finite plate thickness ($t = 100\text{ nm}$) and 3D perimeter diffraction fields.
+    \item \textbf{$\AsymmetricCavitySuppressionFactor\times$ Suppression of Attraction}: Compared to the symmetric $d = 100\text{ nm}$ baseline ($P = -0.118022\text{ Pa}$), increasing the gap to $d = 250\text{ nm}$ with the macro-cavity suppresses attractive Casimir pressure by an extraordinary \textbf{$\AsymmetricCavitySuppressionFactor\times$}.
+    \item \textbf{Finite Thickness Effects}: The residual attraction ($\AsymmetricCavityPressure\text{ Pa}$) compared to the idealized Lifshitz calculation ($+\LifshitzDTwofivezeroPressure\text{ Pa}$) arises from finite plate thickness ($t = 100\text{ nm}$) and 3D perimeter diffraction fields.
 \end{enumerate}
 
 
@@ -543,21 +545,21 @@ In Frontier 1, the bottom plate is etched into a \textbf{3D Stepped Fractal Siev
     \item \textbf{Level 4 (64 Micro-Holes, $W_3 = 74.1\text{ nm}$)}: Depth $h_3 = 50\text{ nm}$.
 \end{itemize}
 
-Full 3D FDTD simulation of the stepped sieve ($L = 2.0\ \mu\text{m}$, $d = 120\text{ nm}$, $R = 40$) yielded $P = -0.218758\text{ Pa}$. While multi-scale phase sifting occurs, flat solid regions between holes maintain short-range dielectric attraction at $d=120\text{ nm}$, demonstrating the necessity of eliminating flat parallel faces entirely via 3D corrugations.
+Full 3D FDTD simulation of the stepped sieve ($L = 2.0\ \mu\text{m}$, $d = 120\text{ nm}$, $R = 40$) yielded $P = \FrontierOnePressure\text{ Pa}$. While multi-scale phase sifting occurs, flat solid regions between holes maintain short-range dielectric attraction at $d=120\text{ nm}$, demonstrating the necessity of eliminating flat parallel faces entirely via 3D corrugations.
 
-\subsection{Frontier 2: Interlocking 3D Fractal Corrugations \texorpdfstring{($94.3\%$ Force Cancellation)}{(94.3\% Force Cancellation)}}
+\subsection{Frontier 2: Interlocking 3D Fractal Corrugations \texorpdfstring{(\FrontierTwoCancellationPercent\% Force Cancellation)}{(\FrontierTwoCancellationPercent\% Force Cancellation)}}
 
 In Frontier 2, flat parallel plates are replaced with complementary $45^\circ$ pyramidal fractal ridges that interlock across a narrow gap $d = 100\text{ nm}$. The tilted boundary walls force virtual electric field lines to align at $45^\circ$ to the normal, ensuring $E_x^2 + E_y^2 > E_z^2$.
 
 Full 3D FDTD simulation on BigRed 200 ($L = 2.0\ \mu\text{m}$, $d = 100\text{ nm}$, $45^\circ$ slope, $R = 40$) yielded:
 \begin{itemize}
-    \item \textbf{Force (Both Plates)}: $F_{\rm both} = +4838.044314$
-    \item \textbf{Force (Self Plate Only)}: $F_{\rm self} = +4838.065605$
-    \item \textbf{Net Force}: $F_{\rm net} = -0.021290$
-    \item \textbf{Consolidated Normal Pressure}: $P = \mathbf{-0.006736\text{ Pa}}$
+    \item \textbf{Force (Both Plates)}: $F_{\rm both} = +\FrontierTwoFBoth$
+    \item \textbf{Force (Self Plate Only)}: $F_{\rm self} = +\FrontierTwoFSelf$
+    \item \textbf{Net Force}: $F_{\rm net} = \FrontierTwoFNet$
+    \item \textbf{Consolidated Normal Pressure}: $P = \mathbf{\FrontierTwoPressure\text{ Pa}}$
 \end{itemize}
 
-\textbf{Major Physical Finding}: Compared to flat prefractal plates ($P = -0.118022\text{ Pa}$), the $45^\circ$ interlocking corrugations suppressed the attractive Casimir pressure down to $-0.006736\text{ Pa}$---an extraordinary \textbf{$17.52\times$ reduction ($94.3\%$ force cancellation)} directly at $100\text{ nm}$ separation!
+\textbf{Major Physical Finding}: Compared to flat prefractal plates ($P = -0.118022\text{ Pa}$), the $45^\circ$ interlocking corrugations suppressed the attractive Casimir pressure down to $\FrontierTwoPressure\text{ Pa}$---an extraordinary \textbf{$\FrontierTwoReductionRatio\times$ reduction ($\FrontierTwoCancellationPercent\%$ force cancellation)} directly at $100\text{ nm}$ separation!
 
 \subsection{Frontier 3: Twisted Moir\'e Pre-Fractal Superlattices}
 
@@ -596,9 +598,9 @@ Figure~\ref{fig:pair1_plots} presents the 1D pressure curves $P(\theta)$ and the
 \subsubsection{Pair 2: Twist Angle \texorpdfstring{$\theta$}{theta} versus Separation Distance \texorpdfstring{$d$}{d} (\texorpdfstring{$\alpha = 70^\circ\text{--}75^\circ$}{alpha = 70--75 deg})}
 Figure~\ref{fig:pair2_plots} illustrates the distance scaling $P(d)$ across fine-grained twist angles. At close range ($d = 50\text{ nm}$), steep corrugation slopes ($\alpha = 75^\circ$) generate massive repulsive pressures:
 \begin{itemize}
-    \item $\alpha = 75.0^\circ, \theta = 82.0^\circ, d = 50\text{ nm} \implies P = \mathbf{+3.610842\text{ Pa}}$ (\textbf{REPULSIVE})
-    \item $\alpha = 75.0^\circ, \theta = 94.0^\circ, d = 50\text{ nm} \implies P = \mathbf{+0.901610\text{ Pa}}$ (\textbf{REPULSIVE})
-    \item $\alpha = 60.0^\circ, \theta = 91.1^\circ, d = 100\text{ nm} \implies P = \mathbf{+0.049422\text{ Pa}}$ (\textbf{REPULSIVE})
+    \item $\alpha = \SweetSpotOneAlpha.0^\circ, \theta = \SweetSpotOneTheta.0^\circ, d = \SweetSpotOneD.0\text{ nm} \implies P = \mathbf{+\SweetSpotOnePressure\text{ Pa}}$ (\textbf{REPULSIVE})
+    \item $\alpha = \SweetSpotThreeAlpha.0^\circ, \theta = \SweetSpotThreeTheta.0^\circ, d = \SweetSpotThreeD.0\text{ nm} \implies P = \mathbf{+\SweetSpotThreePressure\text{ Pa}}$ (\textbf{REPULSIVE})
+    \item $\alpha = \SweetSpotFourAlpha.0^\circ, \theta = \SweetSpotFourTheta^\circ, d = \SweetSpotFourD.0\text{ nm} \implies P = \mathbf{+\SweetSpotFourPressure\text{ Pa}}$ (\textbf{REPULSIVE})
     \item $\alpha = 75.0^\circ, \theta = 92.0^\circ, d = 100\text{ nm} \implies P = \mathbf{+0.024319\text{ Pa}}$ (\textbf{REPULSIVE})
     \item $\alpha = 75.0^\circ, \theta = 80.0^\circ, d = 100\text{ nm} \implies P = \mathbf{+0.019608\text{ Pa}}$ (\textbf{REPULSIVE})
 \end{itemize}
@@ -637,7 +639,7 @@ From our 3D FDTD sweet-spot dataset, we performed zero-crossing interpolation ac
 
 \input{tables/table_levitation_equilibria.tex}
 
-As shown in Table~\ref{tab:levitation_equilibria}, stable levitation gaps range from $d_{\rm eq} = 100.00\text{ nm}$ up to $d_{\rm eq} = 323.36\text{ nm}$, providing a passive, unpowered quantum levitation cushion that permanently prevents mechanical contact and stiction.
+As shown in Table~\ref{tab:levitation_equilibria}, stable levitation gaps range from $d_{\rm eq} = \LevitationEquilibriumTwotwoDEq.00\text{ nm}$ up to $d_{\rm eq} = \LevitationEquilibriumZerofiveDEq\text{ nm}$, providing a passive, unpowered quantum levitation cushion that permanently prevents mechanical contact and stiction.
 
 \subsection{Rotational Tuning: The Quantum Clutch}
 
@@ -672,10 +674,10 @@ The core findings of this study are:
 \begin{enumerate}
     \item \textbf{Thermodynamic Reconciliation}: Semitransparent mode tunneling resolves the historical paradox between spatial compartmentalization and thermodynamic equilibrium.
     \item \textbf{Electromagnetic Trace Framework}: Discrete scale invariance generates an integrated vacuum trace $T^\mu{}_\mu = -\frac{\hbar c}{d^4} \partial_{\ln d}C$, strictly independent of the conformal coupling parameter $\xi$.
-    \item \textbf{Atomic CQED Sensitivities}: The framework yields concrete, measurable signatures for the fractal Purcell effect ($10\%\text{--}50\%$ lifetime shifts), Casimir-Polder potentials, and geometric Lamb shifts ($\sim 2.4\text{ kHz}$).
-    \item \textbf{Screened Power Law Decay}: 3D FDTD simulations demonstrate that symmetric scaling follows an exponential screening law $P(L) \sim L^{-\alpha} e^{-L/\lambda}$ with $\lambda = 1.22\ \mu\text{m}$, driven by sub-wavelength mode localization.
-    \item \textbf{Transverse Field Bending and Quantum Levitation}: Pyramidal corrugations force $E_x^2 + E_y^2 > E_z^2$, canceling $94.3\%$ of normal attraction at $100\text{ nm}$ and enabling high-magnitude repulsive Casimir pressures ($P > 0$ up to $+3.61\text{ Pa}$) across 32 FDTD configurations.
-    \item \textbf{Stable Nanomechanical Equilibria}: We have identified 13 stable passive quantum levitation points ($d_{\rm eq} = 100\text{ to }323\text{ nm}$ where $P=0$ and $\partial P/\partial d < 0$), establishing the foundation for frictionless, stiction-free NEMS/MEMS devices and dynamically tunable quantum clutches.
+    \item \textbf{Atomic CQED Sensitivities}: The framework yields concrete, measurable signatures for the fractal Purcell effect ($\AtomicCqedPurcellLifetimeVariationMin\%\text{--}\AtomicCqedPurcellLifetimeVariationMax\%$ lifetime shifts), Casimir-Polder potentials, and geometric Lamb shifts ($\sim \AtomicCqedLambShiftDeltaNu\text{ kHz}$).
+    \item \textbf{Screened Power Law Decay}: 3D FDTD simulations demonstrate that symmetric scaling follows an exponential screening law $P(L) \sim L^{-\alpha} e^{-L/\lambda}$ with $\lambda = \ModelFourLambda\ \mu\text{m}$, driven by sub-wavelength mode localization.
+    \item \textbf{Transverse Field Bending and Quantum Levitation}: Pyramidal corrugations force $E_x^2 + E_y^2 > E_z^2$, canceling $\FrontierTwoCancellationPercent\%$ of normal attraction at $100\text{ nm}$ and enabling high-magnitude repulsive Casimir pressures ($P > 0$ up to $+\SweetSpotOnePressure\text{ Pa}$) across 32 FDTD configurations.
+    \item \textbf{Stable Nanomechanical Equilibria}: We have identified 13 stable passive quantum levitation points ($d_{\rm eq} = \LevitationEquilibriumTwotwoDEq\text{ to }\LevitationEquilibriumZerofiveDEq\text{ nm}$ where $P=0$ and $\partial P/\partial d < 0$), establishing the foundation for frictionless, stiction-free NEMS/MEMS devices and dynamically tunable quantum clutches.
 \end{enumerate}
 
 \section*{Acknowledgments}

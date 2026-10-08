@@ -15,11 +15,19 @@ import os
 import sys
 import glob
 import json
+import datetime
+import shutil
 import numpy as np
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
+
+try:
+    from utils.metrics_logger import log_metric, export_macros, save_plot_provenance
+    has_metrics_logger = True
+except Exception:
+    has_metrics_logger = False
 
 import matplotlib
 matplotlib.use("Agg")
@@ -101,12 +109,40 @@ def main():
     summary_data = {
         "campaign": "concentric_cantor_ring_rotary_clutch",
         "crossover_angles_deg": crossover_angles,
-        "tasks": data_by_id
+        "tasks": data_by_id,
+        "provenance": {
+            "analyzer_script": "execution/analyze_concentric_ring.py",
+            "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "input_files_count": len(files),
+            "crossover_interpolation": "Linear zero-crossing on F_net(theta)"
+        }
     }
     sum_path = os.path.join(res_dir, "concentric_ring_clutch_summary.json")
     with open(sum_path, "w") as f_s:
         json.dump(summary_data, f_s, indent=4)
     print(f"\nSummary JSON saved to {sum_path}")
+
+    if has_metrics_logger:
+        for gname, x_angle in crossover_angles.items():
+            if x_angle is not None:
+                log_metric(
+                    f"concentric_ring_{gname.lower()}_crossover_angle_deg",
+                    float(x_angle),
+                    step_id="clutch_neutral_angle"
+                )
+
+        peak_n1_fN = max(d["force_net_fN"] for d in groups["N1"]) if groups["N1"] else 0.0
+        peak_n1_Pa = max(d["pressure_Pa"] for d in groups["N1"]) if groups["N1"] else 0.0
+        log_metric(
+            "concentric_ring_n1_peak_force_fN",
+            float(peak_n1_fN),
+            step_id="clutch_peak_repulsion"
+        )
+        log_metric(
+            "concentric_ring_n1_peak_pressure_Pa",
+            float(peak_n1_Pa),
+            step_id="clutch_peak_repulsion"
+        )
 
     # Generate Publication LaTeX Table
     tex_path = os.path.join(res_dir, "table_concentric_ring_clutch.tex")
@@ -187,7 +223,7 @@ def main():
 
     # Panel (c): Chip-Scale Force on 100 um Disk vs. Thermal Noise Floor
     ax3 = axes[2]
-    for gname in ["N2", "N3"]:
+    for gname in ["N1", "N2", "N3"]:
         g_data = groups[gname]
         if g_data:
             th = [d["theta_deg"] for d in g_data]
@@ -205,6 +241,16 @@ def main():
     plt.tight_layout()
     fig_path = os.path.join(res_dir, "fig_concentric_ring_clutch.png")
     plt.savefig(fig_path, dpi=300)
+    if has_metrics_logger:
+        save_plot_provenance(
+            fig_path,
+            sum_path,
+            ["theta_deg", "force_net_fN", "pressure_Pa", "force_net_nN"]
+        )
+        # Also ensure companion sidecar with .png.provenance.json.
+        sidecar_alt = fig_path + ".provenance.json"
+        shutil.copy2(fig_path.replace(".png", ".provenance.json"), sidecar_alt)
+        export_macros()
     plt.close()
     print(f"Publication figure saved to {fig_path}")
 

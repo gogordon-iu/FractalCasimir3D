@@ -116,3 +116,36 @@
 - **Bug**: Integrating Casimir stress over a single oversized full-disk bounding box ($2.8\,\mu\text{m} \times 2.8\,\mu\text{m}$) caused the uniform $(0, 0)$ DCT mode to integrate identically to zero against the 4-fold rotor modulation while capturing a huge rotationally invariant reflection from the $88\%$ solid stator plate.
 - **Solution**: Replaced the full-disk box with a tight bounding box around Sector 0 active teeth scaled by 4-fold rotational symmetry ($F_{\text{rotor}} = 4 \times F_{\text{sector 0}}$), centered the DCT basis coordinates with local face offsets, added a 2 nm numerical overhang to stator aperture prisms, and versioned checkpoints with `v2_`.
 
+## [2026-10-08] Global Provenance Pipeline Omission & Figure Sidecar Absence
+- **Bug**: Codebase lacked an automated end-to-end data provenance pipeline, omitting immutable figure sidecars (`*.provenance.json`), LaTeX macro synchronization, and manuscript mapping.
+- **Solution**: Scaffolding `utils/metrics_logger.py` and authoring `execution/export_provenance_pipeline.py` via `gpt-6.1-sol`, exporting 86 grounded metrics to `results/provenance_metrics.json`, `results/macros_results.tex`, 28 figure sidecars, and `results/manuscript_provenance_map.json`.
+
+## [2026-10-08] Uncentered DCT Spatial Coordinates in 3D FDTD Simulation Engines
+- **Bug**: In `run_meep_simulation.py`, `run_rounded_convergence.py`, `run_geometric_repulsion_meep.py`, and `run_cantor_forest_meep.py`, `make_amp_func` omitted face center subtraction (`pt - center_vec`), evaluating spatial cosines with an unphysical offset that broke mode orthogonality on vertical and lateral faces.
+- **Solution**: Centered DCT coordinates by subtracting `side_center` vectors across all bounding faces in the simulation engines.
+
+## [2026-10-08] Trigonometric Inversion in Pyramid Corrugation Apex Truncation Height
+- **Bug**: In `edge_rounding_geometry.py`, truncation formula computed $r_{\rm tip}(1/\cos(90^\circ - \alpha) - 1) = r_{\rm tip}(1/\sin\alpha - 1)$ instead of $r_{\rm tip}(1/\cos\alpha - 1)$, underestimating apex rounding truncation of $\alpha=75^\circ$ pyramids by $81\times$.
+- **Solution**: Corrected apex truncation geometry to $r_{\rm tip}(1/\sin(90^\circ - \alpha) - 1) = r_{\rm tip}(1/\cos\alpha - 1)$.
+
+## [2026-10-08] Cross-Frequency Forcing in Rotated Lorentzian Material Permittivity Tensors
+- **Bug**: In `materials_database_dispersive.py`, the Y-axis oscillator strength of Black Phosphorus was assigned into the X-axis Lorentzian susceptibility with $\omega_{0,X} = 0.35\,\text{eV}$, driving the orthogonal zigzag resonance at the wrong frequency instead of $\omega_{0,Y} = 1.70\,\text{eV}$.
+- **Solution**: Decoupled X-axis and Y-axis oscillators into distinct rotated Lorentzian susceptibility instances with exact material eigenfrequencies.
+
+## [2026-10-08] Dimensional Inhomogeneity in 6-DOF Stiffness Matrix Symmetrization
+- **Bug**: In `run_6dof_stability_analyzer.py`, $K_{\rm sym} = 0.5(K + K^T)$ directly summed translational stiffness entries ($\text{pN}/\mu\text{m}$) and rotational stiffness entries ($\text{pN}/\text{deg}$) without characteristic lever arm normalization.
+- **Solution**: Converted angular perturbations to radians and normalized generalized coordinates by plate dimension $L$ to ensure dimensional homogeneity.
+
+## [2026-10-08] Dimensionless MEEP Normal Pressure vs. Pascal Scale Discrepancy
+- **Bug**: In `run_asymmetric_sweep.py` and sections of the Nature manuscript, dimensionless force over dimensionless area ($F_{\rm meep} / A_{\rm meep}$) was labeled in Pascals without multiplying by $\hbar c / a^4 = 0.031615\,\text{Pa}$.
+- **Solution**: Explicitly distinguished dimensionless Meep pressure from physical pressure in Pascals across the provenance ledger, macros, and analytical documentation.
+
+## [2026-10-08] Fixed-Precision Underflow in LaTeX Macro Export Engine
+- **Bug**: In `utils/metrics_logger.py`, `export_macros` formatted all floating-point numbers with fixed 4-decimal precision (`f"{val:.4f}"`), rounding physical metrics smaller than $10^{-4}$ (including Lamb shift $\delta E_{\rm Lamb}=10^{-11}\,\text{eV}$ and scattering deviation $\Delta\sigma/\sigma_0=3\times 10^{-19}$) into zero.
+- **Solution**: Implemented dynamic precision formatting that automatically switches to scientific notation for magnitudes $< 10^{-4}$ or $\ge 10^5$ and up to 6 significant digits for intermediate floats.
+
+## [2026-10-08] Angular Area Distortion & Vertical Standoff Asymmetry in Concentric Ring Stress Box
+- **Bug**: In `run_concentric_ring_meep.py`, dynamically computing the Sector 0 Cartesian bounding box from rotated tooth arc coordinates caused the integration box lateral area to swell by up to 23% at diagonal angles ($\theta=22.5^\circ$), distorting modal normalization in the truncated $n_{\max}=1$ DCT basis, while placing $z_{\rm bot}$ at $(2/3)z_{\rm tip}$ created asymmetric dielectric boundary layer proximity.
+- **Solution**: Standardized Sector 0 integration box lateral dimensions to a fixed square bounding envelope across all rotation angles $\theta \in [0, 2\pi/N_{\rm sectors}]$ via full angular envelope scanning, centered $z_{\rm bot}$ symmetrically at the vacuum gap midpoint ($z_{\rm tip}/2.0$), and incremented the checkpoint version tag to `v3_`.
+
+

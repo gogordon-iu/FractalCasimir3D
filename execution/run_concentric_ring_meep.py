@@ -23,6 +23,9 @@ import glob
 import json
 import argparse
 import ctypes
+import socket
+import platform
+import datetime
 import numpy as np
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -141,18 +144,18 @@ def run_concentric_ring_simulation(
     dpml = 0.20
     buffer = 0.10
     delta_xy = 0.03  # 30 nm lateral margin around active tooth cluster
-    delta_z = max(0.005, z_tip / 3.0)
+    delta_z_top = max(0.005, z_tip / 2.0)
 
     # 2. Integration Box S:
     # For flat reference control, enclose full R_max disk.
     # For structured concentric teeth, tightly enclose Sector 0 active teeth in Quadrant 1,
     # exploiting 4-fold rotational symmetry (F_total = num_sectors * F_sector0).
-    # This prevents the empty 98% box volume and solid stator reflection from swamping the angular modulation.
+    # Use a fixed square lateral envelope to keep DCT normalization independent of theta.
     if is_flat_control:
         sx_box = 2.0 * (R_max + delta_xy)
         sy_box = sx_box
-        z_bot = z_tip - delta_z
-        z_top = z_tip + H_teeth + delta_z
+        z_bot = float(z_tip / 2.0)
+        z_top = float(z_tip + H_teeth + delta_z_top)
         sz_box = z_top - z_bot
         cx_box = 0.0
         cy_box = 0.0
@@ -176,25 +179,42 @@ def run_concentric_ring_simulation(
         xs = np.concatenate([r_inner_all * np.cos(phis), r_outer_all * np.cos(phis)])
         ys = np.concatenate([r_inner_all * np.sin(phis), r_outer_all * np.sin(phis)])
 
-        x_min = float(np.min(xs) - delta_xy)
-        x_max = float(np.max(xs) + delta_xy)
-        y_min = float(np.min(ys) - delta_xy)
-        y_max = float(np.max(ys) + delta_xy)
-        z_bot = float(z_tip - delta_z)
-        z_top = float(z_tip + H_teeth + delta_z)
+        max_span = 0.0
+        for test_angle in np.linspace(0.0, sector_pitch_rad, 361):
+            test_phis = np.linspace(
+                test_angle + arc_offset_rad,
+                test_angle + arc_offset_rad + tooth_arc_rad,
+                30
+            )
+            th_xs = np.concatenate([
+                r_inner_all * np.cos(test_phis),
+                r_outer_all * np.cos(test_phis)
+            ])
+            th_ys = np.concatenate([
+                r_inner_all * np.sin(test_phis),
+                r_outer_all * np.sin(test_phis)
+            ])
+            max_span = max(
+                max_span,
+                float(np.max(th_xs) - np.min(th_xs)),
+                float(np.max(th_ys) - np.min(th_ys))
+            )
 
-        sx_box = x_max - x_min
-        sy_box = y_max - y_min
+        s_box_lat = max_span + 2.0 * delta_xy
+        sx_box = s_box_lat
+        sy_box = s_box_lat
+        cx_box = (float(np.min(xs)) + float(np.max(xs))) / 2.0
+        cy_box = (float(np.min(ys)) + float(np.max(ys))) / 2.0
+        z_bot = float(z_tip / 2.0)
+        z_top = float(z_tip + H_teeth + delta_z_top)
         sz_box = z_top - z_bot
-        cx_box = (x_min + x_max) / 2.0
-        cy_box = (y_min + y_max) / 2.0
         cz_box = (z_bot + z_top) / 2.0
         num_sectors_scale = float(num_sectors)  # 4-fold rotational symmetry scaling
 
     # Total Simulation Cell Size
     sx = L_domain + 2.0 * (dpml + buffer)
     sy = sx
-    z_max = max(z_top + delta_z, t_plate + delta_z) + buffer + dpml
+    z_max = max(z_top + delta_z_top, t_plate + delta_z_top) + buffer + dpml
     sz = 2.0 * z_max
     cell_size = mp.Vector3(sx, sy, sz)
 
@@ -202,7 +222,7 @@ def run_concentric_ring_simulation(
     d_eff = max(0.010, z_tip)
     Sigma = 0.5 / d_eff
 
-    # 6 sides of tight bounding box S enclosing the active rotor teeth ensemble
+    # 6 sides of bounding box S enclosing the active rotor teeth ensemble
     sides_info = [
         {"center": mp.Vector3(cx_box - sx_box / 2.0, cy_box, cz_box), "size": mp.Vector3(0.0, sy_box, sz_box), "orientation": -1.0},
         {"center": mp.Vector3(cx_box + sx_box / 2.0, cy_box, cz_box), "size": mp.Vector3(0.0, sy_box, sz_box), "orientation": +1.0},
@@ -496,7 +516,7 @@ def main():
     tooth_duty_cycle = float(cfg["tooth_duty_cycle"])
 
     chk_tag = (
-        f"v2_concentric_ring_task_{task_id:03d}_N_{N_fractal}_th_{theta_deg:.1f}_"
+        f"v3_concentric_ring_task_{task_id:03d}_N_{N_fractal}_th_{theta_deg:.1f}_"
         f"ctrl_{int(is_control)}_flat_{int(is_flat_control)}_res_{resolution}"
     )
 
@@ -632,6 +652,18 @@ def main():
             "chip_scale_100um": {
                 "force_net_nN": float(f_chip_100um_nN)
             },
+            "provenance": {
+                "hostname": socket.gethostname(),
+                "platform": platform.platform(),
+                "slurm_job_id": os.environ.get("SLURM_JOB_ID", "local"),
+                "slurm_array_task_id": os.environ.get("SLURM_ARRAY_TASK_ID", str(task_id)),
+                "num_mpi_ranks": int(os.environ.get("SLURM_NTASKS", "1")),
+                "config_file": args.config_file or f"sweep_configs_concentric_ring/config_{task_id:03d}.json",
+                "algorithm": "FDTD Maxwell stress tensor with Wick-rotated Sigma damping (F_both - F_self)",
+                "discrete_cosine_transform_basis": "Orthogonal DCT-I on standardized square Sector 0 box",
+                "symmetry_scaling": f"{num_sectors}x rotational symmetry (C_4)",
+                "date_utc": datetime.datetime.now(datetime.timezone.utc).isoformat()
+            },
             "regime": "REPULSIVE" if f_net > 0 else "ATTRACTIVE",
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
         }
@@ -639,6 +671,27 @@ def main():
         out_dest = f"results_concentric_ring/task_{task_id:03d}_N{N_fractal}_th_{int(theta_deg)}deg.json"
         with open(out_dest, "w") as f:
             json.dump(result_data, f, indent=4)
+
+        try:
+            from utils.metrics_logger import log_metric, export_macros
+            log_metric(
+                f"concentric_ring_task_{task_id:03d}_force_fN",
+                float(f_net_fN),
+                step_id=f"task_{task_id:03d}"
+            )
+            log_metric(
+                f"concentric_ring_task_{task_id:03d}_pressure_Pa",
+                float(pressure_Pa),
+                step_id=f"task_{task_id:03d}"
+            )
+            log_metric(
+                f"concentric_ring_task_{task_id:03d}_chip_force_nN",
+                float(f_chip_100um_nN),
+                step_id=f"task_{task_id:03d}"
+            )
+            export_macros()
+        except Exception:
+            pass
 
         print("\n" + "=" * 80)
         print("SIMULATION COMPLETE: CONCENTRIC CANTOR-RING CASIMIR EVALUATION")

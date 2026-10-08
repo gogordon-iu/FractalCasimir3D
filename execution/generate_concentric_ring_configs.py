@@ -20,6 +20,7 @@ import os
 import sys
 import json
 import argparse
+import datetime
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
@@ -95,7 +96,18 @@ def generate_all_configs(
                 "num_sectors": 4,
                 "sector_duty_cycle": 0.50,
                 "tooth_duty_cycle": 0.38,
-                "elements": elements
+                "elements": elements,
+                "provenance": {
+                    "generator": "execution/generate_concentric_ring_configs.py",
+                    "distance_invariance_formula": "<d> = z_tip + f_ap * t_plate",
+                    "target_d_avg_nm": float(d_avg_nm),
+                    "verified_d_avg_nm": float(
+                        (1.0 - f_ap) * (z_tip_um * 1e3)
+                        + f_ap * (z_tip_um * 1e3 + t_plate_nm)
+                    ),
+                    "generation_rule": f"Triadic Cantor hierarchy N={N} on [{R_min_um}, {R_max_um}] um",
+                    "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).isoformat()
+                }
             }
 
             fname = os.path.join(out_dir, f"config_{task_id:03d}.json")
@@ -142,7 +154,18 @@ def generate_all_configs(
             "num_sectors": 4,
             "sector_duty_cycle": 0.50,
             "tooth_duty_cycle": 0.38,
-            "elements": ctrl_elements
+            "elements": ctrl_elements,
+            "provenance": {
+                "generator": "execution/generate_concentric_ring_configs.py",
+                "distance_invariance_formula": "<d> = z_tip + f_ap * t_plate",
+                "target_d_avg_nm": float(d_avg_nm),
+                "verified_d_avg_nm": float(
+                    (1.0 - ctrl_f_ap) * (ctrl_z_tip_um * 1e3)
+                    + ctrl_f_ap * (ctrl_z_tip_um * 1e3 + t_plate_nm)
+                ),
+                "generation_rule": "Uniform periodic concentric rings (3 tracks)",
+                "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).isoformat()
+            }
         }
 
         fname = os.path.join(out_dir, f"config_{task_id:03d}.json")
@@ -183,7 +206,15 @@ def generate_all_configs(
         "num_sectors": 4,
         "sector_duty_cycle": 0.0,
         "tooth_duty_cycle": 0.0,
-        "elements": []
+        "elements": [],
+        "provenance": {
+            "generator": "execution/generate_concentric_ring_configs.py",
+            "distance_invariance_formula": "<d> = z_tip",
+            "target_d_avg_nm": float(d_avg_nm),
+            "verified_d_avg_nm": float(d_avg_nm),
+            "generation_rule": "Unpatterned solid flat gold slab",
+            "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).isoformat()
+        }
     }
     fname = os.path.join(out_dir, f"config_{task_id:03d}.json")
     with open(fname, "w") as f:
