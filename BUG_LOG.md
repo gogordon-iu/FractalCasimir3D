@@ -147,5 +147,6 @@
 ## [2026-10-08] Angular Area Distortion & Vertical Standoff Asymmetry in Concentric Ring Stress Box
 - **Bug**: In `run_concentric_ring_meep.py`, dynamically computing the Sector 0 Cartesian bounding box from rotated tooth arc coordinates caused the integration box lateral area to swell by up to 23% at diagonal angles ($\theta=22.5^\circ$), distorting modal normalization in the truncated $n_{\max}=1$ DCT basis, while placing $z_{\rm bot}$ at $(2/3)z_{\rm tip}$ created asymmetric dielectric boundary layer proximity.
 - **Solution**: Standardized Sector 0 integration box lateral dimensions to a fixed square bounding envelope across all rotation angles $\theta \in [0, 2\pi/N_{\rm sectors}]$ via full angular envelope scanning, centered $z_{\rm bot}$ symmetrically at the vacuum gap midpoint ($z_{\rm tip}/2.0$), and incremented the checkpoint version tag to `v3_`.
-
-
+## [2026-10-09] Slurm Script Preemption Termination & Missing Telemetry Signal Traps
+- **Bug**: Slurm batch scripts lacked POSIX signal trapping (`SIGUSR1@120`, `SIGTERM 143`, `SIGINT 130`) and automated continuation suppression, causing preempted or cancelled tasks (such as concentric ring Task 3) to abort with non-zero exit codes, trigger false failure alerts, and halt without recovering or resubmitting from atomic checkpoints.
+- **Solution**: Re-created and validated all 24 primary campaign Slurm batch scripts using the `/bigred-slurm-telemetry` autonomous supervisor harness (`slurm_telemetry_harness.py`), adding walltime signal preemption (`#SBATCH --signal=B:SIGUSR1@120`), subshell process group isolation, automatic checkpoint resumption on preemption (`SIGTERM 143`), `resubmit_job` continuation suppression, and proxy-authenticated Git telemetry.
