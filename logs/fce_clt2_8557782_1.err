@@ -131,3 +131,27 @@ Warning: grid volume is not an integer number of pixels; cell size will be round
 srun: error: nid0192: task 31: Out Of Memory
 srun: Terminating StepId=8557783.0
 [2026-10-13T14:38:39.868] error: *** STEP 8557783.0 ON nid0192 CANCELLED AT 2026-10-13T14:38:39 DUE TO TASK FAILURE ***
+[BigRed200 telemetry] git pull attempt 1 failed; retrying in 2s: From https://github.com/gogordon-iu/FractalCasimir3D
+ * branch            main       -> FETCH_HEAD
+warning: fetch updated the current branch head.
+fast-forwarding your working tree from
+commit 054eb14bdea6e462203c4f0e36cc9794298b48f2.
+error: The following untracked working tree files would be overwritten by merge:
+	logs/crash_report_8557784.json
+	logs/fce_clt2_8557782_2.err
+	logs/fce_clt2_8557782_2.out
+Please move or remove them before you merge.
+Aborting
+fatal: Cannot fast-forward your working tree.
+After making sure that you saved anything precious from
+$ git diff 054eb14bdea6e462203c4f0e36cc9794298b48f2
+output, run
+$ git reset --hard
+to recover.
+[BigRed200 telemetry] git pull attempt 2 failed; retrying in 5s: error: cannot pull with rebase: You have unstaged changes.
+error: Please commit or stash them.
+[BigRed200 telemetry] git pull --rebase failed: error: cannot pull with rebase: You have unstaged changes.
+error: Please commit or stash them.
+[BigRed200 telemetry] git push attempt 1 failed; retrying in 2s: To https://github.com/gogordon-iu/FractalCasimir3D.git
+ ! [remote rejected] main -> main (cannot lock ref 'refs/heads/main': is at 520281461f82f49600d2944afb3ae947c98ed56b but expected b3fb6444edb74bf298c4ff81f8521937a4d3ade9)
+error: failed to push some refs to 'https://github.com/gogordon-iu/FractalCasimir3D.git'
