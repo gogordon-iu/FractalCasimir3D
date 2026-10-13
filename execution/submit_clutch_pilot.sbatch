@@ -1196,6 +1196,8 @@ def main():
             paths.extend(collect(CONFIG["results_dir"]))
             paths.extend(collect(CONFIG["figures_dir"]))
             paths.extend(collect(CONFIG["logs_dir"]))
+            if safe_path("results").exists():
+                paths.extend(collect("results"))
             message = "[BigRed200] SUCCESS: Job {} ({}) on {}".format(
                 JOB_ID, name, report["hostname"]
             )

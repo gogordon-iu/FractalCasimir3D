@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
 MEEP_FORCE_TO_SI = 3.16152649e-14
-CACHE_VERSION = 3
+CACHE_VERSION = 4
 ELEMENT_KEYS = (
     "r_inner",
     "r_outer",
@@ -418,26 +418,14 @@ def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
     max_y = max(point[1] for point in points)
     margin = 2.0 / parameters.resolution
 
-    # Use a fixed square lateral area across the full sector pitch.
-    sector_pitch = 2.0 * math.pi / parameters.num_sectors
-    max_span = 0.0
-    for index in range(361):
-        test_center = sector_pitch * index / 360
-        test_points = tooth_points(test_center)
-        xs = [point[0] for point in test_points]
-        ys = [point[1] for point in test_points]
-        max_span = max(max_span, max(xs) - min(xs), max(ys) - min(ys))
-    s_lat = max_span + 2.0 * margin
-    cx = (min_x + max_x) / 2.0
-    cy = (min_y + max_y) / 2.0
     lower = [
-        cx - s_lat / 2.0,
-        cy - s_lat / 2.0,
+        min_x - margin,
+        min_y - margin,
         parameters.z_tip / 2.0,
     ]
     upper = [
-        cx + s_lat / 2.0,
-        cy + s_lat / 2.0,
+        max_x + margin,
+        max_y + margin,
         parameters.z_tip + parameters.h_teeth + margin,
     ]
     interiors = tuple(
@@ -786,24 +774,49 @@ def run_moment(
 def log_metrics(result: Mapping[str, Any], master: bool) -> None:
     if not master:
         return
-    try:
-        from utils.metrics_logger import export_macros, log_metric
 
-        for name in (
-            "F_both",
-            "F_self",
-            "F_net",
-            "f_net_fN",
-            "f_net_pN",
-            "elapsed_seconds",
-            "completed_moments",
-        ):
-            value = result.get(name)
-            if isinstance(value, (int, float)) and math.isfinite(float(value)):
-                log_metric(name, value)
-        export_macros()
-    except Exception as exc:
-        print(f"Warning: metrics logging failed: {exc}", file=sys.stderr, flush=True)
+    from utils.metrics_logger import log_step, log_metric, export_macros
+
+    task_prefix = f"clutch_pilot_task_{result['task_id']}"
+    step_id = f"{task_prefix}_{result['status']}"
+    log_step(
+        step_id,
+        {
+            name: result.get(name)
+            for name in (
+                "task_id",
+                "theta_deg",
+                "N_fractal",
+                "Sigma",
+                "completed_moments",
+                "completed_by_config",
+                "F_sector0_both",
+                "F_sector0_self",
+            )
+        },
+    )
+    for name in (
+        "F_both",
+        "F_self",
+        "F_net",
+        "f_net_fN",
+        "f_net_pN",
+        "elapsed_seconds",
+        "completed_moments",
+    ):
+        value = result.get(name)
+        if isinstance(value, (int, float)) and math.isfinite(float(value)):
+            log_metric(f"{task_prefix}_{name}", value, step_id=step_id)
+            log_metric(name, value, step_id=step_id)
+    export_macros()
+    for path in (
+        Path("results/provenance_metrics.json"),
+        Path("results/macros_results.tex"),
+    ):
+        if not path.is_file() or path.stat().st_size == 0:
+            raise RuntimeError(
+                "[ERROR: RUN_DATA_MISSING] Provenance artifacts were not generated"
+            )
 
 
 def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> int:
