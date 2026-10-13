@@ -745,6 +745,7 @@ def run_moment(
         integral = 0.0
         compensation = 0.0
         for step in range(steps):
+            guard()
             simulation.fields.step()
             f_temp = simulation.fields.casimir_stress_dct_integral(
                 mp.Z,
@@ -945,19 +946,15 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
     active: dict[str, Any] = {}
     latest_steps: int | None = None
     latest_dt: float | None = None
-    last_moment_duration: float | None = None
+    walltime_seconds = args.max_walltime_hours * 3600.0
 
     def elapsed() -> float:
         return time.monotonic() - started
 
     def guard() -> None:
-        allowance = 1.15 * last_moment_duration if last_moment_duration is not None else 0.0
-        # Check only between moments; never interrupt a native timestep.
-        expired = parallel.broadcast(
-            elapsed() + allowance >= args.max_walltime_hours * 3600.0
-        )
+        expired = parallel.broadcast(elapsed() >= walltime_seconds)
         if expired:
-            raise WalltimeReached("Insufficient walltime remaining to start a new moment")
+            raise WalltimeReached("Walltime limit reached; unfinished moment is not cached")
 
     shard_paths: list[Path] = []
     shard_run_id: str | None = None
@@ -1199,7 +1196,6 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
             active.clear()
             active.update(configuration=configuration, moment=key)
             save_progress("running")
-            moment_started = time.monotonic()
             force, latest_steps, latest_dt = run_moment(
                 mp=mp,
                 np=np,
@@ -1214,7 +1210,6 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
                 rotor_generator=generate_redesigned_rotor_geometry,
                 guard=guard,
             )
-            last_moment_duration = time.monotonic() - moment_started
             if sharded:
                 force = finite_number(force, f"checkpoint moment {key}")
                 local_moments[configuration][key] = force
