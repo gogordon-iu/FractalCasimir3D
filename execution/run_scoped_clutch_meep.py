@@ -15,7 +15,6 @@ Run from the repository root, or invoke this file directly.
 from __future__ import annotations
 
 import argparse
-import copy
 import ctypes
 import hashlib
 import importlib
@@ -295,7 +294,7 @@ def parse_parameters(
     if num_sectors != 4:
         raise ValueError("The required F_total = 4 * F_sector0 scaling requires num_sectors=4")
     nmax = integer_value(get("nmax", 1), "nmax")
-    pml = finite_number(get("pml_thickness_um", 0.25), "pml_thickness_um", positive=True)
+    pml = finite_number(get("pml_thickness_um", 0.20), "pml_thickness_um", positive=True)
     courant = finite_number(get("courant", 0.5), "courant", positive=True)
     if courant > 0.5:
         raise ValueError("courant must not exceed 0.5 for this 3-D calculation")
@@ -352,7 +351,7 @@ def parse_parameters(
 
 
 def cell_dimensions(parameters: Parameters) -> tuple[float, float, float]:
-    buffer = 0.15
+    buffer = 0.10
     margin = 2.0 / parameters.resolution
     z_top = parameters.z_tip + parameters.h_teeth
     # Include the full stator depth, not just the landing pad.
@@ -489,14 +488,44 @@ def material_pair(mp: Any, parameters: Parameters, electric: bool) -> tuple[Any,
 
     from meep.materials import Au
 
-    # Preserve every gold pole and its type without mutating the shared Au model.
-    susceptibilities = copy.deepcopy(Au.E_susceptibilities)
-    for susceptibility in susceptibilities:
-        if electric:
-            susceptibility.gamma += parameters.sigma
+    # Reconstruct poles explicitly without copying native/SWIG objects or
+    # mutating the shared Au model. Preserve the Drude sigma * frequency**2.
+    susceptibilities = []
+    for sus in Au.E_susceptibilities:
+        freq_val = sus.frequency
+        scale = 1.0
+        if isinstance(sus, mp.DrudeSusceptibility):
+            susceptibility_type = mp.DrudeSusceptibility
+            if freq_val < 1e-5:
+                scale = freq_val ** 2
+                freq_val = 1.0
+        elif isinstance(sus, mp.LorentzianSusceptibility):
+            susceptibility_type = mp.LorentzianSusceptibility
+        else:
+            raise ValueError(f"Unsupported gold susceptibility type: {type(sus).__name__}")
+        susceptibilities.append(
+            susceptibility_type(
+                frequency=freq_val,
+                gamma=sus.gamma + (parameters.sigma if electric else 0.0),
+                sigma_diag=mp.Vector3(
+                    sus.sigma_diag.x * scale,
+                    sus.sigma_diag.y * scale,
+                    sus.sigma_diag.z * scale,
+                ),
+                sigma_offdiag=mp.Vector3(
+                    sus.sigma_offdiag.x * scale,
+                    sus.sigma_offdiag.y * scale,
+                    sus.sigma_offdiag.z * scale,
+                ),
+            )
+        )
     material = mp.Medium(
-        epsilon_diag=copy.deepcopy(Au.epsilon_diag),
-        epsilon_offdiag=copy.deepcopy(Au.epsilon_offdiag),
+        epsilon_diag=mp.Vector3(
+            Au.epsilon_diag.x, Au.epsilon_diag.y, Au.epsilon_diag.z
+        ),
+        epsilon_offdiag=mp.Vector3(
+            Au.epsilon_offdiag.x, Au.epsilon_offdiag.y, Au.epsilon_offdiag.z
+        ),
         E_susceptibilities=susceptibilities,
         **conductivity,
     )
@@ -630,7 +659,7 @@ def run_moment(
                 amp_func=cosine_amplitude(face, (m1, m2)),
             )
         ],
-        force_complex_fields=True,
+        force_complex_fields=False,
     )
     try:
         simulation.init_sim()

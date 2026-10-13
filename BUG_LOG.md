@@ -159,3 +159,8 @@
 - **Bug**: Tasks 1–3 in the Scoped Pilot Clutch suite crashed on startup with exit code 1 because `run_scoped_clutch_meep.py` hard-required `mpi4py` under multi-rank MPI runs (`mp.count_processors() > 1`), which is not installed in BigRed 200's native C++ Meep conda environment, while `submit_clutch_pilot.sbatch` omitted `conda.sh` activation and `PYTHONPATH` exports.
 - **Solution**: Made `mpi4py` strictly optional in `ParallelContext` with fallback to native Meep rank queries (`mp.am_master()`), enabled all ranks to read shared-filesystem checkpoints directly without MPI collective broadcast, added robust conda shell activation and `PYTHONPATH` to `submit_clutch_pilot.sbatch`, and aligned array log path resolution.
 
+## [2026-10-13] BigRed 200: 481.27 GB (100.27%) Memory OOM Kill on Job 8557782
+- **Bug**: Job 8557782 crashed after 1m42s with a kernel cgroup OOM kill (481.27 GB used vs 480.00 GB limit across 2 nodes) because `run_scoped_clutch_meep.py` set `force_complex_fields=True` (doubling memory of all 12 Yee field and PML components across 128 ranks) and inflated grid volume with `pml=0.25, buffer=0.15`.
+- **Solution**: Removed `force_complex_fields=True` (reverting to real fields for imaginary-frequency Wick rotation), reduced boundary padding to `pml=0.20, buffer=0.10` (cutting grid volume by 26%), reconstructed Drude/Lorentzian poles explicitly without SWIG `copy.deepcopy`, and added `#SBATCH --exclude=nid0394`, reducing node memory to ~100 GB (42% capacity).
+
+
