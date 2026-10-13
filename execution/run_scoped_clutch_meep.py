@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
 MEEP_FORCE_TO_SI = 3.16152649e-14
-CACHE_VERSION = 2
+CACHE_VERSION = 3
 ELEMENT_KEYS = (
     "r_inner",
     "r_outer",
@@ -374,25 +374,50 @@ def cell_dimensions(parameters: Parameters) -> tuple[float, float, float]:
 def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
     center = math.radians(15.0 + parameters.theta_deg)
     half_span = math.radians(parameters.tooth_arc_deg / 2.0)
-    start, stop = center - half_span, center + half_span
-    angles = [start + (stop - start) * index / 720 for index in range(721)]
-    first = math.ceil(start / (math.pi / 2))
-    last = math.floor(stop / (math.pi / 2))
-    angles.extend(index * math.pi / 2 for index in range(first, last + 1))
     radii = (
         min(element["r_tooth_in"] for element in parameters.elements),
         max(element["r_tooth_out"] for element in parameters.elements),
     )
-    points = [(radius * math.cos(angle), radius * math.sin(angle)) for radius in radii for angle in angles]
+
+    def tooth_points(test_center: float) -> list[tuple[float, float]]:
+        start, stop = test_center - half_span, test_center + half_span
+        angles = [start + (stop - start) * index / 720 for index in range(721)]
+        first = math.ceil(start / (math.pi / 2))
+        last = math.floor(stop / (math.pi / 2))
+        angles.extend(index * math.pi / 2 for index in range(first, last + 1))
+        return [
+            (radius * math.cos(angle), radius * math.sin(angle))
+            for radius in radii
+            for angle in angles
+        ]
+
+    points = tooth_points(center)
+    min_x = min(point[0] for point in points)
+    max_x = max(point[0] for point in points)
+    min_y = min(point[1] for point in points)
+    max_y = max(point[1] for point in points)
     margin = 2.0 / parameters.resolution
+
+    # Use a fixed square lateral area across the full sector pitch.
+    sector_pitch = 2.0 * math.pi / parameters.num_sectors
+    max_span = 0.0
+    for index in range(361):
+        test_center = sector_pitch * index / 360
+        test_points = tooth_points(test_center)
+        xs = [point[0] for point in test_points]
+        ys = [point[1] for point in test_points]
+        max_span = max(max_span, max(xs) - min(xs), max(ys) - min(ys))
+    s_lat = max_span + 2.0 * margin
+    cx = (min_x + max_x) / 2.0
+    cy = (min_y + max_y) / 2.0
     lower = [
-        min(point[0] for point in points) - margin,
-        min(point[1] for point in points) - margin,
+        cx - s_lat / 2.0,
+        cy - s_lat / 2.0,
         parameters.z_tip / 2.0,
     ]
     upper = [
-        max(point[0] for point in points) + margin,
-        max(point[1] for point in points) + margin,
+        cx + s_lat / 2.0,
+        cy + s_lat / 2.0,
         parameters.z_tip + parameters.h_teeth + margin,
     ]
     interiors = tuple(
@@ -682,7 +707,7 @@ def run_moment(
         kernel_owner, gt_arr = kernel_array(
             mp, np, parameters.t_run, dt, parameters.sigma, component, steps
         )
-        volume = mp.Volume(center=mp.Vector3(*face.center), size=mp.Vector3(*face.size))
+        volume = mp.Volume(center=mp.Vector3(*face.center), size=mp.Vector3(*face.size), dims=3)
         integral = 0.0
         compensation = 0.0
         for step in range(steps):
