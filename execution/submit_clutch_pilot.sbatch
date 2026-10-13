@@ -2,9 +2,9 @@
 #SBATCH --job-name=fce_clt2
 #SBATCH --account=r01540
 #SBATCH --partition=general
-#SBATCH --nodes=2
-#SBATCH --ntasks-per-node=64
-#SBATCH --cpus-per-task=2
+#SBATCH --nodes=4
+#SBATCH --ntasks-per-node=32
+#SBATCH --cpus-per-task=4
 #SBATCH --time=08:00:00
 #SBATCH --array=1-3%2
 #SBATCH --mail-type=END,FAIL
@@ -17,6 +17,7 @@
 # BIGRED200_TELEMETRY_HARNESS_V1
 # SIGKILL/node loss cannot be trapped; publication is best-effort.
 # Logs must exist BEFORE sbatch; the generator creates them locally.
+
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
 export WANDB_MODE=offline
@@ -1299,7 +1300,7 @@ run_user_job() (
     echo "Python binary: $PYTHON_BIN"
 
     if command -v srun >/dev/null 2>&1 && [[ -n "${SLURM_JOB_ID:-}" ]]; then
-        srun --nodes=2 -n 128 --ntasks-per-node=64 -c 2 \
+        srun --nodes=4 -n 128 --ntasks-per-node=32 -c 4 \
             "$PYTHON_BIN" execution/run_scoped_clutch_meep.py \
             --config-file "$CONFIG_FILE" \
             --task-id "$TASK_ID" \

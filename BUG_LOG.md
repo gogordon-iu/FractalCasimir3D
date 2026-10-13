@@ -163,4 +163,6 @@
 - **Bug**: Job 8557782 crashed after 1m42s with a kernel cgroup OOM kill (481.27 GB used vs 480.00 GB limit across 2 nodes) because `run_scoped_clutch_meep.py` set `force_complex_fields=True` (doubling memory of all 12 Yee field and PML components across 128 ranks) and inflated grid volume with `pml=0.25, buffer=0.15`.
 - **Solution**: Removed `force_complex_fields=True` (reverting to real fields for imaginary-frequency Wick rotation), reduced boundary padding to `pml=0.20, buffer=0.10` (cutting grid volume by 26%), reconstructed Drude/Lorentzian poles explicitly without SWIG `copy.deepcopy`, and added `#SBATCH --exclude=nid0394`, reducing node memory to ~100 GB (42% capacity).
 
-
+## [2026-10-13] Complex-Field FDTD Domain Decomposition & Multi-Node Memory Scaling on BigRed 200
+- **Bug**: Reverting to real fields (`force_complex_fields=False`) was rejected by project requirements requiring full complex-field electrodynamics, while running complex fields on 2 nodes breached the 480 GB ceiling (481.27 GB).
+- **Solution**: Restored `force_complex_fields=True` in `run_scoped_clutch_meep.py` with parameterization support, and scaled the Slurm allocation to 4 standard compute nodes (`--nodes=4 --ntasks-per-node=32 -c 4`), distributing the 481 GB Yee grid across 960 GB aggregate RAM (120 GB/node, 50% capacity).

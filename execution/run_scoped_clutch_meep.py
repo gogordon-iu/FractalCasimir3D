@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """Run a resumable, sector-scoped 3-D Meep Casimir clutch calculation.
 
 Lengths are in micrometres, and time is in Meep units. The reported force is
@@ -69,6 +70,7 @@ class Parameters:
     gamma: float
     plasma_frequency: float
     epsilon_inf: float
+    force_complex_fields: bool = True
 
     @property
     def sigma(self) -> float:
@@ -323,6 +325,9 @@ def parse_parameters(
     gamma = finite_number(get("gamma", 0.053 / 1.239841984), "gamma")
     if gamma < 0:
         raise ValueError("gamma must be nonnegative")
+    force_complex_fields = get("force_complex_fields", True)
+    if not isinstance(force_complex_fields, bool):
+        raise ValueError("force_complex_fields must be a JSON boolean")
     return Parameters(
         elements=elements,
         theta_deg=theta,
@@ -347,6 +352,7 @@ def parse_parameters(
             get("plasma_frequency", 9.03 / 1.239841984), "plasma_frequency", positive=True
         ),
         epsilon_inf=finite_number(get("epsilon_inf", 1.0), "epsilon_inf", positive=True),
+        force_complex_fields=force_complex_fields,
     )
 
 
@@ -659,7 +665,7 @@ def run_moment(
                 amp_func=cosine_amplitude(face, (m1, m2)),
             )
         ],
-        force_complex_fields=False,
+        force_complex_fields=parameters.force_complex_fields,
     )
     try:
         simulation.init_sim()
