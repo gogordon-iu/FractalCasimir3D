@@ -296,7 +296,7 @@ def parse_parameters(
     if num_sectors != 4:
         raise ValueError("The required F_total = 4 * F_sector0 scaling requires num_sectors=4")
     nmax = integer_value(get("nmax", 1), "nmax")
-    pml = finite_number(get("pml_thickness_um", 0.20), "pml_thickness_um", positive=True)
+    pml = finite_number(get("pml_thickness_um", 0.25), "pml_thickness_um", positive=True)
     courant = finite_number(get("courant", 0.5), "courant", positive=True)
     if courant > 0.5:
         raise ValueError("courant must not exceed 0.5 for this 3-D calculation")
@@ -357,7 +357,7 @@ def parse_parameters(
 
 
 def cell_dimensions(parameters: Parameters) -> tuple[float, float, float]:
-    buffer = 0.10
+    buffer = 0.15
     margin = 2.0 / parameters.resolution
     z_top = parameters.z_tip + parameters.h_teeth
     # Include the full stator depth, not just the landing pad.

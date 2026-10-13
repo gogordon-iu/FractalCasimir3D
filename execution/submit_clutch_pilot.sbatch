@@ -2,6 +2,7 @@
 #SBATCH --job-name=fce_clt2
 #SBATCH --account=r01540
 #SBATCH --partition=general
+#SBATCH --mem=0
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=32
 #SBATCH --cpus-per-task=4
