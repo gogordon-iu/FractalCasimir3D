@@ -7,6 +7,8 @@
 #SBATCH --cpus-per-task=2
 #SBATCH --time=08:00:00
 #SBATCH --array=1-3%2
+#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-user=gogordon@iu.edu
 #SBATCH --signal=B:SIGUSR1@120
 #SBATCH -o logs/%x_%A_%a.out
 #SBATCH -e logs/%x_%A_%a.err
