@@ -91,7 +91,7 @@ class Face:
 
 
 class ParallelContext:
-    """Use collective walltime decisions when Meep runs under MPI."""
+    """Use MPI collectives when mpi4py is available, otherwise local decisions."""
 
     def __init__(self, mp: Any) -> None:
         self.master = bool(mp.am_master())
@@ -100,27 +100,29 @@ class ParallelContext:
         if processors > 1:
             try:
                 from mpi4py import MPI
-            except ImportError as exc:
-                raise RuntimeError(
-                    "MPI Meep runs require mpi4py for synchronized walltime guards."
-                ) from exc
-            self.comm = MPI.COMM_WORLD
-            if self.comm.Get_size() != processors:
-                raise RuntimeError(
-                    "Meep and mpi4py communicator sizes differ; subgroup runs "
-                    "are not supported by this script."
-                )
-            self.master = self.comm.Get_rank() == 0
+            except ImportError:
+                self.comm = None
+                self.master = bool(mp.am_master())
+            else:
+                self.comm = MPI.COMM_WORLD
+                if self.comm.Get_size() != processors:
+                    raise RuntimeError(
+                        "Meep and mpi4py communicator sizes differ; subgroup runs "
+                        "are not supported by this script."
+                    )
+                self.master = self.comm.Get_rank() == 0
 
     def broadcast(self, value: Any) -> Any:
         if self.comm is None:
             return value
         return self.comm.bcast(value if self.master else None, root=0)
 
-    def root_call(self, function: Callable[[], Any]) -> Any:
+    def root_call(
+        self, function: Callable[[], Any], *, all_ranks_without_comm: bool = False
+    ) -> Any:
         result: Any = None
         error: str | None = None
-        if self.master:
+        if self.master or (self.comm is None and all_ranks_without_comm):
             try:
                 result = function()
             except Exception as exc:
@@ -749,8 +751,10 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
     }
     moments: dict[str, dict[str, float]] = {}
     for name in ("both", "self"):
+        # Without mpi4py, every rank reads the same shared-filesystem checkpoint.
         moments[name] = parallel.root_call(
-            lambda name=name: load_checkpoint(checkpoints[name], fingerprint, args.no_cache)
+            lambda name=name: load_checkpoint(checkpoints[name], fingerprint, args.no_cache),
+            all_ranks_without_comm=True,
         )
     polarizations = (
         ("Ex", mp.Ex, True),
@@ -778,6 +782,7 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
         return time.monotonic() - started
 
     def guard() -> None:
+        # broadcast is a passthrough without mpi4py, so each rank checks locally.
         expired = parallel.broadcast(elapsed() >= args.max_walltime_hours * 3600.0)
         if expired:
             raise WalltimeReached("Walltime limit reached; unfinished moment is not cached")
@@ -858,7 +863,7 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
                             rotor_generator=generate_redesigned_rotor_geometry,
                             guard=guard,
                         )
-                        # Persist the master's value on every rank.
+                        # Use the master's value when collectives are available.
                         moments[configuration][key] = parallel.broadcast(force)
                         payload = {
                             "version": CACHE_VERSION,

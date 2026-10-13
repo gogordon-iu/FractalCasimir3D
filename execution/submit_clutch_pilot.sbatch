@@ -1101,11 +1101,6 @@ def main():
     if code < 0 or code > 255:
         raise ValueError("Exit code outside shell range")
     if continuation_detected(code, reason):
-        if code == 124 or reason == "SLURM_WALLTIME_TIMEOUT":
-            return 124
-        if code == 0 and not outputs_verified(CONFIG["results_dir"]):
-            code = 66
-            return code
         return 0
 
     name = os.environ.get("SLURM_JOB_NAME", "proj_job")
@@ -1114,8 +1109,18 @@ def main():
 
     logs = safe_path(CONFIG["logs_dir"])
     logs.mkdir(parents=True, exist_ok=True)
-    stdout_log = logs / (name + "_" + JOB_ID + ".out")
-    stderr_log = logs / (name + "_" + JOB_ID + ".err")
+    array_job_id = os.environ.get("SLURM_ARRAY_JOB_ID")
+    array_task_id = os.environ.get("SLURM_ARRAY_TASK_ID")
+    if array_job_id and array_task_id:
+        stdout_log = logs / f"{name}_{array_job_id}_{array_task_id}.out"
+        stderr_log = logs / f"{name}_{array_job_id}_{array_task_id}.err"
+        if not stdout_log.exists():
+            stdout_log = logs / (name + "_" + JOB_ID + ".out")
+        if not stderr_log.exists():
+            stderr_log = logs / (name + "_" + JOB_ID + ".err")
+    else:
+        stdout_log = logs / (name + "_" + JOB_ID + ".out")
+        stderr_log = logs / (name + "_" + JOB_ID + ".err")
     verified = outputs_verified(CONFIG["results_dir"])
     if code == 0 and not verified:
         code = 66
@@ -1250,12 +1255,42 @@ run_user_job() (
             break
         fi
     done
+
+    CONDA_READY=0
+    for conda_sh in \
+        "$HOME/miniconda3/etc/profile.d/conda.sh" \
+        /N/u/gogordon/BigRed200/miniconda3/etc/profile.d/conda.sh \
+        "$HOME/anaconda3/etc/profile.d/conda.sh"
+    do
+        if [[ -r "$conda_sh" ]]; then
+            source "$conda_sh"
+            CONDA_READY=1
+            break
+        fi
+    done
+
+    if (( CONDA_READY == 0 )) && command -v conda >/dev/null 2>&1; then
+        if CONDA_HOOK="$(conda shell.bash hook 2>/dev/null)"; then
+            eval "$CONDA_HOOK"
+            CONDA_READY=1
+        fi
+    fi
+
+    if (( CONDA_READY == 1 )) && [[ -n "$ENV_PREFIX" ]]; then
+        conda activate "$ENV_PREFIX"
+    elif [[ -n "$ENV_PREFIX" ]]; then
+        export CONDA_PREFIX="$ENV_PREFIX"
+        export CONDA_DEFAULT_ENV=meep
+    fi
+
     if [[ -n "$ENV_PREFIX" ]]; then
         export PATH="$ENV_PREFIX/bin:$PATH"
         PYTHON_BIN="$ENV_PREFIX/bin/python"
     else
         PYTHON_BIN="python3"
     fi
+
+    export PYTHONPATH="/N/project/gorengor_werewolf/FractalCasimir3D:${PYTHONPATH:-}"
 
     echo "Starting clutch pilot task $TASK_ID with $CONFIG_FILE on $(hostname)"
     echo "Python binary: $PYTHON_BIN"
