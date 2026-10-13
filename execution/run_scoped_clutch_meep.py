@@ -26,6 +26,7 @@ import os
 import sys
 import tempfile
 import time
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
@@ -92,13 +93,26 @@ class Face:
 
 
 class ParallelContext:
-    """Use MPI collectives when mpi4py is available, otherwise local decisions."""
+    """Use MPI collectives or shard serial Meep processes launched by Slurm."""
 
     def __init__(self, mp: Any) -> None:
         self.master = bool(mp.am_master())
         self.comm: Any = None
+        self.shard_count = 1
+        self.shard_rank = 0
         processors = int(mp.count_processors())
-        if processors > 1:
+        if processors == 1:
+            slurm_ntasks = int(os.environ.get("SLURM_NTASKS", "1"))
+            if slurm_ntasks > 1:
+                slurm_procid = int(os.environ.get("SLURM_PROCID", "0"))
+                if not 0 <= slurm_procid < slurm_ntasks:
+                    raise ValueError("SLURM_PROCID must be within SLURM_NTASKS")
+                self.shard_count = slurm_ntasks
+                self.shard_rank = slurm_procid
+                self.master = slurm_procid == 0
+                if not self.master:
+                    mp.verbosity(0)
+        elif processors > 1:
             try:
                 from mpi4py import MPI
             except ImportError:
@@ -233,6 +247,7 @@ def invoke_dynamic_trun(
         "t_landing_pad_um": "t_landing_pad",
         "Sigma": "sigma",
         "d_eff": "d_eff",
+        "d_eff_um": "d_eff",
     }
     signature = inspect.signature(function)
     args: list[Any] = []
@@ -257,7 +272,12 @@ def invoke_dynamic_trun(
             args.append(value)
         else:
             kwargs[name] = value
-    return finite_number(function(*args, **kwargs), "computed T_run", positive=True)
+    result = function(*args, **kwargs)
+    if isinstance(result, (tuple, list)):
+        if not result:
+            raise ValueError("computed T_run result must not be empty")
+        result = result[0]
+    return finite_number(result, "computed T_run", positive=True)
 
 
 def parse_parameters(
@@ -478,6 +498,32 @@ def load_checkpoint(path: Path, fingerprint: str, no_cache: bool) -> dict[str, f
         for key, value in moments.items()
         if isinstance(key, str)
     }
+
+
+def load_merged_checkpoints(
+    checkpoint_directory: Path,
+    task_id: int,
+    configuration: str,
+    fingerprint: str,
+    expected_keys: set[str],
+    no_cache: bool,
+) -> dict[str, float]:
+    """Merge canonical and shard checkpoints when no shard is writing them."""
+    if no_cache:
+        return {}
+    prefix = f"chk_moments_clutch_pilot_task_{task_id:03d}_{configuration}"
+    paths = [checkpoint_directory / f"{prefix}.json"]
+    paths.extend(sorted(checkpoint_directory.glob(f"{prefix}_shard_*.json")))
+    moments: dict[str, float] = {}
+    for path in paths:
+        moments.update(
+            {
+                key: value
+                for key, value in load_checkpoint(path, fingerprint, no_cache=False).items()
+                if key in expected_keys
+            }
+        )
+    return moments
 
 
 def cosine_amplitude(
@@ -711,7 +757,6 @@ def run_moment(
         integral = 0.0
         compensation = 0.0
         for step in range(steps):
-            guard()
             simulation.fields.step()
             f_temp = simulation.fields.casimir_stress_dct_integral(
                 mp.Z,
@@ -809,13 +854,15 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
         / f"chk_moments_clutch_pilot_task_{args.task_id:03d}_{name}.json"
         for name in ("both", "self")
     }
-    moments: dict[str, dict[str, float]] = {}
-    for name in ("both", "self"):
-        # Without mpi4py, every rank reads the same shared-filesystem checkpoint.
-        moments[name] = parallel.root_call(
-            lambda name=name: load_checkpoint(checkpoints[name], fingerprint, args.no_cache),
-            all_ranks_without_comm=True,
+    sharded = parallel.shard_count > 1
+    shard_checkpoints = {
+        name: checkpoint_directory
+        / (
+            f"chk_moments_clutch_pilot_task_{args.task_id:03d}_{name}"
+            f"_shard_{parallel.shard_rank:03d}.json"
         )
+        for name in ("both", "self")
+    }
     polarizations = (
         ("Ex", mp.Ex, True),
         ("Ey", mp.Ey, True),
@@ -830,22 +877,197 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
         for face in faces
         for mode in range(parameters.nmax**2)
     }
-    for name in moments:
-        moments[name] = {
-            key: value for key, value in moments[name].items() if key in expected_keys
+
+    def filter_moments(values: Mapping[str, float]) -> dict[str, float]:
+        return {key: value for key, value in values.items() if key in expected_keys}
+
+    def checkpoint_payload(
+        configuration: str, values: Mapping[str, float]
+    ) -> dict[str, Any]:
+        return {
+            "version": CACHE_VERSION,
+            "fingerprint": fingerprint,
+            "configuration": configuration,
+            "moments": dict(values),
+            "updated_unix_seconds": time.time(),
         }
+
+    def initialize_moments(configuration: str) -> dict[str, float]:
+        # Only the master writes canonical files or removes old shard files.
+        # Shards cannot start writing until the initialization handshake ends.
+        if parallel.master and args.no_cache:
+            prefix = (
+                f"chk_moments_clutch_pilot_task_{args.task_id:03d}_{configuration}"
+            )
+            for path in checkpoint_directory.glob(f"{prefix}_shard_*.json"):
+                path.unlink()
+        values = load_merged_checkpoints(
+            checkpoint_directory,
+            args.task_id,
+            configuration,
+            fingerprint,
+            expected_keys,
+            args.no_cache,
+        )
+        if parallel.master:
+            atomic_json(
+                checkpoints[configuration], checkpoint_payload(configuration, values)
+            )
+        return values
+
+    moments: dict[str, dict[str, float]] = {}
+    for name in ("both", "self"):
+        # Serial shards use only the master's immutable starting snapshot.
+        # MPI ranks without mpi4py can read, but only the master writes.
+        moments[name] = parallel.root_call(
+            lambda name=name: initialize_moments(name),
+            all_ranks_without_comm=not sharded,
+        ) or {}
+
+    # Each shard exclusively owns its checkpoint files. The canonical startup
+    # snapshot already preserves earlier runs, so these contain only new work.
+    local_moments: dict[str, dict[str, float]] = {
+        name: {} for name in ("both", "self")
+    }
     active: dict[str, Any] = {}
     latest_steps: int | None = None
     latest_dt: float | None = None
+    last_moment_duration: float | None = None
 
     def elapsed() -> float:
         return time.monotonic() - started
 
     def guard() -> None:
-        # broadcast is a passthrough without mpi4py, so each rank checks locally.
-        expired = parallel.broadcast(elapsed() >= args.max_walltime_hours * 3600.0)
+        allowance = 1.15 * last_moment_duration if last_moment_duration is not None else 0.0
+        # Check only between moments; never interrupt a native timestep.
+        expired = parallel.broadcast(
+            elapsed() + allowance >= args.max_walltime_hours * 3600.0
+        )
         if expired:
-            raise WalltimeReached("Walltime limit reached; unfinished moment is not cached")
+            raise WalltimeReached("Insufficient walltime remaining to start a new moment")
+
+    shard_paths: list[Path] = []
+    shard_run_id: str | None = None
+    shard_master_payload: dict[str, Any] = {}
+
+    def read_status(path: Path) -> dict[str, Any]:
+        try:
+            return read_config(path)
+        except FileNotFoundError:
+            return {}
+
+    if sharded:
+        # A run-id and per-process tokens prevent stale status files from a
+        # previous invocation from being mistaken for participating shards.
+        scope = hashlib.sha256(
+            json.dumps(
+                [
+                    os.environ.get("SLURM_JOB_ID", ""),
+                    os.environ.get("SLURM_STEP_ID", ""),
+                    fingerprint,
+                    args.config,
+                    args.no_cache,
+                    parallel.shard_count,
+                ]
+            ).encode("utf-8")
+        ).hexdigest()[:24]
+        shard_paths = [
+            checkpoint_directory
+            / f"shard_task_{args.task_id:03d}_{scope}_{rank:05d}.json"
+            for rank in range(parallel.shard_count)
+        ]
+        token = uuid.uuid4().hex
+        if parallel.master:
+            shard_run_id = uuid.uuid4().hex
+            shard_master_payload = {
+                "run_id": shard_run_id,
+                "status": "initializing",
+                "token": token,
+            }
+            atomic_json(shard_paths[0], shard_master_payload)
+            tokens = {"0": token}
+            while len(tokens) < parallel.shard_count:
+                for rank in range(1, parallel.shard_count):
+                    status = read_status(shard_paths[rank])
+                    if (
+                        status.get("run_id") == shard_run_id
+                        and status.get("status") == "ready"
+                        and isinstance(status.get("token"), str)
+                    ):
+                        tokens[str(rank)] = status["token"]
+                if len(tokens) < parallel.shard_count:
+                    if elapsed() >= args.max_walltime_hours * 3600.0:
+                        shard_master_payload["status"] = "failed"
+                        atomic_json(shard_paths[0], shard_master_payload)
+                        raise RuntimeError("Timed out waiting for shard initialization")
+                    time.sleep(0.1)
+            shard_master_payload.update(
+                status="running",
+                tokens=tokens,
+                snapshot={name: dict(values) for name, values in moments.items()},
+            )
+            atomic_json(shard_paths[0], shard_master_payload)
+        else:
+            while True:
+                status = read_status(shard_paths[0])
+                run_id = status.get("run_id")
+                if isinstance(run_id, str):
+                    if run_id != shard_run_id:
+                        shard_run_id = run_id
+                        atomic_json(
+                            shard_paths[parallel.shard_rank],
+                            {
+                                "run_id": shard_run_id,
+                                "status": "ready",
+                                "token": token,
+                            },
+                        )
+                    tokens = status.get("tokens", {})
+                    if (
+                        isinstance(tokens, dict)
+                        and tokens.get(str(parallel.shard_rank)) == token
+                        and "snapshot" in status
+                    ):
+                        snapshot = status["snapshot"]
+                        moments = {
+                            name: filter_moments(
+                                {
+                                    key: finite_number(value, f"snapshot moment {key}")
+                                    for key, value in snapshot[name].items()
+                                }
+                            )
+                            for name in ("both", "self")
+                        }
+                        break
+                    if status.get("status") == "failed":
+                        raise RuntimeError("Master shard failed during initialization")
+                if elapsed() >= args.max_walltime_hours * 3600.0:
+                    raise RuntimeError("Timed out waiting for the shard snapshot")
+                time.sleep(0.1)
+
+    # This ordered list is built once from the shared starting snapshot.
+    # Subsequent checkpoint writes must not change moment ownership.
+    pending = [
+        (configuration, label, component, electric, face, mode)
+        for configuration in configurations
+        for label, component, electric in polarizations
+        for face in faces
+        for mode in range(parameters.nmax**2)
+        if f"{label}:{face.name}:{mode}" not in moments[configuration]
+    ]
+
+    def reload_moments() -> None:
+        # Called by the master only after every shard has stopped writing.
+        for name in ("both", "self"):
+            moments[name] = load_merged_checkpoints(
+                checkpoint_directory,
+                args.task_id,
+                name,
+                fingerprint,
+                expected_keys,
+                no_cache=False,
+            )
+            atomic_json(checkpoints[name], checkpoint_payload(name, moments[name]))
 
     def summary(status: str) -> dict[str, Any]:
         forces: dict[str, float | None] = {}
@@ -897,53 +1119,109 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
         parallel.root_call(lambda: atomic_json(progress_path, result))
         return result
 
+    def write_shard_status(status: str) -> None:
+        payload = (
+            dict(shard_master_payload)
+            if parallel.master
+            else {"run_id": shard_run_id}
+        )
+        payload["status"] = status
+        atomic_json(shard_paths[parallel.shard_rank], payload)
+
+    def finish_shards(status: str) -> int:
+        write_shard_status(status)
+        if not parallel.master:
+            return 0
+
+        statuses: dict[int, str] = {0: status}
+        while len(statuses) < parallel.shard_count:
+            for rank in range(1, parallel.shard_count):
+                payload = read_status(shard_paths[rank])
+                if (
+                    payload.get("run_id") == shard_run_id
+                    and payload.get("status") in ("done", "walltime", "failed")
+                ):
+                    statuses[rank] = payload["status"]
+            if len(statuses) < parallel.shard_count:
+                time.sleep(0.1)
+
+        try:
+            reload_moments()
+            active.clear()
+            if "failed" in statuses.values():
+                save_progress("failed")
+                raise RuntimeError("One or more moment shards failed")
+            complete = all(
+                len(moments[name]) == moments_per_config for name in configurations
+            )
+            result = save_progress("complete" if complete else "walltime_reached")
+            if complete:
+                atomic_json(final_path, result)
+                log_metrics(result, True)
+                print(f"Saved {final_path}", flush=True)
+                return 0
+            log_metrics(result, True)
+            print(
+                "Walltime limit reached. Resume with the same arguments; "
+                "remaining moments will be restarted.",
+                file=sys.stderr,
+                flush=True,
+            )
+            return 75
+        finally:
+            for path in shard_paths:
+                try:
+                    path.unlink()
+                except FileNotFoundError:
+                    pass
+
     save_progress("running")
     try:
-        for configuration in configurations:
-            for label, component, electric in polarizations:
-                for face in faces:
-                    for mode in range(parameters.nmax**2):
-                        key = f"{label}:{face.name}:{mode}"
-                        if key in moments[configuration]:
-                            continue
-                        active.clear()
-                        active.update(configuration=configuration, moment=key)
-                        save_progress("running")
-                        force, latest_steps, latest_dt = run_moment(
-                            mp=mp,
-                            np=np,
-                            parameters=parameters,
-                            configuration=configuration,
-                            component=component,
-                            electric=electric,
-                            face=face,
-                            mode=mode,
-                            max_steps=args.max_steps,
-                            stator_generator=generate_redesigned_stator_geometry,
-                            rotor_generator=generate_redesigned_rotor_geometry,
-                            guard=guard,
-                        )
-                        # Use the master's value when collectives are available.
-                        moments[configuration][key] = parallel.broadcast(force)
-                        payload = {
-                            "version": CACHE_VERSION,
-                            "fingerprint": fingerprint,
-                            "configuration": configuration,
-                            "moments": moments[configuration],
-                            "updated_unix_seconds": time.time(),
-                        }
-                        parallel.root_call(
-                            lambda: atomic_json(checkpoints[configuration], payload)
-                        )
-                        active.clear()
-                        save_progress("running")
-        result = save_progress("complete")
-        parallel.root_call(lambda: atomic_json(final_path, result))
-        log_metrics(result, parallel.master)
-        if parallel.master:
-            print(f"Saved {final_path}", flush=True)
-        return 0
+        for pending_index, (
+            configuration, label, component, electric, face, mode
+        ) in enumerate(pending):
+            if pending_index % parallel.shard_count != parallel.shard_rank:
+                continue
+            key = f"{label}:{face.name}:{mode}"
+            active.clear()
+            active.update(configuration=configuration, moment=key)
+            save_progress("running")
+            moment_started = time.monotonic()
+            force, latest_steps, latest_dt = run_moment(
+                mp=mp,
+                np=np,
+                parameters=parameters,
+                configuration=configuration,
+                component=component,
+                electric=electric,
+                face=face,
+                mode=mode,
+                max_steps=args.max_steps,
+                stator_generator=generate_redesigned_stator_geometry,
+                rotor_generator=generate_redesigned_rotor_geometry,
+                guard=guard,
+            )
+            last_moment_duration = time.monotonic() - moment_started
+            if sharded:
+                force = finite_number(force, f"checkpoint moment {key}")
+                local_moments[configuration][key] = force
+                atomic_json(
+                    shard_checkpoints[configuration],
+                    checkpoint_payload(configuration, local_moments[configuration]),
+                )
+                moments[configuration][key] = force
+            else:
+                # Use the master's value when collectives are available.
+                moments[configuration][key] = parallel.broadcast(force)
+                payload = checkpoint_payload(configuration, moments[configuration])
+                parallel.root_call(
+                    lambda: atomic_json(checkpoints[configuration], payload)
+                )
+            active.clear()
+            save_progress("running")
     except WalltimeReached:
+        if sharded:
+            return finish_shards("walltime")
         result = save_progress("walltime_reached")
         log_metrics(result, parallel.master)
         if parallel.master:
@@ -955,8 +1233,22 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
             )
         return 75
     except Exception:
+        if sharded:
+            write_shard_status("failed")
+            if parallel.master:
+                finish_shards("failed")
         save_progress("failed")
         raise
+
+    if sharded:
+        return finish_shards("done")
+    parallel.root_call(reload_moments)
+    result = save_progress("complete")
+    parallel.root_call(lambda: atomic_json(final_path, result))
+    log_metrics(result, parallel.master)
+    if parallel.master:
+        print(f"Saved {final_path}", flush=True)
+    return 0
 
 
 def main(argv: Sequence[str] | None = None) -> int:

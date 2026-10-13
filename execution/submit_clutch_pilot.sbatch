@@ -3,9 +3,9 @@
 #SBATCH --account=r01540
 #SBATCH --partition=general
 #SBATCH --mem=0
-#SBATCH --nodes=4
-#SBATCH --ntasks-per-node=32
-#SBATCH --cpus-per-task=4
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=18
+#SBATCH --cpus-per-task=7
 #SBATCH --time=08:00:00
 #SBATCH --array=1-3%2
 #SBATCH --mail-type=END,FAIL
@@ -720,6 +720,7 @@ AUTHORIZATION_DIAGNOSTIC = (
 )
 
 import datetime
+import fcntl
 import json
 import os
 from pathlib import Path
@@ -870,7 +871,16 @@ def outputs_verified(directory):
     return False
 
 def write_report(report):
-    destination = safe_path(CONFIG["logs_dir"]) / ("crash_report_" + JOB_ID + ".json")
+    array_job_id = os.environ.get("SLURM_ARRAY_JOB_ID", "")
+    array_task_id = os.environ.get("SLURM_ARRAY_TASK_ID", "")
+    report_id = JOB_ID
+    if (
+        array_job_id and array_task_id
+        and all(c.isalnum() or c in "_.-" for c in array_job_id)
+        and all(c.isalnum() or c in "_.-" for c in array_task_id)
+    ):
+        report_id = array_job_id + "_" + array_task_id
+    destination = safe_path(CONFIG["logs_dir"]) / ("crash_report_" + report_id + ".json")
     if destination.is_symlink():
         raise ValueError("Refusing symlink crash report")
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -916,6 +926,28 @@ def publish(paths, message):
     git_directory = git_directory.resolve(strict=True)
     if not git_directory.is_dir():
         raise RuntimeError("Expected Git directory: " + str(git_directory))
+
+    lock_path = git_directory / "bigred200_telemetry.lock"
+    if lock_path.is_symlink():
+        raise ValueError("Refusing symlink telemetry lock: " + str(lock_path))
+    # Keep the lock file in place so all tasks lock the same inode.
+    with lock_path.open("a") as lock_stream:
+        deadline = time.monotonic() + 120
+        while True:
+            try:
+                fcntl.flock(lock_stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError("Timed out waiting for telemetry Git lock")
+                time.sleep(min(0.5, remaining))
+        try:
+            return publish_locked(selected, message, git_directory)
+        finally:
+            fcntl.flock(lock_stream.fileno(), fcntl.LOCK_UN)
+
+def publish_locked(selected, message, git_directory):
     for lock_name in ("index.lock", "config.lock"):
         lock = git_directory / lock_name
         try:
@@ -1009,10 +1041,10 @@ def publish(paths, message):
     else:
         diagnostic("No new safe changes to commit; attempting synchronization.")
 
-    # A dirty worktree can make pull fail even when a push remains possible.
+    # Autostash permits rebase while other array tasks have unstaged outputs.
     try:
         pulled = remote_git(
-            ["pull", "--rebase", CONFIG["git_remote"], current_branch],
+            ["pull", "--rebase", "--autostash", CONFIG["git_remote"], current_branch],
             rebase=True,
         )
     except (OSError, subprocess.SubprocessError) as error:
@@ -1290,18 +1322,23 @@ run_user_job() (
 
     if [[ -n "$ENV_PREFIX" ]]; then
         export PATH="$ENV_PREFIX/bin:$PATH"
+        export LD_LIBRARY_PATH="$ENV_PREFIX/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
         PYTHON_BIN="$ENV_PREFIX/bin/python"
     else
         PYTHON_BIN="python3"
     fi
 
+    module unload xalt 2>/dev/null || true
+    export XALT_EXECUTABLE_TRACKING=no
+    export PYTHONUNBUFFERED=1
+    export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-7}"
     export PYTHONPATH="/N/project/gorengor_werewolf/FractalCasimir3D:${PYTHONPATH:-}"
 
     echo "Starting clutch pilot task $TASK_ID with $CONFIG_FILE on $(hostname)"
     echo "Python binary: $PYTHON_BIN"
 
     if command -v srun >/dev/null 2>&1 && [[ -n "${SLURM_JOB_ID:-}" ]]; then
-        srun --nodes=4 -n 128 --ntasks-per-node=32 -c 4 \
+        srun --nodes=2 -n 36 --ntasks-per-node=18 -c 7 \
             "$PYTHON_BIN" execution/run_scoped_clutch_meep.py \
             --config-file "$CONFIG_FILE" \
             --task-id "$TASK_ID" \
