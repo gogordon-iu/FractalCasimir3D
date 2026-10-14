@@ -3,8 +3,10 @@
 """Run a resumable, sector-scoped 3-D Meep Casimir clutch calculation.
 
 Lengths are in micrometres, and time is in Meep units. The reported force is
-the z-directed force. ``both`` includes stator and rotor; ``self`` includes
-only the rotor. ``all`` runs both configurations and subtracts their forces.
+the z-directed force. ``both`` includes stator and rotor; ``rotor`` (or its
+alias ``self``) includes only the rotor; ``stator`` includes only the stator;
+``vac`` includes neither. ``all`` runs all four configurations and computes
+F_both - F_rotor - F_stator + F_vac.
 
 Each face uses nmax cosine modes in each tangential direction, so there are
 36 * nmax**2 moments per configuration. --max-steps produces a deliberately
@@ -32,7 +34,8 @@ from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
 MEEP_FORCE_TO_SI = 3.16152649e-14
-CACHE_VERSION = 4
+CACHE_VERSION = 5
+ALL_CONFIGURATIONS = ("both", "rotor", "stator", "vac")
 ELEMENT_KEYS = (
     "r_inner",
     "r_outer",
@@ -173,7 +176,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config-file", required=True, type=Path)
     parser.add_argument("--task-id", type=positive_integer, default=1)
-    parser.add_argument("--config", choices=("both", "self", "all"), default="all")
+    parser.add_argument(
+        "--config",
+        choices=("both", "rotor", "self", "stator", "vac", "all"),
+        default="all",
+    )
     parser.add_argument("--max-walltime-hours", type=positive_float, default=7.5)
     parser.add_argument("--max-steps", type=nonnegative_integer, default=0)
     parser.add_argument("--no-cache", action="store_true")
@@ -603,12 +610,12 @@ def kernel_array(
     t_run: float,
     dt: float,
     sigma: float,
-    polarization: Any,
+    field_type: Any,
     count: int,
 ) -> tuple[Any, Any]:
     if isinstance(count, bool) or not isinstance(count, int) or count <= 0:
         raise ValueError("The Casimir kernel sample count must be a positive integer")
-    owner = mp.make_casimir_gfunc(t_run, dt, sigma, polarization)
+    owner = mp.make_casimir_gfunc(t_run, dt, sigma, field_type)
     if owner is None:
         raise RuntimeError("make_casimir_gfunc returned a null pointer")
     if isinstance(owner, np.ndarray):
@@ -656,7 +663,7 @@ def run_moment(
     guard()
     background, material = material_pair(mp, parameters, electric)
     geometry: list[Any] = []
-    if configuration == "both":
+    if configuration in ("both", "stator"):
         geometry.extend(
             stator_generator(
                 elements=list(parameters.elements),
@@ -670,17 +677,18 @@ def run_moment(
                 bridge_arc_deg=parameters.bridge_arc_deg,
             )
         )
-    geometry.extend(
-        rotor_generator(
-            elements=list(parameters.elements),
-            H_teeth=parameters.h_teeth,
-            z_tip=parameters.z_tip,
-            rotor_material=material,
-            num_sectors=parameters.num_sectors,
-            tooth_arc_deg=parameters.tooth_arc_deg,
-            theta_rotor_deg=parameters.theta_deg,
+    if configuration in ("both", "rotor", "self"):
+        geometry.extend(
+            rotor_generator(
+                elements=list(parameters.elements),
+                H_teeth=parameters.h_teeth,
+                z_tip=parameters.z_tip,
+                rotor_material=material,
+                num_sectors=parameters.num_sectors,
+                tooth_arc_deg=parameters.tooth_arc_deg,
+                theta_rotor_deg=parameters.theta_deg,
+            )
         )
-    )
     timestep = [parameters.courant / parameters.resolution]
 
     def impulse(t: float) -> float:
@@ -739,7 +747,7 @@ def run_moment(
         steps = min(full_steps, max_steps) if max_steps > 0 else full_steps
         field_type = mp.E_stuff if electric else mp.H_stuff
         kernel_owner, gt_arr = kernel_array(
-            mp, np, parameters.t_run, dt, parameters.sigma, component, steps
+            mp, np, parameters.t_run, dt, parameters.sigma, field_type, steps
         )
         volume = mp.Volume(center=mp.Vector3(*face.center), size=mp.Vector3(*face.size), dims=3)
         integral = 0.0
@@ -792,13 +800,21 @@ def log_metrics(result: Mapping[str, Any], master: bool) -> None:
                 "completed_moments",
                 "completed_by_config",
                 "F_sector0_both",
+                "F_sector0_rotor",
                 "F_sector0_self",
+                "F_sector0_stator",
+                "F_sector0_vac",
             )
         },
     )
     for name in (
         "F_both",
+        "F_rotor",
         "F_self",
+        "F_stator",
+        "F_vac",
+        "F_2pass",
+        "F_stator_only",
         "F_net",
         "f_net_fN",
         "f_net_pN",
@@ -821,6 +837,8 @@ def log_metrics(result: Mapping[str, Any], master: bool) -> None:
 
 
 def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> int:
+    if args.config == "self":
+        args.config = "rotor"
     # Delay scientific imports until after argparse and basic JSON parsing.
     repository_root = Path(__file__).resolve().parents[1]
     if str(repository_root) not in sys.path:
@@ -849,7 +867,8 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
         "parameters": vars(parameters),
         "max_steps": args.max_steps,
         "force_direction": "z",
-        "kernel_polarization": "source_component",
+        "kernel_polarization": "field_type_E_stuff_H_stuff",
+        "inclusion_exclusion": "4pass_both_rotor_stator_vac",
     }
     fingerprint = hashlib.sha256(
         json.dumps(canonical, sort_keys=True, allow_nan=False).encode("utf-8")
@@ -861,12 +880,16 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
         f"task_{args.task_id:03d}_N{parameters.n_fractal}"
         f"_th_{int(parameters.theta_deg)}deg.json"
     )
-    configurations = ("both", "self") if args.config == "all" else (args.config,)
+    configurations = (
+        ALL_CONFIGURATIONS
+        if args.config == "all"
+        else ("rotor" if args.config == "self" else args.config,)
+    )
     moments_per_config = 36 * parameters.nmax**2
     checkpoints = {
         name: checkpoint_directory
         / f"chk_moments_clutch_pilot_task_{args.task_id:03d}_{name}.json"
-        for name in ("both", "self")
+        for name in ALL_CONFIGURATIONS
     }
     sharded = parallel.shard_count > 1
     shard_checkpoints = {
@@ -875,7 +898,7 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
             f"chk_moments_clutch_pilot_task_{args.task_id:03d}_{name}"
             f"_shard_{parallel.shard_rank:03d}.json"
         )
-        for name in ("both", "self")
+        for name in ALL_CONFIGURATIONS
     }
     polarizations = (
         ("Ex", mp.Ex, True),
@@ -930,7 +953,7 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
         return values
 
     moments: dict[str, dict[str, float]] = {}
-    for name in ("both", "self"):
+    for name in ALL_CONFIGURATIONS:
         # Serial shards use only the master's immutable starting snapshot.
         # MPI ranks without mpi4py can read, but only the master writes.
         moments[name] = parallel.root_call(
@@ -941,7 +964,7 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
     # Each shard exclusively owns its checkpoint files. The canonical startup
     # snapshot already preserves earlier runs, so these contain only new work.
     local_moments: dict[str, dict[str, float]] = {
-        name: {} for name in ("both", "self")
+        name: {} for name in ALL_CONFIGURATIONS
     }
     active: dict[str, Any] = {}
     latest_steps: int | None = None
@@ -1046,7 +1069,7 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
                                     for key, value in snapshot[name].items()
                                 }
                             )
-                            for name in ("both", "self")
+                            for name in ALL_CONFIGURATIONS
                         }
                         break
                     if status.get("status") == "failed":
@@ -1068,7 +1091,7 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
 
     def reload_moments() -> None:
         # Called by the master only after every shard has stopped writing.
-        for name in ("both", "self"):
+        for name in ALL_CONFIGURATIONS:
             moments[name] = load_merged_checkpoints(
                 checkpoint_directory,
                 args.task_id,
@@ -1081,15 +1104,25 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
 
     def summary(status: str) -> dict[str, Any]:
         forces: dict[str, float | None] = {}
-        for name in ("both", "self"):
+        for name in ALL_CONFIGURATIONS:
             forces[name] = (
                 4.0 * math.fsum(moments[name].values())
                 if len(moments[name]) == moments_per_config
                 else None
             )
+        f_2pass = (
+            forces["both"] - forces["rotor"]
+            if forces["both"] is not None and forces["rotor"] is not None
+            else None
+        )
+        f_stator_only = (
+            forces["stator"] - forces["vac"]
+            if forces["stator"] is not None and forces["vac"] is not None
+            else None
+        )
         net = (
-            forces["both"] - forces["self"]
-            if forces["both"] is not None and forces["self"] is not None
+            f_2pass - f_stator_only
+            if f_2pass is not None and f_stator_only is not None
             else None
         )
         return {
@@ -1112,9 +1145,17 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
             "active_moment": dict(active),
             "elapsed_seconds": elapsed(),
             "F_sector0_both": None if forces["both"] is None else forces["both"] / 4.0,
-            "F_sector0_self": None if forces["self"] is None else forces["self"] / 4.0,
+            "F_sector0_rotor": None if forces["rotor"] is None else forces["rotor"] / 4.0,
+            "F_sector0_self": None if forces["rotor"] is None else forces["rotor"] / 4.0,
+            "F_sector0_stator": None if forces["stator"] is None else forces["stator"] / 4.0,
+            "F_sector0_vac": None if forces["vac"] is None else forces["vac"] / 4.0,
             "F_both": forces["both"],
-            "F_self": forces["self"],
+            "F_rotor": forces["rotor"],
+            "F_self": forces["rotor"],
+            "F_stator": forces["stator"],
+            "F_vac": forces["vac"],
+            "F_2pass": f_2pass,
+            "F_stator_only": f_stator_only,
             "F_net": net,
             "MEEP_FORCE_TO_SI_N": MEEP_FORCE_TO_SI,
             "f_net_N": None if net is None else net * MEEP_FORCE_TO_SI,
@@ -1263,6 +1304,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     started = time.monotonic()
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.config == "self":
+        args.config = "rotor"
     try:
         raw = read_config(args.config_file)
         # Validate the geometry before loading Meep or repository geometry code.

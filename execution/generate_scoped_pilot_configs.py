@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the three Scoped Pilot Concentric Casimir Clutch configurations.
+"""Generate the two Scoped Pilot Concentric Casimir Clutch configurations.
 
 Run from the repository root, or execute this file directly:
 
@@ -52,7 +52,7 @@ def load_metrics_logger() -> ModuleType | None:
         return None
 
 
-PHYSICAL_PARAMETERS: dict[str, int | float | str] = {
+PHYSICAL_PARAMETERS: dict[str, int | float | str | list[str]] = {
     "N_fractal": 2,
     "num_tracks": 3,
     "L_domain_um": 3.0,
@@ -67,9 +67,11 @@ PHYSICAL_PARAMETERS: dict[str, int | float | str] = {
     "aperture_arc_deg": 30.0,
     "bridge_arc_deg": 60.0,
     "tooth_arc_deg": 15.0,
-    "resolution": 60,
+    "resolution": 80,
     "nmax": 1,
     "material": "Gold",
+    "inclusion_exclusion_passes": 4,
+    "configurations": ["both", "rotor", "stator", "vac"],
 }
 
 PILOT_TASKS: tuple[tuple[float, str, str, str], ...] = (
@@ -78,12 +80,6 @@ PILOT_TASKS: tuple[tuple[float, str, str, str], ...] = (
         "Disengaged",
         "REPULSIVE",
         "Tooth centered in the 30 deg aperture.",
-    ),
-    (
-        22.5,
-        "Transition",
-        "TRANSITION",
-        "Tooth at the edge of the aperture/bridge.",
     ),
     (
         45.0,
@@ -227,7 +223,10 @@ def validate_physical_parameters() -> None:
     for key in ("H_teeth_um", "z_tip_um", "t_membrane_um", "t_landing_pad_um"):
         if float(p[key]) <= 0.0:
             raise ValueError(f"{key} must be positive.")
-    for key in ("N_fractal", "num_tracks", "num_sectors", "resolution", "nmax"):
+    for key in (
+        "N_fractal", "num_tracks", "num_sectors", "resolution", "nmax",
+        "inclusion_exclusion_passes",
+    ):
         value = p[key]
         if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
             raise ValueError(f"{key} must be a positive integer.")
@@ -264,8 +263,8 @@ def verify_outputs(output_dir: Path, expected: Mapping[str, Mapping[str, Any]]) 
         if actual != to_json_value(document):
             raise ValueError(f"Written configuration differs from expected data: {path}")
     manifest = expected["master_clutch_pilot_suite.json"]
-    if manifest["num_tasks"] != 3:
-        raise ValueError("The pilot suite must contain exactly three tasks.")
+    if manifest["num_tasks"] != 2:
+        raise ValueError("The pilot suite must contain exactly two tasks.")
     for entry in manifest["tasks"]:
         config = expected[entry["config_file"]]
         if config["theta_deg"] != entry["theta_deg"]:
@@ -348,9 +347,25 @@ def generate_configs(output_dir: Path, verify: bool) -> list[Path]:
         paths.append(path)
         LOGGER.info("Wrote %s", path)
 
+    (output_dir / "config_003.json").unlink(missing_ok=True)
+
     if verify:
         verify_outputs(output_dir, documents)
-        LOGGER.info("Verified all three configurations and the master suite.")
+        LOGGER.info("Verified all two configurations and the master suite.")
+
+    if metrics_module is not None:
+        metrics_module.log_step(
+            "generate_scoped_pilot_configs",
+            {
+                "num_tasks": 2,
+                "N_fractal": 2,
+                "resolution": 80,
+                "angles_deg": [0.0, 45.0],
+                "T_run": run_time,
+            },
+        )
+        metrics_module.export_macros()
+
     return paths
 
 

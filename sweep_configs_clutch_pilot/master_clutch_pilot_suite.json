@@ -3,10 +3,9 @@
   "T_run": 3.0,
   "angles_deg": [
     0.0,
-    22.5,
     45.0
   ],
-  "num_tasks": 3,
+  "num_tasks": 2,
   "physical_parameters": {
     "H_teeth_um": 0.25,
     "L_domain_um": 3.0,
@@ -15,11 +14,18 @@
     "R_min_um": 0.3,
     "aperture_arc_deg": 30.0,
     "bridge_arc_deg": 60.0,
+    "configurations": [
+      "both",
+      "rotor",
+      "stator",
+      "vac"
+    ],
+    "inclusion_exclusion_passes": 4,
     "material": "Gold",
     "nmax": 1,
     "num_sectors": 4,
     "num_tracks": 3,
-    "resolution": 60,
+    "resolution": 80,
     "t_landing_pad_um": 0.15,
     "t_membrane_um": 0.025,
     "tooth_arc_deg": 15.0,
@@ -50,7 +56,7 @@
       "target_suppression": 1e-50,
       "units": "d_eff_um: micrometres; T_run: normalized Wick-damping time"
     },
-    "generated_at_utc": "2026-10-12T22:31:19.823832+00:00",
+    "generated_at_utc": "2026-10-14T17:51:33.762912+00:00",
     "generator": "execution/generate_scoped_pilot_configs.py",
     "geometry_function": "execution.clutch_geometry_redesign.get_scoped_clutch_elements",
     "metrics_logger_available": true,
@@ -69,17 +75,9 @@
     },
     {
       "config_file": "config_002.json",
-      "description": "Tooth at the edge of the aperture/bridge.",
-      "expected_regime": "TRANSITION",
-      "task_id": 2,
-      "task_name": "Transition",
-      "theta_deg": 22.5
-    },
-    {
-      "config_file": "config_003.json",
       "description": "Tooth centered on the 60 deg reinforced 150 nm landing pad.",
       "expected_regime": "ATTRACTIVE",
-      "task_id": 3,
+      "task_id": 2,
       "task_name": "Engaged",
       "theta_deg": 45.0
     }

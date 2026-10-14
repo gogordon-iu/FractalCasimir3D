@@ -7,8 +7,14 @@
   "T_run": 3.0,
   "aperture_arc_deg": 30.0,
   "bridge_arc_deg": 60.0,
-  "description": "Tooth at the edge of the aperture/bridge.",
-  "expected_regime": "TRANSITION",
+  "configurations": [
+    "both",
+    "rotor",
+    "stator",
+    "vac"
+  ],
+  "description": "Tooth centered on the 60 deg reinforced 150 nm landing pad.",
+  "expected_regime": "ATTRACTIVE",
   "geometry": [
     {
       "W_slot": 0.35,
@@ -41,6 +47,7 @@
       "w_tooth": 0.02683333333333334
     }
   ],
+  "inclusion_exclusion_passes": 4,
   "material": "Gold",
   "nmax": 1,
   "num_sectors": 4,
@@ -69,20 +76,20 @@
       "target_suppression": 1e-50,
       "units": "d_eff_um: micrometres; T_run: normalized Wick-damping time"
     },
-    "generated_at_utc": "2026-10-12T22:31:19.823832+00:00",
+    "generated_at_utc": "2026-10-14T17:51:33.762912+00:00",
     "generator": "execution/generate_scoped_pilot_configs.py",
     "geometry_function": "execution.clutch_geometry_redesign.get_scoped_clutch_elements",
     "metrics_logger_available": true,
     "regime_note": "Expected regimes are pilot hypotheses, not simulation results."
   },
-  "resolution": 60,
+  "resolution": 80,
   "schema_version": 1,
   "suite_name": "Scoped Pilot Concentric Casimir Clutch",
   "t_landing_pad_um": 0.15,
   "t_membrane_um": 0.025,
   "task_id": 2,
-  "task_name": "Transition",
-  "theta_deg": 22.5,
+  "task_name": "Engaged",
+  "theta_deg": 45.0,
   "tooth_arc_deg": 15.0,
   "z_tip_nm": 15.0,
   "z_tip_um": 0.015

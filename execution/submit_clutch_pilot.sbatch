@@ -4,10 +4,10 @@
 #SBATCH --partition=general
 #SBATCH --mem=0
 #SBATCH --nodes=2
-#SBATCH --ntasks-per-node=18
-#SBATCH --cpus-per-task=7
+#SBATCH --ntasks-per-node=12
+#SBATCH --cpus-per-task=10
 #SBATCH --time=08:00:00
-#SBATCH --array=1-3%2
+#SBATCH --array=1-2
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu
 #SBATCH --exclude=nid0394
@@ -1333,14 +1333,14 @@ run_user_job() (
     module unload xalt 2>/dev/null || true
     export XALT_EXECUTABLE_TRACKING=no
     export PYTHONUNBUFFERED=1
-    export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-7}"
+    export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
     export PYTHONPATH="/N/project/gorengor_werewolf/FractalCasimir3D:${PYTHONPATH:-}"
 
     echo "Starting clutch pilot task $TASK_ID with $CONFIG_FILE on $(hostname)"
     echo "Python binary: $PYTHON_BIN"
 
     if command -v srun >/dev/null 2>&1 && [[ -n "${SLURM_JOB_ID:-}" ]]; then
-        srun --nodes=2 -n 36 --ntasks-per-node=18 -c 7 \
+        srun --nodes=2 -n 24 --ntasks-per-node=12 -c 10 \
             "$PYTHON_BIN" execution/run_scoped_clutch_meep.py \
             --config-file "$CONFIG_FILE" \
             --task-id "$TASK_ID" \
