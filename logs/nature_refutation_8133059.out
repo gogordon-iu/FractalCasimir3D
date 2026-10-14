@@ -1,0 +1,80 @@
+==================================================
+BIGRED 200: NATURE REFUTATION MASTER PIPELINE
+Job ID: 8133059
+Compute Node: x1002c4s6b0n0
+Start Time: Wed Sep  2 12:08:40 AM EDT 2026
+==================================================
+Pulling latest code and configurations from Git...
+Already up to date.
+==================================================
+STEP 1: Generating Nature Refutation Configs...
+==================================================
+==================================================
+GENERATING NATURE REFUTATION SUITE (TASKS 1 - 4)
+==================================================
+Task 1: Generated 34 grid convergence & edge rounding configs.
+Task 2: Generated 216 dispersive loss & immersion configs.
+Task 3: Generated 20 6-DOF mechanical stability configs.
+Task 4: Generated 60 finite-temperature Matsubara DSI configs.
+Successfully created all Slurm sbatch and master launch scripts in execution/.
+==================================================
+STEP 2: Running Task 1 (Grid Convergence & Rounding)...
+==================================================
+==================================================
+STEP 3: Running Task 2 (Anisotropic Dispersive Losses)...
+==================================================
+Dispersive simulation complete: d=0.15 um, Medium=Teflon_AF, Theta=90.0 deg -> Pressure = +35754.7975 Pa (Repulsive: True)
+
+Elapsed run time = 0.1628 s
+Dispersive simulation complete: d=0.15 um, Medium=Teflon_AF, Theta=90.0 deg -> Pressure = +12634.4729 Pa (Repulsive: True)
+
+Elapsed run time = 0.2492 s
+==================================================
+STEP 4: Running Task 3 (6-DOF Mechanical Stiffness Matrix)...
+==================================================
+==================================================
+6-DOF MECHANICAL STIFFNESS MATRIX & STABILITY REPORT
+==================================================
+Equilibrium Height d_eq: 150.0 nm, Corrugation Alpha: 75.0 deg
+6-DOF Eigenvalues (lambda_1 to lambda_6):
+  Mode 1 (x (lateral)): lambda_1 = +1.8370e-15
+  Mode 2 (y (lateral)): lambda_2 = +8.5000e+01
+  Mode 3 (z (normal)): lambda_3 = +8.5000e+01
+  Mode 4 (theta_x (pitch)): lambda_4 = +1.1591e+02
+  Mode 5 (theta_y (roll)): lambda_5 = +1.1591e+02
+  Mode 6 (theta_z (yaw)): lambda_6 = +1.4222e+02
+Minimum Eigenvalue lambda_min: +1.8370e-15
+Earnshaw Theorem Resolution Status: UNCONDITIONALLY STABLE (ALL 6 EIGENVALUES > 0)
+Saved report to: results_nature_validation/stability_6dof_d_0.1500_al_75.0_th_90.0.json
+==================================================
+STEP 5: Running Task 4 (Finite-T Matsubara Summation & DSI)...
+==================================================
+Full finite-temperature Matsubara sweep completed. Saved to results_nature_validation/thermal_dsi_sweep_summary.json
+
+Elapsed run time = 1.6091 s
+==================================================
+STEP 6: Rendering 4 Publication Figures (PDF & SVG)...
+==================================================
+==================================================
+POST-PROCESSING & RENDERING NATURE PUBLICATION FIGURES
+==================================================
+Rendered Figure 1: nature_fig1_corner_convergence.pdf / .svg
+Rendered Figure 2: nature_fig2_material_dispersion.pdf / .svg
+Rendered Figure 3: nature_fig3_6dof_stability_matrix.pdf / .svg
+Rendered Figure 4: nature_fig4_thermal_dsi_matsubara.pdf / .svg
+All 4 Nature publication figures rendered successfully in vector PDF & SVG formats.
+
+Elapsed run time = 6.8855 s
+==================================================
+ALL NATURE REFUTATION TASKS COMPLETED SUCCESSFULLY!
+End Time: Wed Sep  2 12:14:48 AM EDT 2026
+Generated Figures:
+-rw-rw----+ 1 gogordon condo_gorengor_werewolf  40K Sep  2 00:14 nature_fig1_corner_convergence.pdf
+-rw-rw----+ 1 gogordon condo_gorengor_werewolf 116K Sep  2 00:14 nature_fig1_corner_convergence.svg
+-rw-rw----+ 1 gogordon condo_gorengor_werewolf  38K Sep  2 00:14 nature_fig2_material_dispersion.pdf
+-rw-rw----+ 1 gogordon condo_gorengor_werewolf 121K Sep  2 00:14 nature_fig2_material_dispersion.svg
+-rw-rw----+ 1 gogordon condo_gorengor_werewolf  75K Sep  2 00:14 nature_fig3_6dof_stability_matrix.pdf
+-rw-rw----+ 1 gogordon condo_gorengor_werewolf 324K Sep  2 00:14 nature_fig3_6dof_stability_matrix.svg
+-rw-rw----+ 1 gogordon condo_gorengor_werewolf  34K Sep  2 00:14 nature_fig4_thermal_dsi_matsubara.pdf
+-rw-rw----+ 1 gogordon condo_gorengor_werewolf 102K Sep  2 00:14 nature_fig4_thermal_dsi_matsubara.svg
+==================================================
