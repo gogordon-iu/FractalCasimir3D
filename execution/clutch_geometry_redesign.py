@@ -43,7 +43,12 @@ class RadialInterval(TypedDict):
     r_outer: float
 
 
-class ClutchElement(RadialInterval):
+class _AxialOverrides(TypedDict, total=False):
+    z_tip: float | None
+    h_teeth: float | None
+
+
+class ClutchElement(RadialInterval, _AxialOverrides):
     r_center: float
     W_slot: float
     w_tooth: float
@@ -272,6 +277,12 @@ def _validated_elements(elements: Iterable[ClutchElement]) -> list[ClutchElement
             rel_tol=1e-10, abs_tol=1e-12,
         ):
             raise ValueError(f"elements[{index}] has an off-centre tooth.")
+        if "z_tip" in element and element["z_tip"] is not None:
+            values["z_tip"] = _finite(f"elements[{index}].z_tip", element["z_tip"])
+        if "h_teeth" in element and element["h_teeth"] is not None:
+            values["h_teeth"] = _positive(
+                f"elements[{index}].h_teeth", element["h_teeth"]
+            )
         result.append(ClutchElement(level=level, **values))  # type: ignore[typeddict-item]
     if not result:
         raise ValueError("elements must not be empty.")
@@ -474,6 +485,8 @@ def generate_redesigned_rotor_geometry(
     sector offset. Positive theta rotates counterclockwise around +z.
     Default teeth therefore span [7.5, 22.5] at theta=0 and [52.5, 67.5]
     at theta=45.
+
+    Non-None per-element z_tip and h_teeth override the axial defaults.
     """
     validated = _validated_elements(elements)
     height = _positive("H_teeth", H_teeth)
@@ -494,15 +507,18 @@ def generate_redesigned_rotor_geometry(
         centre = sector * pitch + offset + rotation
         start, end = math.radians(centre - arc / 2.0), math.radians(centre + arc / 2.0)
         for element in validated:
+            elem_tip = _finite("element z_tip", element.get("z_tip", tip))
+            elem_height = _positive("element h_teeth", element.get("h_teeth", height))
+            _finite("element z_tip + h_teeth", elem_tip + elem_height)
             geometry.append(mp.Prism(
                 vertices=generate_annular_sector_prism_vertices(
                     element["r_tooth_in"],
                     element["r_tooth_out"],
                     start,
                     end,
-                    z_base=tip,
+                    z_base=elem_tip,
                 ),
-                height=height,
+                height=elem_height,
                 material=material,
             ))
     return geometry

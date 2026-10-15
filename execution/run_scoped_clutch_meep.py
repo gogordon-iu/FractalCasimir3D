@@ -199,6 +199,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-walltime-hours", type=positive_float, default=7.5)
     parser.add_argument("--max-steps", type=nonnegative_integer, default=0)
     parser.add_argument("--no-cache", action="store_true")
+    parser.add_argument(
+        "--checkpoint-prefix", type=str, default="chk_moments_clutch_pilot_task"
+    )
     parser.add_argument("--resolution", type=positive_integer)
     parser.add_argument("--bem-n-xi", type=positive_integer, default=24)
     parser.add_argument("--bem-n-r", type=positive_integer, default=3)
@@ -249,6 +252,17 @@ def geometry_elements(raw: Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
             item[key] = finite_number(
                 item[key], f"geometry[{index}].{key}", positive=key != "r_inner"
             )
+        for key in ("z_tip", "h_teeth"):
+            if key in item:
+                if item[key] is None:
+                    # A null optional override uses the global value.
+                    item.pop(key)
+                else:
+                    item[key] = finite_number(
+                        item[key],
+                        f"geometry[{index}].{key}",
+                        positive=key == "h_teeth",
+                    )
         if item["r_inner"] < 0 or item["r_inner"] >= item["r_outer"]:
             raise ValueError(f"Invalid inner/outer radii in geometry element {index}")
         if item["r_tooth_in"] >= item["r_tooth_out"]:
@@ -356,8 +370,17 @@ def parse_parameters(
                 "For negative z_tip_um, z_pad_top_um must be below both "
                 "z_tip_um and -t_membrane_um"
             )
+        for index, element in enumerate(elements):
+            if element.get("z_tip", values["z_tip"]) <= z_pad_top:
+                raise ValueError(
+                    f"geometry[{index}].z_tip must be strictly above z_pad_top_um"
+                )
         d_eff = min(
             abs(values["z_tip"] - z_pad_top),
+            min(
+                abs(element.get("z_tip", values["z_tip"]) - z_pad_top)
+                for element in elements
+            ),
             min((element["W_slot"] - element["w_tooth"]) / 2.0 for element in elements),
         )
         d_eff = finite_number(d_eff, "d_eff", positive=True)
@@ -471,7 +494,11 @@ def meep_solver_parameters(
 def cell_dimensions(parameters: Parameters) -> tuple[float, float, float]:
     buffer = 0.15
     margin = 2.0 / parameters.resolution
-    z_top = parameters.z_tip + parameters.h_teeth
+    z_top = max(
+        element.get("z_tip", parameters.z_tip)
+        + element.get("h_teeth", parameters.h_teeth)
+        for element in parameters.elements
+    )
     stator_depth = (
         abs(parameters.z_pad_top) + parameters.t_landing_pad
         if parameters.z_pad_top is not None
@@ -548,6 +575,10 @@ def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
             raise ValueError("The landing pad must lie below the rotor tip")
         faces: list[Face] = []
         for idx, element in enumerate(parameters.elements):
+            el_z_tip = float(element.get("z_tip", parameters.z_tip))
+            el_h_teeth = float(element.get("h_teeth", parameters.h_teeth))
+            if pad_top >= el_z_tip:
+                raise ValueError(f"The landing pad must lie below tooth {idx}'s rotor tip")
             clearance = (element["W_slot"] - element["w_tooth"]) / 2.0
             if clearance <= 0:
                 raise ValueError(f"Tooth {idx} requires W_slot > w_tooth")
@@ -568,11 +599,11 @@ def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
                 )
             faces.extend(
                 box_faces(
-                    [x_min, -y_max, 0.5 * (parameters.z_tip + pad_top)],
+                    [x_min, -y_max, 0.5 * (el_z_tip + pad_top)],
                     [
                         x_max,
                         y_max,
-                        parameters.z_tip + parameters.h_teeth + 2.0 / parameters.resolution,
+                        el_z_tip + el_h_teeth + 2.0 / parameters.resolution,
                     ],
                     prefix=f"t{idx}_",
                 )
@@ -657,11 +688,12 @@ def load_merged_checkpoints(
     fingerprint: str,
     expected_keys: set[str],
     no_cache: bool,
+    checkpoint_prefix: str = "chk_moments_clutch_pilot_task",
 ) -> dict[str, float]:
     """Merge canonical and shard checkpoints when no shard is writing them."""
     if no_cache:
         return {}
-    prefix = f"chk_moments_clutch_pilot_task_{task_id:03d}_{configuration}"
+    prefix = f"{checkpoint_prefix}_{task_id:03d}_{configuration}"
     paths = [checkpoint_directory / f"{prefix}.json"]
     paths.extend(sorted(checkpoint_directory.glob(f"{prefix}_shard_*.json")))
     moments: dict[str, float] = {}
@@ -1213,6 +1245,9 @@ def run_numpy_micro_probe(
 def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> int:
     if args.config == "self":
         args.config = "rotor"
+    checkpoint_prefix = getattr(
+        args, "checkpoint_prefix", "chk_moments_clutch_pilot_task"
+    )
     # Delay scientific imports until after argparse and basic JSON parsing.
     repository_root = Path(__file__).resolve().parents[1]
     if str(repository_root) not in sys.path:
@@ -1327,14 +1362,14 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
     moments_per_config = 6 * len(faces) * parameters.nmax**2
     checkpoints = {
         name: checkpoint_directory
-        / f"chk_moments_clutch_pilot_task_{args.task_id:03d}_{name}.json"
+        / f"{checkpoint_prefix}_{args.task_id:03d}_{name}.json"
         for name in ALL_CONFIGURATIONS
     }
     sharded = parallel.shard_count > 1
     shard_checkpoints = {
         name: checkpoint_directory
         / (
-            f"chk_moments_clutch_pilot_task_{args.task_id:03d}_{name}"
+            f"{checkpoint_prefix}_{args.task_id:03d}_{name}"
             f"_shard_{parallel.shard_rank:03d}.json"
         )
         for name in ALL_CONFIGURATIONS
@@ -1372,9 +1407,7 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
         # Only the master writes canonical files or removes old shard files.
         # Shards cannot start writing until the initialization handshake ends.
         if parallel.master and args.no_cache:
-            prefix = (
-                f"chk_moments_clutch_pilot_task_{args.task_id:03d}_{configuration}"
-            )
+            prefix = f"{checkpoint_prefix}_{args.task_id:03d}_{configuration}"
             for path in checkpoint_directory.glob(f"{prefix}_shard_*.json"):
                 path.unlink()
         values = load_merged_checkpoints(
@@ -1384,6 +1417,7 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
             fingerprint,
             expected_keys,
             args.no_cache,
+            checkpoint_prefix=checkpoint_prefix,
         )
         if parallel.master:
             atomic_json(
@@ -1440,6 +1474,7 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
                     args.config,
                     args.no_cache,
                     parallel.shard_count,
+                    checkpoint_prefix,
                 ]
             ).encode("utf-8")
         ).hexdigest()[:24]
@@ -1538,6 +1573,7 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
                 fingerprint,
                 expected_keys,
                 no_cache=False,
+                checkpoint_prefix=checkpoint_prefix,
             )
             atomic_json(checkpoints[name], checkpoint_payload(name, moments[name]))
 

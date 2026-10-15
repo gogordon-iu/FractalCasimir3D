@@ -12,6 +12,9 @@ import hashlib
 import datetime
 import re
 import shutil
+import tempfile
+import time
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -21,6 +24,9 @@ RESULTS_DIR = Path("results")
 DEFAULT_METRICS_PATH = RESULTS_DIR / "provenance_metrics.json"
 DEFAULT_MACROS_PATH = RESULTS_DIR / "macros_results.tex"
 DEFAULT_MAP_PATH = Path("manuscript_provenance_map.json")
+
+_ACTIVE_SOLVER_NAME: Optional[str] = None
+_ACTIVE_SOLVER_PARAMS: Optional[Dict[str, Any]] = None
 
 DIGIT_WORDS = {
     "0": "Zero",
@@ -34,6 +40,74 @@ DIGIT_WORDS = {
     "8": "Eight",
     "9": "Nine",
 }
+
+
+def _replace_with_retry(tmp_path: Path, path: Path) -> None:
+    for attempt in range(20):
+        try:
+            os.replace(tmp_path, path)
+            return
+        except OSError:
+            if attempt == 19:
+                raise
+            time.sleep(0.02)
+
+
+def _atomic_write_json(path: Path, payload: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as f:
+            tmp_path = Path(f.name)
+            json.dump(payload, f, indent=2)
+        _replace_with_retry(tmp_path, path)
+    finally:
+        if tmp_path is not None:
+            try:
+                tmp_path.unlink()
+            except OSError:
+                pass
+
+
+def _atomic_write_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as f:
+            tmp_path = Path(f.name)
+            f.write(text)
+        _replace_with_retry(tmp_path, path)
+    finally:
+        if tmp_path is not None:
+            try:
+                tmp_path.unlink()
+            except OSError:
+                pass
+
+
+def _read_json_with_retry(path: Path) -> Any:
+    for attempt in range(20):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (OSError, json.JSONDecodeError):
+            if attempt == 19:
+                raise
+            time.sleep(0.02)
 
 
 def _get_caller_info(skip_frames: int = 2) -> Dict[str, Any]:
@@ -63,11 +137,7 @@ def _compute_sha256(file_path: str) -> str:
 def _load_or_init_manifest(path: Path) -> Dict[str, Any]:
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
+        return _read_json_with_retry(path)
     return {
         "run_metadata": {
             "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -80,11 +150,114 @@ def _load_or_init_manifest(path: Path) -> Dict[str, Any]:
     }
 
 
-def log_step(name: str, data: Any, metrics_path: str = str(DEFAULT_METRICS_PATH)) -> None:
+def _resolve_solver_provenance(
+    solver_name: Optional[str] = None,
+    solver_parameters: Optional[Dict[str, Any]] = None,
+    data: Any = None,
+    existing_manifest: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Resolve solver provenance in explicit, data, active, environment, manifest order."""
+    data_mapping = data if isinstance(data, Mapping) else {}
+    metadata = {}
+    if isinstance(existing_manifest, Mapping):
+        candidate = existing_manifest.get("run_metadata", {})
+        if isinstance(candidate, Mapping):
+            metadata = candidate
+
+    name = next(
+        (
+            candidate
+            for candidate in (
+                solver_name,
+                data_mapping.get("solver"),
+                data_mapping.get("solver_name"),
+                _ACTIVE_SOLVER_NAME,
+                os.environ.get("CASIMIR_SOLVER"),
+                metadata.get("solver"),
+            )
+            if isinstance(candidate, str) and candidate.strip()
+        ),
+        "unspecified",
+    )
+
+    parameters = next(
+        (
+            dict(candidate)
+            for candidate in (
+                solver_parameters,
+                data_mapping.get("solver_parameters"),
+                data_mapping.get("parameters"),
+                _ACTIVE_SOLVER_PARAMS,
+            )
+            if isinstance(candidate, Mapping)
+        ),
+        None,
+    )
+    if parameters is None:
+        env_parameters = os.environ.get("CASIMIR_SOLVER_PARAMS")
+        if env_parameters:
+            try:
+                parsed_parameters = json.loads(env_parameters)
+            except (ValueError, TypeError):
+                parsed_parameters = None
+            if isinstance(parsed_parameters, Mapping):
+                parameters = dict(parsed_parameters)
+
+    if parameters is None:
+        existing_parameters = metadata.get("solver_parameters")
+        parameters = dict(existing_parameters) if isinstance(existing_parameters, Mapping) else {}
+
+    return {"solver": name, "solver_parameters": parameters}
+
+
+def set_solver_provenance(
+    solver_name: str,
+    solver_parameters: Optional[Dict[str, Any]] = None,
+    metrics_path: str = str(DEFAULT_METRICS_PATH),
+) -> Dict[str, Any]:
+    """Activate a solver and record its configuration and run in the manifest."""
+    global _ACTIVE_SOLVER_NAME, _ACTIVE_SOLVER_PARAMS
+
+    if not isinstance(solver_name, str) or not solver_name.strip():
+        raise ValueError("solver_name must be a non-empty string")
+    if solver_parameters is not None and not isinstance(solver_parameters, Mapping):
+        raise TypeError("solver_parameters must be a mapping or None")
+
+    parameters = dict(solver_parameters) if solver_parameters is not None else {}
+    path = Path(metrics_path)
+    manifest = _load_or_init_manifest(path)
+    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    metadata = manifest["run_metadata"]
+    metadata["solver"] = solver_name
+    metadata["solver_parameters"] = parameters
+    metadata.setdefault("solver_runs", []).append({
+        "solver": solver_name,
+        "solver_parameters": dict(parameters),
+        "timestamp": timestamp,
+    })
+    metadata["updated_at"] = timestamp
+
+    _atomic_write_json(path, manifest)
+
+    _ACTIVE_SOLVER_NAME = solver_name
+    _ACTIVE_SOLVER_PARAMS = dict(parameters)
+    return manifest
+
+
+def log_step(
+    name: str,
+    data: Any,
+    metrics_path: str = str(DEFAULT_METRICS_PATH),
+    solver_name: Optional[str] = None,
+    solver_parameters: Optional[Dict[str, Any]] = None,
+) -> None:
     """Records intermediate pipeline state transitions, splits, or matrix reductions."""
     path = Path(metrics_path)
     manifest = _load_or_init_manifest(path)
     caller = _get_caller_info(skip_frames=1)
+    solver = _resolve_solver_provenance(
+        solver_name, solver_parameters, data=data, existing_manifest=manifest
+    )
 
     manifest["intermediate_steps"][name] = {
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -92,11 +265,13 @@ def log_step(name: str, data: Any, metrics_path: str = str(DEFAULT_METRICS_PATH)
         "source_function": caller["source_function"],
         "line_number": caller["line_number"],
         "data_summary": data,
+        **solver,
     }
+    if solver["solver"] != "unspecified":
+        manifest["run_metadata"].update(solver)
     manifest["run_metadata"]["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(manifest, f, indent=2)
+    _atomic_write_json(path, manifest)
 
 
 def log_metric(
@@ -104,24 +279,33 @@ def log_metric(
     value: Any,
     step_id: Optional[str] = None,
     metrics_path: str = str(DEFAULT_METRICS_PATH),
+    solver_name: Optional[str] = None,
+    solver_parameters: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Records final metric with rigorous caller lineage."""
     path = Path(metrics_path)
     manifest = _load_or_init_manifest(path)
     caller = _get_caller_info(skip_frames=1)
+    resolved_step_id = step_id or "final_evaluation"
+    step = manifest.get("intermediate_steps", {}).get(resolved_step_id)
+    solver = _resolve_solver_provenance(
+        solver_name, solver_parameters, data=step, existing_manifest=manifest
+    )
 
     manifest["metrics"][key] = {
         "value": value,
         "source_file": caller["source_file"],
         "source_function": caller["source_function"],
         "line_number": caller["line_number"],
-        "step_id": step_id or "final_evaluation",
+        "step_id": resolved_step_id,
         "recorded_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        **solver,
     }
+    if solver["solver"] != "unspecified":
+        manifest["run_metadata"].update(solver)
     manifest["run_metadata"]["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(manifest, f, indent=2)
+    _atomic_write_json(path, manifest)
 
 
 def _sanitize_macro_name(key: str) -> str:
@@ -159,8 +343,7 @@ def export_macros(
     if not in_path.exists():
         raise FileNotFoundError(f"[ERROR: RUN_DATA_MISSING] Cannot find metrics manifest at {metrics_path}")
 
-    with open(in_path, "r", encoding="utf-8") as f:
-        manifest = json.load(f)
+    manifest = _read_json_with_retry(in_path)
 
     metrics = manifest.get("metrics", {})
     lines = [
@@ -184,8 +367,7 @@ def export_macros(
                 formatted_val = str(val)
             lines.append(f"\\newcommand{{\\{macro_name}}}{{{formatted_val}}}")
 
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines) + "\n")
+    _atomic_write_text(out_path, "\n".join(lines) + "\n")
 
 
 def save_plot_provenance(
@@ -193,12 +375,36 @@ def save_plot_provenance(
     data_source: str,
     columns_used: List[str],
     sidecar_suffix: str = ".provenance.json",
+    solver_name: Optional[str] = None,
+    solver_parameters: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Generates an immutable sidecar JSON for a generated figure."""
     fig = Path(figure_path)
     sidecar_path = fig.parent / f"{fig.stem}{sidecar_suffix}"
     caller = _get_caller_info(skip_frames=1)
 
+    source_data = {}
+    try:
+        with open(data_source, "r", encoding="utf-8") as f:
+            loaded_data = json.load(f)
+        if isinstance(loaded_data, Mapping):
+            source_data = loaded_data
+    except (OSError, ValueError, UnicodeError):
+        pass
+
+    source_solver_data = dict(source_data)
+    source_metadata = source_data.get("run_metadata")
+    if isinstance(source_metadata, Mapping):
+        for field in ("solver", "solver_name", "solver_parameters", "parameters"):
+            if field not in source_solver_data and field in source_metadata:
+                source_solver_data[field] = source_metadata[field]
+
+    solver = _resolve_solver_provenance(
+        solver_name,
+        solver_parameters,
+        data=source_solver_data,
+        existing_manifest=source_data,
+    )
     sidecar_data = {
         "figure_file": str(fig).replace("\\", "/"),
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -212,11 +418,10 @@ def save_plot_provenance(
             "source_function": caller["source_function"],
             "line_number": caller["line_number"],
         },
+        **solver,
     }
 
-    sidecar_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(sidecar_path, "w", encoding="utf-8") as f:
-        json.dump(sidecar_data, f, indent=2)
+    _atomic_write_json(sidecar_path, sidecar_data)
 
     return str(sidecar_path)
 
@@ -253,6 +458,8 @@ def generate_manuscript_map(
         "Frontier",
         "Scaling",
         "AtomicCqed",
+        "ClutchPilot",
+        "SolverComparison",
     )
 
     for macro_name, metric_key in sorted(metric_macro_to_key.items()):
