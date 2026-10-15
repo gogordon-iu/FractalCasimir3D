@@ -16,9 +16,7 @@
 #SBATCH -e logs/%x_%A_%a.err
 
 # BIGRED200_TELEMETRY_HARNESS_V1
-export http_proxy=http://proxy.uits.iu.edu:3128
-export https_proxy=http://proxy.uits.iu.edu:3128
-export no_proxy=localhost,127.0.0.1,*.iu.edu,*.uits.iu.edu
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
 # SIGKILL/node loss cannot be trapped; publication is best-effort.
 # Logs must exist BEFORE sbatch; the generator creates them locally.
 
@@ -734,7 +732,7 @@ import time
 CONFIG = json.loads('{"auto_resubmit": "0", "figures_dir": "figures", "git_remote": "origin", "logs_dir": "logs", "results_dir": "results_rotational_z_eff_meep", "strict_telemetry": "0"}')
 BLOCKED_SUFFIXES = (".pt", ".ckpt", ".bin", ".h5", ".safetensors", ".tar")
 MAX_GIT_FILE_BYTES = 50 * 1024 * 1024
-GIT_TIMEOUT_SECONDS = 45
+GIT_TIMEOUT_SECONDS = 180
 SYNC_FAILURE_NOTICE = (
     "NOTICE: Workload completed successfully (exit 0), but remote Git sync "
     "failed. All results and logs are safely preserved on cluster disk."
@@ -935,7 +933,7 @@ def publish(paths, message):
         raise ValueError("Refusing symlink telemetry lock: " + str(lock_path))
     # Keep the lock file in place so all tasks lock the same inode.
     with lock_path.open("a") as lock_stream:
-        deadline = time.monotonic() + 120
+        deadline = time.monotonic() + 300
         while True:
             try:
                 fcntl.flock(lock_stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
