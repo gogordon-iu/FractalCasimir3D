@@ -1307,11 +1307,18 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
     ).hexdigest()
     checkpoint_directory = Path(".tmp")
     result_directory = Path("results_clutch_pilot")
-    progress_path = result_directory / f"progress_task_{args.task_id:03d}.json"
-    final_path = result_directory / (
-        f"task_{args.task_id:03d}_N{parameters.n_fractal}"
-        f"_th_{int(parameters.theta_deg)}deg.json"
-    )
+    checkpoint_directory.mkdir(parents=True, exist_ok=True)
+    result_directory.mkdir(parents=True, exist_ok=True)
+    if args.output_file is not None:
+        final_path = args.output_file
+        final_path.parent.mkdir(parents=True, exist_ok=True)
+        progress_path = final_path.parent / f"progress_task_{args.task_id:03d}.json"
+    else:
+        progress_path = result_directory / f"progress_task_{args.task_id:03d}.json"
+        final_path = result_directory / (
+            f"task_{args.task_id:03d}_N{parameters.n_fractal}"
+            f"_th_{int(parameters.theta_deg)}deg.json"
+        )
     configurations = (
         ALL_CONFIGURATIONS
         if args.config == "all"

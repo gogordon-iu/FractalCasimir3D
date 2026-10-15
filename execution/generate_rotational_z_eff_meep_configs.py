@@ -285,7 +285,7 @@ def make_candidate_configs(candidate: Candidate) -> list[dict[str, Any]]:
         "z_pad_top_um": Z_PAD_TOP_UM,
         "t_membrane_um": 0.025,
         "t_landing_pad_um": 0.150,
-        "H_teeth_um": 0.250,
+        "H_teeth_um": 0.100,
         "num_sectors": 4,
         "aperture_arc_deg": 36.0,
         "bridge_arc_deg": 54.0,
