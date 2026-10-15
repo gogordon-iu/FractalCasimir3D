@@ -358,22 +358,41 @@ def generate_redesigned_stator_geometry(
     num_sectors: int = 4,
     aperture_arc_deg: float = 30.0,
     bridge_arc_deg: float = 60.0,
+    z_pad_top: float | None = None,
+    theta_stator_deg: float = 0.0,
 ) -> list[Any]:
     """Return Meep objects for a square membrane, bridge pads, and slots.
 
-    The membrane occupies [-t_membrane, 0]. Bridge pads occupy
-    [-t_landing_pad, -t_membrane]; t_landing_pad is the total depth below
-    z=0, not an additional thickness. Slots occupy aperture sectors only
-    and overhang the membrane by 0.002 um at both faces.
+    The membrane occupies [-t_membrane, 0]. With z_pad_top=None, bridge
+    pads occupy [-t_landing_pad, -t_membrane]; t_landing_pad is the total
+    depth below z=0, not an additional thickness.
 
+    With z_pad_top specified below the membrane, t_landing_pad is the pad
+    thickness below z_pad_top. Bridge material extends from the pad bottom
+    to the membrane; bridge slots are open above z_pad_top. Aperture slots
+    overhang the membrane by 0.002 um at both faces in either mode.
+
+    Positive theta_stator_deg rotates sectors counterclockwise around +z.
     Void objects are appended last so they override membrane material.
     """
     validated = _validated_elements(elements)
     side = _positive("L_plate", L_plate)
     membrane = _positive("t_membrane", t_membrane)
     pad = _positive("t_landing_pad", t_landing_pad)
-    if pad <= membrane:
-        raise ValueError("t_landing_pad must exceed t_membrane.")
+    if z_pad_top is None:
+        if pad <= membrane:
+            raise ValueError("t_landing_pad must exceed t_membrane.")
+        pad_bottom = -pad
+        pad_top = None
+    else:
+        pad_top = _finite("z_pad_top", z_pad_top)
+        if pad_top >= -membrane:
+            raise ValueError("z_pad_top must lie below -t_membrane.")
+        pad_bottom = _finite("z_pad_bot", pad_top - pad)
+        if pad_bottom >= pad_top:
+            raise ValueError("Landing pad thickness cannot be represented numerically.")
+    bridge_height = _positive("bridge height", -membrane - pad_bottom)
+    rotation = _finite("theta_stator_deg", theta_stator_deg) % 360.0
     sectors = _integer("num_sectors", num_sectors)
     aperture = _positive("aperture_arc_deg", aperture_arc_deg)
     bridge = _positive("bridge_arc_deg", bridge_arc_deg)
@@ -383,6 +402,11 @@ def generate_redesigned_stator_geometry(
     if max(item["r_outer"] for item in validated) > side / 2.0:
         raise ValueError("L_plate must enclose every complete radial slot.")
 
+    overhang = 0.002
+    bridge_void_height = (
+        _positive("bridge void height", -pad_top + overhang)
+        if pad_top is not None else None
+    )
     mp = _meep()
     metal = mp.metal if plate_material is None else plate_material
     void = mp.air if void_material is None else void_material
@@ -394,20 +418,19 @@ def generate_redesigned_stator_geometry(
         )
     ]
     for sector in range(sectors):
-        start = sector * pitch + aperture
-        end = (sector + 1) * pitch
+        start = sector * pitch + aperture + rotation
+        end = (sector + 1) * pitch + rotation
         # Without an explicit centre, Meep extrudes from the vertex plane
         # along +z; specifying centre=(0,0,z) would move off-axis sectors.
         geometry.append(mp.Prism(
-            vertices=_square_sector_vertices(side, start, end, -pad),
-            height=pad - membrane,
+            vertices=_square_sector_vertices(side, start, end, pad_bottom),
+            height=bridge_height,
             material=metal,
         ))
 
-    overhang = 0.002
     for sector in range(sectors):
-        start = math.radians(sector * pitch)
-        end = math.radians(sector * pitch + aperture)
+        start = math.radians(sector * pitch + rotation)
+        end = math.radians(sector * pitch + aperture + rotation)
         for element in validated:
             geometry.append(mp.Prism(
                 vertices=generate_annular_sector_prism_vertices(
@@ -420,6 +443,18 @@ def generate_redesigned_stator_geometry(
                 height=membrane + 2.0 * overhang,
                 material=void,
             ))
+            if pad_top is not None:
+                geometry.append(mp.Prism(
+                    vertices=generate_annular_sector_prism_vertices(
+                        element["r_inner"],
+                        element["r_outer"],
+                        end,
+                        math.radians((sector + 1) * pitch + rotation),
+                        z_base=pad_top,
+                    ),
+                    height=bridge_void_height,
+                    material=void,
+                ))
     return geometry
 
 
@@ -431,12 +466,14 @@ def generate_redesigned_rotor_geometry(
     num_sectors: int = 4,
     tooth_arc_deg: float = 15.0,
     theta_rotor_deg: float = 0.0,
+    tooth_center_offset_deg: float = 15.0,
 ) -> list[Any]:
     """Return teeth only; no unspecified rotor backing plate is added.
 
-    Each tooth is initially centred at 15 degrees plus its sector offset.
-    Positive theta rotates counterclockwise around +z. Default teeth
-    therefore span [7.5, 22.5] at theta=0 and [52.5, 67.5] at theta=45.
+    Each tooth is initially centred at tooth_center_offset_deg plus its
+    sector offset. Positive theta rotates counterclockwise around +z.
+    Default teeth therefore span [7.5, 22.5] at theta=0 and [52.5, 67.5]
+    at theta=45.
     """
     validated = _validated_elements(elements)
     height = _positive("H_teeth", H_teeth)
@@ -445,6 +482,7 @@ def generate_redesigned_rotor_geometry(
     sectors = _integer("num_sectors", num_sectors)
     arc = _positive("tooth_arc_deg", tooth_arc_deg)
     rotation = _finite("theta_rotor_deg", theta_rotor_deg) % 360.0
+    offset = _finite("tooth_center_offset_deg", tooth_center_offset_deg) % 360.0
     pitch = 360.0 / sectors
     if arc >= pitch:
         raise ValueError("tooth_arc_deg must be smaller than the sector pitch.")
@@ -453,7 +491,7 @@ def generate_redesigned_rotor_geometry(
     material = mp.metal if rotor_material is None else rotor_material
     geometry: list[Any] = []
     for sector in range(sectors):
-        centre = sector * pitch + 15.0 + rotation
+        centre = sector * pitch + offset + rotation
         start, end = math.radians(centre - arc / 2.0), math.radians(centre + arc / 2.0)
         for element in validated:
             geometry.append(mp.Prism(
@@ -478,6 +516,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--w1-ratio", type=float, default=0.23)
     parser.add_argument("--min-tooth-w", type=float, default=0.020)
     parser.add_argument("--z-tip", type=float, default=0.015)
+    parser.add_argument(
+        "--z-pad-top", type=float, default=None,
+        help="Recessed pad top; defaults to -0.115 um for a negative z_tip.",
+    )
     parser.add_argument("--h-teeth", type=float, default=0.250)
     parser.add_argument("--target-suppression", type=float, default=1e-50)
     parser.add_argument("--safety-factor", type=float, default=1.5)
@@ -485,7 +527,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--max-ceil", type=float, default=12.0)
     parser.add_argument(
         "--d-eff-um", type=float, nargs="+", default=None,
-        help="Explicit effective gaps; default verifies z_tip and radial tooth gaps.",
+        help="Explicit effective gaps; default verifies axial and radial tooth gaps.",
     )
     parser.add_argument(
         "--build-geometry", action="store_true",
@@ -498,11 +540,29 @@ def main(argv: Sequence[str] | None = None) -> int:
         elements = get_scoped_clutch_elements(
             args.N, args.r_min, args.r_max, args.w1_ratio, args.min_tooth_w
         )
-        tip = _positive("z_tip for verification", args.z_tip)
+        tip = _finite("z_tip for verification", args.z_tip)
+        pad_top = args.z_pad_top
+        if pad_top is None and tip < 0.0:
+            pad_top = -0.115
+        if pad_top is not None:
+            pad_top = _finite("z_pad_top", pad_top)
+            if pad_top >= -0.025:
+                raise ValueError("z_pad_top must lie below -t_membrane (-0.025 um).")
+        axial_gap = _positive(
+            "effective axial gap",
+            abs(tip - pad_top) if tip < 0.0 else tip,
+        )
         height = _positive("h_teeth", args.h_teeth)
         _finite("tooth top", tip + height)
         print(f"Cantor clutch verification: N={args.N}; distances in um")
-        print("Membrane z=[-0.025, 0]; bridge reinforcement z=[-0.150, -0.025]")
+        if pad_top is None:
+            print("Membrane z=[-0.025, 0]; bridge reinforcement z=[-0.150, -0.025]")
+        else:
+            print(
+                f"Membrane z=[-0.025, 0]; bridge reinforcement "
+                f"z=[{pad_top - 0.150:.9g}, -0.025]; "
+                f"recessed landing pad top z={pad_top:.9g}"
+            )
         print(f"Teeth z=[{tip:.9g}, {tip + height:.9g}]")
         print("Clearances below are arc lengths at the stated radii, not chords.")
 
@@ -547,7 +607,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 for index, gap in enumerate(args.d_eff_um)
             ]
         else:
-            cases = [("axial tip gap", tip)]
+            cases = [("axial tip gap", axial_gap)]
             cases.extend(
                 (
                     f"ring {index + 1} radial gap",
@@ -569,7 +629,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(json.dumps(diagnostics, indent=2, sort_keys=True, allow_nan=False))
 
         if args.build_geometry:
-            stator = generate_redesigned_stator_geometry(elements, args.plate_size)
+            stator = generate_redesigned_stator_geometry(
+                elements, args.plate_size, z_pad_top=pad_top
+            )
             for rotation in (0.0, 45.0):
                 rotor = generate_redesigned_rotor_geometry(
                     elements,

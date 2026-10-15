@@ -8,9 +8,10 @@ alias ``self``) includes only the rotor; ``stator`` includes only the stator;
 ``vac`` includes neither. ``all`` runs all four configurations and computes
 F_both - F_rotor - F_stator + F_vac.
 
-Each face uses nmax cosine modes in each tangential direction, so there are
-36 * nmax**2 moments per configuration. --max-steps produces a deliberately
-time-truncated diagnostic result, not a converged force.
+Each face uses nmax cosine modes in each tangential direction, with six
+polarizations per mode. --max-steps produces a deliberately time-truncated
+diagnostic result, not a converged force. When Meep is unavailable,
+--max-steps runs a NumPy 3-D Yee-grid micro-probe instead.
 
 Run from the repository root, or invoke this file directly.
 """
@@ -75,10 +76,13 @@ class Parameters:
     plasma_frequency: float
     epsilon_inf: float
     force_complex_fields: bool = True
+    z_pad_top: float | None = None
+    d_eff: float = 0.015
+    stress_box_mode: str = "legacy"
 
     @property
     def sigma(self) -> float:
-        return 0.5 / max(0.010, self.z_tip)
+        return 0.5 / max(0.010, self.d_eff)
 
 
 @dataclass(frozen=True)
@@ -174,7 +178,18 @@ def positive_float(value: str) -> float:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config-file", required=True, type=Path)
+    rotational_config = Path("sweep_configs_rotational_z_eff_meep/config_001.json")
+    parser.add_argument(
+        "--config-file",
+        required=False,
+        type=Path,
+        default=(
+            rotational_config
+            if rotational_config.exists()
+            else Path("sweep_configs_clutch_pilot/config_001.json")
+        ),
+    )
+    parser.add_argument("--solver", choices=("meep", "bem", "scuff"), default="meep")
     parser.add_argument("--task-id", type=positive_integer, default=1)
     parser.add_argument(
         "--config",
@@ -185,6 +200,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--max-steps", type=nonnegative_integer, default=0)
     parser.add_argument("--no-cache", action="store_true")
     parser.add_argument("--resolution", type=positive_integer)
+    parser.add_argument("--bem-n-xi", type=positive_integer, default=24)
+    parser.add_argument("--bem-n-r", type=positive_integer, default=3)
+    parser.add_argument("--bem-n-phi-tooth", type=positive_integer, default=4)
+    parser.add_argument("--bem-n-phi-bridge", type=positive_integer, default=4)
+    parser.add_argument("--bem-n-z", type=positive_integer, default=2)
+    parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
+    parser.add_argument("--output-file", type=Path, default=None)
     return parser
 
 
@@ -249,6 +271,7 @@ def invoke_dynamic_trun(
         "L_domain_um": "L_domain",
         "L_plate": "L_domain",
         "z_tip_um": "z_tip",
+        "z_pad_top_um": "z_pad_top",
         "H_teeth_um": "H_teeth",
         "t_membrane_um": "t_membrane",
         "t_landing_pad_um": "t_landing_pad",
@@ -314,9 +337,40 @@ def parse_parameters(
         "t_membrane": finite_number(get("t_membrane_um", 0.025), "t_membrane_um", positive=True),
         "t_landing_pad": finite_number(get("t_landing_pad_um", 0.150), "t_landing_pad_um", positive=True),
         "H_teeth": finite_number(get("H_teeth_um", 0.250), "H_teeth_um", positive=True),
-        "z_tip": finite_number(get("z_tip_um", 0.015), "z_tip_um", positive=True),
+        "z_tip": finite_number(get("z_tip_um", 0.015), "z_tip_um"),
         "L_domain": finite_number(get("L_domain_um", 3.0), "L_domain_um", positive=True),
     }
+    if values["z_tip"] == 0:
+        raise ValueError("z_tip_um must be nonzero")
+    z_pad_value = get("z_pad_top_um", None)
+    z_pad_top = (
+        finite_number(z_pad_value, "z_pad_top_um")
+        if z_pad_value is not None
+        else (-0.115 if values["z_tip"] < 0 else None)
+    )
+    if values["z_tip"] < 0:
+        if z_pad_top is None or not (
+            z_pad_top < values["z_tip"] and z_pad_top < -values["t_membrane"]
+        ):
+            raise ValueError(
+                "For negative z_tip_um, z_pad_top_um must be below both "
+                "z_tip_um and -t_membrane_um"
+            )
+        d_eff = min(
+            abs(values["z_tip"] - z_pad_top),
+            min((element["W_slot"] - element["w_tooth"]) / 2.0 for element in elements),
+        )
+        d_eff = finite_number(d_eff, "d_eff", positive=True)
+    else:
+        d_eff = max(0.010, values["z_tip"])
+    stress_box_mode = get(
+        "stress_box_mode",
+        "per_tooth_rotor_frame" if values["z_tip"] < 0 else "legacy",
+    )
+    if not isinstance(stress_box_mode, str) or stress_box_mode not in (
+        "legacy", "per_tooth_rotor_frame"
+    ):
+        raise ValueError("stress_box_mode must be 'legacy' or 'per_tooth_rotor_frame'")
     if any(values[name] > 360 for name in ("aperture_arc_deg", "bridge_arc_deg", "tooth_arc_deg")):
         raise ValueError("Angular spans must not exceed 360 degrees")
     num_sectors = integer_value(get("num_sectors", 4), "num_sectors")
@@ -336,8 +390,10 @@ def parse_parameters(
         theta_deg=theta,
         num_sectors=num_sectors,
         nmax=nmax,
-        sigma=0.5 / max(0.010, values["z_tip"]),
-        d_eff=max(0.010, values["z_tip"]),
+        z_pad_top=z_pad_top,
+        stress_box_mode=stress_box_mode,
+        sigma=0.5 / max(0.010, d_eff),
+        d_eff=d_eff,
         dt=courant / resolution,
     )
     t_value = get("T_run", None)
@@ -380,15 +436,47 @@ def parse_parameters(
         ),
         epsilon_inf=finite_number(get("epsilon_inf", 1.0), "epsilon_inf", positive=True),
         force_complex_fields=force_complex_fields,
+        z_pad_top=z_pad_top,
+        d_eff=d_eff,
+        stress_box_mode=stress_box_mode,
     )
+
+
+def meep_solver_parameters(
+    parameters: Parameters,
+    args: argparse.Namespace,
+    latest_steps: int | None,
+    latest_dt: float | None,
+) -> dict[str, Any]:
+    return {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": parameters.resolution,
+        "dx_um": 1.0 / parameters.resolution,
+        "courant": parameters.courant,
+        "t_run": parameters.t_run,
+        "sigma": parameters.sigma,
+        "nmax": parameters.nmax,
+        "moments_per_config": 6 * len(stress_faces(parameters)) * parameters.nmax**2,
+        "configurations": list(ALL_CONFIGURATIONS),
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": parameters.pml_thickness,
+        "force_complex_fields": parameters.force_complex_fields,
+        "max_steps": args.max_steps,
+        "timesteps_per_last_moment": latest_steps,
+        "dt": latest_dt,
+    }
 
 
 def cell_dimensions(parameters: Parameters) -> tuple[float, float, float]:
     buffer = 0.15
     margin = 2.0 / parameters.resolution
     z_top = parameters.z_tip + parameters.h_teeth
-    # Include the full stator depth, not just the landing pad.
-    stator_depth = parameters.t_membrane + parameters.t_landing_pad
+    stator_depth = (
+        abs(parameters.z_pad_top) + parameters.t_landing_pad
+        if parameters.z_pad_top is not None
+        else parameters.t_membrane + parameters.t_landing_pad
+    )
     lateral = parameters.l_domain + 2.0 * (parameters.pml_thickness + buffer)
     vertical = 2.0 * (
         max(z_top + margin, stator_depth + margin)
@@ -399,6 +487,101 @@ def cell_dimensions(parameters: Parameters) -> tuple[float, float, float]:
 
 
 def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
+    interiors = tuple(
+        length / 2.0 - parameters.pml_thickness
+        for length in cell_dimensions(parameters)
+    )
+    stator_depth = (
+        abs(parameters.z_pad_top) + parameters.t_landing_pad
+        if parameters.z_pad_top is not None
+        else parameters.t_membrane + parameters.t_landing_pad
+    )
+    if stator_depth >= interiors[2]:
+        raise ValueError("The stator thickness reaches the lower PML")
+
+    def box_faces(
+        lower: list[float], upper: list[float], prefix: str = ""
+    ) -> list[Face]:
+        if any(
+            not math.isfinite(lo) or not math.isfinite(hi) or lo >= hi
+            for lo, hi in zip(lower, upper)
+        ):
+            raise ValueError("The stress box must have finite, positive dimensions")
+        if any(
+            interior <= 0 or lo <= -interior or hi >= interior
+            for lo, hi, interior in zip(lower, upper, interiors)
+        ):
+            raise ValueError("The stress box intersects the PML; increase L_domain_um")
+        midpoint = [(lo + hi) / 2 for lo, hi in zip(lower, upper)]
+        extent = [hi - lo for lo, hi in zip(lower, upper)]
+        faces: list[Face] = []
+        for axis, label in enumerate(("x", "y", "z")):
+            for endpoint, orientation, suffix in (
+                (lower[axis], -1.0, "min"),
+                (upper[axis], 1.0, "max"),
+            ):
+                face_center = midpoint.copy()
+                face_size = extent.copy()
+                face_center[axis] = endpoint
+                face_size[axis] = 0.0
+                faces.append(
+                    Face(
+                        f"{prefix}{label}{suffix}",
+                        axis,
+                        orientation,
+                        tuple(face_center),
+                        tuple(face_size),
+                    )
+                )
+        return faces
+
+    if parameters.z_tip < 0 or parameters.stress_box_mode == "per_tooth_rotor_frame":
+        alpha = math.radians(parameters.tooth_arc_deg / 2.0)
+        if not 0 < alpha < math.pi / 2:
+            raise ValueError("Per-tooth stress boxes require tooth_arc_deg < 180")
+        pad_top = parameters.z_pad_top
+        if pad_top is None:
+            if parameters.z_tip < 0:
+                raise ValueError("Negative z_tip requires z_pad_top")
+            pad_top = 0.0
+        if pad_top >= parameters.z_tip:
+            raise ValueError("The landing pad must lie below the rotor tip")
+        faces: list[Face] = []
+        for idx, element in enumerate(parameters.elements):
+            clearance = (element["W_slot"] - element["w_tooth"]) / 2.0
+            if clearance <= 0:
+                raise ValueError(f"Tooth {idx} requires W_slot > w_tooth")
+            margin = min(2.0 / parameters.resolution, 0.35 * clearance)
+            x_tooth_min = element["r_tooth_in"] * math.cos(alpha)
+            x_tooth_max = element["r_tooth_out"]
+            y_tooth_max = element["r_tooth_out"] * math.sin(alpha)
+            x_min = 0.5 * (element["r_inner"] + x_tooth_min)
+            y_max = y_tooth_max + margin
+            r_out_limit = math.sqrt(max(0.0, element["r_outer"]**2 - y_max**2))
+            x_max = 0.5 * (x_tooth_max + r_out_limit)
+            if not (
+                element["r_inner"] < x_min < x_tooth_min
+                and x_tooth_max < x_max < r_out_limit
+            ):
+                raise ValueError(
+                    f"Tooth {idx} stress box cannot fit strictly inside its open radial slot"
+                )
+            faces.extend(
+                box_faces(
+                    [x_min, -y_max, 0.5 * (parameters.z_tip + pad_top)],
+                    [
+                        x_max,
+                        y_max,
+                        parameters.z_tip + parameters.h_teeth + 2.0 / parameters.resolution,
+                    ],
+                    prefix=f"t{idx}_",
+                )
+            )
+        return tuple(faces)
+
+    if parameters.stress_box_mode != "legacy" or parameters.z_tip <= 0:
+        raise ValueError("Invalid stress_box_mode or z_tip for a legacy stress box")
+
     center = math.radians(15.0 + parameters.theta_deg)
     half_span = math.radians(parameters.tooth_arc_deg / 2.0)
     radii = (
@@ -424,44 +607,16 @@ def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
     min_y = min(point[1] for point in points)
     max_y = max(point[1] for point in points)
     margin = 2.0 / parameters.resolution
-
-    lower = [
-        min_x - margin,
-        min_y - margin,
-        parameters.z_tip / 2.0,
-    ]
-    upper = [
-        max_x + margin,
-        max_y + margin,
-        parameters.z_tip + parameters.h_teeth + margin,
-    ]
-    interiors = tuple(
-        length / 2.0 - parameters.pml_thickness
-        for length in cell_dimensions(parameters)
+    return tuple(
+        box_faces(
+            [min_x - margin, min_y - margin, parameters.z_tip / 2.0],
+            [
+                max_x + margin,
+                max_y + margin,
+                parameters.z_tip + parameters.h_teeth + margin,
+            ],
+        )
     )
-    if any(
-        interior <= 0 or lo <= -interior or hi >= interior
-        for lo, hi, interior in zip(lower, upper, interiors)
-    ):
-        raise ValueError("The stress box intersects the PML; increase L_domain_um")
-    if parameters.t_membrane + parameters.t_landing_pad >= interiors[2]:
-        raise ValueError("The stator thickness reaches the lower PML")
-    midpoint = [(lo + hi) / 2 for lo, hi in zip(lower, upper)]
-    extent = [hi - lo for lo, hi in zip(lower, upper)]
-    faces: list[Face] = []
-    for axis, label in enumerate(("x", "y", "z")):
-        for endpoint, orientation, suffix in (
-            (lower[axis], -1.0, "min"),
-            (upper[axis], 1.0, "max"),
-        ):
-            face_center = midpoint.copy()
-            face_size = extent.copy()
-            face_center[axis] = endpoint
-            face_size[axis] = 0.0
-            faces.append(
-                Face(f"{label}{suffix}", axis, orientation, tuple(face_center), tuple(face_size))
-            )
-    return tuple(faces)
 
 
 def atomic_json(path: Path, value: Mapping[str, Any]) -> None:
@@ -662,6 +817,17 @@ def run_moment(
 ) -> tuple[float, int, float]:
     guard()
     background, material = material_pair(mp, parameters, electric)
+    rotor_frame = (
+        parameters.z_tip < 0 or parameters.stress_box_mode == "per_tooth_rotor_frame"
+    )
+    stator_options = (
+        {
+            "z_pad_top": parameters.z_pad_top,
+            "theta_stator_deg": -(15.0 + parameters.theta_deg),
+        }
+        if rotor_frame else {}
+    )
+    rotor_options = {"tooth_center_offset_deg": 0.0} if rotor_frame else {}
     geometry: list[Any] = []
     if configuration in ("both", "stator"):
         geometry.extend(
@@ -675,6 +841,7 @@ def run_moment(
                 num_sectors=parameters.num_sectors,
                 aperture_arc_deg=parameters.aperture_arc_deg,
                 bridge_arc_deg=parameters.bridge_arc_deg,
+                **stator_options,
             )
         )
     if configuration in ("both", "rotor", "self"):
@@ -686,7 +853,8 @@ def run_moment(
                 rotor_material=material,
                 num_sectors=parameters.num_sectors,
                 tooth_arc_deg=parameters.tooth_arc_deg,
-                theta_rotor_deg=parameters.theta_deg,
+                theta_rotor_deg=0.0 if rotor_frame else parameters.theta_deg,
+                **rotor_options,
             )
         )
     timestep = [parameters.courant / parameters.resolution]
@@ -784,8 +952,16 @@ def log_metrics(result: Mapping[str, Any], master: bool) -> None:
     if not master:
         return
 
-    from utils.metrics_logger import log_step, log_metric, export_macros
+    from utils.metrics_logger import (
+        log_step,
+        log_metric,
+        export_macros,
+        set_solver_provenance,
+    )
 
+    solver_name = str(result.get("solver", "meep"))
+    solver_parameters = result.get("solver_parameters", {})
+    set_solver_provenance(solver_name, solver_parameters)
     task_prefix = f"clutch_pilot_task_{result['task_id']}"
     step_id = f"{task_prefix}_{result['status']}"
     log_step(
@@ -804,8 +980,12 @@ def log_metrics(result: Mapping[str, Any], master: bool) -> None:
                 "F_sector0_self",
                 "F_sector0_stator",
                 "F_sector0_vac",
+                "solver",
+                "solver_parameters",
             )
         },
+        solver_name=solver_name,
+        solver_parameters=solver_parameters,
     )
     for name in (
         "F_both",
@@ -820,11 +1000,26 @@ def log_metrics(result: Mapping[str, Any], master: bool) -> None:
         "f_net_pN",
         "elapsed_seconds",
         "completed_moments",
+        "micro_probe_steps",
+        "micro_probe_step_seconds",
+        "micro_probe_dct_checksum",
     ):
         value = result.get(name)
         if isinstance(value, (int, float)) and math.isfinite(float(value)):
-            log_metric(f"{task_prefix}_{name}", value, step_id=step_id)
-            log_metric(name, value, step_id=step_id)
+            log_metric(
+                f"{task_prefix}_{name}",
+                value,
+                step_id=step_id,
+                solver_name=solver_name,
+                solver_parameters=solver_parameters,
+            )
+            log_metric(
+                name,
+                value,
+                step_id=step_id,
+                solver_name=solver_name,
+                solver_parameters=solver_parameters,
+            )
     export_macros()
     for path in (
         Path("results/provenance_metrics.json"),
@@ -836,6 +1031,185 @@ def log_metrics(result: Mapping[str, Any], master: bool) -> None:
             )
 
 
+def run_numpy_micro_probe(
+    args: argparse.Namespace, parameters: Parameters, started: float
+) -> int:
+    """Measure real float64 3-D Yee updates and cosine stress-face projections.
+
+    This vacuum timing probe is not a Casimir solver. E and H use staggered
+    spatial locations and leapfrog times; forward/backward differences implement
+    the Yee curls. Periodic boundaries are used only for this local diagnostic.
+    """
+    import numpy as np
+
+    faces = stress_faces(parameters)
+    dimensions = cell_dimensions(parameters)
+    requested_shape = tuple(
+        max(3, math.ceil(length * parameters.resolution)) for length in dimensions
+    )
+    shape = tuple(min(96, count) for count in requested_shape)
+    spacing = tuple(length / count for length, count in zip(dimensions, shape))
+    dt = parameters.courant * min(spacing)
+    coordinates = tuple(
+        (np.arange(count, dtype=np.float64) + 0.5) * dx - length / 2.0
+        for count, dx, length in zip(shape, spacing, dimensions)
+    )
+    electric = np.zeros((3, *shape), dtype=np.float64)
+    magnetic = np.zeros_like(electric)
+
+    # Separable cosine matrices avoid storing nmax**2 full face arrays.
+    projections: list[tuple[Face, tuple[Any, ...], Any, Any, float]] = []
+    for face in faces:
+        selection: list[Any] = [slice(None)] * 3
+        selection[face.axis] = int(
+            np.argmin(np.abs(coordinates[face.axis] - face.center[face.axis]))
+        )
+        bases = []
+        for axis in face.tangent_axes:
+            relative = coordinates[axis] - face.center[axis]
+            indices = np.flatnonzero(np.abs(relative) <= face.size[axis] / 2.0)
+            if indices.size == 0:
+                # The capped grid can underresolve a narrow face; sample its
+                # center cell and document the cap in provenance.
+                indices = np.array([int(np.argmin(np.abs(relative)))])
+            selection[axis] = slice(int(indices[0]), int(indices[-1]) + 1)
+            positions = np.clip(
+                relative[indices] / face.size[axis] + 0.5, 0.0, 1.0
+            )
+            modes = np.arange(parameters.nmax, dtype=np.float64)
+            basis = np.cos(math.pi * modes[:, None] * positions[None, :])
+            basis *= np.sqrt(
+                np.where(modes == 0, 1.0, 2.0) / face.size[axis]
+            )[:, None]
+            bases.append(basis)
+        area = math.prod(spacing[axis] for axis in face.tangent_axes)
+        projections.append((face, tuple(selection), bases[0], bases[1], area))
+
+    # A nonzero, localized impulse excites propagation in all three dimensions.
+    for face, selection, first, second, _ in projections:
+        electric[(2, *selection)] += np.outer(first[0], second[0])
+
+    def difference(field: Any, axis: int, forward: bool) -> Any:
+        if forward:
+            return (np.roll(field, -1, axis=axis) - field) / spacing[axis]
+        return (field - np.roll(field, 1, axis=axis)) / spacing[axis]
+
+    def update_curl(target: Any, source: Any, scale: float, forward: bool) -> None:
+        target[0] += scale * (
+            difference(source[2], 1, forward) - difference(source[1], 2, forward)
+        )
+        target[1] += scale * (
+            difference(source[0], 2, forward) - difference(source[2], 0, forward)
+        )
+        target[2] += scale * (
+            difference(source[1], 0, forward) - difference(source[0], 1, forward)
+        )
+
+    def centered_fields(fields: Any, is_electric: bool) -> Any:
+        # Interpolate staggered components to common cell centers for stress.
+        centered = np.empty_like(fields)
+        for component in range(3):
+            value = fields[component]
+            axes = (
+                (component,) if is_electric
+                else tuple(axis for axis in range(3) if axis != component)
+            )
+            for axis in axes:
+                value = 0.5 * (value + np.roll(value, 1, axis=axis))
+            centered[component] = value
+        return centered
+
+    checksum = 0.0
+    probe_started = time.perf_counter()
+    with np.errstate(over="raise", invalid="raise", divide="raise"):
+        for _ in range(args.max_steps):
+            update_curl(magnetic, electric, -dt, True)
+            update_curl(electric, magnetic, dt, False)
+            e_center = centered_fields(electric, True)
+            h_center = centered_fields(magnetic, False)
+            step_checksum = 0.0
+            for face, selection, first, second, area in projections:
+                e = e_center[(slice(None), *selection)]
+                h = h_center[(slice(None), *selection)]
+                traction = e[2] * e[face.axis] + h[2] * h[face.axis]
+                if face.axis == 2:
+                    traction -= 0.5 * (np.sum(e * e, axis=0) + np.sum(h * h, axis=0))
+                coefficients = first @ traction @ second.T
+                step_checksum += face.orientation * area * float(np.sum(coefficients))
+            checksum += dt * step_checksum
+            if not math.isfinite(checksum):
+                raise FloatingPointError("The NumPy micro-probe stress checksum is non-finite")
+    probe_seconds = time.perf_counter() - probe_started
+    if not bool(np.isfinite(electric).all() and np.isfinite(magnetic).all()):
+        raise FloatingPointError("The NumPy micro-probe fields are non-finite")
+
+    result = {
+        "status": "micro_probe_complete",
+        "solver": "numpy",
+        "solver_parameters": {
+            "solver": "numpy",
+            "method": "3D_Yee_FDTD_Stress_Face_Cosine_DCT_Micro_Probe",
+            "diagnostic_only": True,
+            "casimir_force_computed": False,
+            "device": "cpu",
+            "requested_device": args.device,
+            "dtype": "float64",
+            "resolution": parameters.resolution,
+            "cell_dimensions_um": dimensions,
+            "requested_grid_shape": requested_shape,
+            "grid_shape": shape,
+            "grid_capped": shape != requested_shape,
+            "grid_spacing_um": spacing,
+            "boundary_conditions": "periodic",
+            "material": "vacuum",
+            "courant": parameters.courant,
+            "dt": dt,
+            "nmax": parameters.nmax,
+            "stress_faces": len(faces),
+            "max_steps": args.max_steps,
+            "timesteps_per_last_moment": args.max_steps,
+            "probe_seconds": probe_seconds,
+            "seconds_per_step": probe_seconds / args.max_steps,
+        },
+        "task_id": args.task_id,
+        "config_file": str(args.config_file.resolve()),
+        "requested_config": args.config,
+        "N_fractal": parameters.n_fractal,
+        "theta_deg": parameters.theta_deg,
+        "parameters": vars(parameters),
+        "Sigma": parameters.sigma,
+        "max_steps": args.max_steps,
+        "time_truncated": True,
+        "completed_moments": 0,
+        "completed_by_config": {name: 0 for name in ALL_CONFIGURATIONS},
+        "F_net": None,
+        "f_net_N": None,
+        "f_net_fN": None,
+        "f_net_pN": None,
+        "elapsed_seconds": time.monotonic() - started,
+        "micro_probe_steps": args.max_steps,
+        "micro_probe_step_seconds": probe_seconds / args.max_steps,
+        "micro_probe_dct_checksum": checksum,
+    }
+    out_path = (
+        args.output_file
+        if args.output_file is not None
+        else Path("results_clutch_pilot")
+        / (
+            f"task_{args.task_id:03d}_N{parameters.n_fractal}"
+            f"_th_{int(parameters.theta_deg)}deg_numpy_micro_probe.json"
+        )
+    )
+    atomic_json(out_path, result)
+    log_metrics(result, True)
+    print(
+        f"NumPy 3-D micro-probe: {args.max_steps} steps on {shape}, "
+        f"{probe_seconds / args.max_steps:.6g} s/step. Saved {out_path}",
+        flush=True,
+    )
+    return 0
+
+
 def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> int:
     if args.config == "self":
         args.config = "rotor"
@@ -843,9 +1217,67 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
     repository_root = Path(__file__).resolve().parents[1]
     if str(repository_root) not in sys.path:
         sys.path.insert(0, str(repository_root))
+
+    if args.solver in ("bem", "scuff"):
+        from execution.clutch_geometry_redesign import compute_dynamic_Trun
+
+        parameters = parse_parameters(raw, args.resolution, compute_dynamic_Trun)
+        from execution.casimir_bem_solver import (
+            run_bem_casimir_solver,
+            export_scuff_files_and_run,
+        )
+
+        if args.solver == "bem":
+            result = run_bem_casimir_solver(
+                raw,
+                n_r=args.bem_n_r,
+                n_phi_tooth=args.bem_n_phi_tooth,
+                n_phi_bridge=args.bem_n_phi_bridge,
+                n_z=args.bem_n_z,
+                n_xi=args.bem_n_xi,
+                max_steps=args.max_steps,
+                device=args.device,
+                config_file=args.config_file.resolve(),
+                task_id=str(args.task_id),
+                record_metrics=True,
+            )
+        else:
+            result = export_scuff_files_and_run(
+                raw,
+                n_r=args.bem_n_r,
+                n_phi_tooth=args.bem_n_phi_tooth,
+                n_phi_bridge=args.bem_n_phi_bridge,
+                n_z=args.bem_n_z,
+                config_file=args.config_file.resolve(),
+                task_id=str(args.task_id),
+                record_metrics=True,
+            )
+        out_path = (
+            args.output_file
+            if args.output_file is not None
+            else Path("results_clutch_pilot")
+            / (
+                f"task_{args.task_id:03d}_N{parameters.n_fractal}"
+                f"_th_{int(parameters.theta_deg)}deg_{args.solver}.json"
+            )
+        )
+        atomic_json(out_path, result)
+        print(f"Saved {out_path}", flush=True)
+        return 0
+
     try:
         mp = importlib.import_module("meep")
     except ImportError as exc:
+        if args.max_steps > 0:
+            # Import only the runtime helper needed for parameter parsing.
+            # Explicit T_run configurations do not need geometry-module imports.
+            def dynamic_trun(**context: Any) -> Any:
+                from execution.clutch_geometry_redesign import compute_dynamic_Trun
+
+                return invoke_dynamic_trun(compute_dynamic_Trun, context)
+
+            parameters = parse_parameters(raw, args.resolution, dynamic_trun)
+            return run_numpy_micro_probe(args, parameters, started)
         raise RuntimeError(
             "Meep is required to run the simulation. Load the BigRed 200 "
             "Meep/MPI environment; --help does not require Meep."
@@ -885,7 +1317,7 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
         if args.config == "all"
         else ("rotor" if args.config == "self" else args.config,)
     )
-    moments_per_config = 36 * parameters.nmax**2
+    moments_per_config = 6 * len(faces) * parameters.nmax**2
     checkpoints = {
         name: checkpoint_directory
         / f"chk_moments_clutch_pilot_task_{args.task_id:03d}_{name}.json"
@@ -1127,6 +1559,10 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
         )
         return {
             "status": status,
+            "solver": "meep",
+            "solver_parameters": meep_solver_parameters(
+                parameters, args, latest_steps, latest_dt
+            ),
             "task_id": args.task_id,
             "config_file": str(args.config_file.resolve()),
             "requested_config": args.config,
