@@ -1,7 +1,7 @@
 {
   "run_metadata": {
     "created_at": "2026-10-15T18:15:22.084634+00:00",
-    "updated_at": "2026-10-15T22:25:52.173785+00:00",
+    "updated_at": "2026-10-15T23:02:24.925136+00:00",
     "environment": "Windows",
     "entry_point": "execution/casimir_bem_solver.py",
     "solver": "numpy",
@@ -13,38 +13,38 @@
       "device": "cpu",
       "requested_device": "auto",
       "dtype": "float64",
-      "resolution": 60,
+      "resolution": 50,
       "cell_dimensions_um": [
         3.8,
         3.8,
-        1.3966666666666667
+        1.41
       ],
       "requested_grid_shape": [
-        228,
-        228,
-        84
+        190,
+        190,
+        71
       ],
       "grid_shape": [
         96,
         96,
-        84
+        71
       ],
       "grid_capped": true,
       "grid_spacing_um": [
         0.03958333333333333,
         0.03958333333333333,
-        0.01662698412698413
+        0.019859154929577464
       ],
       "boundary_conditions": "periodic",
       "material": "vacuum",
-      "courant": 0.5,
-      "dt": 0.008313492063492064,
+      "courant": 0.3,
+      "dt": 0.005957746478873239,
       "nmax": 1,
       "stress_faces": 18,
       "max_steps": 5,
       "timesteps_per_last_moment": 5,
-      "probe_seconds": 0.8083101999945939,
-      "seconds_per_step": 0.16166203999891876
+      "probe_seconds": 0.6044631999975536,
+      "seconds_per_step": 0.12089263999951072
     },
     "solver_runs": [
       {
@@ -3632,6 +3632,66 @@
           "seconds_per_step": 0.16166203999891876
         },
         "timestamp": "2026-10-15T22:25:30.629996+00:00"
+      },
+      {
+        "solver": "meep",
+        "solver_parameters": {
+          "solver": "meep",
+          "solver_name": "Meep",
+          "backend": "meep",
+          "method": "3D FDTD",
+          "dimensions": 3,
+          "platform": "BigRed 200",
+          "hardware": "BigRed 200",
+          "generator": "execution/generate_nature_meep_verification_configs.py",
+          "simulation_executed": false
+        },
+        "timestamp": "2026-10-15T23:00:14.809867+00:00"
+      },
+      {
+        "solver": "numpy",
+        "solver_parameters": {
+          "solver": "numpy",
+          "method": "3D_Yee_FDTD_Stress_Face_Cosine_DCT_Micro_Probe",
+          "diagnostic_only": true,
+          "casimir_force_computed": false,
+          "device": "cpu",
+          "requested_device": "auto",
+          "dtype": "float64",
+          "resolution": 50,
+          "cell_dimensions_um": [
+            3.8,
+            3.8,
+            1.41
+          ],
+          "requested_grid_shape": [
+            190,
+            190,
+            71
+          ],
+          "grid_shape": [
+            96,
+            96,
+            71
+          ],
+          "grid_capped": true,
+          "grid_spacing_um": [
+            0.03958333333333333,
+            0.03958333333333333,
+            0.019859154929577464
+          ],
+          "boundary_conditions": "periodic",
+          "material": "vacuum",
+          "courant": 0.3,
+          "dt": 0.005957746478873239,
+          "nmax": 1,
+          "stress_faces": 18,
+          "max_steps": 5,
+          "timesteps_per_last_moment": 5,
+          "probe_seconds": 0.6044631999975536,
+          "seconds_per_step": 0.12089263999951072
+        },
+        "timestamp": "2026-10-15T23:02:11.915550+00:00"
       }
     ]
   },
@@ -434425,7 +434485,7 @@
       }
     },
     "nature_meep_verification": {
-      "timestamp": "2026-10-15T22:20:12.009380+00:00",
+      "timestamp": "2026-10-15T23:00:15.991017+00:00",
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_step",
       "line_number": 257,
@@ -434664,7 +434724,7 @@
       }
     },
     "clutch_pilot_task_8_micro_probe_complete": {
-      "timestamp": "2026-10-15T22:24:45.272967+00:00",
+      "timestamp": "2026-10-15T23:02:13.117868+00:00",
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_step",
       "line_number": 257,
@@ -434718,14 +434778,14 @@
           ],
           "boundary_conditions": "periodic",
           "material": "vacuum",
-          "courant": 0.5,
-          "dt": 0.009929577464788732,
+          "courant": 0.3,
+          "dt": 0.005957746478873239,
           "nmax": 1,
           "stress_faces": 18,
           "max_steps": 5,
           "timesteps_per_last_moment": 5,
-          "probe_seconds": 0.5628224000101909,
-          "seconds_per_step": 0.11256448000203818
+          "probe_seconds": 0.6044631999975536,
+          "seconds_per_step": 0.12089263999951072
         }
       },
       "solver": "numpy",
@@ -434761,14 +434821,14 @@
         ],
         "boundary_conditions": "periodic",
         "material": "vacuum",
-        "courant": 0.5,
-        "dt": 0.009929577464788732,
+        "courant": 0.3,
+        "dt": 0.005957746478873239,
         "nmax": 1,
         "stress_faces": 18,
         "max_steps": 5,
         "timesteps_per_last_moment": 5,
-        "probe_seconds": 0.5628224000101909,
-        "seconds_per_step": 0.11256448000203818
+        "probe_seconds": 0.6044631999975536,
+        "seconds_per_step": 0.12089263999951072
       }
     },
     "clutch_pilot_task_11_micro_probe_complete": {
@@ -434985,6 +435045,30 @@
         "timesteps_per_last_moment": 5,
         "probe_seconds": 0.8083101999945939,
         "seconds_per_step": 0.16166203999891876
+      }
+    },
+    "generate_rotational_z_eff_meep_configs": {
+      "timestamp": "2026-10-15T23:01:57.368109+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 257,
+      "data_summary": {
+        "output_dir": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\sweep_configs_rotational_z_eff_meep",
+        "manifest": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\sweep_configs_rotational_z_eff_meep\\manifest.json",
+        "task_count": 21,
+        "complete": true
+      },
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "solver_name": "Meep",
+        "backend": "meep",
+        "method": "3D FDTD",
+        "dimensions": 3,
+        "platform": "BigRed 200",
+        "hardware": "BigRed 200",
+        "generator": "execution/generate_nature_meep_verification_configs.py",
+        "simulation_executed": false
       }
     }
   },
@@ -485651,7 +485735,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:13.107543+00:00",
+      "recorded_at": "2026-10-15T23:00:17.238149+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485671,7 +485755,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:14.291576+00:00",
+      "recorded_at": "2026-10-15T23:00:18.405330+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485691,7 +485775,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:15.531095+00:00",
+      "recorded_at": "2026-10-15T23:00:19.558415+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485711,7 +485795,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:16.587177+00:00",
+      "recorded_at": "2026-10-15T23:00:20.760842+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485731,7 +485815,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:17.603373+00:00",
+      "recorded_at": "2026-10-15T23:00:21.961039+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485751,7 +485835,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:18.959754+00:00",
+      "recorded_at": "2026-10-15T23:00:23.141185+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485771,7 +485855,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:21.648259+00:00",
+      "recorded_at": "2026-10-15T23:00:24.297585+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485791,7 +485875,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:24.108677+00:00",
+      "recorded_at": "2026-10-15T23:00:25.521875+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485811,7 +485895,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:25.846031+00:00",
+      "recorded_at": "2026-10-15T23:00:26.674387+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485831,7 +485915,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:27.350595+00:00",
+      "recorded_at": "2026-10-15T23:00:27.789052+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485851,7 +485935,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:28.852590+00:00",
+      "recorded_at": "2026-10-15T23:00:28.926091+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485871,7 +485955,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:30.912748+00:00",
+      "recorded_at": "2026-10-15T23:00:30.079399+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485891,7 +485975,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:33.043559+00:00",
+      "recorded_at": "2026-10-15T23:00:31.220401+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485911,7 +485995,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:34.682920+00:00",
+      "recorded_at": "2026-10-15T23:00:32.387903+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485931,7 +486015,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:36.439260+00:00",
+      "recorded_at": "2026-10-15T23:00:33.602111+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485951,7 +486035,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:38.523086+00:00",
+      "recorded_at": "2026-10-15T23:00:34.750802+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485971,7 +486055,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:40.792641+00:00",
+      "recorded_at": "2026-10-15T23:00:35.959226+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -485991,7 +486075,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:43.292253+00:00",
+      "recorded_at": "2026-10-15T23:00:37.128443+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486011,7 +486095,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:45.040314+00:00",
+      "recorded_at": "2026-10-15T23:00:38.341584+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486031,7 +486115,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:46.895463+00:00",
+      "recorded_at": "2026-10-15T23:00:39.612360+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486051,7 +486135,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:48.871302+00:00",
+      "recorded_at": "2026-10-15T23:00:40.754710+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486071,7 +486155,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:51.070228+00:00",
+      "recorded_at": "2026-10-15T23:00:42.084696+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486091,7 +486175,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:53.694276+00:00",
+      "recorded_at": "2026-10-15T23:00:43.593134+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486111,7 +486195,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:56.390763+00:00",
+      "recorded_at": "2026-10-15T23:00:44.881891+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486131,7 +486215,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:20:59.178946+00:00",
+      "recorded_at": "2026-10-15T23:00:46.064282+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486151,7 +486235,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:02.034816+00:00",
+      "recorded_at": "2026-10-15T23:00:47.217327+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486171,7 +486255,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:04.585393+00:00",
+      "recorded_at": "2026-10-15T23:00:48.376488+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486191,7 +486275,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:06.944052+00:00",
+      "recorded_at": "2026-10-15T23:00:49.511209+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486211,7 +486295,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:09.150926+00:00",
+      "recorded_at": "2026-10-15T23:00:50.692500+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486231,7 +486315,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:11.278562+00:00",
+      "recorded_at": "2026-10-15T23:00:51.933284+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486251,7 +486335,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:13.377657+00:00",
+      "recorded_at": "2026-10-15T23:00:53.131437+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486271,7 +486355,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:15.849432+00:00",
+      "recorded_at": "2026-10-15T23:00:54.308333+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486291,7 +486375,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:17.998053+00:00",
+      "recorded_at": "2026-10-15T23:00:55.587709+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486311,7 +486395,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:20.504775+00:00",
+      "recorded_at": "2026-10-15T23:00:56.708688+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486331,7 +486415,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:23.030420+00:00",
+      "recorded_at": "2026-10-15T23:00:57.850048+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486351,7 +486435,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:25.569165+00:00",
+      "recorded_at": "2026-10-15T23:00:59.016697+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486371,7 +486455,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:27.589149+00:00",
+      "recorded_at": "2026-10-15T23:01:00.142010+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486391,7 +486475,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:29.608899+00:00",
+      "recorded_at": "2026-10-15T23:01:01.365582+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486411,7 +486495,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:31.922045+00:00",
+      "recorded_at": "2026-10-15T23:01:02.719781+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486431,7 +486515,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:34.119947+00:00",
+      "recorded_at": "2026-10-15T23:01:04.040661+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486451,7 +486535,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:35.956661+00:00",
+      "recorded_at": "2026-10-15T23:01:05.444754+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486471,7 +486555,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:38.211696+00:00",
+      "recorded_at": "2026-10-15T23:01:06.729090+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486491,7 +486575,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:40.195622+00:00",
+      "recorded_at": "2026-10-15T23:01:07.881712+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486511,7 +486595,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:42.272472+00:00",
+      "recorded_at": "2026-10-15T23:01:09.019351+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486531,7 +486615,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:45.085672+00:00",
+      "recorded_at": "2026-10-15T23:01:10.161467+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486551,7 +486635,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:47.856190+00:00",
+      "recorded_at": "2026-10-15T23:01:11.319782+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486571,7 +486655,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:51.365844+00:00",
+      "recorded_at": "2026-10-15T23:01:12.482049+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486591,7 +486675,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:54.053303+00:00",
+      "recorded_at": "2026-10-15T23:01:13.636781+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486611,7 +486695,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:56.496309+00:00",
+      "recorded_at": "2026-10-15T23:01:14.807263+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486631,7 +486715,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:21:58.516826+00:00",
+      "recorded_at": "2026-10-15T23:01:15.963658+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486651,7 +486735,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:00.303977+00:00",
+      "recorded_at": "2026-10-15T23:01:17.080106+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486671,7 +486755,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:02.313032+00:00",
+      "recorded_at": "2026-10-15T23:01:18.250683+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486691,7 +486775,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:04.215217+00:00",
+      "recorded_at": "2026-10-15T23:01:19.361266+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486711,7 +486795,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:05.843889+00:00",
+      "recorded_at": "2026-10-15T23:01:20.499193+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486731,7 +486815,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:07.338204+00:00",
+      "recorded_at": "2026-10-15T23:01:21.656302+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486751,7 +486835,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:08.841877+00:00",
+      "recorded_at": "2026-10-15T23:01:22.807081+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486771,7 +486855,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:10.396178+00:00",
+      "recorded_at": "2026-10-15T23:01:23.982940+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486791,7 +486875,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:11.885012+00:00",
+      "recorded_at": "2026-10-15T23:01:25.276502+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486811,7 +486895,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:13.623939+00:00",
+      "recorded_at": "2026-10-15T23:01:26.417469+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486831,7 +486915,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:15.189592+00:00",
+      "recorded_at": "2026-10-15T23:01:27.574492+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486851,7 +486935,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:16.751417+00:00",
+      "recorded_at": "2026-10-15T23:01:28.701457+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486871,7 +486955,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:18.593770+00:00",
+      "recorded_at": "2026-10-15T23:01:29.831041+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486891,7 +486975,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:20.258830+00:00",
+      "recorded_at": "2026-10-15T23:01:31.009735+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486911,7 +486995,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:21.923588+00:00",
+      "recorded_at": "2026-10-15T23:01:32.197206+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486931,7 +487015,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:23.435586+00:00",
+      "recorded_at": "2026-10-15T23:01:33.352803+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486951,7 +487035,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:24.975704+00:00",
+      "recorded_at": "2026-10-15T23:01:34.520179+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486971,7 +487055,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:26.821920+00:00",
+      "recorded_at": "2026-10-15T23:01:35.657313+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -486991,7 +487075,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:28.321047+00:00",
+      "recorded_at": "2026-10-15T23:01:36.820284+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487011,7 +487095,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:29.856516+00:00",
+      "recorded_at": "2026-10-15T23:01:37.940121+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487031,7 +487115,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:31.360017+00:00",
+      "recorded_at": "2026-10-15T23:01:39.043652+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487051,7 +487135,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:33.069115+00:00",
+      "recorded_at": "2026-10-15T23:01:40.241846+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487071,7 +487155,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:34.559572+00:00",
+      "recorded_at": "2026-10-15T23:01:41.410802+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487091,7 +487175,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:36.065597+00:00",
+      "recorded_at": "2026-10-15T23:01:42.631259+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487111,7 +487195,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:37.570796+00:00",
+      "recorded_at": "2026-10-15T23:01:43.780391+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487131,7 +487215,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:39.111473+00:00",
+      "recorded_at": "2026-10-15T23:01:45.047496+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487151,7 +487235,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:40.621453+00:00",
+      "recorded_at": "2026-10-15T23:01:46.309599+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487171,7 +487255,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:42.162755+00:00",
+      "recorded_at": "2026-10-15T23:01:47.449445+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487191,7 +487275,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:44.276136+00:00",
+      "recorded_at": "2026-10-15T23:01:48.559350+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487211,7 +487295,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:46.036460+00:00",
+      "recorded_at": "2026-10-15T23:01:49.758743+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487231,7 +487315,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:48.471171+00:00",
+      "recorded_at": "2026-10-15T23:01:50.887067+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487251,7 +487335,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:51.339352+00:00",
+      "recorded_at": "2026-10-15T23:01:51.990306+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487271,7 +487355,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:52.501685+00:00",
+      "recorded_at": "2026-10-15T23:01:53.140684+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487291,7 +487375,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:53.781664+00:00",
+      "recorded_at": "2026-10-15T23:01:54.322162+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487311,7 +487395,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "nature_meep_verification",
-      "recorded_at": "2026-10-15T22:22:54.993757+00:00",
+      "recorded_at": "2026-10-15T23:01:55.459266+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -487376,12 +487460,12 @@
       }
     },
     "elapsed_seconds": {
-      "value": 0.9250355999975,
+      "value": 0.7110291999997571,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 288,
-      "step_id": "clutch_pilot_task_12_micro_probe_complete",
-      "recorded_at": "2026-10-15T22:25:35.195662+00:00",
+      "step_id": "clutch_pilot_task_8_micro_probe_complete",
+      "recorded_at": "2026-10-15T23:02:15.529615+00:00",
       "solver": "numpy",
       "solver_parameters": {
         "solver": "numpy",
@@ -487391,38 +487475,38 @@
         "device": "cpu",
         "requested_device": "auto",
         "dtype": "float64",
-        "resolution": 60,
+        "resolution": 50,
         "cell_dimensions_um": [
           3.8,
           3.8,
-          1.3966666666666667
+          1.41
         ],
         "requested_grid_shape": [
-          228,
-          228,
-          84
+          190,
+          190,
+          71
         ],
         "grid_shape": [
           96,
           96,
-          84
+          71
         ],
         "grid_capped": true,
         "grid_spacing_um": [
           0.03958333333333333,
           0.03958333333333333,
-          0.01662698412698413
+          0.019859154929577464
         ],
         "boundary_conditions": "periodic",
         "material": "vacuum",
-        "courant": 0.5,
-        "dt": 0.008313492063492064,
+        "courant": 0.3,
+        "dt": 0.005957746478873239,
         "nmax": 1,
         "stress_faces": 18,
         "max_steps": 5,
         "timesteps_per_last_moment": 5,
-        "probe_seconds": 0.8083101999945939,
-        "seconds_per_step": 0.16166203999891876
+        "probe_seconds": 0.6044631999975536,
+        "seconds_per_step": 0.12089263999951072
       }
     },
     "clutch_pilot_task_1_completed_moments": {
@@ -487480,8 +487564,8 @@
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 288,
-      "step_id": "clutch_pilot_task_12_micro_probe_complete",
-      "recorded_at": "2026-10-15T22:25:38.303720+00:00",
+      "step_id": "clutch_pilot_task_8_micro_probe_complete",
+      "recorded_at": "2026-10-15T23:02:17.875443+00:00",
       "solver": "numpy",
       "solver_parameters": {
         "solver": "numpy",
@@ -487491,38 +487575,38 @@
         "device": "cpu",
         "requested_device": "auto",
         "dtype": "float64",
-        "resolution": 60,
+        "resolution": 50,
         "cell_dimensions_um": [
           3.8,
           3.8,
-          1.3966666666666667
+          1.41
         ],
         "requested_grid_shape": [
-          228,
-          228,
-          84
+          190,
+          190,
+          71
         ],
         "grid_shape": [
           96,
           96,
-          84
+          71
         ],
         "grid_capped": true,
         "grid_spacing_um": [
           0.03958333333333333,
           0.03958333333333333,
-          0.01662698412698413
+          0.019859154929577464
         ],
         "boundary_conditions": "periodic",
         "material": "vacuum",
-        "courant": 0.5,
-        "dt": 0.008313492063492064,
+        "courant": 0.3,
+        "dt": 0.005957746478873239,
         "nmax": 1,
         "stress_faces": 18,
         "max_steps": 5,
         "timesteps_per_last_moment": 5,
-        "probe_seconds": 0.8083101999945939,
-        "seconds_per_step": 0.16166203999891876
+        "probe_seconds": 0.6044631999975536,
+        "seconds_per_step": 0.12089263999951072
       }
     },
     "clutch_pilot_task_1_micro_probe_steps": {
@@ -487580,8 +487664,8 @@
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 288,
-      "step_id": "clutch_pilot_task_12_micro_probe_complete",
-      "recorded_at": "2026-10-15T22:25:43.341134+00:00",
+      "step_id": "clutch_pilot_task_8_micro_probe_complete",
+      "recorded_at": "2026-10-15T23:02:20.261158+00:00",
       "solver": "numpy",
       "solver_parameters": {
         "solver": "numpy",
@@ -487591,38 +487675,38 @@
         "device": "cpu",
         "requested_device": "auto",
         "dtype": "float64",
-        "resolution": 60,
+        "resolution": 50,
         "cell_dimensions_um": [
           3.8,
           3.8,
-          1.3966666666666667
+          1.41
         ],
         "requested_grid_shape": [
-          228,
-          228,
-          84
+          190,
+          190,
+          71
         ],
         "grid_shape": [
           96,
           96,
-          84
+          71
         ],
         "grid_capped": true,
         "grid_spacing_um": [
           0.03958333333333333,
           0.03958333333333333,
-          0.01662698412698413
+          0.019859154929577464
         ],
         "boundary_conditions": "periodic",
         "material": "vacuum",
-        "courant": 0.5,
-        "dt": 0.008313492063492064,
+        "courant": 0.3,
+        "dt": 0.005957746478873239,
         "nmax": 1,
         "stress_faces": 18,
         "max_steps": 5,
         "timesteps_per_last_moment": 5,
-        "probe_seconds": 0.8083101999945939,
-        "seconds_per_step": 0.16166203999891876
+        "probe_seconds": 0.6044631999975536,
+        "seconds_per_step": 0.12089263999951072
       }
     },
     "clutch_pilot_task_1_micro_probe_step_seconds": {
@@ -487676,12 +487760,12 @@
       }
     },
     "micro_probe_step_seconds": {
-      "value": 0.16166203999891876,
+      "value": 0.12089263999951072,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 288,
-      "step_id": "clutch_pilot_task_12_micro_probe_complete",
-      "recorded_at": "2026-10-15T22:25:47.162525+00:00",
+      "step_id": "clutch_pilot_task_8_micro_probe_complete",
+      "recorded_at": "2026-10-15T23:02:22.619530+00:00",
       "solver": "numpy",
       "solver_parameters": {
         "solver": "numpy",
@@ -487691,38 +487775,38 @@
         "device": "cpu",
         "requested_device": "auto",
         "dtype": "float64",
-        "resolution": 60,
+        "resolution": 50,
         "cell_dimensions_um": [
           3.8,
           3.8,
-          1.3966666666666667
+          1.41
         ],
         "requested_grid_shape": [
-          228,
-          228,
-          84
+          190,
+          190,
+          71
         ],
         "grid_shape": [
           96,
           96,
-          84
+          71
         ],
         "grid_capped": true,
         "grid_spacing_um": [
           0.03958333333333333,
           0.03958333333333333,
-          0.01662698412698413
+          0.019859154929577464
         ],
         "boundary_conditions": "periodic",
         "material": "vacuum",
-        "courant": 0.5,
-        "dt": 0.008313492063492064,
+        "courant": 0.3,
+        "dt": 0.005957746478873239,
         "nmax": 1,
         "stress_faces": 18,
         "max_steps": 5,
         "timesteps_per_last_moment": 5,
-        "probe_seconds": 0.8083101999945939,
-        "seconds_per_step": 0.16166203999891876
+        "probe_seconds": 0.6044631999975536,
+        "seconds_per_step": 0.12089263999951072
       }
     },
     "clutch_pilot_task_1_micro_probe_dct_checksum": {
@@ -487776,12 +487860,12 @@
       }
     },
     "micro_probe_dct_checksum": {
-      "value": 0.05667858410832847,
+      "value": 0.15554424184915513,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 288,
-      "step_id": "clutch_pilot_task_12_micro_probe_complete",
-      "recorded_at": "2026-10-15T22:25:52.173764+00:00",
+      "step_id": "clutch_pilot_task_8_micro_probe_complete",
+      "recorded_at": "2026-10-15T23:02:24.925119+00:00",
       "solver": "numpy",
       "solver_parameters": {
         "solver": "numpy",
@@ -487791,38 +487875,38 @@
         "device": "cpu",
         "requested_device": "auto",
         "dtype": "float64",
-        "resolution": 60,
+        "resolution": 50,
         "cell_dimensions_um": [
           3.8,
           3.8,
-          1.3966666666666667
+          1.41
         ],
         "requested_grid_shape": [
-          228,
-          228,
-          84
+          190,
+          190,
+          71
         ],
         "grid_shape": [
           96,
           96,
-          84
+          71
         ],
         "grid_capped": true,
         "grid_spacing_um": [
           0.03958333333333333,
           0.03958333333333333,
-          0.01662698412698413
+          0.019859154929577464
         ],
         "boundary_conditions": "periodic",
         "material": "vacuum",
-        "courant": 0.5,
-        "dt": 0.008313492063492064,
+        "courant": 0.3,
+        "dt": 0.005957746478873239,
         "nmax": 1,
         "stress_faces": 18,
         "max_steps": 5,
         "timesteps_per_last_moment": 5,
-        "probe_seconds": 0.8083101999945939,
-        "seconds_per_step": 0.16166203999891876
+        "probe_seconds": 0.6044631999975536,
+        "seconds_per_step": 0.12089263999951072
       }
     },
     "clutch_pilot_task_4_elapsed_seconds": {
@@ -488076,12 +488160,12 @@
       }
     },
     "clutch_pilot_task_8_elapsed_seconds": {
-      "value": 0.6657143000047654,
+      "value": 0.7110291999997571,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "clutch_pilot_task_8_micro_probe_complete",
-      "recorded_at": "2026-10-15T22:24:46.529666+00:00",
+      "recorded_at": "2026-10-15T23:02:14.309891+00:00",
       "solver": "numpy",
       "solver_parameters": {
         "solver": "numpy",
@@ -488115,14 +488199,14 @@
         ],
         "boundary_conditions": "periodic",
         "material": "vacuum",
-        "courant": 0.5,
-        "dt": 0.009929577464788732,
+        "courant": 0.3,
+        "dt": 0.005957746478873239,
         "nmax": 1,
         "stress_faces": 18,
         "max_steps": 5,
         "timesteps_per_last_moment": 5,
-        "probe_seconds": 0.5628224000101909,
-        "seconds_per_step": 0.11256448000203818
+        "probe_seconds": 0.6044631999975536,
+        "seconds_per_step": 0.12089263999951072
       }
     },
     "clutch_pilot_task_8_completed_moments": {
@@ -488131,7 +488215,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "clutch_pilot_task_8_micro_probe_complete",
-      "recorded_at": "2026-10-15T22:24:48.799392+00:00",
+      "recorded_at": "2026-10-15T23:02:16.706731+00:00",
       "solver": "numpy",
       "solver_parameters": {
         "solver": "numpy",
@@ -488165,14 +488249,14 @@
         ],
         "boundary_conditions": "periodic",
         "material": "vacuum",
-        "courant": 0.5,
-        "dt": 0.009929577464788732,
+        "courant": 0.3,
+        "dt": 0.005957746478873239,
         "nmax": 1,
         "stress_faces": 18,
         "max_steps": 5,
         "timesteps_per_last_moment": 5,
-        "probe_seconds": 0.5628224000101909,
-        "seconds_per_step": 0.11256448000203818
+        "probe_seconds": 0.6044631999975536,
+        "seconds_per_step": 0.12089263999951072
       }
     },
     "clutch_pilot_task_8_micro_probe_steps": {
@@ -488181,7 +488265,7 @@
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "clutch_pilot_task_8_micro_probe_complete",
-      "recorded_at": "2026-10-15T22:24:51.054367+00:00",
+      "recorded_at": "2026-10-15T23:02:19.112026+00:00",
       "solver": "numpy",
       "solver_parameters": {
         "solver": "numpy",
@@ -488215,23 +488299,23 @@
         ],
         "boundary_conditions": "periodic",
         "material": "vacuum",
-        "courant": 0.5,
-        "dt": 0.009929577464788732,
+        "courant": 0.3,
+        "dt": 0.005957746478873239,
         "nmax": 1,
         "stress_faces": 18,
         "max_steps": 5,
         "timesteps_per_last_moment": 5,
-        "probe_seconds": 0.5628224000101909,
-        "seconds_per_step": 0.11256448000203818
+        "probe_seconds": 0.6044631999975536,
+        "seconds_per_step": 0.12089263999951072
       }
     },
     "clutch_pilot_task_8_micro_probe_step_seconds": {
-      "value": 0.11256448000203818,
+      "value": 0.12089263999951072,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "clutch_pilot_task_8_micro_probe_complete",
-      "recorded_at": "2026-10-15T22:24:54.734043+00:00",
+      "recorded_at": "2026-10-15T23:02:21.433683+00:00",
       "solver": "numpy",
       "solver_parameters": {
         "solver": "numpy",
@@ -488265,23 +488349,23 @@
         ],
         "boundary_conditions": "periodic",
         "material": "vacuum",
-        "courant": 0.5,
-        "dt": 0.009929577464788732,
+        "courant": 0.3,
+        "dt": 0.005957746478873239,
         "nmax": 1,
         "stress_faces": 18,
         "max_steps": 5,
         "timesteps_per_last_moment": 5,
-        "probe_seconds": 0.5628224000101909,
-        "seconds_per_step": 0.11256448000203818
+        "probe_seconds": 0.6044631999975536,
+        "seconds_per_step": 0.12089263999951072
       }
     },
     "clutch_pilot_task_8_micro_probe_dct_checksum": {
-      "value": 0.19538016773595202,
+      "value": 0.15554424184915513,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 288,
       "step_id": "clutch_pilot_task_8_micro_probe_complete",
-      "recorded_at": "2026-10-15T22:24:58.616825+00:00",
+      "recorded_at": "2026-10-15T23:02:23.757086+00:00",
       "solver": "numpy",
       "solver_parameters": {
         "solver": "numpy",
@@ -488315,14 +488399,14 @@
         ],
         "boundary_conditions": "periodic",
         "material": "vacuum",
-        "courant": 0.5,
-        "dt": 0.009929577464788732,
+        "courant": 0.3,
+        "dt": 0.005957746478873239,
         "nmax": 1,
         "stress_faces": 18,
         "max_steps": 5,
         "timesteps_per_last_moment": 5,
-        "probe_seconds": 0.5628224000101909,
-        "seconds_per_step": 0.11256448000203818
+        "probe_seconds": 0.6044631999975536,
+        "seconds_per_step": 0.12089263999951072
       }
     },
     "clutch_pilot_task_11_elapsed_seconds": {
@@ -488823,6 +488907,206 @@
         "timesteps_per_last_moment": 5,
         "probe_seconds": 0.8083101999945939,
         "seconds_per_step": 0.16166203999891876
+      }
+    },
+    "rotational_z_eff_meep_config_count": {
+      "value": 21.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 288,
+      "step_id": "final_evaluation",
+      "recorded_at": "2026-10-15T23:01:58.623188+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "solver_name": "Meep",
+        "backend": "meep",
+        "method": "3D FDTD",
+        "dimensions": 3,
+        "platform": "BigRed 200",
+        "hardware": "BigRed 200",
+        "generator": "execution/generate_nature_meep_verification_configs.py",
+        "simulation_executed": false
+      }
+    },
+    "Rot_C8_Compact_N2_d_eff_um": {
+      "value": 0.015,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 288,
+      "step_id": "final_evaluation",
+      "recorded_at": "2026-10-15T23:01:59.865205+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "solver_name": "Meep",
+        "backend": "meep",
+        "method": "3D FDTD",
+        "dimensions": 3,
+        "platform": "BigRed 200",
+        "hardware": "BigRed 200",
+        "generator": "execution/generate_nature_meep_verification_configs.py",
+        "simulation_executed": false
+      }
+    },
+    "Rot_C8_Compact_N2_T_run": {
+      "value": 3.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 288,
+      "step_id": "final_evaluation",
+      "recorded_at": "2026-10-15T23:02:01.041500+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "solver_name": "Meep",
+        "backend": "meep",
+        "method": "3D FDTD",
+        "dimensions": 3,
+        "platform": "BigRed 200",
+        "hardware": "BigRed 200",
+        "generator": "execution/generate_nature_meep_verification_configs.py",
+        "simulation_executed": false
+      }
+    },
+    "Rot_C8_Compact_N2_Sigma": {
+      "value": 33.333333333333336,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 288,
+      "step_id": "final_evaluation",
+      "recorded_at": "2026-10-15T23:02:02.248688+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "solver_name": "Meep",
+        "backend": "meep",
+        "method": "3D FDTD",
+        "dimensions": 3,
+        "platform": "BigRed 200",
+        "hardware": "BigRed 200",
+        "generator": "execution/generate_nature_meep_verification_configs.py",
+        "simulation_executed": false
+      }
+    },
+    "Rot_C4_TightSlot_N2_d_eff_um": {
+      "value": 0.015,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 288,
+      "step_id": "final_evaluation",
+      "recorded_at": "2026-10-15T23:02:03.412499+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "solver_name": "Meep",
+        "backend": "meep",
+        "method": "3D FDTD",
+        "dimensions": 3,
+        "platform": "BigRed 200",
+        "hardware": "BigRed 200",
+        "generator": "execution/generate_nature_meep_verification_configs.py",
+        "simulation_executed": false
+      }
+    },
+    "Rot_C4_TightSlot_N2_T_run": {
+      "value": 3.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 288,
+      "step_id": "final_evaluation",
+      "recorded_at": "2026-10-15T23:02:04.607843+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "solver_name": "Meep",
+        "backend": "meep",
+        "method": "3D FDTD",
+        "dimensions": 3,
+        "platform": "BigRed 200",
+        "hardware": "BigRed 200",
+        "generator": "execution/generate_nature_meep_verification_configs.py",
+        "simulation_executed": false
+      }
+    },
+    "Rot_C4_TightSlot_N2_Sigma": {
+      "value": 33.333333333333336,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 288,
+      "step_id": "final_evaluation",
+      "recorded_at": "2026-10-15T23:02:05.844354+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "solver_name": "Meep",
+        "backend": "meep",
+        "method": "3D FDTD",
+        "dimensions": 3,
+        "platform": "BigRed 200",
+        "hardware": "BigRed 200",
+        "generator": "execution/generate_nature_meep_verification_configs.py",
+        "simulation_executed": false
+      }
+    },
+    "Rot_C10_Fractal_N3_d_eff_um": {
+      "value": 0.014999999999999946,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 288,
+      "step_id": "final_evaluation",
+      "recorded_at": "2026-10-15T23:02:07.023925+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "solver_name": "Meep",
+        "backend": "meep",
+        "method": "3D FDTD",
+        "dimensions": 3,
+        "platform": "BigRed 200",
+        "hardware": "BigRed 200",
+        "generator": "execution/generate_nature_meep_verification_configs.py",
+        "simulation_executed": false
+      }
+    },
+    "Rot_C10_Fractal_N3_T_run": {
+      "value": 3.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 288,
+      "step_id": "final_evaluation",
+      "recorded_at": "2026-10-15T23:02:08.217645+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "solver_name": "Meep",
+        "backend": "meep",
+        "method": "3D FDTD",
+        "dimensions": 3,
+        "platform": "BigRed 200",
+        "hardware": "BigRed 200",
+        "generator": "execution/generate_nature_meep_verification_configs.py",
+        "simulation_executed": false
+      }
+    },
+    "Rot_C10_Fractal_N3_Sigma": {
+      "value": 33.33333333333346,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 288,
+      "step_id": "final_evaluation",
+      "recorded_at": "2026-10-15T23:02:09.435087+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "solver_name": "Meep",
+        "backend": "meep",
+        "method": "3D FDTD",
+        "dimensions": 3,
+        "platform": "BigRed 200",
+        "hardware": "BigRed 200",
+        "generator": "execution/generate_nature_meep_verification_configs.py",
+        "simulation_executed": false
       }
     }
   }

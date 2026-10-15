@@ -35,7 +35,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
 MEEP_FORCE_TO_SI = 3.16152649e-14
-CACHE_VERSION = 5
+CACHE_VERSION = 6
 ALL_CONFIGURATIONS = ("both", "rotor", "stator", "vac")
 ELEMENT_KEYS = (
     "r_inner",
@@ -765,7 +765,7 @@ def material_pair(mp: Any, parameters: Parameters, electric: bool) -> tuple[Any,
         susceptibilities.append(
             susceptibility_type(
                 frequency=freq_val,
-                gamma=sus.gamma + (parameters.sigma if electric else 0.0),
+                gamma=sus.gamma,
                 sigma_diag=mp.Vector3(
                     sus.sigma_diag.x * scale,
                     sus.sigma_diag.y * scale,
@@ -919,6 +919,7 @@ def run_moment(
         boundary_layers=[mp.PML(parameters.pml_thickness)],
         default_material=background,
         geometry=geometry,
+        eps_averaging=False,
         sources=[
             mp.Source(
                 src=mp.CustomSource(

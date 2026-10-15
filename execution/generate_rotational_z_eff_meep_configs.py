@@ -294,7 +294,7 @@ def make_candidate_configs(candidate: Candidate) -> list[dict[str, Any]]:
         "resolution": RESOLUTION,
         "nmax": 1,
         "pml_thickness_um": 0.25,
-        "courant": 0.5,
+        "courant": 0.3,
         "T_run": run_time,
         "d_eff_um": d_eff_um,
         "Sigma": sigma,

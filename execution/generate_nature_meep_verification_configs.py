@@ -60,7 +60,7 @@ COMMON: JSONDict = {
     "num_sectors": 4,
     "nmax": 1,
     "pml_thickness_um": 0.25,
-    "courant": 0.5,
+    "courant": 0.3,
     "material": "Gold",
     "force_complex_fields": True,
     "stress_box_mode": "per_tooth_rotor_frame",
