@@ -1,7 +1,7 @@
 {
   "run_metadata": {
     "created_at": "2026-10-15T18:15:22.084634+00:00",
-    "updated_at": "2026-10-17T05:36:28.319915+00:00",
+    "updated_at": "2026-10-17T06:02:49.440048+00:00",
     "environment": "Windows",
     "entry_point": "execution/casimir_bem_solver.py",
     "solver": "meep",
@@ -7269,6 +7269,33 @@
           "dt": 0.006
         },
         "timestamp": "2026-10-17T05:35:45.417924+00:00"
+      },
+      {
+        "solver": "meep",
+        "solver_parameters": {
+          "solver": "meep",
+          "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+          "resolution": 50,
+          "dx_um": 0.02,
+          "courant": 0.3,
+          "t_run": 3.0,
+          "sigma": 33.333333333333336,
+          "nmax": 1,
+          "moments_per_config": 108,
+          "configurations": [
+            "both",
+            "rotor",
+            "stator",
+            "vac"
+          ],
+          "inclusion_exclusion_passes": 4,
+          "pml_thickness": 0.25,
+          "force_complex_fields": true,
+          "max_steps": 0,
+          "timesteps_per_last_moment": 500,
+          "dt": 0.006
+        },
+        "timestamp": "2026-10-17T06:02:06.382944+00:00"
       }
     ]
   },
@@ -467715,10 +467742,10 @@
       }
     },
     "clutch_pilot_task_4_complete": {
-      "timestamp": "2026-10-16T09:33:40.496597+00:00",
+      "timestamp": "2026-10-17T06:02:08.403415+00:00",
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_step",
-      "line_number": 257,
+      "line_number": 326,
       "data_summary": {
         "task_id": 4,
         "theta_deg": 3.0,
@@ -714268,12 +714295,12 @@
       }
     },
     "elapsed_seconds": {
-      "value": 1662.8264748849906,
+      "value": 3243.7196480300045,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 359,
-      "step_id": "clutch_pilot_task_1_complete",
-      "recorded_at": "2026-10-17T05:36:24.952591+00:00",
+      "step_id": "clutch_pilot_task_4_complete",
+      "recorded_at": "2026-10-17T06:02:46.069868+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -714336,8 +714363,8 @@
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 359,
-      "step_id": "clutch_pilot_task_1_complete",
-      "recorded_at": "2026-10-17T05:36:28.319902+00:00",
+      "step_id": "clutch_pilot_task_4_complete",
+      "recorded_at": "2026-10-17T06:02:49.440035+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -714664,103 +714691,67 @@
       }
     },
     "clutch_pilot_task_4_elapsed_seconds": {
-      "value": 0.6733548000047449,
+      "value": 3243.7196480300045,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
-      "line_number": 288,
-      "step_id": "clutch_pilot_task_4_micro_probe_complete",
-      "recorded_at": "2026-10-15T22:24:23.597522+00:00",
-      "solver": "numpy",
+      "line_number": 359,
+      "step_id": "clutch_pilot_task_4_complete",
+      "recorded_at": "2026-10-17T06:02:44.378935+00:00",
+      "solver": "meep",
       "solver_parameters": {
-        "solver": "numpy",
-        "method": "3D_Yee_FDTD_Stress_Face_Cosine_DCT_Micro_Probe",
-        "diagnostic_only": true,
-        "casimir_force_computed": false,
-        "device": "cpu",
-        "requested_device": "auto",
-        "dtype": "float64",
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
         "resolution": 50,
-        "cell_dimensions_um": [
-          3.8,
-          3.8,
-          1.41
-        ],
-        "requested_grid_shape": [
-          190,
-          190,
-          71
-        ],
-        "grid_shape": [
-          96,
-          96,
-          71
-        ],
-        "grid_capped": true,
-        "grid_spacing_um": [
-          0.03958333333333333,
-          0.03958333333333333,
-          0.019859154929577464
-        ],
-        "boundary_conditions": "periodic",
-        "material": "vacuum",
-        "courant": 0.5,
-        "dt": 0.009929577464788732,
+        "dx_um": 0.02,
+        "courant": 0.3,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
         "nmax": 1,
-        "stress_faces": 18,
-        "max_steps": 5,
-        "timesteps_per_last_moment": 5,
-        "probe_seconds": 0.582722899998771,
-        "seconds_per_step": 0.1165445799997542
+        "moments_per_config": 108,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.25,
+        "force_complex_fields": true,
+        "max_steps": 0,
+        "timesteps_per_last_moment": 500,
+        "dt": 0.006
       }
     },
     "clutch_pilot_task_4_completed_moments": {
-      "value": 0,
+      "value": 432,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
-      "line_number": 288,
-      "step_id": "clutch_pilot_task_4_micro_probe_complete",
-      "recorded_at": "2026-10-15T22:24:25.821595+00:00",
-      "solver": "numpy",
+      "line_number": 359,
+      "step_id": "clutch_pilot_task_4_complete",
+      "recorded_at": "2026-10-17T06:02:47.758017+00:00",
+      "solver": "meep",
       "solver_parameters": {
-        "solver": "numpy",
-        "method": "3D_Yee_FDTD_Stress_Face_Cosine_DCT_Micro_Probe",
-        "diagnostic_only": true,
-        "casimir_force_computed": false,
-        "device": "cpu",
-        "requested_device": "auto",
-        "dtype": "float64",
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
         "resolution": 50,
-        "cell_dimensions_um": [
-          3.8,
-          3.8,
-          1.41
-        ],
-        "requested_grid_shape": [
-          190,
-          190,
-          71
-        ],
-        "grid_shape": [
-          96,
-          96,
-          71
-        ],
-        "grid_capped": true,
-        "grid_spacing_um": [
-          0.03958333333333333,
-          0.03958333333333333,
-          0.019859154929577464
-        ],
-        "boundary_conditions": "periodic",
-        "material": "vacuum",
-        "courant": 0.5,
-        "dt": 0.009929577464788732,
+        "dx_um": 0.02,
+        "courant": 0.3,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
         "nmax": 1,
-        "stress_faces": 18,
-        "max_steps": 5,
-        "timesteps_per_last_moment": 5,
-        "probe_seconds": 0.582722899998771,
-        "seconds_per_step": 0.1165445799997542
+        "moments_per_config": 108,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.25,
+        "force_complex_fields": true,
+        "max_steps": 0,
+        "timesteps_per_last_moment": 500,
+        "dt": 0.006
       }
     },
     "clutch_pilot_task_4_micro_probe_steps": {
@@ -715896,12 +715887,12 @@
       }
     },
     "F_both": {
-      "value": -21993.27109215586,
+      "value": -25269.008560681286,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 359,
-      "step_id": "clutch_pilot_task_3_complete",
-      "recorded_at": "2026-10-17T05:35:35.009647+00:00",
+      "step_id": "clutch_pilot_task_4_complete",
+      "recorded_at": "2026-10-17T06:02:11.842543+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -715960,12 +715951,12 @@
       }
     },
     "F_rotor": {
-      "value": -22514.63823800246,
+      "value": -25320.845212812845,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 359,
-      "step_id": "clutch_pilot_task_3_complete",
-      "recorded_at": "2026-10-17T05:35:38.443233+00:00",
+      "step_id": "clutch_pilot_task_4_complete",
+      "recorded_at": "2026-10-17T06:02:15.277250+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716024,12 +716015,12 @@
       }
     },
     "F_self": {
-      "value": -22514.63823800246,
+      "value": -25320.845212812845,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 359,
-      "step_id": "clutch_pilot_task_2_complete",
-      "recorded_at": "2026-10-17T05:35:50.882456+00:00",
+      "step_id": "clutch_pilot_task_4_complete",
+      "recorded_at": "2026-10-17T06:02:18.751715+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716088,12 +716079,12 @@
       }
     },
     "F_stator": {
-      "value": -26483.303791409064,
+      "value": -30930.160893795146,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 359,
-      "step_id": "clutch_pilot_task_2_complete",
-      "recorded_at": "2026-10-17T05:35:54.336387+00:00",
+      "step_id": "clutch_pilot_task_4_complete",
+      "recorded_at": "2026-10-17T06:02:22.161292+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716152,12 +716143,12 @@
       }
     },
     "F_vac": {
-      "value": -27141.277464120365,
+      "value": -30980.606327072248,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 359,
-      "step_id": "clutch_pilot_task_2_complete",
-      "recorded_at": "2026-10-17T05:35:57.762774+00:00",
+      "step_id": "clutch_pilot_task_4_complete",
+      "recorded_at": "2026-10-17T06:02:25.579655+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716216,12 +716207,12 @@
       }
     },
     "F_2pass": {
-      "value": 225.4545359100557,
+      "value": 51.83665213155837,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 359,
-      "step_id": "clutch_pilot_task_2_complete",
-      "recorded_at": "2026-10-17T05:36:01.127170+00:00",
+      "step_id": "clutch_pilot_task_4_complete",
+      "recorded_at": "2026-10-17T06:02:29.048955+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716280,12 +716271,12 @@
       }
     },
     "F_stator_only": {
-      "value": 52.818904187395674,
+      "value": 50.44543327710198,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 359,
-      "step_id": "clutch_pilot_task_1_complete",
-      "recorded_at": "2026-10-17T05:36:11.408012+00:00",
+      "step_id": "clutch_pilot_task_4_complete",
+      "recorded_at": "2026-10-17T06:02:32.424951+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716344,12 +716335,12 @@
       }
     },
     "F_net": {
-      "value": 9.803212872961012,
+      "value": 1.3912188544563833,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 359,
-      "step_id": "clutch_pilot_task_1_complete",
-      "recorded_at": "2026-10-17T05:36:14.774783+00:00",
+      "step_id": "clutch_pilot_task_4_complete",
+      "recorded_at": "2026-10-17T06:02:35.810514+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716408,12 +716399,12 @@
       }
     },
     "f_net_fN": {
-      "value": 309.93117184975245,
+      "value": 43.983752617513105,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 359,
-      "step_id": "clutch_pilot_task_1_complete",
-      "recorded_at": "2026-10-17T05:36:18.155345+00:00",
+      "step_id": "clutch_pilot_task_4_complete",
+      "recorded_at": "2026-10-17T06:02:39.262652+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716472,12 +716463,12 @@
       }
     },
     "f_net_pN": {
-      "value": 0.30993117184975244,
+      "value": 0.043983752617513104,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 359,
-      "step_id": "clutch_pilot_task_1_complete",
-      "recorded_at": "2026-10-17T05:36:21.538434+00:00",
+      "step_id": "clutch_pilot_task_4_complete",
+      "recorded_at": "2026-10-17T06:02:42.646638+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716507,9 +716498,9 @@
       "value": -25269.008560681286,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
-      "line_number": 288,
+      "line_number": 359,
       "step_id": "clutch_pilot_task_4_complete",
-      "recorded_at": "2026-10-16T09:33:41.558078+00:00",
+      "recorded_at": "2026-10-17T06:02:10.137030+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716539,9 +716530,9 @@
       "value": -25320.845212812845,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
-      "line_number": 288,
+      "line_number": 359,
       "step_id": "clutch_pilot_task_4_complete",
-      "recorded_at": "2026-10-16T09:33:43.704028+00:00",
+      "recorded_at": "2026-10-17T06:02:13.561994+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716571,9 +716562,9 @@
       "value": -25320.845212812845,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
-      "line_number": 288,
+      "line_number": 359,
       "step_id": "clutch_pilot_task_4_complete",
-      "recorded_at": "2026-10-16T09:33:45.838206+00:00",
+      "recorded_at": "2026-10-17T06:02:17.015812+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716603,9 +716594,9 @@
       "value": -30930.160893795146,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
-      "line_number": 288,
+      "line_number": 359,
       "step_id": "clutch_pilot_task_4_complete",
-      "recorded_at": "2026-10-16T09:33:48.033248+00:00",
+      "recorded_at": "2026-10-17T06:02:20.450385+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716635,9 +716626,9 @@
       "value": -30980.606327072248,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
-      "line_number": 288,
+      "line_number": 359,
       "step_id": "clutch_pilot_task_4_complete",
-      "recorded_at": "2026-10-16T09:33:50.141090+00:00",
+      "recorded_at": "2026-10-17T06:02:23.901323+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716667,9 +716658,9 @@
       "value": 51.83665213155837,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
-      "line_number": 288,
+      "line_number": 359,
       "step_id": "clutch_pilot_task_4_complete",
-      "recorded_at": "2026-10-16T09:33:52.314585+00:00",
+      "recorded_at": "2026-10-17T06:02:27.289815+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716699,9 +716690,9 @@
       "value": 50.44543327710198,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
-      "line_number": 288,
+      "line_number": 359,
       "step_id": "clutch_pilot_task_4_complete",
-      "recorded_at": "2026-10-16T09:33:54.416315+00:00",
+      "recorded_at": "2026-10-17T06:02:30.724505+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716731,9 +716722,9 @@
       "value": 1.3912188544563833,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
-      "line_number": 288,
+      "line_number": 359,
       "step_id": "clutch_pilot_task_4_complete",
-      "recorded_at": "2026-10-16T09:33:56.525761+00:00",
+      "recorded_at": "2026-10-17T06:02:34.108587+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716763,9 +716754,9 @@
       "value": 43.983752617513105,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
-      "line_number": 288,
+      "line_number": 359,
       "step_id": "clutch_pilot_task_4_complete",
-      "recorded_at": "2026-10-16T09:33:58.629706+00:00",
+      "recorded_at": "2026-10-17T06:02:37.502207+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -716795,9 +716786,9 @@
       "value": 0.043983752617513104,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
-      "line_number": 288,
+      "line_number": 359,
       "step_id": "clutch_pilot_task_4_complete",
-      "recorded_at": "2026-10-16T09:34:00.719001+00:00",
+      "recorded_at": "2026-10-17T06:02:40.954279+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
@@ -790844,5 +790835,5 @@
   "model": "meep",
   "dataset": "fractal_casimir_3d",
   "status": "completed",
-  "executed_at": "2026-10-17T05:36:28.319953+00:00"
+  "executed_at": "2026-10-17T06:02:49.440082+00:00"
 }
