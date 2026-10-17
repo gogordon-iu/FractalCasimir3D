@@ -1,9 +1,9 @@
 {
   "figure_file": "figures/fig_nature_6step_narrative.png",
-  "timestamp": "2026-10-15T21:54:16.918078+00:00",
+  "timestamp": "2026-10-17T01:08:56.363999+00:00",
   "input_source": {
     "path": "results/nature_6step_narrative_data.csv",
-    "sha256": "e6943c4e1bf106b29f753ba0917fcb488a698e1228ba7abb83328184a742197f"
+    "sha256": "c29e7fece1bc5cde3d05c882ab02db9607d54db920963bad6a09a5ea7d32e9f3"
   },
   "data_slices_columns": [
     "step",
@@ -26,15 +26,16 @@
   "solver_parameters": {
     "python_version": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]",
     "repository_root": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations",
-    "formulation": "scalar_yukawa",
+    "formulation": "vector_dyadic",
     "device": "cpu",
     "max_steps": 0,
     "micro_probe": false,
-    "convergence_tolerance": 0.05,
-    "agreement_tolerance": 0.05,
-    "solver_sha256": "821b11220697d40e8adb3fdbb1f9b673acee0d71a1fde008c046d86c330e9e18",
-    "script_sha256": "b7d8ac84c10218e2d56ed3c7585826bb709a204f81eec9babaa424ee1d93d1d1",
+    "convergence_tolerance": 0.15,
+    "agreement_tolerance": 0.15,
+    "solver_sha256": "6bf5aa15e4764429ef4e631fd8a1a9f1349d6b6bfb0bf6450aee4117ef2f1490",
+    "script_sha256": "ecd0ca4e2c44d5fbcfd99c821bb1e526715774824a6f3c2c6e4191b718e43062",
     "energy_conversion_hbar_c_pN_um2": 0.031615267735,
+    "resume_loaded_rows": 67,
     "active_mesh_reference": {
       "module": "execution.run_fractal_advantage_study",
       "builder": "build_study_clutch_mesh",
@@ -47,6 +48,145 @@
     "derived_quantities": {
       "Delta_F_pN": "F_z_pN(theta=3) - F_z_pN(theta=48)",
       "F_rep_pN_per_um2": "F_z_pN(theta=3) / footprint_um2"
+    },
+    "meep_sources": [
+      {
+        "task_id": 1,
+        "result_path": "results_nature_meep_verification\\task_1_meep.json",
+        "config_path": "sweep_configs_nature_meep_verification\\config_001.json",
+        "result_sha256": "f301bc313703b59164a3b2b06ecddeea6e167d87595815558e5210616f66e4ed",
+        "config_sha256": "5981ed07ef39b1de175fbbdaf286498ff99447c505da68b11d0434693aa9cb46",
+        "status": "complete"
+      },
+      {
+        "task_id": 2,
+        "result_path": "results_nature_meep_verification\\task_2_meep.json",
+        "config_path": "sweep_configs_nature_meep_verification\\config_002.json",
+        "result_sha256": "c853b10c70f78ab1a21db39d2063bf12b703c0600a27ca0e0229b8da460f6f9c",
+        "config_sha256": "d136afb9a948ea94ae1d66a6e18febb44f151612b1fbcafc332c7b509f862635",
+        "status": "complete"
+      },
+      {
+        "task_id": 3,
+        "result_path": "results_nature_meep_verification\\task_3_meep.json",
+        "config_path": "sweep_configs_nature_meep_verification\\config_003.json",
+        "result_sha256": "72426ea1b555dbe93abf8779fae96b004cb3a6a3fd7308f53c9ca371b834adcd",
+        "config_sha256": "b79024f0a4a0e54cdb5c206679f30b9d59fcc4066186313a0946eda4929b28a3",
+        "status": "complete"
+      },
+      {
+        "task_id": 4,
+        "result_path": "results_nature_meep_verification\\task_4_meep.json",
+        "config_path": "sweep_configs_nature_meep_verification\\config_004.json",
+        "result_sha256": "7b7f2c9159ba92385664acbd40989e0b25487e419a617b9eefce99aa2c492261",
+        "config_sha256": "546805ac538cd1d8719ca016d944467f2aa83eb88aa6d8e014e65a087f12a3e6",
+        "status": "complete"
+      },
+      {
+        "task_id": 5,
+        "result_path": "results_nature_meep_verification\\task_5_meep.json",
+        "config_path": "sweep_configs_nature_meep_verification\\config_005.json",
+        "result_sha256": "739c2da5d27166f54dcd3831e8c4d92d2f7dcfbe099a6c3a389155c3a771e088",
+        "config_sha256": "b3feca8ff642eb1361916f3c43d49889552d0e7a5c4d56d71ca96bdac2b48c4f",
+        "status": "complete"
+      },
+      {
+        "task_id": 6,
+        "result_path": "results_nature_meep_verification\\task_6_meep.json",
+        "config_path": "sweep_configs_nature_meep_verification\\config_006.json",
+        "result_sha256": "f1ebbad698340411f524aa1b01151a414c45b327b460488002168058c1b5f046",
+        "config_sha256": "bfb977fb76cea846a274d7348e7a3bf6935168d867c0405805fd9ab8cfb0d1f5",
+        "status": "complete"
+      },
+      {
+        "task_id": 7,
+        "result_path": "results_nature_meep_verification\\task_7_meep.json",
+        "config_path": "sweep_configs_nature_meep_verification\\config_007.json",
+        "result_sha256": "0b7a49df57d904e1d6873a6274496c99099e74e3bf1e12cb1feaa582166f6dc8",
+        "config_sha256": "cde25d2a8dc77ae96347c7b494b98b5d2dbfdeecf601598bdf130c99ef33b766",
+        "status": "complete"
+      },
+      {
+        "task_id": 8,
+        "result_path": "results_nature_meep_verification\\task_8_meep.json",
+        "config_path": "sweep_configs_nature_meep_verification\\config_008.json",
+        "result_sha256": "04a72ce214cca19f015245ccc2d06d12c93e4e37c8e7915f4ab74669fb498097",
+        "config_sha256": "474faf6330c92084063c9f054a99d9571757ce0198c58cdfda377d0043c9a974",
+        "status": "complete"
+      },
+      {
+        "task_id": 9,
+        "result_path": "results_nature_meep_verification\\task_9_meep.json",
+        "config_path": "sweep_configs_nature_meep_verification\\config_009.json",
+        "result_sha256": "e2d7b9151c049eee36ed5c128e0a3b8689cd74fd3c85dd305bed0da798592248",
+        "config_sha256": "98f98055e9b7474351c5c352ebf1f80ae0c79f0d544e06ffe88d31600974fe0a",
+        "status": "complete"
+      },
+      {
+        "task_id": 10,
+        "result_path": "results_nature_meep_verification\\task_10_meep.json",
+        "config_path": "sweep_configs_nature_meep_verification\\config_010.json",
+        "result_sha256": "0094b6cade17ce18fe6c78aa691674ebdae33efd15d40f6bd22c32c37fccc73a",
+        "config_sha256": "c29191e7c67a26bc3917232e52438f296ffcf6b56310d0c0c6f87e02bb87295f",
+        "status": "complete"
+      },
+      {
+        "task_id": 11,
+        "result_path": "results_nature_meep_verification\\task_11_meep.json",
+        "config_path": "sweep_configs_nature_meep_verification\\config_011.json",
+        "result_sha256": "04278cfefc30b821e2aa28d2acd33380e8fd01aa8ab84b53044d98aac924afb7",
+        "config_sha256": "5d7bde81ebb86d991ce74c8ad58899195e703bb89eb6c06b28fd7e5a7729119e",
+        "status": "complete"
+      },
+      {
+        "task_id": 12,
+        "result_path": "results_nature_meep_verification\\task_12_meep.json",
+        "config_path": "sweep_configs_nature_meep_verification\\config_012.json",
+        "result_sha256": "bdc700ebfa3d5efd720d710d30bf675ad61ecdf5c9d6faa39ef89b44802393ca",
+        "config_sha256": "780c6548307de34819865e33abf8e3d7229ebab175b3172b27b6a532ffc294f8",
+        "status": "complete"
+      }
+    ],
+    "meep_richardson": {
+      "status": "complete",
+      "task_ids": [
+        11,
+        8,
+        12
+      ],
+      "design": "Cantor_N2_HybridRZ",
+      "theta_deg": 3.0,
+      "resolutions": [
+        40,
+        50,
+        60
+      ],
+      "order": 4,
+      "method": "Three-point least-squares Richardson fit F(R)=F_inf+C*(1/R)^4.",
+      "F_inf_4pass_pN": 0.1534865088604671,
+      "r2_4pass": 0.998391520226162,
+      "points": [
+        {
+          "task_id": 11,
+          "R": 40,
+          "dx": 0.025,
+          "f_net_pN": 3.420059966490944
+        },
+        {
+          "task_id": 8,
+          "R": 50,
+          "dx": 0.02,
+          "f_net_pN": 1.4244827858826676
+        },
+        {
+          "task_id": 12,
+          "R": 60,
+          "dx": 0.016666666666666666,
+          "f_net_pN": 0.8400540792028202
+        }
+      ],
+      "coefficient_pN_um_minus4": 8321532.364736863,
+      "residual_sum_squares_pN2": 0.005887205171128471
     }
   }
 }

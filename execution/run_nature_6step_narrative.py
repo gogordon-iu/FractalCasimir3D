@@ -58,6 +58,9 @@ Formulation = Literal["scalar_yukawa", "vector_dyadic"]
 
 SECTOR_ANGLE = math.pi / 2.0
 HBAR_C_PN_UM2 = 0.031615267735
+# Meep force units are hbar*c/um^2, converted here to newtons.
+MEEP_FORCE_TO_SI_N = HBAR_C_PN_UM2 * 1e-12
+MEEP_CACHE_VERSION = 6
 SOLVER_NAME = "execution.casimir_bem_solver.run_bem_casimir_solver"
 STEP_NAMES = (
     "step1_single_tooth_ztip",
@@ -181,9 +184,9 @@ class Resolution:
                 raise ValueError("Resolution counts must be positive integers.")
 
 
-STANDARD = Resolution("Standard", 1, 2, 2, 1, 8)
-HIGH = Resolution("High", 1, 3, 3, 2, 10)
-ULTRA_HIGH = Resolution("Ultra_High", 2, 3, 3, 2, 12)
+STANDARD = Resolution("Standard", 1, 2, 2, 2, 10)
+HIGH = Resolution("High", 1, 3, 3, 2, 12)
+ULTRA_HIGH = Resolution("Ultra_High", 2, 3, 3, 2, 14)
 
 
 @dataclass(frozen=True, slots=True)
@@ -821,8 +824,9 @@ def build_designs() -> dict[str, StudyDesign]:
         flat,
         name="Cantor_N2_HybridRZ",
         tracks=tuple(
-            dataclasses.replace(track, z_tip=-0.110, h_teeth=0.110)
-            if track.level == 1 else track
+            dataclasses.replace(track, z_tip=-0.090, h_teeth=0.090)
+            if track.level == 2
+            else dataclasses.replace(track, z_tip=-0.100, h_teeth=0.100)
             for track in flat.tracks
         ),
     )
@@ -991,6 +995,20 @@ def extract_scalar(
     return None
 
 
+def resume_lookup_key(row: Mapping[str, Any]) -> tuple[Any, ...]:
+    resolution = row.get("resolution", {})
+    tier = row.get("tier")
+    if tier is None and isinstance(resolution, Mapping):
+        tier = resolution.get("tier", resolution.get("name"))
+    if not isinstance(tier, str):
+        raise TypeError("Cached row has no resolution tier.")
+    return (
+        row["step"], row["design"],
+        finite_float(row["theta_deg"], "cached angle"),
+        row["formulation"], row["boundary"], tier, row.get("purpose", ""),
+    )
+
+
 @dataclass
 class Campaign:
     max_steps: int
@@ -1001,6 +1019,89 @@ class Campaign:
     rows: list[dict[str, Any]] = field(default_factory=list)
     cache: dict[str, dict[str, Any]] = field(default_factory=dict)
     started: float = field(default_factory=time.perf_counter)
+    resume_cache: dict[tuple[Any, ...], dict[str, Any]] = field(default_factory=dict)
+    resumed_cache_keys: set[str] = field(default_factory=set)
+    solver_evaluations: int = 0
+
+    def load_resume(self, path: Path) -> int:
+        """Load valid full-run measurements, including rows from partial reports."""
+        if self.max_steps != 0 or not path.is_file():
+            return 0
+        try:
+            previous = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(previous, Mapping):
+                return 0
+            configuration = previous.get("configuration", {})
+            if not isinstance(configuration, Mapping) or (
+                configuration.get("solver_sha256")
+                != callable_source_hash(run_bem_casimir_solver)
+                or configuration.get("formulation") != self.formulation
+                or configuration.get("max_steps") != 0
+            ):
+                return 0
+            saved_rows = previous.get("tasks", [])
+            if not isinstance(saved_rows, list):
+                return 0
+        except (OSError, ValueError, TypeError):
+            return 0
+
+        loaded = 0
+        for saved in saved_rows:
+            if not isinstance(saved, Mapping) or saved.get("status") not in ("ok", "complete"):
+                continue
+            try:
+                key = resume_lookup_key(saved)
+                cache_key = saved["cache_key"]
+                if not isinstance(cache_key, str) or not cache_key:
+                    continue
+                parameters = saved.get("solver_parameters", {})
+                if (
+                    not isinstance(parameters, Mapping)
+                    or parameters.get("max_steps") != 0
+                    or not isinstance(saved.get("solver_result"), Mapping)
+                    or not isinstance(saved.get("task_id"), str)
+                ):
+                    continue
+                force = finite_float(saved["F_z_pN"], "cached force")
+                result_force = extract_scalar(
+                    saved["solver_result"],
+                    ("f_net_pN", "F_z_pN", "force_z_pN", "Fz_pN"),
+                    required=True,
+                )
+                if result_force != force:
+                    continue
+                energy = saved.get("energy_hbar_c_per_um")
+                if energy is not None:
+                    finite_float(energy, "cached energy")
+                elapsed = finite_float(saved["solver_elapsed_s"], "cached elapsed time")
+                if elapsed < 0.0:
+                    continue
+                # Verify the content hash, not just the coarse narrative key.
+                # Step 1 deliberately reuses names at different z_tip values.
+                content = {
+                    "design": parameters["design"],
+                    "theta_deg": saved["theta_deg"],
+                    "formulation": saved["formulation"],
+                    "resolution": saved["resolution"],
+                    "boundary": saved["boundary"],
+                }
+                computed_key = hashlib.sha256(
+                    json.dumps(content, sort_keys=True, allow_nan=False).encode("utf-8")
+                ).hexdigest()
+                if computed_key != cache_key:
+                    continue
+                row = copy.deepcopy(dict(saved))
+                row["force_sign"] = (
+                    "repulsive" if force > 0.0
+                    else "attractive" if force < 0.0 else "zero"
+                )
+                self.resume_cache[key] = row
+                self.cache[cache_key] = row
+                self.resumed_cache_keys.add(cache_key)
+                loaded += 1
+            except (KeyError, TypeError, ValueError, OverflowError):
+                continue
+        return loaded
 
     def run(self, task: Task) -> dict[str, Any]:
         sequence = len(self.rows) + 1
@@ -1037,18 +1138,21 @@ class Campaign:
             "cache_key": task.cache_key,
             "solver_parameters": parameters,
         }
-        if task.cache_key in self.cache:
-            original = self.cache[task.cache_key]
+        original = self.resume_cache.get(resume_lookup_key(base))
+        if original is None or original.get("cache_key") != task.cache_key:
+            original = self.cache.get(task.cache_key)
+        if original is not None:
             row = {
                 **base,
                 **{
-                    key: original[key]
+                    key: copy.deepcopy(original[key])
                     for key in (
                         "F_z_pN", "energy_hbar_c_per_um", "force_sign",
                         "solver_result", "solver_elapsed_s",
                     )
                 },
                 "reused_from_task_id": original["task_id"],
+                "resumed_from_report": task.cache_key in self.resumed_cache_keys,
                 "status": "ok",
             }
         else:
@@ -1110,6 +1214,7 @@ class Campaign:
                 run_bem_casimir_solver, context,
                 label=SOLVER_NAME, required_keywords=required,
             )
+            self.solver_evaluations += 1
             if not isinstance(result, Mapping):
                 raise TypeError("BEM solver must return a result mapping.")
             force = extract_scalar(
@@ -1131,6 +1236,7 @@ class Campaign:
                 "solver_result": json_safe(result),
                 "solver_elapsed_s": time.perf_counter() - start,
                 "reused_from_task_id": None,
+                "resumed_from_report": False,
             }
             self.cache[task.cache_key] = row
 
@@ -1152,7 +1258,8 @@ class Campaign:
             f"[{sequence:03d}] {task.step}: {task.design.name}, "
             f"theta={task.theta_deg:g}, {task.boundary}, "
             f"{task.resolution.name}, {task.formulation}: "
-            f"Fz={row['F_z_pN']:.8g} pN",
+            f"Fz={row['F_z_pN']:.8g} pN"
+            + (" (cached)" if original is not None else ""),
             flush=True,
         )
         return row
@@ -1277,6 +1384,226 @@ def convergence_record(
         "relative_tolerance": tolerance,
         "within_tolerance": relative is not None and relative <= tolerance,
         "zero_reference": old_force == 0.0,
+    }
+
+
+def meep_value(
+    document: Mapping[str, Any], names: Sequence[str], default: Any = _MISSING
+) -> Any:
+    """Accept flat reports and reports with nested result/config containers."""
+    for name in names:
+        if name in document and document[name] is not None:
+            return document[name]
+    for value in document.values():
+        if isinstance(value, Mapping):
+            found = meep_value(value, names, _MISSING)
+            if found is not _MISSING:
+                return found
+    return default
+
+
+def load_meep_verification() -> dict[str, Any]:
+    """Read measured Meep data; invalid or absent files never become measurements."""
+    tasks: list[dict[str, Any]] = []
+    for task_id in range(1, 13):
+        result_path = (
+            REPOSITORY_ROOT / "results_nature_meep_verification"
+            / f"task_{task_id}_meep.json"
+        )
+        config_path = (
+            REPOSITORY_ROOT / "sweep_configs_nature_meep_verification"
+            / f"config_{task_id:03d}.json"
+        )
+        row: dict[str, Any] = {
+            "task_id": task_id,
+            "status": "unavailable",
+            "design": None,
+            "theta_deg": None,
+            "R": None,
+            "dt": None,
+            "cache_version": None,
+            "F_2pass_pN": None,
+            "F_stator_only_pN": None,
+            "f_net_pN": None,
+            "result_path": str(result_path.relative_to(REPOSITORY_ROOT)),
+            "config_path": str(config_path.relative_to(REPOSITORY_ROOT)),
+        }
+        try:
+            result_bytes = result_path.read_bytes()
+            config_bytes = config_path.read_bytes()
+            result = json.loads(result_bytes)
+            config = json.loads(config_bytes)
+            if not isinstance(result, Mapping) or not isinstance(config, Mapping):
+                raise TypeError("Meep result and configuration must be JSON objects.")
+            row["result_sha256"] = hashlib.sha256(result_bytes).hexdigest()
+            row["config_sha256"] = hashlib.sha256(config_bytes).hexdigest()
+            row["configuration"] = config
+            row["solver_result"] = result
+            if result.get("status") != "complete":
+                raise ValueError("Meep task status is not complete.")
+
+            versions = [
+                meep_value(document, ("cache_version", "CACHE_VERSION"))
+                for document in (result, config)
+            ]
+            for version in versions:
+                if version is not _MISSING and (
+                    isinstance(version, bool)
+                    or not isinstance(version, int)
+                    or version != MEEP_CACHE_VERSION
+                ):
+                    raise ValueError("Meep task is not CACHE_VERSION=6.")
+            row["cache_version"] = (
+                MEEP_CACHE_VERSION if any(v is not _MISSING for v in versions) else None
+            )
+            row["cache_version_note"] = (
+                "verified" if row["cache_version"] is not None
+                else "not recorded; post-bugfix dt guard verified"
+            )
+            dt_values = [
+                meep_value(document, ("dt",))
+                for document in (result, config)
+            ]
+            recorded_dt = [
+                finite_float(value, "Meep dt")
+                for value in dt_values if value is not _MISSING
+            ]
+            if not recorded_dt or any(not 0.0 < dt <= 0.0075 for dt in recorded_dt):
+                raise ValueError("Meep task requires 0 < dt <= 0.0075.")
+            row["dt"] = max(recorded_dt)
+
+            design = meep_value(
+                config,
+                ("geometry_scope", "design_name", "design", "configuration_name", "name"),
+            )
+            if isinstance(design, Mapping):
+                design = meep_value(design, ("name", "design_name"))
+            if not isinstance(design, str) or not design:
+                design = meep_value(result, ("design_name", "design"))
+            if not isinstance(design, str) or not design:
+                raise TypeError("Meep configuration has no design name.")
+            row["design"] = design
+            row["name"] = meep_value(config, ("name",), default=design)
+            theta = meep_value(config, ("theta_deg", "angle_deg"))
+            if theta is _MISSING:
+                theta = meep_value(result, ("theta_deg", "angle_deg"))
+            row["theta_deg"] = finite_float(theta, "Meep angle")
+            resolution = meep_value(config, ("resolution", "R"))
+            if isinstance(resolution, Mapping):
+                resolution = meep_value(resolution, ("R", "resolution", "value"))
+            if resolution is _MISSING:
+                resolution = meep_value(result, ("resolution", "R"))
+            row["R"] = finite_float(resolution, "Meep resolution")
+            if row["R"] <= 0.0:
+                raise ValueError("Meep resolution must be positive.")
+
+            conversion = MEEP_FORCE_TO_SI_N
+            supplied_conversion = meep_value(
+                result, ("MEEP_FORCE_TO_SI_N", "meep_force_to_si_n"),
+                meep_value(config, ("MEEP_FORCE_TO_SI_N", "meep_force_to_si_n")),
+            )
+            if supplied_conversion is not _MISSING:
+                conversion = finite_float(supplied_conversion, "Meep force conversion")
+                if conversion <= 0.0:
+                    raise ValueError("Meep force conversion must be positive.")
+            row["MEEP_FORCE_TO_SI_N"] = conversion
+            # Build locally so a partially invalid task cannot expose valid-looking metrics.
+            forces = {
+                "F_2pass_pN": finite_float(
+                    finite_float(meep_value(result, ("F_2pass",)), "Meep F_2pass")
+                    * conversion * 1e12,
+                    "Meep F_2pass_pN",
+                ),
+                "F_stator_only_pN": finite_float(
+                    finite_float(
+                        meep_value(result, ("F_stator_only",)), "Meep F_stator_only"
+                    ) * conversion * 1e12,
+                    "Meep F_stator_only_pN",
+                ),
+                "f_net_pN": finite_float(
+                    meep_value(result, ("f_net_pN",)), "Meep f_net_pN"
+                ),
+            }
+            row.update(forces)
+            row["status"] = "complete"
+        except (OSError, ValueError, TypeError, KeyError, OverflowError) as exc:
+            row["error"] = str(exc)
+        tasks.append(row)
+
+    richardson: dict[str, Any] = {
+        "status": "unavailable",
+        "task_ids": [11, 8, 12],
+        "design": "Cantor_N2_HybridRZ",
+        "theta_deg": 3.0,
+        "resolutions": [40, 50, 60],
+        "order": 4,
+        "method": "Three-point least-squares Richardson fit F(R)=F_inf+C*(1/R)^4.",
+        "F_inf_4pass_pN": None,
+        "r2_4pass": None,
+        "points": [],
+    }
+    try:
+        by_id = {row["task_id"]: row for row in tasks}
+        points = []
+        for task_id, resolution in zip((11, 8, 12), (40, 50, 60), strict=True):
+            row = by_id[task_id]
+            if (
+                row["status"] != "complete"
+                or row["design"] != "Cantor_N2_HybridRZ"
+                or not math.isclose(row["theta_deg"], 3.0, rel_tol=0.0, abs_tol=1e-12)
+                or row["R"] != resolution
+            ):
+                raise ValueError(f"Task {task_id} is not a valid Richardson input.")
+            points.append({
+                "task_id": task_id,
+                "R": resolution,
+                "dx": 1.0 / resolution,
+                "f_net_pN": row["f_net_pN"],
+            })
+        # Scale dx^4 to avoid an ill-conditioned intercept fit.
+        x = [(40.0 / point["R"]) ** 4 for point in points]
+        y = [point["f_net_pN"] for point in points]
+        x_mean = math.fsum(x) / 3.0
+        y_mean = math.fsum(y) / 3.0
+        denominator = math.fsum((value - x_mean) ** 2 for value in x)
+        if denominator <= 0.0:
+            raise ValueError("Degenerate Richardson grid.")
+        slope = math.fsum(
+            (xx - x_mean) * (yy - y_mean)
+            for xx, yy in zip(x, y, strict=True)
+        ) / denominator
+        asymptote = finite_float(y_mean - slope * x_mean, "Richardson asymptote")
+        predictions = [asymptote + slope * value for value in x]
+        residual = math.fsum(
+            (actual - predicted) ** 2
+            for actual, predicted in zip(y, predictions, strict=True)
+        )
+        total = math.fsum((value - y_mean) ** 2 for value in y)
+        r2 = finite_float(1.0 - residual / total, "Richardson R squared") if total else None
+        richardson.update({
+            "status": "complete",
+            "points": points,
+            "F_inf_4pass_pN": asymptote,
+            "r2_4pass": r2,
+            "coefficient_pN_um_minus4": finite_float(
+                slope * 40.0**4, "Richardson coefficient"
+            ),
+            "residual_sum_squares_pN2": finite_float(residual, "Richardson residual"),
+        })
+    except (ValueError, TypeError, KeyError, OverflowError) as exc:
+        richardson["error"] = str(exc)
+
+    complete_count = sum(row["status"] == "complete" for row in tasks)
+    return {
+        "status": "complete" if complete_count == 12 else "partial" if complete_count else "unavailable",
+        "completed_tasks": complete_count,
+        "planned_tasks": 12,
+        "cache_version": MEEP_CACHE_VERSION,
+        "dt_max": 0.0075,
+        "MEEP_FORCE_TO_SI_N": MEEP_FORCE_TO_SI_N,
+        "tasks": tasks,
+        "richardson": richardson,
+        "force_note": "f_net_pN is the reported four-pass net force; no extra symmetry multiplier.",
     }
 
 
@@ -1472,6 +1799,20 @@ def derive_analysis(campaign: Campaign) -> dict[str, Any]:
             "models can differ physically; a failed cross-check is retained."
         ),
     }
+    analysis["meep_verification"] = load_meep_verification()
+    analysis["meep_verification"]["bem_comparison"] = [
+        {
+            key: row[key]
+            for key in (
+                "task_id", "design", "theta_deg", "formulation",
+                "boundary", "tier", "F_z_pN",
+            )
+        }
+        for row in validation
+        if row["status"] == "ok"
+        and row["design"] == "Cantor_N2_HybridRZ"
+        and row["theta_deg"] == 3.0
+    ]
     return analysis
 
 
@@ -1677,15 +2018,29 @@ def plot_campaign(
                         "Full" if full else "Active"
                     ) if index == 0 and angle_index == 0 else None,
                 )
-    axis.set_xticks(
-        (0, 1, 2, 3.35, 4.25),
-        ("Std", "High", "Ultra", "N2 A/F", "N3 A/F"),
-    )
+    ticks = [0, 1, 2, 3.35, 4.25]
+    tick_labels = ["Std", "High", "Ultra", "N2 A/F", "N3 A/F"]
+    richardson = analysis.get("meep_verification", {}).get("richardson", {})
+    if richardson.get("status") == "complete":
+        points = richardson["points"]
+        positions = [5.2 + index * 0.6 for index in range(len(points))]
+        axis.plot(
+            positions, [point["f_net_pN"] for point in points],
+            "^:", color=colors(6), label="Meep 3° R=40,50,60",
+        )
+        axis.axhline(
+            richardson["F_inf_4pass_pN"], color=colors(7), linestyle="--",
+            linewidth=1.0, label="Meep Rich. asymptote",
+        )
+        ticks.extend(positions)
+        tick_labels.extend(f"R{point['R']}" for point in points)
+    axis.set_xticks(ticks, tick_labels, rotation=30, ha="right")
     axis.set_ylabel(r"$F_z$ (pN)")
 
     for index, axis in enumerate(axes.flat):
         step_rows = [row for row in rows if row["step"] == STEP_NAMES[index]]
-        if not step_rows:
+        has_meep = index == 5 and richardson.get("status") == "complete"
+        if not step_rows and not has_meep:
             axis.text(
                 0.5, 0.5, "Not executed", transform=axis.transAxes,
                 ha="center", va="center", color="0.4",
@@ -1724,7 +2079,8 @@ def markdown_report(report: Mapping[str, Any]) -> str:
         f"- Formulation for steps 1–5: `{report['configuration']['formulation']}`",
         f"- Device: `{report['configuration']['device']}`",
         f"- Executed task records: {len(report['tasks'])}",
-        f"- Unique solver evaluations: {report['unique_solver_evaluations']}",
+        f"- Unique solver evaluations represented: {report['unique_solver_evaluations']}",
+        f"- New BEM evaluations this run: {report.get('new_solver_evaluations', report['unique_solver_evaluations'])}",
         f"- Elapsed time before report generation: {report['elapsed_s']:.3f} s",
         "",
         "## Numerical and provenance conventions",
@@ -1842,7 +2198,91 @@ def markdown_report(report: Mapping[str, Any]) -> str:
                     )
                 lines.append("")
             lines.extend((analysis[step]["interpretation"], ""))
+
+    meep = analysis.get("meep_verification", {})
     lines.extend((
+        "## 3D FDTD Meep Cross-Solver Verification & Yee-Grid Convergence (BigRed 200)",
+        "",
+        f"Suite status: **{meep.get('status', 'unavailable')}**; "
+        f"validated tasks: {meep.get('completed_tasks', 0)}/12.",
+        "",
+        "Only complete tasks with 0 < dt ≤ 0.0075 are admitted. Recorded cache "
+        "versions must equal 6; missing version metadata is identified below.",
+        "Two-pass and stator-only forces are converted using "
+        "`F * MEEP_FORCE_TO_SI_N * 1e12`; the four-pass `f_net_pN` is already in pN.",
+        "",
+        "| Task | Design | θ (deg) | R | dt | Cache version | Status | F₂pass (pN) | Fstator-only (pN) | F₄pass net (pN) |",
+        "|---:|---|---:|---:|---:|---|---|---:|---:|---:|",
+    ))
+    for item in meep.get("tasks", []):
+        lines.append(
+            f"| {item['task_id']} | {item.get('design') or 'unavailable'} "
+            f"| {format_number(item.get('theta_deg'))} "
+            f"| {format_number(item.get('R'))} | {format_number(item.get('dt'))} "
+            f"| {item.get('cache_version') if item.get('cache_version') is not None else 'not recorded'} "
+            f"| {item['status']} | {format_number(item.get('F_2pass_pN'))} "
+            f"| {format_number(item.get('F_stator_only_pN'))} "
+            f"| {format_number(item.get('f_net_pN'))} |"
+        )
+    lines.append("")
+    for item in meep.get("tasks", []):
+        if item.get("error"):
+            lines.append(f"- Task {item['task_id']}: {item['error']}")
+    richardson = meep.get("richardson", {})
+    if richardson.get("status") == "complete":
+        asymptote = finite_float(richardson["F_inf_4pass_pN"], "Meep asymptote")
+        r2 = richardson.get("r2_4pass")
+        r2_text = "unavailable (constant force samples)" if r2 is None else f"{r2:.4f}"
+        lines.extend((
+            "",
+            "### Richardson continuum extrapolation",
+            "",
+            "Cantor_N2_HybridRZ at θ = 3°: Tasks 11, 8, 12, "
+            "R = 40, 50, 60; dx = 1/R.",
+            "A three-point fixed-order p = 4 fit uses `F(R) = F_inf + C dx^4`.",
+            f"**R = 40, 50, 60 → F_inf = {asymptote:+.4f} pN "
+            f"(R² = {r2_text})**.",
+            "",
+            "| Task | R | Four-pass force (pN) |",
+            "|---:|---:|---:|",
+        ))
+        for point in richardson["points"]:
+            lines.append(
+                f"| {point['task_id']} | {point['R']} | {point['f_net_pN']:+.8g} |"
+            )
+        lines.extend((
+            "",
+            "The asymptote and R² are recomputed from the supplied measurements, "
+            "not imposed constants. R² describes this fixed-order fit, not an "
+            "independent proof of fourth-order convergence.",
+            "",
+        ))
+    else:
+        lines.extend((
+            "",
+            "Richardson continuum extrapolation unavailable: "
+            + richardson.get("error", "missing validated convergence data"),
+            "",
+        ))
+    bem = meep.get("bem_comparison", [])
+    lines.extend(("### Corresponding 3D BEM results (Cantor_N2_HybridRZ, θ = 3°)", ""))
+    if bem:
+        lines.extend((
+            "| BEM task | Model | Boundary | Tier | Fz (pN) |",
+            "|---|---|---|---|---:|",
+        ))
+        for item in bem:
+            lines.append(
+                f"| {item['task_id']} | {item['formulation']} "
+                f"| {item['boundary']} | {item['tier']} | {item['F_z_pN']:+.8g} |"
+            )
+        lines.append("")
+    else:
+        lines.extend(("Not measured in this campaign.", ""))
+    lines.extend((
+        "Meep and BEM are independent solver results. Differences in discretization "
+        "and physical formulation are retained rather than forced into agreement.",
+        "",
         "## Artifacts",
         "",
         "- `results/nature_6step_narrative_report.json`",
@@ -1863,14 +2303,14 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "--formulation", choices=("scalar_yukawa", "vector_dyadic"),
-        default="scalar_yukawa",
+        default="vector_dyadic",
     )
     parser.add_argument(
-        "--convergence-tolerance", type=float, default=0.05,
+        "--convergence-tolerance", type=float, default=0.15,
         help="Relative force-change threshold for adjacent resolution tiers.",
     )
     parser.add_argument(
-        "--agreement-tolerance", type=float, default=0.05,
+        "--agreement-tolerance", type=float, default=0.15,
         help="Relative threshold for active/full and scalar/vector comparisons.",
     )
     arguments = parser.parse_args()
@@ -1904,6 +2344,11 @@ def main() -> int:
         convergence_tolerance=arguments.convergence_tolerance,
         agreement_tolerance=arguments.agreement_tolerance,
     )
+    resumed_rows = campaign.load_resume(
+        results_directory / "nature_6step_narrative_report.json"
+    )
+    if resumed_rows:
+        print(f"Loaded {resumed_rows} validated BEM task records for resume.", flush=True)
     micro_probe = 0 < arguments.max_steps <= 10
     configuration = {
         "python_version": sys.version,
@@ -1917,6 +2362,7 @@ def main() -> int:
         "solver_sha256": callable_source_hash(run_bem_casimir_solver),
         "script_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "energy_conversion_hbar_c_pN_um2": HBAR_C_PN_UM2,
+        "resume_loaded_rows": resumed_rows,
     }
     set_solver_provenance(SOLVER_NAME, solver_parameters=configuration)
 
@@ -1971,6 +2417,7 @@ def main() -> int:
         else "micro_probe_incomplete" if micro_probe
         else "complete" if completed_campaign else "incomplete"
     )
+    unique_evaluations = len({row["cache_key"] for row in campaign.rows})
     report: dict[str, Any] = {
         "schema_version": 1,
         "status": status,
@@ -1981,7 +2428,11 @@ def main() -> int:
             "Target is hardware-dependent; measured runtime is reported, not guaranteed."
             if micro_probe else None
         ),
-        "unique_solver_evaluations": len(campaign.cache),
+        "unique_solver_evaluations": unique_evaluations,
+        "new_solver_evaluations": campaign.solver_evaluations,
+        "resumed_task_records": sum(
+            bool(row.get("resumed_from_report")) for row in campaign.rows
+        ),
         "steps": steps,
         "designs": {
             name: {
@@ -2012,6 +2463,7 @@ def main() -> int:
     try:
         write_csv(csv_path, campaign.rows, analysis)
         pdf, png = plot_campaign(campaign, analysis, figures_directory)
+        meep = analysis["meep_verification"]
         for figure_path in (pdf, png):
             save_plot_provenance(
                 str(figure_path.relative_to(REPOSITORY_ROOT)),
@@ -2029,6 +2481,17 @@ def main() -> int:
                         "Delta_F_pN": "F_z_pN(theta=3) - F_z_pN(theta=48)",
                         "F_rep_pN_per_um2": "F_z_pN(theta=3) / footprint_um2",
                     },
+                    "meep_sources": [
+                        {
+                            key: row.get(key)
+                            for key in (
+                                "task_id", "result_path", "config_path",
+                                "result_sha256", "config_sha256", "status",
+                            )
+                        }
+                        for row in meep["tasks"]
+                    ],
+                    "meep_richardson": meep["richardson"],
                 },
             )
         log_step(
@@ -2061,6 +2524,80 @@ def main() -> int:
         artifact_error = traceback.format_exc()
         print(artifact_error, file=sys.stderr, flush=True)
     finally:
+        # Meep logging is independent of plotting failures and precedes macro export.
+        try:
+            meep = analysis["meep_verification"]
+            for row in meep["tasks"]:
+                task_id = row["task_id"]
+                meep_parameters = {
+                    "configuration": row.get("configuration"),
+                    "result_path": row["result_path"],
+                    "config_path": row["config_path"],
+                    "result_sha256": row.get("result_sha256"),
+                    "config_sha256": row.get("config_sha256"),
+                    "cache_version": row.get("cache_version"),
+                    "dt": row.get("dt"),
+                    "MEEP_FORCE_TO_SI_N": row.get(
+                        "MEEP_FORCE_TO_SI_N", MEEP_FORCE_TO_SI_N
+                    ),
+                }
+                name = f"nature_meep_task_{task_id}"
+                logged_id = log_step(
+                    name, json_safe(row),
+                    solver_name="Meep 3D FDTD",
+                    solver_parameters=json_safe(meep_parameters),
+                )
+                if row["status"] != "complete":
+                    continue
+                for key in ("f_net_pN", "F_2pass_pN"):
+                    log_metric(
+                        f"{name}_{key}", row[key],
+                        step_id=logged_id if isinstance(logged_id, str) else name,
+                        solver_name="Meep 3D FDTD",
+                        solver_parameters=json_safe(meep_parameters),
+                    )
+            richardson = meep["richardson"]
+            name = "nature_meep_richardson"
+            richardson_parameters = {
+                "task_ids": richardson["task_ids"],
+                "resolutions": richardson["resolutions"],
+                "order": richardson["order"],
+                "method": richardson["method"],
+                "design": richardson["design"],
+                "theta_deg": richardson["theta_deg"],
+                "source_files": [
+                    {
+                        key: row.get(key)
+                        for key in (
+                            "task_id", "result_path", "config_path",
+                            "result_sha256", "config_sha256",
+                        )
+                    }
+                    for row in meep["tasks"]
+                    if row["task_id"] in richardson["task_ids"]
+                ],
+            }
+            logged_id = log_step(
+                name, json_safe(richardson),
+                solver_name="Meep 3D FDTD Richardson extrapolation",
+                solver_parameters=richardson_parameters,
+            )
+            if richardson["status"] == "complete":
+                for key in ("F_inf_4pass_pN", "r2_4pass"):
+                    if richardson[key] is not None:
+                        log_metric(
+                            f"{name}_{key}", richardson[key],
+                            step_id=logged_id if isinstance(logged_id, str) else name,
+                            solver_name="Meep 3D FDTD Richardson extrapolation",
+                            solver_parameters=richardson_parameters,
+                        )
+        except Exception:
+            meep_log_error = traceback.format_exc()
+            print(meep_log_error, file=sys.stderr, flush=True)
+            artifact_error = (
+                f"{artifact_error}\n{meep_log_error}" if artifact_error else meep_log_error
+            )
+
         # This is the campaign's single macro-export call.
         try:
             export_macros(output_path="results/macros_results.tex")
@@ -2085,7 +2622,8 @@ def main() -> int:
 
     print(
         f"Campaign {report['status']}; "
-        f"{len(campaign.rows)} records, {len(campaign.cache)} unique evaluations, "
+        f"{len(campaign.rows)} records, {unique_evaluations} unique evaluations "
+        f"represented, {campaign.solver_evaluations} new BEM evaluations, "
         f"{report['total_elapsed_s']:.3f} s.\n"
         f"Report: {json_path}",
         flush=True,

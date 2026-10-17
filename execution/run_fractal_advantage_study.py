@@ -55,6 +55,7 @@ SOLVER_PROVENANCE: dict[str, Any] = {}
 DZ_VALUES = (-0.060, -0.030, 0.000, 0.020, 0.040)
 WINDOW_DESIGNS = (
     "Ctrl_UniformPeriodic",
+    "Ctrl_SizeMatched_Monotonic",
     "Cantor_FlatZ",
     "Cantor_RZ_ScaleMatched",
     "Cantor_Z_Staircase",
@@ -548,8 +549,8 @@ def build_designs() -> tuple[StudyDesign, ...]:
             "Cantor_RZ_ScaleMatched", "mechanism_2",
             "Coupled radial/vertical scales; all tooth tops flush at z=0.",
             tuple(dataclasses.replace(
-                t, z_tip=(-0.085, -0.110, -0.085)[i],
-                h_teeth=(0.085, 0.110, 0.085)[i],
+                t, z_tip=(-0.090, -0.100, -0.090)[i],
+                h_teeth=(0.090, 0.100, 0.090)[i],
             ) for i, t in enumerate(base)),
         ),
         design(
@@ -898,9 +899,6 @@ def main() -> int:
     }
     SOLVER_PROVENANCE.clear()
     SOLVER_PROVENANCE.update(provenance)
-    set_solver_provenance(
-        "bem", {"formulation": args.formulation, "n_xi": args.n_xi},
-    )
 
     designs = build_designs()
     by_name = {d.name: d for d in designs}
@@ -911,6 +909,7 @@ def main() -> int:
     ]
     selected = tasks[:1] if micro else tasks
     records: list[dict[str, Any]] = []
+    force_cache: dict[tuple[str, float, float], float] = {}
     report: dict[str, Any] = {
         "schema_version": 1,
         "status": "running",
@@ -929,13 +928,8 @@ def main() -> int:
             "A wall-clock bound depends on repository solver and available hardware.",
         ],
     }
-    record_step(0, "study_configuration", configuration)
 
     for index, task in enumerate(selected, start=1):
-        mesh = build_study_clutch_mesh(
-            task.design, task.theta_deg, task.delta_z_rotor,
-            args.n_r, args.n_phi_tooth, args.n_phi_bridge, args.n_z,
-        )
         task_id = f"fractal_{task.design.name}_{task.experiment}_{index}"
         context = {
             "design": task.design.name,
@@ -946,22 +940,36 @@ def main() -> int:
             "micro_probe": micro,
             "step_id": task_id,
         }
-        task_start = time.monotonic()
-        result = run_bem_casimir_solver(
-            mesh.parameters,
-            n_r=args.n_r,
-            n_phi_tooth=args.n_phi_tooth,
-            n_phi_bridge=args.n_phi_bridge,
-            n_z=args.n_z,
-            n_xi=args.n_xi,
-            max_steps=args.max_steps,
-            device=device,
-            task_id=task_id,
-            mesh=mesh,
-            record_metrics=True,
-            formulation=args.formulation,
+        cache_key = (
+            task.design.name,
+            float(task.theta_deg),
+            float(task.delta_z_rotor),
         )
-        force = finite(extract_force_pN(result), "F_z_pN")
+        if cache_key not in force_cache:
+            mesh = build_study_clutch_mesh(
+                task.design, task.theta_deg, task.delta_z_rotor,
+                args.n_r, args.n_phi_tooth, args.n_phi_bridge, args.n_z,
+            )
+        task_start = time.monotonic()
+        if cache_key in force_cache:
+            force = force_cache[cache_key]
+        else:
+            result = run_bem_casimir_solver(
+                mesh.parameters,
+                n_r=args.n_r,
+                n_phi_tooth=args.n_phi_tooth,
+                n_phi_bridge=args.n_phi_bridge,
+                n_z=args.n_z,
+                n_xi=args.n_xi,
+                max_steps=args.max_steps,
+                device=device,
+                task_id=task_id,
+                mesh=mesh,
+                record_metrics=False,
+                formulation=args.formulation,
+            )
+            force = finite(extract_force_pN(result), "F_z_pN")
+            force_cache[cache_key] = force
         area, perimeter = active_geometry(task.design)
         record = {
             **context,
@@ -973,19 +981,26 @@ def main() -> int:
             "elapsed_seconds": time.monotonic() - task_start,
         }
         records.append(record)
-        prefix = task_id
-        for key, unit in (
-            ("F_z_pN", "pN"), ("F_z_pN_per_um2", "pN/um^2"),
-            ("F_z_pN_per_um", "pN/um"), ("active_tooth_area_um2", "um^2"),
-            ("edge_perimeter_um", "um"), ("elapsed_seconds", "s"),
-        ):
-            record_metric(f"{prefix}_{key}", record[key], unit, context)
-        record_step(index, "bem_task_completed", record)
         report["switching"], report["windows"] = summaries(designs, records)
         export_report(report)
 
     report["status"] = "micro_probe_complete" if micro else "complete"
     report["elapsed_seconds"] = time.monotonic() - start
+
+    # Defer provenance writes until all BEM tasks have finished.
+    set_solver_provenance(
+        "bem", {"formulation": args.formulation, "n_xi": args.n_xi},
+    )
+    record_step(0, "study_configuration", configuration)
+    for index, record in enumerate(records, start=1):
+        prefix = record["step_id"]
+        for key, unit in (
+            ("F_z_pN", "pN"), ("F_z_pN_per_um2", "pN/um^2"),
+            ("F_z_pN_per_um", "pN/um"), ("active_tooth_area_um2", "um^2"),
+            ("edge_perimeter_um", "um"), ("elapsed_seconds", "s"),
+        ):
+            record_metric(f"{prefix}_{key}", record[key], unit, record)
+        record_step(index, "bem_task_completed", record)
     for group in ("switching", "windows"):
         for entry in report[group]:
             for key, value in entry.items():

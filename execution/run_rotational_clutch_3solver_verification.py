@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import csv
 import dataclasses
+import datetime
 import hashlib
 import inspect
 import json
@@ -377,6 +378,7 @@ def write_tables(
     csv_path = output / CAMPAIGN / "convergence_results.csv"
     csv_path.parent.mkdir(parents=True, exist_ok=True)
     columns = [
+        "model", "dataset", "timestamp",
         "design", "theta_deg", "state", "tier", "n_r", "n_phi_tooth",
         "n_phi_bridge", "n_z", "n_xi", "panel_count", "vector_dofs",
         "scalar_dofs", "vector_dyadic_F_z_pN", "scalar_yukawa_F_z_pN",
@@ -388,6 +390,9 @@ def write_tables(
         writer.writeheader()
         for row in rows:
             flat = {name: row.get(name) for name in columns}
+            flat["model"] = CAMPAIGN
+            flat["dataset"] = row["design"]
+            flat["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
             for name in ("n_r", "n_phi_tooth", "n_phi_bridge", "n_z", "n_xi"):
                 flat[name] = row["resolution"][name]
             for formulation in (*FORMULATIONS, "lifshitz_pfa"):

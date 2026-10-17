@@ -1,0 +1,997 @@
+{
+  "artifacts": {
+    "figure_pdf": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\figures\\fig_nature_feasibility_stability.pdf",
+    "figure_png": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\figures\\fig_nature_feasibility_stability.png",
+    "json": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\results\\nature_feasibility_stability_report.json",
+    "macros": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\results\\macros_results.tex",
+    "markdown": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\results\\nature_feasibility_stability_report.md",
+    "provenance": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\results\\provenance_metrics.json"
+  },
+  "backend_signatures": {
+    "_yukawa_blocks": "(target: 'BodyPanels', source: 'BodyPanels', source_sector: 'int', kappa: 'float', *, same_body: 'bool') -> 'YukawaBlocks'",
+    "build_study_clutch_mesh": "(design: 'StudyDesign', theta_deg: 'float', delta_z_rotor: 'float' = 0.0, n_r: 'int' = 1, n_phi_tooth: 'int' = 2, n_phi_bridge: 'int' = 2, n_z: 'int' = 2) -> 'ClutchSurfaceMesh'",
+    "run_bem_casimir_solver": "(parameters: 'Any', *, n_r: 'int' = 2, n_phi_tooth: 'int' = 3, n_phi_bridge: 'int' = 3, n_z: 'int' = 2, n_xi: 'int' = 24, max_steps: 'int' = 0, device: \"Literal['auto', 'cpu', 'cuda']\" = 'auto', condition_limit: 'float' = 100000000000000.0, max_memory_gib: 'float' = 4.0, config_file: 'str | Path | None' = None, task_id: 'str | None' = None, mesh: 'ClutchSurfaceMesh | None' = None, record_metrics: 'bool' = True, require_exact_electromagnetics: 'bool' = False, formulation: 'Formulation' = 'vector_dyadic', temperature_K: 'float | None' = None) -> 'dict[str, Any]'"
+  },
+  "caveats": [
+    "The active-sector 3D BEM backend is the only Casimir source.",
+    "Material labels are passed to the backend without substituting a material model.",
+    "Finite mesh/frequency settings require a separate convergence study.",
+    "The voltage test is a mutual-capacitance residual/RMS-voltage bound; it does not integrate a spatial patch-potential spectrum.",
+    "Three radial samples test one collective tooth-shift coordinate, not the complete lateral/rotational mechanical Hessian.",
+    "The requested positive-offset origin-energy estimate assumes vanishing first derivative and is not a centered stiffness at zero displacement.",
+    "Axial lift uses a linearized suspension, not a force-displacement equilibrium solve."
+  ],
+  "compute_elapsed_seconds": 232.61967580000055,
+  "constants": {
+    "HBAR_C_PN_UM2": 0.031615267735,
+    "epsilon0_F_per_m": 8.8541878128e-12,
+    "kBT300_pN_um": 0.004141947
+  },
+  "design_definitions": {
+    "Cantor_N2_HybridRZ": {
+      "h_teeth_um": [
+        0.09,
+        0.1,
+        0.09
+      ],
+      "source": "Cantor_RZ_ScaleMatched",
+      "z_tip_um": [
+        -0.09,
+        -0.1,
+        -0.09
+      ]
+    },
+    "Rot_C8_Compact_N2": {
+      "N": 2,
+      "R_max": 0.9,
+      "R_min": 0.2,
+      "h_teeth_um": [
+        0.1,
+        0.1,
+        0.1
+      ],
+      "levels": [
+        2,
+        1,
+        2
+      ],
+      "min_tooth_w": 0.02,
+      "source": "execution.clutch_geometry_redesign.get_scoped_clutch_elements",
+      "w1_ratio": 0.45,
+      "z_tip_um": [
+        -0.1,
+        -0.1,
+        -0.1
+      ]
+    }
+  },
+  "designs": {
+    "Cantor_N2_HybridRZ": {
+      "cd_tolerance": {
+        "engaged_attraction_preserved_at_all_CDs": true,
+        "material": "Gold",
+        "passes_requested_repulsion_and_swing_test": true,
+        "rows": [
+          {
+            "Delta_F_pN": 0.5040422531771839,
+            "F_engaged_pN": -0.33222721688310203,
+            "F_rep_pN": 0.17181503629408187,
+            "attraction_preserved": true,
+            "delta_w_tooth_nm": -10.0,
+            "delta_w_tooth_um": -0.01,
+            "positive_switching_swing": true,
+            "repulsion_preserved": true
+          },
+          {
+            "Delta_F_pN": 0.5356103794899615,
+            "F_engaged_pN": -0.34791794018637723,
+            "F_rep_pN": 0.18769243930358423,
+            "attraction_preserved": true,
+            "delta_w_tooth_nm": -5.0,
+            "delta_w_tooth_um": -0.005,
+            "positive_switching_swing": true,
+            "repulsion_preserved": true
+          },
+          {
+            "Delta_F_pN": 0.5680961698056872,
+            "F_engaged_pN": -0.36387440102740454,
+            "F_rep_pN": 0.20422176877828263,
+            "attraction_preserved": true,
+            "delta_w_tooth_nm": 0.0,
+            "delta_w_tooth_um": 0.0,
+            "positive_switching_swing": true,
+            "repulsion_preserved": true
+          },
+          {
+            "Delta_F_pN": 0.60132388304398,
+            "F_engaged_pN": -0.3799671214150969,
+            "F_rep_pN": 0.22135676162888313,
+            "attraction_preserved": true,
+            "delta_w_tooth_nm": 5.0,
+            "delta_w_tooth_um": 0.005,
+            "positive_switching_swing": true,
+            "repulsion_preserved": true
+          },
+          {
+            "Delta_F_pN": 0.6350941739425243,
+            "F_engaged_pN": -0.39601660230219166,
+            "F_rep_pN": 0.23907757164033264,
+            "attraction_preserved": true,
+            "delta_w_tooth_nm": 10.0,
+            "delta_w_tooth_um": 0.01,
+            "positive_switching_swing": true,
+            "repulsion_preserved": true
+          }
+        ],
+        "slot_width_fixed": true,
+        "temperature_K": 300.0,
+        "tooth_center_fixed": true
+      },
+      "lateral_stability": {
+        "E_Y_Pa": 169000000000.0,
+        "L_spoke_um": 15.0,
+        "combined_radial_stiffness_pN_per_nm": 1.0260038601226327,
+        "energy_rows": [
+          {
+            "delta_r_um": 0.0,
+            "energy_hbar_c_per_um": -2.0080990671203285,
+            "energy_pN_um": -0.06348658964541293
+          },
+          {
+            "delta_r_um": 0.004,
+            "energy_hbar_c_per_um": -1.9990523450432727,
+            "energy_pN_um": -0.06320057510482267
+          },
+          {
+            "delta_r_um": 0.008,
+            "energy_hbar_c_per_um": -1.992293421056534,
+            "energy_pN_um": -0.0629868899133814
+          }
+        ],
+        "equilibrium_axial_repulsive_lift_nm": 1.685843796048535,
+        "finite_difference_center_um": 0.004,
+        "k_r_Casimir_N_per_m": -4.5205843218114675e-06,
+        "k_r_Casimir_pN_per_nm": -0.0045205843218114675,
+        "k_r_Casimir_pN_per_um": -4.520584321811468,
+        "k_r_mech_pN_per_nm": 1.0305244444444441,
+        "k_z_mech_pN_per_nm": 0.12113919999999996,
+        "lateral_stability_safety_factor": 227.96266391321225,
+        "lift_is_linearized_not_a_self_consistent_equilibrium": true,
+        "locally_stable_in_sampled_coordinate": true,
+        "material": "Gold",
+        "origin_estimate_assumes_zero_first_derivative": true,
+        "origin_even_energy_estimate_pN_per_nm": 0.03575181757378178,
+        "origin_even_energy_estimate_pN_per_um": 35.75181757378178,
+        "spoke_count": 4,
+        "t_spoke_um": 0.12,
+        "temperature_K": 300.0,
+        "w_spoke_um": 0.35
+      },
+      "material_dispersion": {
+        "rows": [
+          {
+            "W_rep_30nm_over_kBT300": 12.361674733426675,
+            "W_rep_30nm_pN_um": 0.051201401577092416,
+            "energy_pN_um": -0.21812230335909283,
+            "expected_force_sign_observed": true,
+            "force_z_pN": 1.7067133859030805,
+            "regime": "PEC_T0K",
+            "theta_deg": 3.0
+          },
+          {
+            "W_rep_30nm_over_kBT300": null,
+            "W_rep_30nm_pN_um": null,
+            "energy_pN_um": -0.15760974289836951,
+            "expected_force_sign_observed": true,
+            "force_z_pN": -2.5214972955931905,
+            "regime": "PEC_T0K",
+            "theta_deg": 48.0
+          },
+          {
+            "W_rep_30nm_over_kBT300": 1.4502833587108401,
+            "W_rep_30nm_pN_um": 0.006006996806762288,
+            "energy_pN_um": -0.059563220389124726,
+            "expected_force_sign_observed": true,
+            "force_z_pN": 0.20023322689207626,
+            "regime": "Gold_T0K",
+            "theta_deg": 3.0
+          },
+          {
+            "W_rep_30nm_over_kBT300": null,
+            "W_rep_30nm_pN_um": null,
+            "energy_pN_um": -0.04696619303517591,
+            "expected_force_sign_observed": true,
+            "force_z_pN": -0.34936745990242646,
+            "regime": "Gold_T0K",
+            "theta_deg": 48.0
+          },
+          {
+            "W_rep_30nm_over_kBT300": 1.479172249994623,
+            "W_rep_30nm_pN_um": 0.0061266530633484785,
+            "energy_pN_um": -0.06348658964541293,
+            "expected_force_sign_observed": true,
+            "force_z_pN": 0.20422176877828263,
+            "regime": "Gold_T300K",
+            "theta_deg": 3.0
+          },
+          {
+            "W_rep_30nm_over_kBT300": null,
+            "W_rep_30nm_pN_um": null,
+            "energy_pN_um": -0.050569923732541204,
+            "expected_force_sign_observed": true,
+            "force_z_pN": -0.36387440102740454,
+            "regime": "Gold_T300K",
+            "theta_deg": 48.0
+          }
+        ]
+      },
+      "patch_potential": {
+        "F_Casimir_Gold_300K_pN": 0.20422176877828263,
+        "V_crit_mV": 44.203562567327324,
+        "V_crit_status": "finite",
+        "abs_dC_dz_pN_per_mV2": 0.00020903426605882916,
+        "capacitance_rows": [
+          {
+            "C_mutual_F": 1.6818838421129977e-16,
+            "delta_z_rotor_um": -0.002,
+            "relative_linear_residual": 7.452437637606974e-16,
+            "rotor_panel_count_per_sector": 48,
+            "sector_count": 4,
+            "stator_panel_count_per_sector": 128
+          },
+          {
+            "C_mutual_F": 1.6862152286630523e-16,
+            "delta_z_rotor_um": 0.0,
+            "relative_linear_residual": 6.0218934303504555e-16,
+            "rotor_panel_count_per_sector": 48,
+            "sector_count": 4,
+            "stator_panel_count_per_sector": 128
+          },
+          {
+            "C_mutual_F": 1.690245212755351e-16,
+            "delta_z_rotor_um": 0.002,
+            "relative_linear_residual": 7.369184071047141e-16,
+            "rotor_panel_count_per_sector": 48,
+            "sector_count": 4,
+            "stator_panel_count_per_sector": 128
+          }
+        ],
+        "critical_voltage_is_exact_only_within_model": true,
+        "dC_dz_F_per_m": 2.0903426605882916e-10,
+        "force_model": "uniform residual/RMS-voltage mutual-capacitance bound",
+        "kappa_per_um": 1e-06,
+        "method": "m=0 cyclic-summed single-layer, +/-0.5 V Dirichlet data",
+        "passes_at_50mV": false,
+        "spatial_patch_spectrum_modelled": false,
+        "voltage_rows": [
+          {
+            "F_net_pN": 0.20422176877828263,
+            "V_patch_mV": 0
+          },
+          {
+            "F_net_pN": 0.20160884045254726,
+            "V_patch_mV": 5
+          },
+          {
+            "F_net_pN": 0.19377005547534118,
+            "V_patch_mV": 10
+          },
+          {
+            "F_net_pN": 0.18070541384666436,
+            "V_patch_mV": 15
+          },
+          {
+            "F_net_pN": 0.1624149155665168,
+            "V_patch_mV": 20
+          },
+          {
+            "F_net_pN": 0.13889856063489853,
+            "V_patch_mV": 25
+          },
+          {
+            "F_net_pN": 0.1101563490518095,
+            "V_patch_mV": 30
+          },
+          {
+            "F_net_pN": 0.0369943559312193,
+            "V_patch_mV": 40
+          },
+          {
+            "F_net_pN": -0.05707106379525384,
+            "V_patch_mV": 50
+          }
+        ]
+      },
+      "status": "complete"
+    },
+    "Rot_C8_Compact_N2": {
+      "cd_tolerance": {
+        "engaged_attraction_preserved_at_all_CDs": true,
+        "material": "Gold",
+        "passes_requested_repulsion_and_swing_test": true,
+        "rows": [
+          {
+            "Delta_F_pN": 0.5855355476940547,
+            "F_engaged_pN": -0.38371725573158433,
+            "F_rep_pN": 0.20181829196247042,
+            "attraction_preserved": true,
+            "delta_w_tooth_nm": -10.0,
+            "delta_w_tooth_um": -0.01,
+            "positive_switching_swing": true,
+            "repulsion_preserved": true
+          },
+          {
+            "Delta_F_pN": 0.6377020882482876,
+            "F_engaged_pN": -0.4150476458867965,
+            "F_rep_pN": 0.22265444236149104,
+            "attraction_preserved": true,
+            "delta_w_tooth_nm": -5.0,
+            "delta_w_tooth_um": -0.005,
+            "positive_switching_swing": true,
+            "repulsion_preserved": true
+          },
+          {
+            "Delta_F_pN": 0.6909647682467952,
+            "F_engaged_pN": -0.4474482125096063,
+            "F_rep_pN": 0.24351655573718886,
+            "attraction_preserved": true,
+            "delta_w_tooth_nm": 0.0,
+            "delta_w_tooth_um": 0.0,
+            "positive_switching_swing": true,
+            "repulsion_preserved": true
+          },
+          {
+            "Delta_F_pN": 0.7457316144873571,
+            "F_engaged_pN": -0.4812724922598992,
+            "F_rep_pN": 0.264459122227458,
+            "attraction_preserved": true,
+            "delta_w_tooth_nm": 5.0,
+            "delta_w_tooth_um": 0.005,
+            "positive_switching_swing": true,
+            "repulsion_preserved": true
+          },
+          {
+            "Delta_F_pN": 0.8024471115735797,
+            "F_engaged_pN": -0.5164433624459901,
+            "F_rep_pN": 0.28600374912758963,
+            "attraction_preserved": true,
+            "delta_w_tooth_nm": 10.0,
+            "delta_w_tooth_um": 0.01,
+            "positive_switching_swing": true,
+            "repulsion_preserved": true
+          }
+        ],
+        "slot_width_fixed": true,
+        "temperature_K": 300.0,
+        "tooth_center_fixed": true
+      },
+      "lateral_stability": {
+        "E_Y_Pa": 169000000000.0,
+        "L_spoke_um": 15.0,
+        "combined_radial_stiffness_pN_per_nm": 1.0214455170736831,
+        "energy_rows": [
+          {
+            "delta_r_um": 0.0,
+            "energy_hbar_c_per_um": -2.309397321508747,
+            "energy_pN_um": -0.0730122146259909
+          },
+          {
+            "delta_r_um": 0.004,
+            "energy_hbar_c_per_um": -2.3030076803980246,
+            "energy_pN_um": -0.07281020441154486
+          },
+          {
+            "delta_r_um": 0.008,
+            "energy_hbar_c_per_um": -2.301212744578106,
+            "energy_pN_um": -0.07275345703503099
+          }
+        ],
+        "equilibrium_axial_repulsive_lift_nm": 2.01022093374555,
+        "finite_difference_center_um": 0.004,
+        "k_r_Casimir_N_per_m": -9.07892737076095e-06,
+        "k_r_Casimir_pN_per_nm": -0.009078927370760952,
+        "k_r_Casimir_pN_per_um": -9.078927370760951,
+        "k_r_mech_pN_per_nm": 1.0305244444444441,
+        "k_z_mech_pN_per_nm": 0.12113919999999996,
+        "lateral_stability_safety_factor": 113.50729027344015,
+        "lift_is_linearized_not_a_self_consistent_equilibrium": true,
+        "locally_stable_in_sampled_coordinate": true,
+        "material": "Gold",
+        "origin_estimate_assumes_zero_first_derivative": true,
+        "origin_even_energy_estimate_pN_per_nm": 0.02525127680575584,
+        "origin_even_energy_estimate_pN_per_um": 25.25127680575584,
+        "spoke_count": 4,
+        "t_spoke_um": 0.12,
+        "temperature_K": 300.0,
+        "w_spoke_um": 0.35
+      },
+      "material_dispersion": {
+        "rows": [
+          {
+            "W_rep_30nm_over_kBT300": 15.885502659125095,
+            "W_rep_30nm_pN_um": 0.06579691008245521,
+            "energy_pN_um": -0.28514454930335864,
+            "expected_force_sign_observed": true,
+            "force_z_pN": 2.1932303360818404,
+            "regime": "PEC_T0K",
+            "theta_deg": 3.0
+          },
+          {
+            "W_rep_30nm_over_kBT300": null,
+            "W_rep_30nm_pN_um": null,
+            "energy_pN_um": -0.1941607618278152,
+            "expected_force_sign_observed": true,
+            "force_z_pN": -4.0610420253653094,
+            "regime": "PEC_T0K",
+            "theta_deg": 48.0
+          },
+          {
+            "W_rep_30nm_over_kBT300": 1.7298555884950026,
+            "W_rep_30nm_pN_um": 0.007164970165200111,
+            "energy_pN_um": -0.06928783397271765,
+            "expected_force_sign_observed": true,
+            "force_z_pN": 0.2388323388400037,
+            "regime": "Gold_T0K",
+            "theta_deg": 3.0
+          },
+          {
+            "W_rep_30nm_over_kBT300": null,
+            "W_rep_30nm_pN_um": null,
+            "energy_pN_um": -0.049351710561311636,
+            "expected_force_sign_observed": true,
+            "force_z_pN": -0.4315656237806764,
+            "regime": "Gold_T0K",
+            "theta_deg": 48.0
+          },
+          {
+            "W_rep_30nm_over_kBT300": 1.763783233372051,
+            "W_rep_30nm_pN_um": 0.007305496672115666,
+            "energy_pN_um": -0.0730122146259909,
+            "expected_force_sign_observed": true,
+            "force_z_pN": 0.24351655573718886,
+            "regime": "Gold_T300K",
+            "theta_deg": 3.0
+          },
+          {
+            "W_rep_30nm_over_kBT300": null,
+            "W_rep_30nm_pN_um": null,
+            "energy_pN_um": -0.05239035355103098,
+            "expected_force_sign_observed": true,
+            "force_z_pN": -0.4474482125096063,
+            "regime": "Gold_T300K",
+            "theta_deg": 48.0
+          }
+        ]
+      },
+      "patch_potential": {
+        "F_Casimir_Gold_300K_pN": 0.24351655573718886,
+        "V_crit_mV": 48.518469037186335,
+        "V_crit_status": "finite",
+        "abs_dC_dz_pN_per_mV2": 0.0002068922920875793,
+        "capacitance_rows": [
+          {
+            "C_mutual_F": 1.1756653819526844e-16,
+            "delta_z_rotor_um": -0.002,
+            "relative_linear_residual": 6.447200587580603e-16,
+            "rotor_panel_count_per_sector": 48,
+            "sector_count": 4,
+            "stator_panel_count_per_sector": 128
+          },
+          {
+            "C_mutual_F": 1.1799354898585264e-16,
+            "delta_z_rotor_um": 0.0,
+            "relative_linear_residual": 6.6211642251411445e-16,
+            "rotor_panel_count_per_sector": 48,
+            "sector_count": 4,
+            "stator_panel_count_per_sector": 128
+          },
+          {
+            "C_mutual_F": 1.1839410736361876e-16,
+            "delta_z_rotor_um": 0.002,
+            "relative_linear_residual": 6.4745254164792455e-16,
+            "rotor_panel_count_per_sector": 48,
+            "sector_count": 4,
+            "stator_panel_count_per_sector": 128
+          }
+        ],
+        "critical_voltage_is_exact_only_within_model": true,
+        "dC_dz_F_per_m": 2.068922920875793e-10,
+        "force_model": "uniform residual/RMS-voltage mutual-capacitance bound",
+        "kappa_per_um": 1e-06,
+        "method": "m=0 cyclic-summed single-layer, +/-0.5 V Dirichlet data",
+        "passes_at_50mV": false,
+        "spatial_patch_spectrum_modelled": false,
+        "voltage_rows": [
+          {
+            "F_net_pN": 0.24351655573718886,
+            "V_patch_mV": 0
+          },
+          {
+            "F_net_pN": 0.24093040208609412,
+            "V_patch_mV": 5
+          },
+          {
+            "F_net_pN": 0.2331719411328099,
+            "V_patch_mV": 10
+          },
+          {
+            "F_net_pN": 0.2202411728773362,
+            "V_patch_mV": 15
+          },
+          {
+            "F_net_pN": 0.202138097319673,
+            "V_patch_mV": 20
+          },
+          {
+            "F_net_pN": 0.17886271445982033,
+            "V_patch_mV": 25
+          },
+          {
+            "F_net_pN": 0.15041502429777817,
+            "V_patch_mV": 30
+          },
+          {
+            "F_net_pN": 0.07800272206712541,
+            "V_patch_mV": 40
+          },
+          {
+            "F_net_pN": -0.015098809372285277,
+            "V_patch_mV": 50
+          }
+        ]
+      },
+      "status": "complete"
+    }
+  },
+  "evaluations": [
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.0,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 12.668887599997106,
+      "energy_hbar_c_per_um": -6.899271111268128,
+      "energy_pN_um": -0.21812230335909283,
+      "force_z_pN": 1.7067133859030805,
+      "material": "PEC",
+      "step_id": 0,
+      "temperature_K": 0.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.0,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 23.75615829999151,
+      "energy_hbar_c_per_um": -4.98524144155471,
+      "energy_pN_um": -0.15760974289836951,
+      "force_z_pN": -2.5214972955931905,
+      "material": "PEC",
+      "step_id": 1,
+      "temperature_K": 0.0,
+      "theta_deg": 48.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.0,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 92.04348730000493,
+      "energy_hbar_c_per_um": -1.884001770549128,
+      "energy_pN_um": -0.059563220389124726,
+      "force_z_pN": 0.20023322689207626,
+      "material": "Gold",
+      "step_id": 2,
+      "temperature_K": 0.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.0,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 12.59046269999817,
+      "energy_hbar_c_per_um": -1.4855541768251896,
+      "energy_pN_um": -0.04696619303517591,
+      "force_z_pN": -0.34936745990242646,
+      "material": "Gold",
+      "step_id": 3,
+      "temperature_K": 0.0,
+      "theta_deg": 48.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.0,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 12.485407400003169,
+      "energy_hbar_c_per_um": -2.0080990671203285,
+      "energy_pN_um": -0.06348658964541293,
+      "force_z_pN": 0.20422176877828263,
+      "material": "Gold",
+      "step_id": 4,
+      "temperature_K": 300.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.0,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 12.043779300001916,
+      "energy_hbar_c_per_um": -1.5995412139609135,
+      "energy_pN_um": -0.050569923732541204,
+      "force_z_pN": -0.36387440102740454,
+      "material": "Gold",
+      "step_id": 5,
+      "temperature_K": 300.0,
+      "theta_deg": 48.0
+    },
+    {
+      "delta_r_um": 0.004,
+      "delta_w_tooth_um": 0.0,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 88.95530970000254,
+      "energy_hbar_c_per_um": -1.9990523450432727,
+      "energy_pN_um": -0.06320057510482267,
+      "force_z_pN": 0.20424347100183646,
+      "material": "Gold",
+      "step_id": 6,
+      "temperature_K": 300.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.008,
+      "delta_w_tooth_um": 0.0,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 29.571683400004986,
+      "energy_hbar_c_per_um": -1.992293421056534,
+      "energy_pN_um": -0.0629868899133814,
+      "force_z_pN": 0.205860300164608,
+      "material": "Gold",
+      "step_id": 7,
+      "temperature_K": 300.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": -0.01,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 11.731936299998779,
+      "energy_hbar_c_per_um": -1.8944889199249488,
+      "energy_pN_um": -0.059894774424418235,
+      "force_z_pN": 0.17181503629408187,
+      "material": "Gold",
+      "step_id": 8,
+      "temperature_K": 300.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": -0.01,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 12.221832299997914,
+      "energy_hbar_c_per_um": -1.5251760062134692,
+      "energy_pN_um": -0.04821884777943685,
+      "force_z_pN": -0.33222721688310203,
+      "material": "Gold",
+      "step_id": 9,
+      "temperature_K": 300.0,
+      "theta_deg": 48.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": -0.005,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 21.03231290000258,
+      "energy_hbar_c_per_um": -1.95151743374467,
+      "energy_pN_um": -0.06169774615735787,
+      "force_z_pN": 0.18769243930358423,
+      "material": "Gold",
+      "step_id": 10,
+      "temperature_K": 300.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": -0.005,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 21.74175240000477,
+      "energy_hbar_c_per_um": -1.5628283413763155,
+      "energy_pN_um": -0.0494092364364582,
+      "force_z_pN": -0.34791794018637723,
+      "material": "Gold",
+      "step_id": 11,
+      "temperature_K": 300.0,
+      "theta_deg": 48.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.005,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 18.65574960000231,
+      "energy_hbar_c_per_um": -2.0641173927201493,
+      "energy_pN_um": -0.06525762400731766,
+      "force_z_pN": 0.22135676162888313,
+      "material": "Gold",
+      "step_id": 12,
+      "temperature_K": 300.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.005,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 18.350834499986377,
+      "energy_hbar_c_per_um": -1.6352553563464387,
+      "energy_pN_um": -0.05169903590598549,
+      "force_z_pN": -0.3799671214150969,
+      "material": "Gold",
+      "step_id": 13,
+      "temperature_K": 300.0,
+      "theta_deg": 48.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.01,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 23.049533400000655,
+      "energy_hbar_c_per_um": -2.1194345752844876,
+      "energy_pN_um": -0.0670064915444351,
+      "force_z_pN": 0.23907757164033264,
+      "material": "Gold",
+      "step_id": 14,
+      "temperature_K": 300.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.01,
+      "design": "Cantor_N2_HybridRZ",
+      "elapsed_seconds": 12.236848099986673,
+      "energy_hbar_c_per_um": -1.6698824644766526,
+      "energy_pN_um": -0.052793781200411,
+      "force_z_pN": -0.39601660230219166,
+      "material": "Gold",
+      "step_id": 15,
+      "temperature_K": 300.0,
+      "theta_deg": 48.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.0,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 11.81281129999843,
+      "energy_hbar_c_per_um": -9.01920400274474,
+      "energy_pN_um": -0.28514454930335864,
+      "force_z_pN": 2.1932303360818404,
+      "material": "PEC",
+      "step_id": 16,
+      "temperature_K": 0.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.0,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 11.858693500005757,
+      "energy_hbar_c_per_um": -6.141360669638345,
+      "energy_pN_um": -0.1941607618278152,
+      "force_z_pN": -4.0610420253653094,
+      "material": "PEC",
+      "step_id": 17,
+      "temperature_K": 0.0,
+      "theta_deg": 48.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.0,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 12.140751200000523,
+      "energy_hbar_c_per_um": -2.1915940916107397,
+      "energy_pN_um": -0.06928783397271765,
+      "force_z_pN": 0.2388323388400037,
+      "material": "Gold",
+      "step_id": 18,
+      "temperature_K": 0.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.0,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 14.842927600009716,
+      "energy_hbar_c_per_um": -1.5610087814210198,
+      "energy_pN_um": -0.049351710561311636,
+      "force_z_pN": -0.4315656237806764,
+      "material": "Gold",
+      "step_id": 19,
+      "temperature_K": 0.0,
+      "theta_deg": 48.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.0,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 12.630974100000458,
+      "energy_hbar_c_per_um": -2.309397321508747,
+      "energy_pN_um": -0.0730122146259909,
+      "force_z_pN": 0.24351655573718886,
+      "material": "Gold",
+      "step_id": 20,
+      "temperature_K": 300.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.0,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 20.859593200002564,
+      "energy_hbar_c_per_um": -1.6571219320414519,
+      "energy_pN_um": -0.05239035355103098,
+      "force_z_pN": -0.4474482125096063,
+      "material": "Gold",
+      "step_id": 21,
+      "temperature_K": 300.0,
+      "theta_deg": 48.0
+    },
+    {
+      "delta_r_um": 0.004,
+      "delta_w_tooth_um": 0.0,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 18.806151999990107,
+      "energy_hbar_c_per_um": -2.3030076803980246,
+      "energy_pN_um": -0.07281020441154486,
+      "force_z_pN": 0.24671915090855254,
+      "material": "Gold",
+      "step_id": 22,
+      "temperature_K": 300.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.008,
+      "delta_w_tooth_um": 0.0,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 19.30984719999833,
+      "energy_hbar_c_per_um": -2.301212744578106,
+      "energy_pN_um": -0.07275345703503099,
+      "force_z_pN": 0.25438541683745525,
+      "material": "Gold",
+      "step_id": 23,
+      "temperature_K": 300.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": -0.01,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 18.41353470001195,
+      "energy_hbar_c_per_um": -2.0996135178576854,
+      "energy_pN_um": -0.06637984350709593,
+      "force_z_pN": 0.20181829196247042,
+      "material": "Gold",
+      "step_id": 24,
+      "temperature_K": 300.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": -0.01,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 14.69833880000806,
+      "energy_hbar_c_per_um": -1.5141402208886938,
+      "energy_pN_um": -0.047869948471728097,
+      "force_z_pN": -0.38371725573158433,
+      "material": "Gold",
+      "step_id": 25,
+      "temperature_K": 300.0,
+      "theta_deg": 48.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": -0.005,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 12.750274499994703,
+      "energy_hbar_c_per_um": -2.206646658714146,
+      "energy_pN_um": -0.06976372491179089,
+      "force_z_pN": 0.22265444236149104,
+      "material": "Gold",
+      "step_id": 26,
+      "temperature_K": 300.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": -0.005,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 12.316786900002626,
+      "energy_hbar_c_per_um": -1.5876036178896245,
+      "energy_pN_um": -0.05019251343663511,
+      "force_z_pN": -0.4150476458867965,
+      "material": "Gold",
+      "step_id": 27,
+      "temperature_K": 300.0,
+      "theta_deg": 48.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.005,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 12.359911899999133,
+      "energy_hbar_c_per_um": -2.4084490142096935,
+      "energy_pN_um": -0.07614376041033628,
+      "force_z_pN": 0.264459122227458,
+      "material": "Gold",
+      "step_id": 28,
+      "temperature_K": 300.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.005,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 12.204039800009923,
+      "energy_hbar_c_per_um": -1.7233893059088585,
+      "energy_pN_um": -0.05448541431794438,
+      "force_z_pN": -0.4812724922598992,
+      "material": "Gold",
+      "step_id": 29,
+      "temperature_K": 300.0,
+      "theta_deg": 48.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.01,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 11.597891099998378,
+      "energy_hbar_c_per_um": -2.5038642981522483,
+      "energy_pN_um": -0.07916034015819119,
+      "force_z_pN": 0.28600374912758963,
+      "material": "Gold",
+      "step_id": 30,
+      "temperature_K": 300.0,
+      "theta_deg": 3.0
+    },
+    {
+      "delta_r_um": 0.0,
+      "delta_w_tooth_um": 0.01,
+      "design": "Rot_C8_Compact_N2",
+      "elapsed_seconds": 11.835422200005269,
+      "energy_hbar_c_per_um": -1.7867301010387586,
+      "energy_pN_um": -0.05648795051452396,
+      "force_z_pN": -0.5164433624459901,
+      "material": "Gold",
+      "step_id": 31,
+      "temperature_K": 300.0,
+      "theta_deg": 48.0
+    }
+  ],
+  "mode": "full",
+  "schema_version": 1,
+  "settings": {
+    "device": "cpu",
+    "formulation": "vector_dyadic",
+    "max_steps": 0,
+    "micro_resolution_override": false,
+    "n_phi_bridge": 2,
+    "n_phi_tooth": 2,
+    "n_r": 1,
+    "n_xi": 12,
+    "n_z": 2,
+    "requested_resolution": {
+      "n_phi_bridge": 2,
+      "n_phi_tooth": 2,
+      "n_r": 1,
+      "n_xi": 12,
+      "n_z": 2
+    },
+    "resume_report_path": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\results\\nature_feasibility_stability_report.json"
+  },
+  "solver": "bem",
+  "status": "complete",
+  "total_elapsed_seconds": 484.36723010000424,
+  "units": {
+    "capacitance": "F",
+    "energy": "pN um",
+    "force": "pN",
+    "mesh_length": "um",
+    "pN_per_um_to_N_per_m": 1e-06,
+    "pN_per_um_to_pN_per_nm": 0.001,
+    "voltage": "mV"
+  }
+}

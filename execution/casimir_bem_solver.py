@@ -51,7 +51,7 @@ import sys
 import tempfile
 import time
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Callable, Literal, TypeAlias, cast
 
@@ -187,6 +187,7 @@ def _configuration(parameters: Any) -> tuple[dict[str, Any], dict[str, Any]]:
         "theta_deg",
         "N_fractal",
         "material",
+        "temperature_K",
         "R_min",
         "R_max",
         "r_min",
@@ -260,9 +261,15 @@ class BodyPanels:
     normals: FloatArray
     areas: FloatArray
     panel_types: tuple[PanelType, ...]
-    # The default preserves construction by legacy callers without vertices.
+    # The defaults preserve construction by legacy callers without vertices.
     tangents: FloatArray = dataclasses.field(
         default_factory=lambda: np.empty((0, 2, 3), dtype=np.float64)
+    )
+    quad_points: FloatArray = dataclasses.field(
+        default_factory=lambda: np.empty((0, 4, 3), dtype=np.float64)
+    )
+    quad_weights: FloatArray = dataclasses.field(
+        default_factory=lambda: np.full(4, 0.25, dtype=np.float64)
     )
 
     def __post_init__(self) -> None:
@@ -292,6 +299,30 @@ class BodyPanels:
             atol=1.0e-12,
         ):
             raise ValueError("Panel tangents must be perpendicular to the normals.")
+        if self.quad_points.shape == (0, 4, 3) and self.count:
+            centroids = np.asarray(self.centroids, dtype=np.float64)
+            if centroids.shape != (self.count, 3):
+                raise ValueError("Panel centroids must have shape (N, 3).")
+            object.__setattr__(
+                self, "quad_points", np.repeat(centroids[:, None, :], 4, axis=1)
+            )
+        if self.quad_points.shape != (self.count, 4, 3):
+            raise ValueError("Panel quadrature points must have shape (N, 4, 3).")
+        if not np.isfinite(self.quad_points).all():
+            raise ValueError("Panel quadrature points must be finite.")
+        if self.quad_weights.shape != (4,):
+            raise ValueError("Panel quadrature weights must have shape (4,).")
+        if (
+            not np.isfinite(self.quad_weights).all()
+            or np.any(self.quad_weights < 0.0)
+            or not math.isclose(
+                float(np.sum(self.quad_weights)), 1.0,
+                rel_tol=1.0e-12, abs_tol=1.0e-12,
+            )
+        ):
+            raise ValueError(
+                "Panel quadrature weights must be finite, nonnegative, and sum to one."
+            )
 
     @property
     def count(self) -> int:
@@ -334,12 +365,27 @@ class ClutchSurfaceMesh:
             raise ValueError("Cannot construct panel tangent basis from its vertices.")
         t1 /= lengths[:, None]
         tangents = np.stack((t1, np.cross(normals, t1)), axis=1)
+        s = (1.0 - 1.0 / math.sqrt(3.0)) / 2.0
+        nodes = (s, 1.0 - s)
+        quad_points = np.stack(
+            [
+                (1.0 - u) * (1.0 - v) * vertices[:, 0]
+                + u * (1.0 - v) * vertices[:, 1]
+                + u * v * vertices[:, 2]
+                + (1.0 - u) * v * vertices[:, 3]
+                for u in nodes
+                for v in nodes
+            ],
+            axis=1,
+        )
         return BodyPanels(
             np.asarray([p.centroid for p in panels], dtype=np.float64),
             normals,
             np.asarray([p.area for p in panels], dtype=np.float64),
             tuple(p.panel_type for p in panels),
             tangents,
+            quad_points=quad_points,
+            quad_weights=np.full(4, 0.25, dtype=np.float64),
         )
 
 
@@ -780,6 +826,65 @@ class YukawaBlocks:
     double_layer_target: FloatArray
 
 
+def _panel_pair_samples(
+    target: BodyPanels,
+    source: BodyPanels,
+    rotation: FloatArray,
+    kappa: float,
+    self_block: bool,
+) -> Iterator[tuple[FloatArray, FloatArray, FloatArray, FloatArray]]:
+    """Yield weighted kernels for 16 point pairs without a full QxQ tensor."""
+    for body in (target, source):
+        if body.centroids.shape != (body.count, 3):
+            raise ValueError("Panel centroids must have shape (N, 3).")
+        if not np.isfinite(body.centroids).all():
+            raise ValueError("Panel centroids must be finite.")
+        if body.areas.shape != (body.count,):
+            raise ValueError("Panel areas must have shape (N,).")
+        if not np.isfinite(body.areas).all() or np.any(body.areas <= 0.0):
+            raise ValueError("Panel areas must be finite and positive.")
+
+    if self_block and target.count != source.count:
+        raise ValueError("Inconsistent self-block dimensions.")
+    source_positions = source.centroids @ rotation.T
+    distance = np.linalg.norm(
+        target.centroids[:, None, :] - source_positions[None, :, :], axis=2
+    )
+    zero = distance <= 0.0
+    if self_block:
+        if np.any(zero & ~np.eye(target.count, dtype=np.bool_)):
+            raise ValueError("A body has duplicate panel collocation points.")
+    elif zero.any():
+        raise ValueError("Distinct panels have coincident collocation points.")
+
+    sub_panel_var = (
+        target.areas[:, None] + source.areas[None, :]
+    ) / (32.0 * math.pi)
+    area_scale = (
+        np.sqrt(target.areas[:, None]) * np.sqrt(source.areas[None, :])
+    )
+    source_points = source.quad_points @ rotation.T
+    for qt in range(4):
+        for qs in range(4):
+            weight = float(target.quad_weights[qt] * source.quad_weights[qs])
+            if weight == 0.0:
+                continue
+            delta = (
+                target.quad_points[:, qt, None, :]
+                - source_points[None, :, qs, :]
+            )
+            effective_distance = np.sqrt(
+                np.sum(delta**2, axis=2) + sub_panel_var
+            )
+            kernel = (
+                np.exp(-kappa * effective_distance)
+                / (4.0 * math.pi * effective_distance)
+                * area_scale * weight
+            )
+            radial_derivative = -kernel * (kappa + 1.0 / effective_distance)
+            yield delta, effective_distance, kernel, radial_derivative
+
+
 def _yukawa_blocks(
     target: BodyPanels,
     source: BodyPanels,
@@ -790,41 +895,34 @@ def _yukawa_blocks(
 ) -> YukawaBlocks:
     """
     Area-symmetrized finite-panel-regularized Yukawa kernels and analytic
-    derivatives. The self value is the user-specified equal-area disk value.
+    derivatives averaged over 2x2 bilinear quadrature on each panel.
 
-    The finite-area diagonal is not the exact integral for an arbitrary
-    quadrilateral. Off-diagonal centroid distances are regularized by panel
-    areas to avoid a point-collocation near-field singularity.
+    The self value remains the kappa-independent equal-area disk value.
+    Off-diagonal point pairs use sub-panel-area distance regularization.
     """
+    kappa = _positive_float(kappa, "kappa", allow_zero=True)
     rotation = _rotation(source_sector)
-    source_positions = source.centroids @ rotation.T
     source_normals = source.normals @ rotation.T
-    delta = target.centroids[:, None, :] - source_positions[None, :, :]
-    distance = np.linalg.norm(delta, axis=2)
     self_block = same_body and source_sector == 0
-    diagonal_mask = np.eye(target.count, dtype=np.bool_) if self_block else None
-    if self_block and target.count != source.count:
-        raise ValueError("Inconsistent self-block dimensions.")
-    zero = distance <= 0.0
-    if diagonal_mask is None:
-        if zero.any():
-            raise ValueError("Distinct panels have coincident collocation points.")
-    elif np.any(zero & ~diagonal_mask):
-        raise ValueError("A body has duplicate panel collocation points.")
+    shape = (target.count, source.count)
+    single = np.zeros(shape, dtype=np.float64)
+    dz = np.zeros(shape, dtype=np.float64)
+    d_target = np.zeros(shape, dtype=np.float64)
+    d_source = np.zeros(shape, dtype=np.float64)
 
-    panel_var = (target.areas[:, None] + source.areas[None, :]) / (8.0 * math.pi)
-    effective_distance = np.sqrt(distance**2 + panel_var)
-    area_scale = np.sqrt(target.areas[:, None] * source.areas[None, :])
-    kernel = np.exp(-kappa * effective_distance) / (4.0 * math.pi * effective_distance)
-    radial_derivative = -kernel * (kappa + 1.0 / effective_distance)
-    gradient = radial_derivative[:, :, None] * delta / effective_distance[:, :, None]
-    single = kernel * area_scale
-    dz = gradient[:, :, 2] * area_scale
-    d_target = np.einsum("ijk,ik->ij", gradient, target.normals) * area_scale
-    d_source = -np.einsum("ijk,jk->ij", gradient, source_normals) * area_scale
+    for delta, effective_distance, kernel, radial_derivative in _panel_pair_samples(
+        target, source, rotation, kappa, self_block
+    ):
+        gradient = (
+            radial_derivative[:, :, None]
+            * delta / effective_distance[:, :, None]
+        )
+        single += kernel
+        dz += gradient[:, :, 2]
+        d_target += np.einsum("ijk,ik->ij", gradient, target.normals)
+        d_source -= np.einsum("ijk,jk->ij", gradient, source_normals)
 
-    if diagonal_mask is not None:
-        # Keep the kappa-independent equal-area disk surface capacitance.
+    if self_block:
         # G_ii = 1 / (2 sqrt(pi A_i)); multiply by sqrt(A_i A_i).
         diagonal = np.sqrt(target.areas) / (2.0 * math.sqrt(math.pi))
         np.fill_diagonal(single, diagonal)
@@ -849,87 +947,76 @@ def _vector_dyadic_blocks(
     Regularized vector single-layer self blocks and tangential dyadic cross
     blocks, with analytic target-z derivatives and panel-major DoF ordering.
 
-    Double-layer fields retain scalar-kernel normal-derivative diagnostics
-    projected onto the tangent bases; they are not Maxwell PMCHWT operators.
+    Off-diagonal kernels and derivatives use 2x2 bilinear quadrature on each
+    panel. Double-layer fields retain scalar-kernel normal-derivative
+    diagnostics projected onto tangent bases; they are not PMCHWT operators.
     """
     kappa = _positive_float(kappa, "kappa", allow_zero=True)
     if target.count == 0 or source.count == 0:
         raise ValueError("Vector dyadic blocks require nonempty panel arrays.")
-    for body in (target, source):
-        if body.centroids.shape != (body.count, 3):
-            raise ValueError("Panel centroids must have shape (N, 3).")
-        if not np.isfinite(body.centroids).all():
-            raise ValueError("Panel centroids must be finite.")
-        if not np.isfinite(body.areas).all() or np.any(body.areas <= 0.0):
-            raise ValueError("Panel areas must be finite and positive.")
 
     rotation = _rotation(source_sector)
-    source_positions = source.centroids @ rotation.T
     source_normals = source.normals @ rotation.T
     source_tangents = np.einsum("ab,jmb->jma", rotation, source.tangents)
-    delta = target.centroids[:, None, :] - source_positions[None, :, :]
-    distance = np.linalg.norm(delta, axis=2)
     self_block = same_body and source_sector == 0
-    if self_block:
-        if target.count != source.count:
-            raise ValueError("Inconsistent self-block dimensions.")
-        diagonal_mask = np.eye(target.count, dtype=np.bool_)
-        if np.any((distance <= 0.0) & ~diagonal_mask):
-            raise ValueError("A body has duplicate panel collocation points.")
-    elif np.any(distance <= 0.0):
-        raise ValueError("Distinct panels have coincident collocation points.")
-
-    panel_var = (target.areas[:, None] + source.areas[None, :]) / (8.0 * math.pi)
-    effective_distance = np.sqrt(distance**2 + panel_var)
-    area_scale = np.sqrt(target.areas[:, None] * source.areas[None, :])
-    kernel = np.exp(-kappa * effective_distance) / (4.0 * math.pi * effective_distance)
-    radial_derivative = -kernel * (kappa + 1.0 / effective_distance)
     t_dot_t = np.einsum("ima,jna->ijmn", target.tangents, source_tangents)
-    scaled_kernel = (kernel * area_scale)[:, :, None, None]
-    scaled_dz = (
-        radial_derivative * delta[:, :, 2] / effective_distance * area_scale
-    )[:, :, None, None]
+    shape = (target.count, source.count, 2, 2)
+    single = np.zeros(shape, dtype=np.float64)
+    dz = np.zeros(shape, dtype=np.float64)
+    d_target = np.zeros(shape, dtype=np.float64)
+    d_source = np.zeros(shape, dtype=np.float64)
 
-    if same_body:
-        single = scaled_kernel * t_dot_t
-        dz = scaled_dz * t_dot_t
-    else:
-        x = kappa * effective_distance
-        # Equivalent rational forms avoid overflow from x**2 at large kappa.
-        inv = 1.0 / (1.0 + x)
-        denominator = 1.0 - inv + inv**2
-        c_dir = (1.0 + inv + inv**2) / denominator
-        dc_dir_dx = -2.0 * inv**2 * (1.0 - inv**2) / denominator**2
-        u_R = np.einsum("ima,ija->ijm", target.tangents, delta)
-        v_R = np.einsum("jna,ija->ijn", source_tangents, delta)
-        u_z = target.tangents[:, :, 2][:, None, :, None]
-        v_z = source_tangents[:, :, 2][None, :, None, :]
-        R_inv2 = (1.0 / effective_distance**2)[:, :, None, None]
-        Z = delta[:, :, 2][:, :, None, None]
-        D = u_R[:, :, :, None] * v_R[:, :, None, :] * R_inv2
-        dD_dz = (
-            (u_z * v_R[:, :, None, :] + u_R[:, :, :, None] * v_z) * R_inv2
-            - 2.0 * Z * D * R_inv2
-        )
-        Aniso = 0.5 * (t_dot_t - 0.5 * c_dir[:, :, None, None] * D)
-        dAniso_dz = (
-            -0.25
-            * (dc_dir_dx * kappa * delta[:, :, 2] / effective_distance)[
-                :, :, None, None
-            ]
-            * D
-            - 0.25 * c_dir[:, :, None, None] * dD_dz
-        )
-        single = scaled_kernel * Aniso
-        dz = scaled_dz * Aniso + scaled_kernel * dAniso_dz
+    for delta, effective_distance, kernel, radial_derivative in _panel_pair_samples(
+        target, source, rotation, kappa, self_block
+    ):
+        scaled_kernel = kernel[:, :, None, None]
+        scaled_dz = (
+            radial_derivative * delta[:, :, 2] / effective_distance
+        )[:, :, None, None]
 
-    gradient = radial_derivative[:, :, None] * delta / effective_distance[:, :, None]
-    d_target = (
-        np.einsum("ija,ia->ij", gradient, target.normals) * area_scale
-    )[:, :, None, None] * t_dot_t
-    d_source = (
-        -np.einsum("ija,ja->ij", gradient, source_normals) * area_scale
-    )[:, :, None, None] * t_dot_t
+        if same_body:
+            single += scaled_kernel * t_dot_t
+            dz += scaled_dz * t_dot_t
+        else:
+            x = kappa * effective_distance
+            # Equivalent rational forms avoid overflow from x**2 at large kappa.
+            inv = 1.0 / (1.0 + x)
+            denominator = 1.0 - inv + inv**2
+            c_dir = (1.0 + inv + inv**2) / denominator
+            dc_dir_dx = -2.0 * inv**2 * (1.0 - inv**2) / denominator**2
+            u_R = np.einsum("ima,ija->ijm", target.tangents, delta)
+            v_R = np.einsum("jna,ija->ijn", source_tangents, delta)
+            u_z = target.tangents[:, :, 2][:, None, :, None]
+            v_z = source_tangents[:, :, 2][None, :, None, :]
+            R_inv2 = (1.0 / effective_distance**2)[:, :, None, None]
+            Z = delta[:, :, 2][:, :, None, None]
+            D = u_R[:, :, :, None] * v_R[:, :, None, :] * R_inv2
+            dD_dz = (
+                (u_z * v_R[:, :, None, :] + u_R[:, :, :, None] * v_z) * R_inv2
+                - 2.0 * Z * D * R_inv2
+            )
+            Aniso = 0.5 * (t_dot_t - 0.5 * c_dir[:, :, None, None] * D)
+            dAniso_dz = (
+                -0.25
+                * (dc_dir_dx * kappa * delta[:, :, 2] / effective_distance)[
+                    :, :, None, None
+                ]
+                * D
+                - 0.25 * c_dir[:, :, None, None] * dD_dz
+            )
+            single += scaled_kernel * Aniso
+            dz += scaled_dz * Aniso + scaled_kernel * dAniso_dz
+
+        gradient = (
+            radial_derivative[:, :, None]
+            * delta / effective_distance[:, :, None]
+        )
+        d_target += np.einsum(
+            "ija,ia->ij", gradient, target.normals
+        )[:, :, None, None] * t_dot_t
+        d_source -= np.einsum(
+            "ija,ja->ij", gradient, source_normals
+        )[:, :, None, None] * t_dot_t
 
     if self_block:
         indices = np.arange(target.count)
@@ -1499,9 +1586,14 @@ def run_bem_casimir_solver(
     record_metrics: bool = True,
     require_exact_electromagnetics: bool = False,
     formulation: Formulation = "vector_dyadic",
+    temperature_K: float | None = None,
 ) -> dict[str, Any]:
     """
     Evaluate the specified vector dyadic or legacy scalar T-operator model.
+
+    At positive temperature, use low Matsubara modes and an Euler-Maclaurin
+    midpoint tail integral. The static mode is evaluated at a small positive
+    kappa to retain compatibility with the dispersive material model.
 
     max_steps evaluates a prefix of the *original* n_xi quadrature rule.
     A partial integral is never renormalized or reported as converged.
@@ -1522,6 +1614,11 @@ def run_bem_casimir_solver(
         mesh = build_clutch_surface_mesh(
             parameters, n_r, n_phi_tooth, n_phi_bridge, n_z
         )
+    temperature_K = _positive_float(
+        temperature_K if temperature_K is not None
+        else mesh.parameters.get("temperature_K", 0.0),
+        "temperature_K", allow_zero=True,
+    )
     backend = DenseBackend(device)
     material = MaterialModel.from_parameters(mesh.parameters)
     nr, ns = len(mesh.rotor), len(mesh.stator)
@@ -1549,7 +1646,42 @@ def run_bem_casimir_solver(
             )
 
     kappa_0 = 1.0 / max(abs(mesh.geometry.z_tip), 0.015)
-    kappas, weights, nodes = _quadrature(n_xi, kappa_0)
+    matsubara_count = 0
+    tail_count = n_xi
+    delta_kappa = 0.0
+    kappa_cut = 0.0
+    if temperature_K > 0.0:
+        delta_kappa = (
+            2.0 * math.pi * (8.617333262e-5 * temperature_K) / 0.1973269804
+        )
+        if not math.isfinite(delta_kappa) or delta_kappa <= 0.0:
+            raise FloatingPointError("Invalid Matsubara frequency spacing.")
+        # Cap M for n_xi=1, preserving the requested total node count.
+        matsubara_count = min(n_xi, min(8, max(2, n_xi // 3)))
+        tail_count = n_xi - matsubara_count
+        kappas = np.arange(matsubara_count, dtype=np.float64) * delta_kappa
+        kappas[0] = 1.0e-4 * delta_kappa
+        weights = np.full(matsubara_count, delta_kappa, dtype=np.float64)
+        weights[0] *= 0.5
+        # Discrete modes have no mapped-tail coordinate; retain the numeric
+        # "u" return key using zero for these entries.
+        nodes = np.zeros(matsubara_count, dtype=np.float64)
+        kappa_cut = (matsubara_count - 0.5) * delta_kappa
+        if tail_count:
+            tail_kappas, tail_weights, tail_nodes = _quadrature(tail_count, kappa_0)
+            kappas = np.concatenate((kappas, kappa_cut + tail_kappas))
+            weights = np.concatenate((weights, tail_weights))
+            nodes = np.concatenate((nodes, tail_nodes))
+        if (
+            not np.isfinite(kappas).all()
+            or np.any(kappas <= 0.0)
+            or not np.isfinite(weights).all()
+            or np.any(weights <= 0.0)
+        ):
+            raise FloatingPointError("Invalid finite-temperature quadrature.")
+    else:
+        kappas, weights, nodes = _quadrature(n_xi, kappa_0)
+
     evaluated = min(n_xi, max_steps) if max_steps > 0 else n_xi
     settings: dict[str, Any] = {
         "method": (
@@ -1576,8 +1708,15 @@ def run_bem_casimir_solver(
         "device": backend.device,
         "requested_device": device,
         "dtype": "complex128",
-        "quadrature_rule": "Gauss-Legendre on u in (0,1)",
-        "kappa_mapping": "kappa_0*u/(1-u)",
+        "quadrature_rule": (
+            "Matsubara modes plus Euler-Maclaurin midpoint Gauss-Legendre tail"
+            if temperature_K > 0.0
+            else "Gauss-Legendre on u in (0,1)"
+        ),
+        "kappa_mapping": (
+            "kappa_cut + kappa_0*u/(1-u) for the tail"
+            if temperature_K > 0.0 else "kappa_0*u/(1-u)"
+        ),
         "kappa_0_um_inv": kappa_0,
         "dispersion_model": material.metadata(),
         "channel_weights": "normal-incidence TM and TE Fresnel amplitudes",
@@ -1586,8 +1725,8 @@ def run_bem_casimir_solver(
         "inter_sector_interactions": True,
         "diagonal_self_term": "equal-area disk: 1/(2*sqrt(pi*A))",
         "off_diagonal_quadrature": (
-            "panel centroid with finite-panel distance "
-            "sqrt(distance^2 + (A_target + A_source)/(8*pi))"
+            "2x2 Gauss-Legendre bilinear points per panel; 16 weighted point pairs "
+            "with sqrt(distance^2 + (A_target + A_source)/(32*pi))"
         ),
         "normal_derivatives": (
             "analytic finite-panel-regularized scalar kernel derivatives "
@@ -1599,13 +1738,21 @@ def run_bem_casimir_solver(
         "regularization": None,
         "estimated_dense_memory_bytes": estimated_bytes,
         "max_memory_gib": max_memory_gib,
-        "temperature_K": 0.0,
+        "temperature_K": temperature_K,
         "force_derivative": "analytic rigid rotor z translation",
         "diagnostic_decomposition": (
             "partition of translation derivative by rotor panel; "
             "not an independently observable Maxwell-stress face force"
         ),
     }
+    if temperature_K > 0.0:
+        settings.update({
+            "matsubara_modes": matsubara_count,
+            "tail_quadrature_points": tail_count,
+            "delta_kappa_um_inv": delta_kappa,
+            "kappa_cut_um_inv": kappa_cut,
+            "static_mode_kappa_um_inv": float(kappas[0]),
+        })
     result = _base_result(mesh, "bem", settings, config_file, task_id)
     rows: list[dict[str, Any]] = []
     net = bottom = edge = tm_total = te_total = energy = 0.0
@@ -1629,6 +1776,11 @@ def run_bem_casimir_solver(
             "weighted_force_contribution": weight * float(row["force_integrand"]),
             "elapsed_seconds": time.perf_counter() - step_started,
         })
+        if temperature_K > 0.0:
+            row.update({
+                "quadrature_kind": "matsubara" if q < matsubara_count else "tail",
+                "matsubara_mode": q if q < matsubara_count else None,
+            })
         rows.append(row)
     if not math.isclose(net, bottom + edge, rel_tol=1.0e-9, abs_tol=1.0e-12):
         raise FloatingPointError("Force diagnostic partition does not sum to total.")
