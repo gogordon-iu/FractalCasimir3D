@@ -1,14 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=fce_bemg
 #SBATCH --account=r01540
-#SBATCH --partition=gpu
+#SBATCH --partition=general
 #SBATCH --exclude=nid0394
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=64G
+#SBATCH --cpus-per-task=128
+#SBATCH --mem=0
 #SBATCH --time=02:00:00
-#SBATCH --gpus=1
 #SBATCH --signal=B:SIGUSR1@120
 #SBATCH -o logs/%x_%j.out
 #SBATCH -e logs/%x_%j.err
@@ -244,10 +243,13 @@ def sync_git(paths, message):
     else:
         diagnostic("No new safe changes to commit; attempting synchronization.")
 
-    # A dirty worktree can make pull fail even when a push remains possible.
-    pulled = git(["pull", "--rebase", CONFIG["git_remote"], current_branch], check=False)
+    # Preserve unstaged tracked changes while rebasing the shared worktree.
+    pulled = git(
+        ["pull", "--rebase", "--autostash", CONFIG["git_remote"], current_branch],
+        check=False,
+    )
     if pulled.returncode != 0:
-        diagnostic("git pull --rebase failed: " + pulled.stderr.strip()[-3000:])
+        diagnostic("git pull --rebase --autostash failed: " + pulled.stderr.strip()[-3000:])
         git_directory = Path(git(["rev-parse", "--absolute-git-dir"]).stdout.strip())
         if (git_directory / "rebase-merge").exists() or (git_directory / "rebase-apply").exists():
             raise RuntimeError("Rebase conflict; resolve manually before pushing")
@@ -408,15 +410,81 @@ run_user_job() (
     trap 'trap - SIGTERM SIGINT; kill -15 0 2>/dev/null || true; exit 143' SIGTERM
     trap 'trap - SIGTERM SIGINT; kill -15 0 2>/dev/null || true; exit 130' SIGINT
     set -Eeuo pipefail
-'python3' '-u' '--' 'execution/run_nature_6step_narrative.py' '--device' 'cuda'
-'python3' '-u' '--' 'execution/run_real_world_nems_clutch.py' '--device' 'cuda'
-'python3' '-u' '--' 'execution/run_rotational_clutch_3solver_verification.py' '--device' 'cuda'
-'python3' '-u' '--' 'execution/run_rotational_z_eff_clutch.py' '--device' 'cuda'
-'python3' '-u' '--' 'execution/run_fractal_advantage_study.py' '--device' 'cuda'
-'python3' '-u' '--' 'execution/run_nature_feasibility_and_stability.py' '--device' 'cuda'
-'python3' '-u' '--' 'execution/run_repulsion_10configs_scan.py' '--device' 'cuda'
-'python3' '-u' '--' 'execution/run_top_repulsive_verification.py' '--device' 'cuda'
-'python3' '-u' '--' 'execution/export_provenance_pipeline.py'
+
+    export OMP_NUM_THREADS=128
+    export MKL_NUM_THREADS=128
+    export OPENBLAS_NUM_THREADS=128
+    export PYTHONPATH="${SLURM_SUBMIT_DIR:-$PWD}${PYTHONPATH:+:$PYTHONPATH}"
+
+    PYTHON_BIN=""
+    for ENV_PREFIX in \
+        "/N/u/gogordon/BigRed200/.conda/envs/meep" \
+        "/N/u/gogordon/BigRed200/miniconda3" \
+        "${HOME}/.conda/envs/meep" \
+        "${HOME}/miniconda3/envs/meep" \
+        "${HOME}/miniconda3"
+    do
+        [[ -x "$ENV_PREFIX/bin/python" ]] || continue
+        if ! "$ENV_PREFIX/bin/python" -c 'import numpy; import torch' >/dev/null 2>&1; then
+            continue
+        fi
+
+        # Conda may be installed separately from the environment prefix.
+        CONDA_ACTIVATED=0
+        for CONDA_SH in \
+            "$ENV_PREFIX/etc/profile.d/conda.sh" \
+            "$ENV_PREFIX/../../etc/profile.d/conda.sh" \
+            "/N/u/gogordon/BigRed200/miniconda3/etc/profile.d/conda.sh" \
+            "${HOME}/miniconda3/etc/profile.d/conda.sh"
+        do
+            [[ -f "$CONDA_SH" ]] || continue
+            set +u
+            if source "$CONDA_SH" && conda activate "$ENV_PREFIX"; then
+                CONDA_ACTIVATED=1
+            fi
+            set -u
+            if [[ "$CONDA_ACTIVATED" -eq 1 ]]; then
+                break
+            fi
+        done
+        # A standalone environment can still be used without a Conda hook.
+        if [[ "$CONDA_ACTIVATED" -eq 0 ]]; then
+            export PATH="$ENV_PREFIX/bin:$PATH"
+        fi
+        if "$ENV_PREFIX/bin/python" -c 'import numpy; import torch' >/dev/null 2>&1; then
+            PYTHON_BIN="$ENV_PREFIX/bin/python"
+            break
+        fi
+    done
+
+    if [[ -z "$PYTHON_BIN" ]]; then
+        if type module >/dev/null 2>&1; then
+            module load python/gpu || module load python || true
+        fi
+        for PYTHON_COMMAND in python3 python; do
+            if CANDIDATE=$(command -v "$PYTHON_COMMAND") \
+                && "$CANDIDATE" -c 'import numpy; import torch' >/dev/null 2>&1; then
+                PYTHON_BIN="$CANDIDATE"
+                break
+            fi
+        done
+    fi
+    if [[ -z "$PYTHON_BIN" ]]; then
+        printf "%s\n" "[BigRed200] No Python environment with numpy and torch found." >&2
+        exit 1
+    fi
+    export PYTHON_BIN
+    printf "[BigRed200] Using Python: %s\n" "$PYTHON_BIN"
+
+    "$PYTHON_BIN" -u execution/run_nature_6step_narrative.py --device auto
+    "$PYTHON_BIN" -u execution/run_real_world_nems_clutch.py --device auto
+    "$PYTHON_BIN" -u execution/run_rotational_clutch_3solver_verification.py --device auto
+    "$PYTHON_BIN" -u execution/run_rotational_z_eff_clutch.py --device auto
+    "$PYTHON_BIN" -u execution/run_fractal_advantage_study.py --device auto
+    "$PYTHON_BIN" -u execution/run_nature_feasibility_and_stability.py --device auto
+    "$PYTHON_BIN" -u execution/run_repulsion_10configs_scan.py --device auto
+    "$PYTHON_BIN" -u execution/run_top_repulsive_verification.py --device auto
+    "$PYTHON_BIN" -u execution/export_provenance_pipeline.py
 )
 set -m
 run_user_job &
