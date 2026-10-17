@@ -1,9 +1,9 @@
 {
   "figure_file": "C:/Users/gorengor/Goren/IUB/Research/FractalCasimirEffect/Code/3Dsimulations/Papers/Fractal_Casimir_Nature_EM/figures/pair2_theta_d_2d.png",
-  "timestamp": "2026-10-17T03:09:53.048602+00:00",
+  "timestamp": "2026-10-17T05:33:13.399435+00:00",
   "input_source": {
     "path": "C:/Users/gorengor/Goren/IUB/Research/FractalCasimirEffect/Code/3Dsimulations/results/provenance_metrics.json",
-    "sha256": "46eae2c8c0e5b12cf73247f00c08ef8f6df485733264d04b46c03817aea32bec"
+    "sha256": "5d4b5e1ad8d617a4dc73abb4f07037cc5688caa152ee31c7323b13e7dc1dc7d9"
   },
   "data_slices_columns": [
     "model_1_ssr",
@@ -116,22 +116,22 @@
     "exact_electromagnetic_fsc": false,
     "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
     "n_xi": 24,
-    "n_xi_evaluated": 2,
-    "max_steps": 2,
+    "n_xi_evaluated": 24,
+    "max_steps": 0,
     "panel_resolution": {
       "n_r": 2,
       "n_phi_tooth": 3,
       "n_phi_bridge": 3,
       "n_z": 2
     },
-    "n_panels_rotor": 384,
-    "n_panels_stator": 1104,
-    "n_panels_total": 1488,
-    "n_panels_rotor_sector": 96,
-    "n_panels_stator_sector": 276,
+    "n_panels_rotor": 896,
+    "n_panels_stator": 2272,
+    "n_panels_total": 3168,
+    "n_panels_rotor_sector": 224,
+    "n_panels_stator_sector": 568,
     "dofs_per_panel": 2,
-    "n_dofs_rotor_sector": 192,
-    "n_dofs_stator_sector": 552,
+    "n_dofs_rotor_sector": 448,
+    "n_dofs_stator_sector": 1136,
     "device": "cpu",
     "requested_device": "cpu",
     "dtype": "complex128",
@@ -156,10 +156,14 @@
     "normal_derivatives": "analytic finite-panel-regularized scalar kernel derivatives projected onto tangent bases; diagnostics only",
     "condition_limit": 100000000000000.0,
     "regularization": null,
-    "estimated_dense_memory_bytes": 89745408,
+    "estimated_dense_memory_bytes": 407871488,
     "max_memory_gib": 4.0,
     "temperature_K": 0.0,
     "force_derivative": "analytic rigid rotor z translation",
-    "diagnostic_decomposition": "partition of translation derivative by rotor panel; not an independently observable Maxwell-stress face force"
+    "diagnostic_decomposition": "partition of translation derivative by rotor panel; not an independently observable Maxwell-stress face force",
+    "model": "BEM_Meep_RotationalZEff",
+    "dataset": "rotational_z_eff_clutch",
+    "status": "completed",
+    "executed_at": "2026-10-17T05:28:24.770906+00:00"
   }
 }
