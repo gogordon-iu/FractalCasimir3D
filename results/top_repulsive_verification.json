@@ -1,0 +1,569 @@
+[
+  {
+    "task_id": "C4_disengaged_base",
+    "winner": "C4",
+    "state": "disengaged",
+    "z_tip": -0.1,
+    "n_r": 2,
+    "n_phi_tooth": 3,
+    "n_phi_bridge": 3,
+    "n_z": 2,
+    "n_xi": 24,
+    "model": "casimir_bem_top_repulsive",
+    "dataset": "top_repulsive_verification",
+    "theta_deg": 0.0,
+    "success": true,
+    "error": "",
+    "result": {
+      "status": "completed",
+      "task_id": "C4_disengaged_base",
+      "config_file": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\.tmp\\toprep_probe\\configs\\C4_disengaged_base.json",
+      "fingerprint": "01ac0e95bb829681496502156d6becfee06e29916548f8ed470d5240d4c48c5f",
+      "N_fractal": null,
+      "theta_deg": 0.0,
+      "parameters": {
+        "N": 2,
+        "R_min": 0.3,
+        "R_max": 1.35,
+        "w1_ratio": 0.65,
+        "min_tooth_w": 0.02,
+        "h_teeth": 0.25,
+        "t_membrane": 0.025,
+        "t_landing_pad": 0.15,
+        "tooth_arc_deg": 15.0,
+        "aperture_arc_deg": 30.0,
+        "material": "Gold",
+        "theta_deg": 0.0,
+        "z_tip": -0.1,
+        "elements": [
+          {
+            "r_inner": 0.4166666666666667,
+            "r_outer": 0.5333333333333333,
+            "r_tooth_in": 0.4370833333333333,
+            "r_tooth_out": 0.5129166666666667
+          },
+          {
+            "r_inner": 0.65,
+            "r_outer": 1.0,
+            "r_tooth_in": 0.7112499999999999,
+            "r_tooth_out": 0.93875
+          },
+          {
+            "r_inner": 1.1166666666666667,
+            "r_outer": 1.2333333333333334,
+            "r_tooth_in": 1.1370833333333334,
+            "r_tooth_out": 1.2129166666666666
+          }
+        ]
+      },
+      "solver": "bem",
+      "solver_parameters": {
+        "method": "dense area-symmetrized tangential-vector dyadic T-operator",
+        "formulation": "vector_dyadic",
+        "physical_model": "dielectric_weighted_tangential_vector_dyadic",
+        "exact_electromagnetic_fsc": false,
+        "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+        "n_xi": 24,
+        "n_xi_evaluated": 2,
+        "max_steps": 2,
+        "panel_resolution": {
+          "n_r": 2,
+          "n_phi_tooth": 3,
+          "n_phi_bridge": 3,
+          "n_z": 2
+        },
+        "n_panels_rotor": 384,
+        "n_panels_stator": 1104,
+        "n_panels_total": 1488,
+        "n_panels_rotor_sector": 96,
+        "n_panels_stator_sector": 276,
+        "dofs_per_panel": 2,
+        "n_dofs_rotor_sector": 192,
+        "n_dofs_stator_sector": 552,
+        "device": "cpu",
+        "requested_device": "cpu",
+        "dtype": "complex128",
+        "quadrature_rule": "Gauss-Legendre on u in (0,1)",
+        "kappa_mapping": "kappa_0*u/(1-u)",
+        "kappa_0_um_inv": 10.0,
+        "dispersion_model": {
+          "material": "Gold",
+          "model": "Drude-Lorentz",
+          "frequency_units": "um^-1 (xi/c)",
+          "epsilon_inf": 1.0,
+          "plasma_frequency": 45.76160838064494,
+          "gamma": 0.268589728037008,
+          "lorentz_oscillators": []
+        },
+        "channel_weights": "evanescent TM and TE Fresnel amplitudes at k_parallel=max(k_eff,1e-3), k_eff=1/max(minimum cross-body centroid separation,0.020 um)",
+        "symmetry_multiplier": 4.0,
+        "symmetry_method": "sum of four cyclic Fourier-block traces",
+        "inter_sector_interactions": true,
+        "diagonal_self_term": "equal-area disk: 1/(2*sqrt(pi*A)) times (1-exp(-x))/x, x=kappa*sqrt(A/pi), with static limit 1",
+        "off_diagonal_quadrature": "2x2 Gauss-Legendre bilinear points per panel; 16 weighted point pairs with sqrt(distance^2 + (A_target + A_source)/(32*pi))",
+        "normal_derivatives": "analytic finite-panel-regularized scalar kernel derivatives projected onto tangent bases; diagnostics only",
+        "condition_limit": 100000000000000.0,
+        "regularization": null,
+        "estimated_dense_memory_bytes": 89745408,
+        "max_memory_gib": 4.0,
+        "temperature_K": 0.0,
+        "force_derivative": "analytic rigid rotor z translation",
+        "diagnostic_decomposition": "partition of translation derivative by rotor panel; not an independently observable Maxwell-stress face force"
+      },
+      "symmetry_multiplier": 4.0,
+      "n_panels_rotor": 384,
+      "n_panels_stator": 1104,
+      "n_panels_total": 1488,
+      "force_units": "hbar*c/um^2",
+      "force_direction": "z; negative means attraction toward stator",
+      "MEEP_FORCE_TO_SI": 3.16152649e-14,
+      "F_net": -1.8350543450380221,
+      "f_net_N": -5.801572922427307e-14,
+      "f_net_fN": -58.01572922427307,
+      "f_net_pN": -0.058015729224273074,
+      "elapsed_seconds": 6.434432600013679,
+      "time_truncated": true,
+      "converged": false,
+      "qualification_status": "completed_vector_approximation",
+      "model": "BEM_vector_dyadic_Gold",
+      "dataset": "casimir_bem_3d",
+      "executed_at": "2026-10-17T03:03:02.062198+00:00",
+      "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+      "quadrature_incomplete": true,
+      "convergence_note": "Only a prefix of the frequency integral was evaluated.",
+      "energy_hbar_c_per_um": -0.41153926777662037,
+      "diagnostics": {
+        "F_bottom": 0.1538166974782569,
+        "F_lateral_top_edge": -1.9888710425162792,
+        "f_bottom_N": 4.862955636818254e-15,
+        "f_lateral_top_edge_N": -6.287868486109132e-14,
+        "F_TM": -1.8254969541803976,
+        "F_TE": -0.009557390857624705,
+        "n_panels_rotor": 384,
+        "n_panels_stator": 1104,
+        "n_panels_total": 1488,
+        "panel_types_sector": {
+          "rotor_bottom": 18,
+          "rotor_top": 18,
+          "rotor_azimuthal_wall": 24,
+          "rotor_radial_wall": 36,
+          "stator_bottom": 66,
+          "stator_radial_wall": 96,
+          "stator_top": 66,
+          "stator_azimuthal_wall": 48
+        },
+        "per_xi": [
+          {
+            "kappa_um_inv": 0.02412194682655332,
+            "epsilon_i_xi": 296586.6674616226,
+            "k_eff_um_inv": 39.63931750145876,
+            "char_gap_um": 0.025227477742602384,
+            "d_logdet_d_z": 55.86715147982584,
+            "force_integrand": -8.891533314477979,
+            "bottom_force_integrand": 0.7427358977994001,
+            "edge_top_force_integrand": -9.63426921227738,
+            "logdet_Y": -12.771082438913043,
+            "TM_force_integrand": -8.886079273855346,
+            "TE_force_integrand": -0.005454040622632508,
+            "normal_derivative_frobenius_norms": {
+              "rotor": 2.3480569597509686,
+              "stator": 8.280835414721931,
+              "cross": 1.362793599248312
+            },
+            "symmetry_modes": [
+              {
+                "mode": 0,
+                "condition_number_M_rotor": 3.562260212107446,
+                "condition_number_M_stator": 10.287870851653324,
+                "channels": {
+                  "TM": {
+                    "reflection_weight": 0.9999928959644231,
+                    "condition_number_Y": 1.0567490922436107,
+                    "d_logdet_d_z": 14.384132638037325,
+                    "logdet_Y": -3.359461755098288
+                  },
+                  "TE": {
+                    "reflection_weight": -0.026045899667345596,
+                    "condition_number_Y": 1.0000353465300555,
+                    "d_logdet_d_z": 0.008819575115637237,
+                    "logdet_Y": -0.0021195060997228655
+                  }
+                }
+              },
+              {
+                "mode": 1,
+                "condition_number_M_rotor": 3.409394670036015,
+                "condition_number_M_stator": 10.341703964602921,
+                "channels": {
+                  "TM": {
+                    "reflection_weight": 0.9999928959644231,
+                    "condition_number_Y": 1.0500639112782792,
+                    "d_logdet_d_z": 13.853145398010529,
+                    "logdet_Y": -3.1220182506637566
+                  },
+                  "TE": {
+                    "reflection_weight": -0.026045899667345596,
+                    "condition_number_Y": 1.000030146951055,
+                    "d_logdet_d_z": 0.008507377051197479,
+                    "logdet_Y": -0.001980935943550655
+                  }
+                }
+              },
+              {
+                "mode": 2,
+                "condition_number_M_rotor": 3.3750397475899248,
+                "condition_number_M_stator": 10.285156529384539,
+                "channels": {
+                  "TM": {
+                    "reflection_weight": 0.9999928959644231,
+                    "condition_number_Y": 1.052940881491695,
+                    "d_logdet_d_z": 13.742459297862572,
+                    "logdet_Y": -3.1595024462175685
+                  },
+                  "TE": {
+                    "reflection_weight": -0.026045899667345596,
+                    "condition_number_Y": 1.0000314336576976,
+                    "d_logdet_d_z": 0.00843441868685298,
+                    "logdet_Y": -0.0020003582828496446
+                  }
+                }
+              },
+              {
+                "mode": 3,
+                "condition_number_M_rotor": 3.409394670036015,
+                "condition_number_M_stator": 10.341703964602921,
+                "channels": {
+                  "TM": {
+                    "reflection_weight": 0.9999928959644231,
+                    "condition_number_Y": 1.0500639112782792,
+                    "d_logdet_d_z": 13.853145398010533,
+                    "logdet_Y": -3.122018250663757
+                  },
+                  "TE": {
+                    "reflection_weight": -0.026045899667345596,
+                    "condition_number_Y": 1.000030146951055,
+                    "d_logdet_d_z": 0.008507377051197479,
+                    "logdet_Y": -0.001980935943550655
+                  }
+                }
+              }
+            ],
+            "quadrature_index": 0,
+            "u": 0.0024063900014893447,
+            "quadrature_weight_um_inv": 0.06200420253748477,
+            "weighted_force_contribution": -0.5513124324996859,
+            "elapsed_seconds": 3.039115799998399
+          },
+          {
+            "kappa_um_inv": 0.12797426741145324,
+            "epsilon_i_xi": 41264.553621523315,
+            "k_eff_um_inv": 39.63931750145876,
+            "char_gap_um": 0.025227477742602384,
+            "d_logdet_d_z": 55.12130573423234,
+            "force_integrand": -8.772828277282711,
+            "bottom_force_integrand": 0.7364366797183974,
+            "edge_top_force_integrand": -9.50926495700111,
+            "logdet_Y": -12.25925786608331,
+            "TM_force_integrand": -8.70982604103027,
+            "TE_force_integrand": -0.06300223625244174,
+            "normal_derivative_frobenius_norms": {
+              "rotor": 2.3478553719132695,
+              "stator": 8.280406652894143,
+              "cross": 1.3623594194478772
+            },
+            "symmetry_modes": [
+              {
+                "mode": 0,
+                "condition_number_M_rotor": 3.544314912623972,
+                "condition_number_M_stator": 10.284180488006907,
+                "channels": {
+                  "TM": {
+                    "reflection_weight": 0.9999420409444367,
+                    "condition_number_Y": 1.0545039325391963,
+                    "d_logdet_d_z": 14.060590260372228,
+                    "logdet_Y": -3.176563071287924
+                  },
+                  "TE": {
+                    "reflection_weight": -0.08919592374743292,
+                    "condition_number_Y": 1.000400272033832,
+                    "d_logdet_d_z": 0.10163898566385761,
+                    "logdet_Y": -0.02364713964582668
+                  }
+                }
+              },
+              {
+                "mode": 1,
+                "condition_number_M_rotor": 3.4089460632159114,
+                "condition_number_M_stator": 10.325673827168973,
+                "channels": {
+                  "TM": {
+                    "reflection_weight": 0.9999420409444367,
+                    "condition_number_Y": 1.0484160591554674,
+                    "d_logdet_d_z": 13.588161438921093,
+                    "logdet_Y": -2.986163912318755
+                  },
+                  "TE": {
+                    "reflection_weight": -0.08919592374743292,
+                    "condition_number_Y": 1.0003441366033556,
+                    "d_logdet_d_z": 0.09833484742332983,
+                    "logdet_Y": -0.02232100012439808
+                  }
+                }
+              },
+              {
+                "mode": 2,
+                "condition_number_M_rotor": 3.374607315024092,
+                "condition_number_M_stator": 10.281501550932642,
+                "channels": {
+                  "TM": {
+                    "reflection_weight": 0.9999420409444367,
+                    "condition_number_Y": 1.0512047967258238,
+                    "d_logdet_d_z": 13.488537870877122,
+                    "logdet_Y": -3.0195538531235635
+                  },
+                  "TE": {
+                    "reflection_weight": -0.08919592374743292,
+                    "condition_number_Y": 1.0003591844264361,
+                    "d_logdet_d_z": 0.09754604463028174,
+                    "logdet_Y": -0.02252397713969033
+                  }
+                }
+              },
+              {
+                "mode": 3,
+                "condition_number_M_rotor": 3.4089460632159114,
+                "condition_number_M_stator": 10.325673827168973,
+                "channels": {
+                  "TM": {
+                    "reflection_weight": 0.9999420409444367,
+                    "condition_number_Y": 1.0484160591554674,
+                    "d_logdet_d_z": 13.588161438921095,
+                    "logdet_Y": -2.9861639123187547
+                  },
+                  "TE": {
+                    "reflection_weight": -0.08919592374743292,
+                    "condition_number_Y": 1.0003441366033556,
+                    "d_logdet_d_z": 0.09833484742332985,
+                    "logdet_Y": -0.02232100012439808
+                  }
+                }
+              }
+            ],
+            "quadrature_index": 1,
+            "u": 0.012635722014345263,
+            "quadrature_weight_um_inv": 0.14633159021960948,
+            "weighted_force_contribution": -1.2837419125383362,
+            "elapsed_seconds": 3.3688114999968093
+          }
+        ]
+      },
+      "per_xi_integrands": [
+        {
+          "kappa_um_inv": 0.02412194682655332,
+          "epsilon_i_xi": 296586.6674616226,
+          "k_eff_um_inv": 39.63931750145876,
+          "char_gap_um": 0.025227477742602384,
+          "d_logdet_d_z": 55.86715147982584,
+          "force_integrand": -8.891533314477979,
+          "bottom_force_integrand": 0.7427358977994001,
+          "edge_top_force_integrand": -9.63426921227738,
+          "logdet_Y": -12.771082438913043,
+          "TM_force_integrand": -8.886079273855346,
+          "TE_force_integrand": -0.005454040622632508,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 2.3480569597509686,
+            "stator": 8.280835414721931,
+            "cross": 1.362793599248312
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 3.562260212107446,
+              "condition_number_M_stator": 10.287870851653324,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9999928959644231,
+                  "condition_number_Y": 1.0567490922436107,
+                  "d_logdet_d_z": 14.384132638037325,
+                  "logdet_Y": -3.359461755098288
+                },
+                "TE": {
+                  "reflection_weight": -0.026045899667345596,
+                  "condition_number_Y": 1.0000353465300555,
+                  "d_logdet_d_z": 0.008819575115637237,
+                  "logdet_Y": -0.0021195060997228655
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 3.409394670036015,
+              "condition_number_M_stator": 10.341703964602921,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9999928959644231,
+                  "condition_number_Y": 1.0500639112782792,
+                  "d_logdet_d_z": 13.853145398010529,
+                  "logdet_Y": -3.1220182506637566
+                },
+                "TE": {
+                  "reflection_weight": -0.026045899667345596,
+                  "condition_number_Y": 1.000030146951055,
+                  "d_logdet_d_z": 0.008507377051197479,
+                  "logdet_Y": -0.001980935943550655
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 3.3750397475899248,
+              "condition_number_M_stator": 10.285156529384539,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9999928959644231,
+                  "condition_number_Y": 1.052940881491695,
+                  "d_logdet_d_z": 13.742459297862572,
+                  "logdet_Y": -3.1595024462175685
+                },
+                "TE": {
+                  "reflection_weight": -0.026045899667345596,
+                  "condition_number_Y": 1.0000314336576976,
+                  "d_logdet_d_z": 0.00843441868685298,
+                  "logdet_Y": -0.0020003582828496446
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 3.409394670036015,
+              "condition_number_M_stator": 10.341703964602921,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9999928959644231,
+                  "condition_number_Y": 1.0500639112782792,
+                  "d_logdet_d_z": 13.853145398010533,
+                  "logdet_Y": -3.122018250663757
+                },
+                "TE": {
+                  "reflection_weight": -0.026045899667345596,
+                  "condition_number_Y": 1.000030146951055,
+                  "d_logdet_d_z": 0.008507377051197479,
+                  "logdet_Y": -0.001980935943550655
+                }
+              }
+            }
+          ],
+          "quadrature_index": 0,
+          "u": 0.0024063900014893447,
+          "quadrature_weight_um_inv": 0.06200420253748477,
+          "weighted_force_contribution": -0.5513124324996859,
+          "elapsed_seconds": 3.039115799998399
+        },
+        {
+          "kappa_um_inv": 0.12797426741145324,
+          "epsilon_i_xi": 41264.553621523315,
+          "k_eff_um_inv": 39.63931750145876,
+          "char_gap_um": 0.025227477742602384,
+          "d_logdet_d_z": 55.12130573423234,
+          "force_integrand": -8.772828277282711,
+          "bottom_force_integrand": 0.7364366797183974,
+          "edge_top_force_integrand": -9.50926495700111,
+          "logdet_Y": -12.25925786608331,
+          "TM_force_integrand": -8.70982604103027,
+          "TE_force_integrand": -0.06300223625244174,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 2.3478553719132695,
+            "stator": 8.280406652894143,
+            "cross": 1.3623594194478772
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 3.544314912623972,
+              "condition_number_M_stator": 10.284180488006907,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9999420409444367,
+                  "condition_number_Y": 1.0545039325391963,
+                  "d_logdet_d_z": 14.060590260372228,
+                  "logdet_Y": -3.176563071287924
+                },
+                "TE": {
+                  "reflection_weight": -0.08919592374743292,
+                  "condition_number_Y": 1.000400272033832,
+                  "d_logdet_d_z": 0.10163898566385761,
+                  "logdet_Y": -0.02364713964582668
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 3.4089460632159114,
+              "condition_number_M_stator": 10.325673827168973,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9999420409444367,
+                  "condition_number_Y": 1.0484160591554674,
+                  "d_logdet_d_z": 13.588161438921093,
+                  "logdet_Y": -2.986163912318755
+                },
+                "TE": {
+                  "reflection_weight": -0.08919592374743292,
+                  "condition_number_Y": 1.0003441366033556,
+                  "d_logdet_d_z": 0.09833484742332983,
+                  "logdet_Y": -0.02232100012439808
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 3.374607315024092,
+              "condition_number_M_stator": 10.281501550932642,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9999420409444367,
+                  "condition_number_Y": 1.0512047967258238,
+                  "d_logdet_d_z": 13.488537870877122,
+                  "logdet_Y": -3.0195538531235635
+                },
+                "TE": {
+                  "reflection_weight": -0.08919592374743292,
+                  "condition_number_Y": 1.0003591844264361,
+                  "d_logdet_d_z": 0.09754604463028174,
+                  "logdet_Y": -0.02252397713969033
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 3.4089460632159114,
+              "condition_number_M_stator": 10.325673827168973,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9999420409444367,
+                  "condition_number_Y": 1.0484160591554674,
+                  "d_logdet_d_z": 13.588161438921095,
+                  "logdet_Y": -2.9861639123187547
+                },
+                "TE": {
+                  "reflection_weight": -0.08919592374743292,
+                  "condition_number_Y": 1.0003441366033556,
+                  "d_logdet_d_z": 0.09833484742332985,
+                  "logdet_Y": -0.02232100012439808
+                }
+              }
+            }
+          ],
+          "quadrature_index": 1,
+          "u": 0.012635722014345263,
+          "quadrature_weight_um_inv": 0.14633159021960948,
+          "weighted_force_contribution": -1.2837419125383362,
+          "elapsed_seconds": 3.3688114999968093
+        }
+      ]
+    },
+    "wall_seconds": 20.241156999982195,
+    "status": "completed",
+    "executed_at": "2026-10-17T03:03:14.821441+00:00"
+  }
+]

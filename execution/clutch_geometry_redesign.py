@@ -177,7 +177,7 @@ def compute_dynamic_Trun(
 def get_cantor_radial_intervals(
     N: int, R_min: float, R_max: float
 ) -> list[RadialInterval]:
-    """Return removed middle-third intervals, ordered by level then radius."""
+    """Return removed middle-third intervals, ordered by inner then outer radius."""
     depth = _integer("N", N)
     if depth not in (1, 2, 3):
         raise ValueError("N must be one of 1, 2, or 3.")
@@ -198,6 +198,7 @@ def get_cantor_radial_intervals(
             removed.append({"level": level, "r_inner": a, "r_outer": b})
             next_survivors.extend(((left, a), (b, right)))
         survivors = next_survivors
+    removed.sort(key=lambda item: (item["r_inner"], item["r_outer"]))
     return removed
 
 
@@ -208,7 +209,7 @@ def get_scoped_clutch_elements(
     w1_ratio: float = 0.23,
     min_tooth_w: float = 0.020,
 ) -> list[ClutchElement]:
-    """Build radially centred teeth with strictly positive slot clearances."""
+    """Build radially ordered, centred teeth with positive slot clearances."""
     ratio = _positive("w1_ratio", w1_ratio)
     if ratio >= 1.0:
         raise ValueError("w1_ratio must be less than 1.")

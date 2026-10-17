@@ -53,14 +53,14 @@ def generate_rounded_pyramid_corrugations(
     def recurse_level(x, y, w, level):
         if level > N:
             return
-        
+
         w_hole = w / 3.0
         # Theoretical sharp pyramid height
         h_ideal = (w_hole / 2.0) * tan_angle
-        
+
         # Effective tip rounding truncation height and fillet transitions
         if r_tip > 0.0 and h_ideal > 2.0 * r_tip:
-            h_actual = h_ideal - (r_tip * (1.0 / np.cos(np.radians(90.0 - angle)) - 1.0))
+            h_actual = h_ideal - (r_tip * (1.0 / np.cos(np.radians(angle)) - 1.0))
             if h_actual <= 0.0:
                 h_actual = h_ideal * 0.95
         else:
@@ -73,7 +73,7 @@ def generate_rounded_pyramid_corrugations(
 
         for k in range(num_slices):
             frac = (k + 0.5) / float(num_slices)
-            
+
             if is_top_plate:
                 # Top plate: V-groove carved UPWARD into top plate starting at base_z (+d/2)
                 if r_tip > 0.0 and frac > 0.85:
@@ -86,7 +86,7 @@ def generate_rounded_pyramid_corrugations(
                 slice_z = base_z + (frac * h_actual)
                 rx = x * C - y * S
                 ry = x * S + y * C
-                
+
                 shapes.append(mp.Block(
                     center=mp.Vector3(rx + center_x, ry + center_y, slice_z),
                     size=mp.Vector3(max(slice_w, 1e-4), max(slice_w, 1e-4), dz + 0.0005),
@@ -107,7 +107,7 @@ def generate_rounded_pyramid_corrugations(
                 slice_z = base_z - ((1.0 - frac) * h_actual)
                 rx = x * C - y * S
                 ry = x * S + y * C
-                
+
                 shapes.append(mp.Block(
                     center=mp.Vector3(rx + center_x, ry + center_y, slice_z),
                     size=mp.Vector3(max(slice_w, 1e-4), max(slice_w, 1e-4), dz + 0.0005),

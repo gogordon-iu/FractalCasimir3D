@@ -36,66 +36,68 @@ Study status: `complete`
 
 ### 1. Material dispersion and temperature
 
-| Regime | Angle (deg) | Fz (pN) | Wrep(30 nm)/kBT300 | Expected sign |
-|---|---:|---:|---:|:---:|
-| PEC_T0K | 3 | 1.70671 | 12.3617 | yes |
-| PEC_T0K | 48 | -2.5215 | not available | yes |
-| Gold_T0K | 3 | 0.200233 | 1.45028 | yes |
-| Gold_T0K | 48 | -0.349367 | not available | yes |
-| Gold_T300K | 3 | 0.204222 | 1.47917 | yes |
-| Gold_T300K | 48 | -0.363874 | not available | yes |
+Legacy 30 nm work is the single-point force × 0.030 um extrapolation. Basin work is max(force, 0) × 0.5 × 0.016 um, using an approximately 16 nm triangular repulsive profile. Neither is a computed force integral.
+
+| Regime | Angle (deg) | Fz (pN) | Legacy Wrep(30 nm)/kBT300 | Basin work (pN um) | Basin work/kBT300 | Expected sign |
+|---|---:|---:|---:|---:|---:|:---:|
+| PEC_T0K | 3 | 2.52898 | 18.3173 | 0.0202318 | 4.88461 | yes |
+| PEC_T0K | 48 | -9.2572 | not available | not available | not available | yes |
+| Gold_T0K | 3 | 0.758868 | 5.49646 | 0.00607094 | 1.46572 | yes |
+| Gold_T0K | 48 | -1.79512 | not available | not available | not available | yes |
+| Gold_T300K | 3 | 0.757441 | 5.48612 | 0.00605953 | 1.46297 | yes |
+| Gold_T300K | 48 | -1.79121 | not available | not available | not available | yes |
 
 ### 2. Electrostatic residual-voltage bound
 
 | Rotor shift (um) | Mutual capacitance (F) | Relative solve residual |
 |---:|---:|---:|
-| -0.002 | 1.681883842e-16 | 7.45244e-16 |
-| 0 | 1.686215229e-16 | 6.02189e-16 |
-| 0.002 | 1.690245213e-16 | 7.36918e-16 |
+| -0.002 | 1.681883873e-16 | 6.08108e-16 |
+| 0 | 1.68621526e-16 | 6.99687e-16 |
+| 0.002 | 1.690245244e-16 | 6.21476e-16 |
 
-- dC/dz: 2.090342661e-10 F/m
-- Absolute gradient coefficient: 0.0002090342661 pN/mV²
-- Critical voltage: 44.20356257 mV (`finite`)
-- Repulsion survives 50 mV: no
+- dC/dz: 2.09034274e-10 F/m
+- Absolute gradient coefficient: 0.000209034274 pN/mV²
+- Critical voltage: 85.12961468 mV (`finite`)
+- Repulsion survives 50 mV: yes
 
 | Voltage (mV) | Net force (pN) |
 |---:|---:|
-| 0 | 0.204222 |
-| 5 | 0.201609 |
-| 10 | 0.19377 |
-| 15 | 0.180705 |
-| 20 | 0.162415 |
-| 25 | 0.138899 |
-| 30 | 0.110156 |
-| 40 | 0.0369944 |
-| 50 | -0.0570711 |
+| 0 | 0.757441 |
+| 5 | 0.754828 |
+| 10 | 0.746989 |
+| 15 | 0.733925 |
+| 20 | 0.715634 |
+| 25 | 0.692118 |
+| 30 | 0.663376 |
+| 40 | 0.590214 |
+| 50 | 0.496148 |
 
 ### 3. Lateral stiffness and four-spoke suspension
 
 | Radial shift (um) | Energy (hbar*c/um) | Energy (pN um) |
 |---:|---:|---:|
-| 0 | -2.008099067 | -0.06348658965 |
-| 0.004 | -1.999052345 | -0.0632005751 |
-| 0.008 | -1.992293421 | -0.06298688991 |
-- `k_r_Casimir_pN_per_um`: -4.520584322 pN/um
-- `k_r_Casimir_pN_per_nm`: -0.004520584322 pN/nm
-- `k_r_Casimir_N_per_m`: -4.520584322e-06 N/m
-- `origin_even_energy_estimate_pN_per_um`: 35.75181757 pN/um
+| 0 | -3.672031285 | -0.1160922522 |
+| 0.004 | -3.681876948 | -0.1164035255 |
+| 0.008 | -3.654060592 | -0.1155241039 |
+- `k_r_Casimir_pN_per_um`: 74.41842804 pN/um
+- `k_r_Casimir_pN_per_nm`: 0.07441842804 pN/nm
+- `k_r_Casimir_N_per_m`: 7.441842804e-05 N/m
+- `origin_even_energy_estimate_pN_per_um`: -38.90916145 pN/um
 - `k_z_mech_pN_per_nm`: 0.1211392 pN/nm
 - `k_r_mech_pN_per_nm`: 1.030524444 pN/nm
-- `lateral_stability_safety_factor`: 227.9626639
-- `combined_radial_stiffness_pN_per_nm`: 1.02600386 pN/nm
-- `equilibrium_axial_repulsive_lift_nm`: 1.685843796 nm
+- `lateral_stability_safety_factor`: 13.84770509
+- `combined_radial_stiffness_pN_per_nm`: 1.104942872 pN/nm
+- `equilibrium_axial_repulsive_lift_nm`: 6.252650282 nm
 
 ### 4. Tooth critical-dimension tolerance
 
 | CD error (nm) | Repulsive F (pN) | Engaged F (pN) | Swing (pN) | Repulsion + swing retained |
 |---:|---:|---:|---:|:---:|
-| -10 | 0.171815 | -0.332227 | 0.504042 | yes |
-| -5 | 0.187692 | -0.347918 | 0.53561 | yes |
-| 0 | 0.204222 | -0.363874 | 0.568096 | yes |
-| 5 | 0.221357 | -0.379967 | 0.601324 | yes |
-| 10 | 0.239078 | -0.396017 | 0.635094 | yes |
+| -10 | 0.643253 | -1.61219 | 2.25544 | yes |
+| -5 | 0.699346 | -1.70077 | 2.40012 | yes |
+| 0 | 0.757441 | -1.79121 | 2.54865 | yes |
+| 5 | 0.817385 | -1.8829 | 2.70028 | yes |
+| 10 | 0.879328 | -1.97502 | 2.85435 | yes |
 
 Requested ±10 nm robustness test passes: **yes**.
 Engaged attraction retained at every CD: **yes**.
@@ -106,66 +108,68 @@ Study status: `complete`
 
 ### 1. Material dispersion and temperature
 
-| Regime | Angle (deg) | Fz (pN) | Wrep(30 nm)/kBT300 | Expected sign |
-|---|---:|---:|---:|:---:|
-| PEC_T0K | 3 | 2.19323 | 15.8855 | yes |
-| PEC_T0K | 48 | -4.06104 | not available | yes |
-| Gold_T0K | 3 | 0.238832 | 1.72986 | yes |
-| Gold_T0K | 48 | -0.431566 | not available | yes |
-| Gold_T300K | 3 | 0.243517 | 1.76378 | yes |
-| Gold_T300K | 48 | -0.447448 | not available | yes |
+Legacy 30 nm work is the single-point force × 0.030 um extrapolation. Basin work is max(force, 0) × 0.5 × 0.016 um, using an approximately 16 nm triangular repulsive profile. Neither is a computed force integral.
+
+| Regime | Angle (deg) | Fz (pN) | Legacy Wrep(30 nm)/kBT300 | Basin work (pN um) | Basin work/kBT300 | Expected sign |
+|---|---:|---:|---:|---:|---:|:---:|
+| PEC_T0K | 3 | 3.12697 | 22.6485 | 0.0250157 | 6.03961 | yes |
+| PEC_T0K | 48 | -14.4428 | not available | not available | not available | yes |
+| Gold_T0K | 3 | 0.904683 | 6.55259 | 0.00723746 | 1.74736 | yes |
+| Gold_T0K | 48 | -2.00068 | not available | not available | not available | yes |
+| Gold_T300K | 3 | 0.90372 | 6.54562 | 0.00722976 | 1.7455 | yes |
+| Gold_T300K | 48 | -1.99718 | not available | not available | not available | yes |
 
 ### 2. Electrostatic residual-voltage bound
 
 | Rotor shift (um) | Mutual capacitance (F) | Relative solve residual |
 |---:|---:|---:|
-| -0.002 | 1.175665382e-16 | 6.4472e-16 |
-| 0 | 1.17993549e-16 | 6.62116e-16 |
-| 0.002 | 1.183941074e-16 | 6.47453e-16 |
+| -0.002 | 1.175665396e-16 | 6.37378e-16 |
+| 0 | 1.179935504e-16 | 7.31843e-16 |
+| 0.002 | 1.183941088e-16 | 6.17673e-16 |
 
-- dC/dz: 2.068922921e-10 F/m
-- Absolute gradient coefficient: 0.0002068922921 pN/mV²
-- Critical voltage: 48.51846904 mV (`finite`)
-- Repulsion survives 50 mV: no
+- dC/dz: 2.068922979e-10 F/m
+- Absolute gradient coefficient: 0.0002068922979 pN/mV²
+- Critical voltage: 93.46731955 mV (`finite`)
+- Repulsion survives 50 mV: yes
 
 | Voltage (mV) | Net force (pN) |
 |---:|---:|
-| 0 | 0.243517 |
-| 5 | 0.24093 |
-| 10 | 0.233172 |
-| 15 | 0.220241 |
-| 20 | 0.202138 |
-| 25 | 0.178863 |
-| 30 | 0.150415 |
-| 40 | 0.0780027 |
-| 50 | -0.0150988 |
+| 0 | 0.90372 |
+| 5 | 0.901134 |
+| 10 | 0.893375 |
+| 15 | 0.880445 |
+| 20 | 0.862342 |
+| 25 | 0.839066 |
+| 30 | 0.810618 |
+| 40 | 0.738206 |
+| 50 | 0.645105 |
 
 ### 3. Lateral stiffness and four-spoke suspension
 
 | Radial shift (um) | Energy (hbar*c/um) | Energy (pN um) |
 |---:|---:|---:|
-| 0 | -2.309397322 | -0.07301221463 |
-| 0.004 | -2.30300768 | -0.07281020441 |
-| 0.008 | -2.301212745 | -0.07275345704 |
-- `k_r_Casimir_pN_per_um`: -9.078927371 pN/um
-- `k_r_Casimir_pN_per_nm`: -0.009078927371 pN/nm
-- `k_r_Casimir_N_per_m`: -9.078927371e-06 N/m
-- `origin_even_energy_estimate_pN_per_um`: 25.25127681 pN/um
+| 0 | -4.395577134 | -0.1389673479 |
+| 0.004 | -4.364901403 | -0.1379975265 |
+| 0.008 | -4.363516368 | -0.1379537382 |
+- `k_r_Casimir_pN_per_um`: -57.8770752 pN/um
+- `k_r_Casimir_pN_per_nm`: -0.0578770752 pN/nm
+- `k_r_Casimir_N_per_m`: -5.78770752e-05 N/m
+- `origin_even_energy_estimate_pN_per_um`: 121.2276808 pN/um
 - `k_z_mech_pN_per_nm`: 0.1211392 pN/nm
 - `k_r_mech_pN_per_nm`: 1.030524444 pN/nm
-- `lateral_stability_safety_factor`: 113.5072903
-- `combined_radial_stiffness_pN_per_nm`: 1.021445517 pN/nm
-- `equilibrium_axial_repulsive_lift_nm`: 2.010220934 nm
+- `lateral_stability_safety_factor`: 17.80539947
+- `combined_radial_stiffness_pN_per_nm`: 0.9726473692 pN/nm
+- `equilibrium_axial_repulsive_lift_nm`: 7.460178219 nm
 
 ### 4. Tooth critical-dimension tolerance
 
 | CD error (nm) | Repulsive F (pN) | Engaged F (pN) | Swing (pN) | Repulsion + swing retained |
 |---:|---:|---:|---:|:---:|
-| -10 | 0.201818 | -0.383717 | 0.585536 | yes |
-| -5 | 0.222654 | -0.415048 | 0.637702 | yes |
-| 0 | 0.243517 | -0.447448 | 0.690965 | yes |
-| 5 | 0.264459 | -0.481272 | 0.745732 | yes |
-| 10 | 0.286004 | -0.516443 | 0.802447 | yes |
+| -10 | 0.752886 | -1.6611 | 2.41399 | yes |
+| -5 | 0.827787 | -1.82577 | 2.65356 | yes |
+| 0 | 0.90372 | -1.99718 | 2.9009 | yes |
+| 5 | 0.979318 | -2.17683 | 3.15615 | yes |
+| 10 | 1.05923 | -2.36419 | 3.42342 | yes |
 
 Requested ±10 nm robustness test passes: **yes**.
 Engaged attraction retained at every CD: **yes**.
@@ -175,7 +179,10 @@ Engaged attraction retained at every CD: **yes**.
 - The active-sector 3D BEM backend is the only Casimir source.
 - Material labels are passed to the backend without substituting a material model.
 - Finite mesh/frequency settings require a separate convergence study.
+- W_rep_30nm_pN_um is retained as a legacy single-point force times 30 nm extrapolation, not work integrated over the repulsive basin.
+- work_basin_pN_um uses max(force, 0) * 0.5 * 0.016 um for an approximately 16 nm triangular repulsive basin; it is a bounded profile-model estimate, not a computed force-displacement integral.
 - The voltage test is a mutual-capacitance residual/RMS-voltage bound; it does not integrate a spatial patch-potential spectrum.
 - Three radial samples test one collective tooth-shift coordinate, not the complete lateral/rotational mechanical Hessian.
 - The requested positive-offset origin-energy estimate assumes vanishing first derivative and is not a centered stiffness at zero displacement.
 - Axial lift uses a linearized suspension, not a force-displacement equilibrium solve.
+- status='completed' marks output-record completion for freshness filtering; execution_status records scientific success, failure, timeout, or budget exhaustion.

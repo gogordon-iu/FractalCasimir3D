@@ -1,0 +1,4931 @@
+{
+  "task_id": "C10_disengaged_base",
+  "winner": "C10",
+  "state": "disengaged",
+  "z_tip": -0.1,
+  "n_r": 2,
+  "n_phi_tooth": 3,
+  "n_phi_bridge": 3,
+  "n_z": 2,
+  "n_xi": 24,
+  "theta_deg": 3.0,
+  "success": true,
+  "error": "",
+  "result": {
+    "status": "completed_vector_approximation",
+    "task_id": "C10_disengaged_base",
+    "config_file": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\results\\top_repulsive_verification\\configs\\C10_disengaged_base.json",
+    "fingerprint": "a2c7ec85b44a9f1f87b6ed9bf08832c82a1175b848c23886e8ee3bf89b62bcae",
+    "N_fractal": null,
+    "theta_deg": 3.0,
+    "parameters": {
+      "N": 3,
+      "R_min": 0.3,
+      "R_max": 1.65,
+      "w1_ratio": 0.4,
+      "min_tooth_w": 0.015,
+      "h_teeth": 0.25,
+      "t_membrane": 0.025,
+      "t_landing_pad": 0.15,
+      "tooth_arc_deg": 12.0,
+      "aperture_arc_deg": 36.0,
+      "material": "Gold",
+      "theta_deg": 3.0,
+      "z_tip": -0.1,
+      "elements": [
+        {
+          "r_inner": 0.35,
+          "r_outer": 0.39999999999999997,
+          "r_tooth_in": 0.365,
+          "r_tooth_out": 0.385
+        },
+        {
+          "r_inner": 0.44999999999999996,
+          "r_outer": 0.6,
+          "r_tooth_in": 0.4949999999999999,
+          "r_tooth_out": 0.5549999999999999
+        },
+        {
+          "r_inner": 0.65,
+          "r_outer": 0.7,
+          "r_tooth_in": 0.665,
+          "r_tooth_out": 0.685
+        },
+        {
+          "r_inner": 0.75,
+          "r_outer": 1.2,
+          "r_tooth_in": 0.885,
+          "r_tooth_out": 1.065
+        },
+        {
+          "r_inner": 1.25,
+          "r_outer": 1.2999999999999998,
+          "r_tooth_in": 1.265,
+          "r_tooth_out": 1.285
+        },
+        {
+          "r_inner": 1.3499999999999999,
+          "r_outer": 1.5,
+          "r_tooth_in": 1.3949999999999998,
+          "r_tooth_out": 1.4549999999999998
+        },
+        {
+          "r_inner": 1.55,
+          "r_outer": 1.5999999999999999,
+          "r_tooth_in": 1.565,
+          "r_tooth_out": 1.585
+        }
+      ]
+    },
+    "solver": "bem",
+    "solver_parameters": {
+      "method": "dense area-symmetrized tangential-vector dyadic T-operator",
+      "formulation": "vector_dyadic",
+      "physical_model": "dielectric_weighted_tangential_vector_dyadic",
+      "exact_electromagnetic_fsc": false,
+      "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+      "n_xi": 24,
+      "n_xi_evaluated": 24,
+      "max_steps": 0,
+      "panel_resolution": {
+        "n_r": 2,
+        "n_phi_tooth": 3,
+        "n_phi_bridge": 3,
+        "n_z": 2
+      },
+      "n_panels_rotor": 896,
+      "n_panels_stator": 2320,
+      "n_panels_total": 3216,
+      "n_panels_rotor_sector": 224,
+      "n_panels_stator_sector": 580,
+      "dofs_per_panel": 2,
+      "n_dofs_rotor_sector": 448,
+      "n_dofs_stator_sector": 1160,
+      "device": "cpu",
+      "requested_device": "cpu",
+      "dtype": "complex128",
+      "quadrature_rule": "Gauss-Legendre on u in (0,1)",
+      "kappa_mapping": "kappa_0*u/(1-u)",
+      "kappa_0_um_inv": 10.0,
+      "dispersion_model": {
+        "material": "Gold",
+        "model": "Drude-Lorentz",
+        "frequency_units": "um^-1 (xi/c)",
+        "epsilon_inf": 1.0,
+        "plasma_frequency": 7.283186177376616,
+        "gamma": 0.04274738287939764,
+        "lorentz_oscillators": []
+      },
+      "channel_weights": "normal-incidence TM and TE Fresnel amplitudes",
+      "symmetry_multiplier": 4.0,
+      "symmetry_method": "sum of four cyclic Fourier-block traces",
+      "inter_sector_interactions": true,
+      "diagonal_self_term": "equal-area disk: 1/(2*sqrt(pi*A))",
+      "off_diagonal_quadrature": "panel centroid with finite-panel distance sqrt(distance^2 + (A_target + A_source)/(8*pi))",
+      "normal_derivatives": "analytic finite-panel-regularized scalar kernel derivatives projected onto tangent bases; diagnostics only",
+      "condition_limit": 100000000000000.0,
+      "regularization": null,
+      "estimated_dense_memory_bytes": 420128768,
+      "max_memory_gib": 4.0,
+      "temperature_K": 0.0,
+      "force_derivative": "analytic rigid rotor z translation",
+      "diagnostic_decomposition": "partition of translation derivative by rotor panel; not an independently observable Maxwell-stress face force"
+    },
+    "symmetry_multiplier": 4.0,
+    "n_panels_rotor": 896,
+    "n_panels_stator": 2320,
+    "n_panels_total": 3216,
+    "force_units": "hbar*c/um^2",
+    "force_direction": "z; negative means attraction toward stator",
+    "MEEP_FORCE_TO_SI": 3.16152649e-14,
+    "F_net": 158.42064763698266,
+    "f_net_N": 5.008510740672766e-12,
+    "f_net_fN": 5008.510740672766,
+    "f_net_pN": 5.008510740672766,
+    "elapsed_seconds": 151.4464506000004,
+    "time_truncated": false,
+    "converged": false,
+    "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+    "quadrature_incomplete": false,
+    "convergence_note": "No resolution/frequency convergence study has been performed.",
+    "energy_hbar_c_per_um": -10.445639077141658,
+    "diagnostics": {
+      "F_bottom": 6.05042493819032,
+      "F_lateral_top_edge": 152.37022269879236,
+      "f_bottom_N": 1.9128578717845308e-13,
+      "f_lateral_top_edge_N": 4.817224953494313e-12,
+      "F_TM": 79.21032381849133,
+      "F_TE": 79.21032381849133,
+      "n_panels_rotor": 896,
+      "n_panels_stator": 2320,
+      "n_panels_total": 3216,
+      "panel_types_sector": {
+        "rotor_bottom": 42,
+        "rotor_top": 42,
+        "rotor_azimuthal_wall": 56,
+        "rotor_radial_wall": 84,
+        "stator_bottom": 138,
+        "stator_radial_wall": 192,
+        "stator_top": 138,
+        "stator_azimuthal_wall": 112
+      },
+      "per_xi": [
+        {
+          "kappa_um_inv": 0.02412194682655332,
+          "epsilon_i_xi": 32886.427955934065,
+          "d_logdet_d_z": -649.3006776941039,
+          "force_integrand": 103.33941240793419,
+          "bottom_force_integrand": 4.362681773941297,
+          "edge_top_force_integrand": 98.9767306339929,
+          "logdet_Y": -53.62956743232101,
+          "TM_force_integrand": 51.66970620396708,
+          "TE_force_integrand": 51.66970620396708,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 6.328182690513412,
+            "stator": 16.48368265817829,
+            "cross": 2.548142847469959
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 8.029096612091143,
+              "condition_number_M_stator": 29.699389247237594,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9890318498938734,
+                  "condition_number_Y": 1.2545069942121656,
+                  "d_logdet_d_z": -80.27749742533577,
+                  "logdet_Y": -6.888917456894745
+                },
+                "TE": {
+                  "reflection_weight": -0.9890318498938733,
+                  "condition_number_Y": 1.2545069942121656,
+                  "d_logdet_d_z": -80.27749742533577,
+                  "logdet_Y": -6.888917456894745
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.811792013654247,
+              "condition_number_M_stator": 29.893690088614154,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9890318498938734,
+                  "condition_number_Y": 1.2563319174813081,
+                  "d_logdet_d_z": -81.35695376549754,
+                  "logdet_Y": -6.6312028072666624
+                },
+                "TE": {
+                  "reflection_weight": -0.9890318498938733,
+                  "condition_number_Y": 1.2563319174813081,
+                  "d_logdet_d_z": -81.35695376549754,
+                  "logdet_Y": -6.6312028072666624
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.760480199924513,
+              "condition_number_M_stator": 29.692601455560762,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9890318498938734,
+                  "condition_number_Y": 1.2581856667500526,
+                  "d_logdet_d_z": -81.65893389072106,
+                  "logdet_Y": -6.663460644732439
+                },
+                "TE": {
+                  "reflection_weight": -0.9890318498938733,
+                  "condition_number_Y": 1.2581856667500526,
+                  "d_logdet_d_z": -81.65893389072106,
+                  "logdet_Y": -6.663460644732439
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.811792013654247,
+              "condition_number_M_stator": 29.893690088614008,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9890318498938734,
+                  "condition_number_Y": 1.2563319174813081,
+                  "d_logdet_d_z": -81.35695376549754,
+                  "logdet_Y": -6.6312028072666624
+                },
+                "TE": {
+                  "reflection_weight": -0.9890318498938733,
+                  "condition_number_Y": 1.2563319174813081,
+                  "d_logdet_d_z": -81.35695376549754,
+                  "logdet_Y": -6.6312028072666624
+                }
+              }
+            }
+          ],
+          "quadrature_index": 0,
+          "u": 0.0024063900014893447,
+          "quadrature_weight_um_inv": 0.06200420253748477,
+          "weighted_force_contribution": 6.407477857046219,
+          "elapsed_seconds": 4.14032700000098
+        },
+        {
+          "kappa_um_inv": 0.12797426741145324,
+          "epsilon_i_xi": 2428.904339037178,
+          "d_logdet_d_z": -597.3621215259383,
+          "force_integrand": 95.07313445671457,
+          "bottom_force_integrand": 3.9950398831796305,
+          "edge_top_force_integrand": 91.07809457353494,
+          "logdet_Y": -48.433151635427706,
+          "TM_force_integrand": 47.53656722835728,
+          "TE_force_integrand": 47.53656722835728,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 6.327952691318231,
+            "stator": 16.48286508953072,
+            "cross": 2.547694728584819
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 8.017901269784964,
+              "condition_number_M_stator": 28.330913458780785,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9602258500504549,
+                  "condition_number_Y": 1.2302045027079147,
+                  "d_logdet_d_z": -73.92282639388115,
+                  "logdet_Y": -6.191843309759712
+                },
+                "TE": {
+                  "reflection_weight": -0.9602258500504551,
+                  "condition_number_Y": 1.2302045027079147,
+                  "d_logdet_d_z": -73.92282639388115,
+                  "logdet_Y": -6.191843309759712
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.829986222255738,
+              "condition_number_M_stator": 28.47066766415644,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9602258500504549,
+                  "condition_number_Y": 1.231382928666697,
+                  "d_logdet_d_z": -74.83380325578771,
+                  "logdet_Y": -5.998788239100513
+                },
+                "TE": {
+                  "reflection_weight": -0.9602258500504551,
+                  "condition_number_Y": 1.231382928666697,
+                  "d_logdet_d_z": -74.83380325578771,
+                  "logdet_Y": -5.998788239100513
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.779235678006526,
+              "condition_number_M_stator": 28.324548957277635,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9602258500504549,
+                  "condition_number_Y": 1.2325254112482833,
+                  "d_logdet_d_z": -75.09062785751253,
+                  "logdet_Y": -6.027156029753115
+                },
+                "TE": {
+                  "reflection_weight": -0.9602258500504551,
+                  "condition_number_Y": 1.2325254112482833,
+                  "d_logdet_d_z": -75.09062785751253,
+                  "logdet_Y": -6.027156029753115
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.829986222255738,
+              "condition_number_M_stator": 28.470667664156583,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9602258500504549,
+                  "condition_number_Y": 1.2313829286666973,
+                  "d_logdet_d_z": -74.83380325578771,
+                  "logdet_Y": -5.998788239100512
+                },
+                "TE": {
+                  "reflection_weight": -0.9602258500504551,
+                  "condition_number_Y": 1.2313829286666973,
+                  "d_logdet_d_z": -74.83380325578771,
+                  "logdet_Y": -5.998788239100512
+                }
+              }
+            }
+          ],
+          "quadrature_index": 1,
+          "u": 0.012635722014345263,
+          "quadrature_weight_um_inv": 0.14633159021960948,
+          "weighted_force_contribution": 13.912202952213791,
+          "elapsed_seconds": 4.0456387999984145
+        },
+        {
+          "kappa_um_inv": 0.31845564878045296,
+          "epsilon_i_xi": 462.1502835319319,
+          "d_logdet_d_z": -516.7739649875521,
+          "force_integrand": 82.24713098896696,
+          "bottom_force_integrand": 3.4328235527135136,
+          "edge_top_force_integrand": 78.81430743625346,
+          "logdet_Y": -40.51545211491779,
+          "TM_force_integrand": 41.12356549448348,
+          "TE_force_integrand": 41.12356549448348,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 6.326764871796491,
+            "stator": 16.478666162486782,
+            "cross": 2.5455385901848864
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 8.00105557512874,
+              "condition_number_M_stator": 26.22648159938899,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9111019482399394,
+                  "condition_number_Y": 1.1935985511642504,
+                  "d_logdet_d_z": -64.0364411372475,
+                  "logdet_Y": -5.150534101903844
+                },
+                "TE": {
+                  "reflection_weight": -0.9111019482399394,
+                  "condition_number_Y": 1.1935985511642504,
+                  "d_logdet_d_z": -64.0364411372475,
+                  "logdet_Y": -5.150534101903844
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.856581245902136,
+              "condition_number_M_stator": 26.304392428190255,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9111019482399394,
+                  "condition_number_Y": 1.1940376576974427,
+                  "d_logdet_d_z": -64.71811489303059,
+                  "logdet_Y": -5.028873847805366
+                },
+                "TE": {
+                  "reflection_weight": -0.9111019482399394,
+                  "condition_number_Y": 1.1940376576974427,
+                  "d_logdet_d_z": -64.71811489303059,
+                  "logdet_Y": -5.028873847805366
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.8095292464586565,
+              "condition_number_M_stator": 26.221053973951356,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9111019482399394,
+                  "condition_number_Y": 1.1944918497131152,
+                  "d_logdet_d_z": -64.91431157046739,
+                  "logdet_Y": -5.0494442599443214
+                },
+                "TE": {
+                  "reflection_weight": -0.9111019482399394,
+                  "condition_number_Y": 1.1944918497131152,
+                  "d_logdet_d_z": -64.91431157046739,
+                  "logdet_Y": -5.0494442599443214
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.856581245902136,
+              "condition_number_M_stator": 26.30439242819018,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.9111019482399394,
+                  "condition_number_Y": 1.1940376576974427,
+                  "d_logdet_d_z": -64.71811489303059,
+                  "logdet_Y": -5.028873847805365
+                },
+                "TE": {
+                  "reflection_weight": -0.9111019482399394,
+                  "condition_number_Y": 1.1940376576974427,
+                  "d_logdet_d_z": -64.71811489303059,
+                  "logdet_Y": -5.028873847805365
+                }
+              }
+            }
+          ],
+          "quadrature_index": 2,
+          "u": 0.0308627239986336,
+          "quadrature_weight_um_inv": 0.23571211220157842,
+          "weighted_force_contribution": 19.386644967929296,
+          "elapsed_seconds": 3.88248190000013
+        },
+        {
+          "kappa_um_inv": 0.6021179924020734,
+          "epsilon_i_xi": 137.61304126717397,
+          "d_logdet_d_z": -420.0271975402062,
+          "force_integrand": 66.84940472155981,
+          "bottom_force_integrand": 2.7645948513227645,
+          "edge_top_force_integrand": 64.08480987023704,
+          "logdet_Y": -31.389087851267764,
+          "TM_force_integrand": 33.424702360779904,
+          "TE_force_integrand": 33.424702360779904,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 6.3233387464588535,
+            "stator": 16.466639837474656,
+            "cross": 2.539953792279665
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 7.982694456716156,
+              "condition_number_M_stator": 23.779311216811585,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.8429014037666456,
+                  "condition_number_Y": 1.1515674214442768,
+                  "d_logdet_d_z": -52.12696345431811,
+                  "logdet_Y": -3.9728767692776326
+                },
+                "TE": {
+                  "reflection_weight": -0.8429014037666455,
+                  "condition_number_Y": 1.1515674214442768,
+                  "d_logdet_d_z": -52.12696345431811,
+                  "logdet_Y": -3.9728767692776326
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.884281944060922,
+              "condition_number_M_stator": 23.813140706865987,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.8429014037666456,
+                  "condition_number_Y": 1.1516074808472168,
+                  "d_logdet_d_z": -52.58265340782767,
+                  "logdet_Y": -3.9037930565086487
+                },
+                "TE": {
+                  "reflection_weight": -0.8429014037666455,
+                  "condition_number_Y": 1.1516074808472168,
+                  "d_logdet_d_z": -52.58265340782767,
+                  "logdet_Y": -3.9037930565086487
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.845537019264891,
+              "condition_number_M_stator": 23.77528047944823,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.8429014037666456,
+                  "condition_number_Y": 1.1517449363175238,
+                  "d_logdet_d_z": -52.72132850012968,
+                  "logdet_Y": -3.9140810433389537
+                },
+                "TE": {
+                  "reflection_weight": -0.8429014037666455,
+                  "condition_number_Y": 1.1517449363175238,
+                  "d_logdet_d_z": -52.72132850012968,
+                  "logdet_Y": -3.9140810433389537
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.884281944060922,
+              "condition_number_M_stator": 23.813140706865973,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.8429014037666456,
+                  "condition_number_Y": 1.1516074808472168,
+                  "d_logdet_d_z": -52.582653407827664,
+                  "logdet_Y": -3.9037930565086483
+                },
+                "TE": {
+                  "reflection_weight": -0.8429014037666455,
+                  "condition_number_Y": 1.1516074808472168,
+                  "d_logdet_d_z": -52.582653407827664,
+                  "logdet_Y": -3.9037930565086483
+                }
+              }
+            }
+          ],
+          "quadrature_index": 3,
+          "u": 0.056792236497799464,
+          "quadrature_weight_um_inv": 0.33327259294471623,
+          "weighted_force_contribution": 22.279074448364995,
+          "elapsed_seconds": 4.002625200002512
+        },
+        {
+          "kappa_um_inv": 0.9889989978762477,
+          "epsilon_i_xi": 52.984517571312196,
+          "d_logdet_d_z": -320.4088898294172,
+          "force_integrand": 50.99465862693826,
+          "bottom_force_integrand": 2.076618969302103,
+          "edge_top_force_integrand": 48.91803965763616,
+          "logdet_Y": -22.503271368446907,
+          "TM_force_integrand": 25.497329313469127,
+          "TE_force_integrand": 25.497329313469127,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 6.3158847672092016,
+            "stator": 16.440630521888973,
+            "cross": 2.52929167748763
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 7.966058524590385,
+              "condition_number_M_stator": 21.285934455958643,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.758426286617673,
+                  "condition_number_Y": 1.110729428555799,
+                  "d_logdet_d_z": -39.824900022083774,
+                  "logdet_Y": -2.839028784732491
+                },
+                "TE": {
+                  "reflection_weight": -0.7584262866176729,
+                  "condition_number_Y": 1.110729428555799,
+                  "d_logdet_d_z": -39.824900022083774,
+                  "logdet_Y": -2.839028784732491
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.907042167901638,
+              "condition_number_M_stator": 21.297265944556475,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.758426286617673,
+                  "condition_number_Y": 1.1106676779680065,
+                  "d_logdet_d_z": -40.09600532307922,
+                  "logdet_Y": -2.803434338698953
+                },
+                "TE": {
+                  "reflection_weight": -0.7584262866176729,
+                  "condition_number_Y": 1.1106676779680065,
+                  "d_logdet_d_z": -40.09600532307922,
+                  "logdet_Y": -2.803434338698953
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.879843466651248,
+              "condition_number_M_stator": 21.283415400585756,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.758426286617673,
+                  "condition_number_Y": 1.1107033172870688,
+                  "d_logdet_d_z": -40.187534246466385,
+                  "logdet_Y": -2.805738222093057
+                },
+                "TE": {
+                  "reflection_weight": -0.7584262866176729,
+                  "condition_number_Y": 1.1107033172870688,
+                  "d_logdet_d_z": -40.187534246466385,
+                  "logdet_Y": -2.805738222093057
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.907042167901638,
+              "condition_number_M_stator": 21.297265944556475,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.758426286617673,
+                  "condition_number_Y": 1.1106676779680065,
+                  "d_logdet_d_z": -40.09600532307921,
+                  "logdet_Y": -2.803434338698953
+                },
+                "TE": {
+                  "reflection_weight": -0.7584262866176729,
+                  "condition_number_Y": 1.1106676779680065,
+                  "d_logdet_d_z": -40.09600532307921,
+                  "logdet_Y": -2.803434338698953
+                }
+              }
+            }
+          ],
+          "quadrature_index": 4,
+          "u": 0.08999900701304853,
+          "quadrature_weight_um_inv": 0.4428590830865533,
+          "weighted_force_contribution": 22.583447761837675,
+          "elapsed_seconds": 4.037733900000603
+        },
+        {
+          "kappa_um_inv": 1.4934325359025047,
+          "epsilon_i_xi": 24.121453466973367,
+          "d_logdet_d_z": -228.6650009795144,
+          "force_integrand": 36.39316521800281,
+          "bottom_force_integrand": 1.4407718895395345,
+          "edge_top_force_integrand": 34.95239332846327,
+          "logdet_Y": -14.878301076852196,
+          "TM_force_integrand": 18.196582609001403,
+          "TE_force_integrand": 18.196582609001403,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 6.3021043265736125,
+            "stator": 16.392664753683885,
+            "cross": 2.5120834546804414
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 7.951897350595353,
+              "condition_number_M_stator": 18.909856775795912,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.6616683600052746,
+                  "condition_number_Y": 1.075510653346245,
+                  "d_logdet_d_z": -28.462930996072227,
+                  "logdet_Y": -1.8723720688829517
+                },
+                "TE": {
+                  "reflection_weight": -0.6616683600052745,
+                  "condition_number_Y": 1.075510653346245,
+                  "d_logdet_d_z": -28.462930996072227,
+                  "logdet_Y": -1.8723720688829517
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.921045423712886,
+              "condition_number_M_stator": 18.912667339109408,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.6616683600052746,
+                  "condition_number_Y": 1.0754598048613921,
+                  "d_logdet_d_z": -28.604789163994482,
+                  "logdet_Y": -1.8560010347437501
+                },
+                "TE": {
+                  "reflection_weight": -0.6616683600052745,
+                  "condition_number_Y": 1.0754598048613921,
+                  "d_logdet_d_z": -28.604789163994482,
+                  "logdet_Y": -1.8560010347437501
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.90532609399209,
+              "condition_number_M_stator": 18.908569920397532,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.6616683600052746,
+                  "condition_number_Y": 1.0754670413607217,
+                  "d_logdet_d_z": -28.659991165695995,
+                  "logdet_Y": -1.8547764000556461
+                },
+                "TE": {
+                  "reflection_weight": -0.6616683600052745,
+                  "condition_number_Y": 1.0754670413607217,
+                  "d_logdet_d_z": -28.659991165695995,
+                  "logdet_Y": -1.8547764000556461
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.921045423712886,
+              "condition_number_M_stator": 18.912667339109394,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.6616683600052746,
+                  "condition_number_Y": 1.0754598048613921,
+                  "d_logdet_d_z": -28.604789163994482,
+                  "logdet_Y": -1.8560010347437501
+                },
+                "TE": {
+                  "reflection_weight": -0.6616683600052745,
+                  "condition_number_Y": 1.0754598048613921,
+                  "d_logdet_d_z": -28.604789163994482,
+                  "logdet_Y": -1.8560010347437501
+                }
+              }
+            }
+          ],
+          "quadrature_index": 5,
+          "u": 0.12993790421072282,
+          "quadrature_weight_um_inv": 0.5692816705958218,
+          "weighted_force_contribution": 20.717961893574394,
+          "elapsed_seconds": 3.952924499997607
+        },
+        {
+          "kappa_um_inv": 2.1352327135623335,
+          "epsilon_i_xi": 12.406271438271206,
+          "d_logdet_d_z": -151.83902584688693,
+          "force_integrand": 24.165931517790114,
+          "bottom_force_integrand": 0.9116266610429923,
+          "edge_top_force_integrand": 23.25430485674712,
+          "logdet_Y": -9.021048420273821,
+          "TM_force_integrand": 12.08296575889506,
+          "TE_force_integrand": 12.08296575889506,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 6.279172698876702,
+            "stator": 16.312657507951677,
+            "cross": 2.486854206780962
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 7.937995596802499,
+              "condition_number_M_stator": 17.5822636481787,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.5577426404740341,
+                  "condition_number_Y": 1.0479282620811532,
+                  "d_logdet_d_z": -18.92433764218417,
+                  "logdet_Y": -1.1330200239523207
+                },
+                "TE": {
+                  "reflection_weight": -0.5577426404740341,
+                  "condition_number_Y": 1.0479282620811532,
+                  "d_logdet_d_z": -18.92433764218417,
+                  "logdet_Y": -1.1330200239523207
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.924115997502688,
+              "condition_number_M_stator": 17.58230933267644,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.5577426404740341,
+                  "condition_number_Y": 1.0479038325714123,
+                  "d_logdet_d_z": -18.98858454136287,
+                  "logdet_Y": -1.1263940571243332
+                },
+                "TE": {
+                  "reflection_weight": -0.5577426404740341,
+                  "condition_number_Y": 1.0479038325714123,
+                  "d_logdet_d_z": -18.98858454136287,
+                  "logdet_Y": -1.1263940571243332
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.916950893028702,
+              "condition_number_M_stator": 17.581833029024633,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.5577426404740341,
+                  "condition_number_Y": 1.0479048540048181,
+                  "d_logdet_d_z": -19.018006198533573,
+                  "logdet_Y": -1.1247160719359237
+                },
+                "TE": {
+                  "reflection_weight": -0.5577426404740341,
+                  "condition_number_Y": 1.0479048540048181,
+                  "d_logdet_d_z": -19.018006198533573,
+                  "logdet_Y": -1.1247160719359237
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.924115997502688,
+              "condition_number_M_stator": 17.58230933267644,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.5577426404740341,
+                  "condition_number_Y": 1.0479038325714123,
+                  "d_logdet_d_z": -18.988584541362865,
+                  "logdet_Y": -1.1263940571243332
+                },
+                "TE": {
+                  "reflection_weight": -0.5577426404740341,
+                  "condition_number_Y": 1.0479038325714123,
+                  "d_logdet_d_z": -18.988584541362865,
+                  "logdet_Y": -1.1263940571243332
+                }
+              }
+            }
+          ],
+          "quadrature_index": 6,
+          "u": 0.17595317403151223,
+          "quadrature_weight_um_inv": 0.7187850393546718,
+          "weighted_force_contribution": 17.37011003705707,
+          "elapsed_seconds": 4.1111856000025
+        },
+        {
+          "kappa_um_inv": 2.9414534288994942,
+          "epsilon_i_xi": 7.043002900560628,
+          "d_logdet_d_z": -93.1430688552311,
+          "force_integrand": 14.824179823058795,
+          "bottom_force_integrand": 0.5191719184126977,
+          "edge_top_force_integrand": 14.3050079046461,
+          "logdet_Y": -4.981843165967254,
+          "TM_force_integrand": 7.412089911529398,
+          "TE_force_integrand": 7.412089911529398,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 6.243707770545113,
+            "stator": 16.188028607007276,
+            "cross": 2.4518846896933506
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 7.920061156483094,
+              "condition_number_M_stator": 17.79172965591076,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.45263449992189914,
+                  "condition_number_Y": 1.028159275093202,
+                  "d_logdet_d_z": -11.621016256133606,
+                  "logdet_Y": -0.6247384497849477
+                },
+                "TE": {
+                  "reflection_weight": -0.4526344999218991,
+                  "condition_number_Y": 1.028159275093202,
+                  "d_logdet_d_z": -11.621016256133606,
+                  "logdet_Y": -0.6247384497849477
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.914761459264695,
+              "condition_number_M_stator": 17.791518947351992,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.45263449992189914,
+                  "condition_number_Y": 1.0281532097596318,
+                  "d_logdet_d_z": -11.645707983035592,
+                  "logdet_Y": -0.6224112752904403
+                },
+                "TE": {
+                  "reflection_weight": -0.4526344999218991,
+                  "condition_number_Y": 1.0281532097596318,
+                  "d_logdet_d_z": -11.645707983035592,
+                  "logdet_Y": -0.6224112752904403
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.9123758226943215,
+              "condition_number_M_stator": 17.791623859094766,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.45263449992189914,
+                  "condition_number_Y": 1.028153295327424,
+                  "d_logdet_d_z": -11.65910220541076,
+                  "logdet_Y": -0.6213605826177984
+                },
+                "TE": {
+                  "reflection_weight": -0.4526344999218991,
+                  "condition_number_Y": 1.028153295327424,
+                  "d_logdet_d_z": -11.65910220541076,
+                  "logdet_Y": -0.6213605826177984
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.914761459264695,
+              "condition_number_M_stator": 17.791518947351992,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.45263449992189914,
+                  "condition_number_Y": 1.0281532097596318,
+                  "d_logdet_d_z": -11.645707983035592,
+                  "logdet_Y": -0.6224112752904403
+                },
+                "TE": {
+                  "reflection_weight": -0.4526344999218991,
+                  "condition_number_Y": 1.0281532097596318,
+                  "d_logdet_d_z": -11.645707983035592,
+                  "logdet_Y": -0.6224112752904403
+                }
+              }
+            }
+          ],
+          "quadrature_index": 7,
+          "u": 0.22728926430558022,
+          "quadrature_weight_um_inv": 0.8997448551418562,
+          "weighted_force_contribution": 13.337979527494863,
+          "elapsed_seconds": 4.150962899999286
+        },
+        {
+          "kappa_um_inv": 3.9490100168707847,
+          "epsilon_i_xi": 4.365041690679092,
+          "d_logdet_d_z": -52.38701098809997,
+          "force_integrand": 8.337651752565547,
+          "bottom_force_integrand": 0.26318596578352077,
+          "edge_top_force_integrand": 8.074465786782026,
+          "logdet_Y": -2.4896327688149373,
+          "TM_force_integrand": 4.1688258762827735,
+          "TE_force_integrand": 4.1688258762827735,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 6.191681697763255,
+            "stator": 16.00323817850722,
+            "cross": 2.4050314844720724
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 8.022027265927166,
+              "condition_number_M_stator": 17.925308033967077,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.3525974896782322,
+                  "condition_number_Y": 1.0152125091467405,
+                  "d_logdet_d_z": -6.541217467965005,
+                  "logdet_Y": -0.3118398965320973
+                },
+                "TE": {
+                  "reflection_weight": -0.3525974896782322,
+                  "condition_number_Y": 1.0152125091467405,
+                  "d_logdet_d_z": -6.541217467965005,
+                  "logdet_Y": -0.3118398965320973
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 8.02142323494664,
+              "condition_number_M_stator": 17.925181734899986,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.3525974896782322,
+                  "condition_number_Y": 1.015212513614617,
+                  "d_logdet_d_z": -6.549084245737526,
+                  "logdet_Y": -0.3111424618430988
+                },
+                "TE": {
+                  "reflection_weight": -0.3525974896782322,
+                  "condition_number_Y": 1.015212513614617,
+                  "d_logdet_d_z": -6.549084245737526,
+                  "logdet_Y": -0.3111424618430988
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 8.021984869463711,
+              "condition_number_M_stator": 17.92531757736336,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.3525974896782322,
+                  "condition_number_Y": 1.015212517980085,
+                  "d_logdet_d_z": -6.5541195346099315,
+                  "logdet_Y": -0.3106915641891739
+                },
+                "TE": {
+                  "reflection_weight": -0.3525974896782322,
+                  "condition_number_Y": 1.015212517980085,
+                  "d_logdet_d_z": -6.5541195346099315,
+                  "logdet_Y": -0.3106915641891739
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 8.02142323494664,
+              "condition_number_M_stator": 17.925181734899986,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.3525974896782322,
+                  "condition_number_Y": 1.015212513614617,
+                  "d_logdet_d_z": -6.549084245737526,
+                  "logdet_Y": -0.3111424618430988
+                },
+                "TE": {
+                  "reflection_weight": -0.3525974896782322,
+                  "condition_number_Y": 1.015212513614617,
+                  "d_logdet_d_z": -6.549084245737526,
+                  "logdet_Y": -0.3111424618430988
+                }
+              }
+            }
+          ],
+          "quadrature_index": 8,
+          "u": 0.28310324618697746,
+          "quadrature_weight_um_inv": 1.1237250776469492,
+          "weighted_force_contribution": 9.369228363044941,
+          "elapsed_seconds": 3.9959535999987565
+        },
+        {
+          "kappa_um_inv": 5.208631863279859,
+          "epsilon_i_xi": 2.939303479969003,
+          "d_logdet_d_z": -26.845372676351722,
+          "force_integrand": 4.27257376058548,
+          "bottom_force_integrand": 0.1179423920101292,
+          "edge_top_force_integrand": 4.154631368575352,
+          "logdet_Y": -1.1208822274330352,
+          "TM_force_integrand": 2.1362868802927406,
+          "TE_force_integrand": 2.1362868802927406,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 6.118204130304385,
+            "stator": 15.739203446423078,
+            "cross": 2.343608889514422
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 8.131824191114992,
+              "condition_number_M_stator": 17.972948820837566,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.26319969418833233,
+                  "condition_number_Y": 1.0075131004476805,
+                  "d_logdet_d_z": -3.353778854100984,
+                  "logdet_Y": -0.14027653290787734
+                },
+                "TE": {
+                  "reflection_weight": -0.2631996941883323,
+                  "condition_number_Y": 1.0075131004476805,
+                  "d_logdet_d_z": -3.353778854100984,
+                  "logdet_Y": -0.14027653290787734
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 8.131572739658424,
+              "condition_number_M_stator": 17.97290080136124,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.26319969418833233,
+                  "condition_number_Y": 1.0075131005642373,
+                  "d_logdet_d_z": -3.3558003519572472,
+                  "logdet_Y": -0.1401021275681094
+                },
+                "TE": {
+                  "reflection_weight": -0.2631996941883323,
+                  "condition_number_Y": 1.0075131005642373,
+                  "d_logdet_d_z": -3.3558003519572472,
+                  "logdet_Y": -0.1401021275681094
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 8.131801239941975,
+              "condition_number_M_stator": 17.972974569701588,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.26319969418833233,
+                  "condition_number_Y": 1.0075131006801268,
+                  "d_logdet_d_z": -3.3573067801603833,
+                  "logdet_Y": -0.13996032567242148
+                },
+                "TE": {
+                  "reflection_weight": -0.2631996941883323,
+                  "condition_number_Y": 1.0075131006801268,
+                  "d_logdet_d_z": -3.3573067801603833,
+                  "logdet_Y": -0.13996032567242148
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 8.131572739658424,
+              "condition_number_M_stator": 17.97290080136124,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.26319969418833233,
+                  "condition_number_Y": 1.0075131005642373,
+                  "d_logdet_d_z": -3.3558003519572477,
+                  "logdet_Y": -0.1401021275681094
+                },
+                "TE": {
+                  "reflection_weight": -0.2631996941883323,
+                  "condition_number_Y": 1.0075131005642373,
+                  "d_logdet_d_z": -3.3558003519572477,
+                  "logdet_Y": -0.1401021275681094
+                }
+              }
+            }
+          ],
+          "quadrature_index": 9,
+          "u": 0.3424786601519183,
+          "quadrature_weight_um_inv": 1.4071341257286474,
+          "weighted_force_contribution": 6.012084343212609,
+          "elapsed_seconds": 4.088295499997912
+        },
+        {
+          "kappa_um_inv": 6.790935435705376,
+          "epsilon_i_xi": 2.143032041553309,
+          "d_logdet_d_z": -12.487416823812875,
+          "force_integrand": 1.9874341139587146,
+          "bottom_force_integrand": 0.04662791135294884,
+          "edge_top_force_integrand": 1.9408062026057658,
+          "logdet_Y": -0.45401692863864135,
+          "TM_force_integrand": 0.9937170569793573,
+          "TE_force_integrand": 0.9937170569793573,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 6.01707168159761,
+            "stator": 15.372517981478062,
+            "cross": 2.2642699254778496
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 8.221725864441538,
+              "condition_number_M_stator": 17.935211810269717,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.18828198927638862,
+                  "condition_number_Y": 1.0033790061050274,
+                  "d_logdet_d_z": -1.5605377485240393,
+                  "logdet_Y": -0.05678672598928766
+                },
+                "TE": {
+                  "reflection_weight": -0.18828198927638864,
+                  "condition_number_Y": 1.0033790061050274,
+                  "d_logdet_d_z": -1.5605377485240393,
+                  "logdet_Y": -0.05678672598928766
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 8.221642910340341,
+              "condition_number_M_stator": 17.935198944870493,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.18828198927638862,
+                  "condition_number_Y": 1.0033790040189003,
+                  "d_logdet_d_z": -1.560942545572514,
+                  "logdet_Y": -0.05675150866690264
+                },
+                "TE": {
+                  "reflection_weight": -0.18828198927638864,
+                  "condition_number_Y": 1.0033790040189003,
+                  "d_logdet_d_z": -1.560942545572514,
+                  "logdet_Y": -0.05675150866690264
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 8.221714693783321,
+              "condition_number_M_stator": 17.935227494632166,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.18828198927638862,
+                  "condition_number_Y": 1.003379002035845,
+                  "d_logdet_d_z": -1.56128557223737,
+                  "logdet_Y": -0.056718720996227705
+                },
+                "TE": {
+                  "reflection_weight": -0.18828198927638864,
+                  "condition_number_Y": 1.003379002035845,
+                  "d_logdet_d_z": -1.56128557223737,
+                  "logdet_Y": -0.056718720996227705
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 8.221642910340341,
+              "condition_number_M_stator": 17.935198944870493,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.18828198927638862,
+                  "condition_number_Y": 1.0033790040189003,
+                  "d_logdet_d_z": -1.5609425455725143,
+                  "logdet_Y": -0.05675150866690264
+                },
+                "TE": {
+                  "reflection_weight": -0.18828198927638864,
+                  "condition_number_Y": 1.0033790040189003,
+                  "d_logdet_d_z": -1.5609425455725143,
+                  "logdet_Y": -0.05675150866690264
+                }
+              }
+            }
+          ],
+          "quadrature_index": 10,
+          "u": 0.40444056626319186,
+          "quadrature_weight_um_inv": 1.7739023892674497,
+          "weighted_force_contribution": 3.525514123263001,
+          "elapsed_seconds": 3.8596154999977443
+        },
+        {
+          "kappa_um_inv": 8.795987445929232,
+          "epsilon_i_xi": 1.6822886047322154,
+          "d_logdet_d_z": -5.266427434000424,
+          "force_integrand": 0.8381779585559339,
+          "bottom_force_integrand": 0.016264222058811464,
+          "edge_top_force_integrand": 0.8219137364971224,
+          "logdet_Y": -0.1656312185795421,
+          "TM_force_integrand": 0.41908897927796696,
+          "TE_force_integrand": 0.41908897927796696,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 5.87993884774456,
+            "stator": 14.874400110299145,
+            "cross": 2.1628405966001836
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 8.27895381548244,
+              "condition_number_M_stator": 17.822023339762694,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.129310718074357,
+                  "condition_number_Y": 1.0013812671414881,
+                  "d_logdet_d_z": -0.6582443191247396,
+                  "logdet_Y": -0.020709352658548407
+                },
+                "TE": {
+                  "reflection_weight": -0.12931071807435698,
+                  "condition_number_Y": 1.0013812671414881,
+                  "d_logdet_d_z": -0.6582443191247396,
+                  "logdet_Y": -0.020709352658548407
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 8.27893358777421,
+              "condition_number_M_stator": 17.82202143597544,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.129310718074357,
+                  "condition_number_Y": 1.001381267068096,
+                  "d_logdet_d_z": -0.6583044443338614,
+                  "logdet_Y": -0.020703895304172354
+                },
+                "TE": {
+                  "reflection_weight": -0.12931071807435698,
+                  "condition_number_Y": 1.001381267068096,
+                  "d_logdet_d_z": -0.6583044443338614,
+                  "logdet_Y": -0.020703895304172354
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 8.278949520205247,
+              "condition_number_M_stator": 17.822029671480603,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.129310718074357,
+                  "condition_number_Y": 1.0013812669959317,
+                  "d_logdet_d_z": -0.6583605092077498,
+                  "logdet_Y": -0.020698466022877934
+                },
+                "TE": {
+                  "reflection_weight": -0.12931071807435698,
+                  "condition_number_Y": 1.0013812669959317,
+                  "d_logdet_d_z": -0.6583605092077498,
+                  "logdet_Y": -0.020698466022877934
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 8.27893358777421,
+              "condition_number_M_stator": 17.82202143597544,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.129310718074357,
+                  "condition_number_Y": 1.001381267068096,
+                  "d_logdet_d_z": -0.6583044443338614,
+                  "logdet_Y": -0.020703895304172354
+                },
+                "TE": {
+                  "reflection_weight": -0.12931071807435698,
+                  "condition_number_Y": 1.001381267068096,
+                  "d_logdet_d_z": -0.6583044443338614,
+                  "logdet_Y": -0.020703895304172354
+                }
+              }
+            }
+          ],
+          "quadrature_index": 11,
+          "u": 0.4679715535686972,
+          "quadrature_weight_um_inv": 2.259958776379919,
+          "weighted_force_contribution": 1.894247633606687,
+          "elapsed_seconds": 4.101489300002868
+        },
+        {
+          "kappa_um_inv": 11.368820227941528,
+          "epsilon_i_xi": 1.4088670537217944,
+          "d_logdet_d_z": -2.0121302708010114,
+          "force_integrand": 0.3202404787428149,
+          "bottom_force_integrand": 0.004977920268628506,
+          "edge_top_force_integrand": 0.31526255847418644,
+          "logdet_Y": -0.0544559455334938,
+          "TM_force_integrand": 0.16012023937140746,
+          "TE_force_integrand": 0.16012023937140746,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 5.694964395905316,
+            "stator": 14.209451202636188,
+            "cross": 2.0341404489655046
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 8.291685493699559,
+              "condition_number_M_stator": 17.64814977460451,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.0854873011094267,
+                  "condition_number_Y": 1.0005116511903276,
+                  "d_logdet_d_z": -0.25151018148537985,
+                  "logdet_Y": -0.006807595443390626
+                },
+                "TE": {
+                  "reflection_weight": -0.08548730110942672,
+                  "condition_number_Y": 1.0005116511903276,
+                  "d_logdet_d_z": -0.25151018148537985,
+                  "logdet_Y": -0.006807595443390626
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 8.291682157922896,
+              "condition_number_M_stator": 17.648149873061822,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.0854873011094267,
+                  "condition_number_Y": 1.000511651189189,
+                  "d_logdet_d_z": -0.2515163015335649,
+                  "logdet_Y": -0.006806995600550272
+                },
+                "TE": {
+                  "reflection_weight": -0.08548730110942672,
+                  "condition_number_Y": 1.000511651189189,
+                  "d_logdet_d_z": -0.2515163015335649,
+                  "logdet_Y": -0.006806995600550272
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 8.29168430642841,
+              "condition_number_M_stator": 17.64815158695423,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.0854873011094267,
+                  "condition_number_Y": 1.000511651188055,
+                  "d_logdet_d_z": -0.25152235084799607,
+                  "logdet_Y": -0.006806386122255728
+                },
+                "TE": {
+                  "reflection_weight": -0.08548730110942672,
+                  "condition_number_Y": 1.000511651188055,
+                  "d_logdet_d_z": -0.25152235084799607,
+                  "logdet_Y": -0.006806386122255728
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 8.291682157922896,
+              "condition_number_M_stator": 17.648149873061822,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.0854873011094267,
+                  "condition_number_Y": 1.000511651189189,
+                  "d_logdet_d_z": -0.2515163015335649,
+                  "logdet_Y": -0.006806995600550272
+                },
+                "TE": {
+                  "reflection_weight": -0.08548730110942672,
+                  "condition_number_Y": 1.000511651189189,
+                  "d_logdet_d_z": -0.2515163015335649,
+                  "logdet_Y": -0.006806995600550272
+                }
+              }
+            }
+          ],
+          "quadrature_index": 12,
+          "u": 0.5320284464313028,
+          "quadrature_weight_um_inv": 2.920998376721503,
+          "weighted_force_contribution": 0.9354219185682793,
+          "elapsed_seconds": 4.094151500001317
+        },
+        {
+          "kappa_um_inv": 14.725511815974581,
+          "epsilon_i_xi": 1.2439175892180943,
+          "d_logdet_d_z": -0.6933060542861742,
+          "force_integrand": 0.11034308561518255,
+          "bottom_force_integrand": 0.001306623416819277,
+          "edge_top_force_integrand": 0.10903646219836327,
+          "logdet_Y": -0.016062129540041784,
+          "TM_force_integrand": 0.055171542807591276,
+          "TE_force_integrand": 0.055171542807591276,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 5.444894306071672,
+            "stator": 13.334767707725279,
+            "cross": 1.871925087635714
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 8.25247349678168,
+              "condition_number_M_stator": 17.427393202543502,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.05451234368676025,
+                  "condition_number_Y": 1.000170179533887,
+                  "d_logdet_d_z": -0.08666288157863308,
+                  "logdet_Y": -0.0020078078285590446
+                },
+                "TE": {
+                  "reflection_weight": -0.05451234368676034,
+                  "condition_number_Y": 1.000170179533887,
+                  "d_logdet_d_z": -0.08666288157863308,
+                  "logdet_Y": -0.0020078078285590446
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 8.25247316349626,
+              "condition_number_M_stator": 17.42739330061521,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.05451234368676025,
+                  "condition_number_Y": 1.000170179533881,
+                  "d_logdet_d_z": -0.08666325555952602,
+                  "logdet_Y": -0.0020077663436121667
+                },
+                "TE": {
+                  "reflection_weight": -0.05451234368676034,
+                  "condition_number_Y": 1.000170179533881,
+                  "d_logdet_d_z": -0.08666325555952602,
+                  "logdet_Y": -0.0020077663436121667
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 8.252473288774194,
+              "condition_number_M_stator": 17.42739354090749,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.05451234368676025,
+                  "condition_number_Y": 1.0001701795338753,
+                  "d_logdet_d_z": -0.08666363444540198,
+                  "logdet_Y": -0.0020077242542375128
+                },
+                "TE": {
+                  "reflection_weight": -0.05451234368676034,
+                  "condition_number_Y": 1.0001701795338753,
+                  "d_logdet_d_z": -0.08666363444540198,
+                  "logdet_Y": -0.0020077242542375128
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 8.25247316349626,
+              "condition_number_M_stator": 17.42739330061521,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.05451234368676025,
+                  "condition_number_Y": 1.000170179533881,
+                  "d_logdet_d_z": -0.08666325555952602,
+                  "logdet_Y": -0.0020077663436121667
+                },
+                "TE": {
+                  "reflection_weight": -0.05451234368676034,
+                  "condition_number_Y": 1.000170179533881,
+                  "d_logdet_d_z": -0.08666325555952602,
+                  "logdet_Y": -0.0020077663436121667
+                }
+              }
+            }
+          ],
+          "quadrature_index": 13,
+          "u": 0.5955594337368082,
+          "quadrature_weight_um_inv": 3.8465423270262793,
+          "weighted_force_contribution": 0.42443934931348426,
+          "elapsed_seconds": 4.1127993000009155
+        },
+        {
+          "kappa_um_inv": 19.198899562279742,
+          "epsilon_i_xi": 1.1435900164403818,
+          "d_logdet_d_z": -0.21242915437435284,
+          "force_integrand": 0.03380914997550957,
+          "bottom_force_integrand": 0.0002789195386356119,
+          "edge_top_force_integrand": 0.03353023043687396,
+          "logdet_Y": -0.004184267971441559,
+          "TM_force_integrand": 0.016904574987754783,
+          "TE_force_integrand": 0.016904574987754783,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 5.104876587448344,
+            "stator": 12.20093584510424,
+            "cross": 1.6692493801907657
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 8.161337370013069,
+              "condition_number_M_stator": 17.169056423818997,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.03353053829378235,
+                  "condition_number_Y": 1.0000497236648485,
+                  "d_logdet_d_z": -0.026553633314271297,
+                  "logdet_Y": -0.0005230350012515047
+                },
+                "TE": {
+                  "reflection_weight": -0.03353053829378229,
+                  "condition_number_Y": 1.0000497236648485,
+                  "d_logdet_d_z": -0.026553633314271297,
+                  "logdet_Y": -0.0005230350012515047
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 8.161337352259212,
+              "condition_number_M_stator": 17.169056438385798,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.03353053829378235,
+                  "condition_number_Y": 1.0000497236648485,
+                  "d_logdet_d_z": -0.026553644253976376,
+                  "logdet_Y": -0.000523033499154937
+                },
+                "TE": {
+                  "reflection_weight": -0.03353053829378229,
+                  "condition_number_Y": 1.0000497236648485,
+                  "d_logdet_d_z": -0.026553644253976376,
+                  "logdet_Y": -0.000523033499154937
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 8.161337350961055,
+              "condition_number_M_stator": 17.16905645833381,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.03353053829378235,
+                  "condition_number_Y": 1.0000497236648485,
+                  "d_logdet_d_z": -0.026553655364952345,
+                  "logdet_Y": -0.0005230319861594011
+                },
+                "TE": {
+                  "reflection_weight": -0.03353053829378229,
+                  "condition_number_Y": 1.0000497236648485,
+                  "d_logdet_d_z": -0.026553655364952345,
+                  "logdet_Y": -0.0005230319861594011
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 8.161337352259212,
+              "condition_number_M_stator": 17.169056438385798,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.03353053829378235,
+                  "condition_number_Y": 1.0000497236648485,
+                  "d_logdet_d_z": -0.026553644253976376,
+                  "logdet_Y": -0.000523033499154937
+                },
+                "TE": {
+                  "reflection_weight": -0.03353053829378229,
+                  "condition_number_Y": 1.0000497236648485,
+                  "d_logdet_d_z": -0.026553644253976376,
+                  "logdet_Y": -0.000523033499154937
+                }
+              }
+            }
+          ],
+          "quadrature_index": 14,
+          "u": 0.6575213398480817,
+          "quadrature_weight_um_inv": 5.186664648153707,
+          "weighted_force_contribution": 0.17535672296210228,
+          "elapsed_seconds": 4.002570699998614
+        },
+        {
+          "kappa_um_inv": 25.322802315715702,
+          "epsilon_i_xi": 1.082582263173357,
+          "d_logdet_d_z": -0.056076380190604104,
+          "force_integrand": 0.008924833098035084,
+          "bottom_force_integrand": 4.395280574048487e-05,
+          "edge_top_force_integrand": 0.008880880292294597,
+          "logdet_Y": -0.0009298157707935363,
+          "TM_force_integrand": 0.004462416549017541,
+          "TE_force_integrand": 0.004462416549017541,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 4.641069651754862,
+            "stator": 10.757995717477247,
+            "cross": 1.4198936907233128
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 8.025977880834642,
+              "condition_number_M_stator": 16.878993174310427,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.019834691222844744,
+                  "condition_number_Y": 1.0000122208881743,
+                  "d_logdet_d_z": -0.007009547423968486,
+                  "logdet_Y": -0.00011622699261773839
+                },
+                "TE": {
+                  "reflection_weight": -0.019834691222844824,
+                  "condition_number_Y": 1.0000122208881743,
+                  "d_logdet_d_z": -0.007009547423968486,
+                  "logdet_Y": -0.00011622699261773839
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 8.02597788041522,
+              "condition_number_M_stator": 16.87899317499687,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.019834691222844744,
+                  "condition_number_Y": 1.0000122208881743,
+                  "d_logdet_d_z": -0.007009547523576985,
+                  "logdet_Y": -0.00011622697136118248
+                },
+                "TE": {
+                  "reflection_weight": -0.019834691222844824,
+                  "condition_number_Y": 1.0000122208881743,
+                  "d_logdet_d_z": -0.007009547523576985,
+                  "logdet_Y": -0.00011622697136118248
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 8.02597788016534,
+              "condition_number_M_stator": 16.878993175741865,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.019834691222844744,
+                  "condition_number_Y": 1.0000122208881743,
+                  "d_logdet_d_z": -0.007009547624179592,
+                  "logdet_Y": -0.00011622695005666479
+                },
+                "TE": {
+                  "reflection_weight": -0.019834691222844824,
+                  "condition_number_Y": 1.0000122208881743,
+                  "d_logdet_d_z": -0.007009547624179592,
+                  "logdet_Y": -0.00011622695005666479
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 8.02597788041522,
+              "condition_number_M_stator": 16.87899317499687,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.019834691222844744,
+                  "condition_number_Y": 1.0000122208881743,
+                  "d_logdet_d_z": -0.007009547523576985,
+                  "logdet_Y": -0.00011622697136118248
+                },
+                "TE": {
+                  "reflection_weight": -0.019834691222844824,
+                  "condition_number_Y": 1.0000122208881743,
+                  "d_logdet_d_z": -0.007009547523576985,
+                  "logdet_Y": -0.00011622697136118248
+                }
+              }
+            }
+          ],
+          "quadrature_index": 15,
+          "u": 0.7168967538130225,
+          "quadrature_weight_um_inv": 7.205823200472544,
+          "weighted_force_contribution": 0.06431076939816646,
+          "elapsed_seconds": 3.5331710999998904
+        },
+        {
+          "kappa_um_inv": 33.996798663378364,
+          "epsilon_i_xi": 1.0458375124227224,
+          "d_logdet_d_z": -0.01198204632635691,
+          "force_integrand": 0.0019070019011957877,
+          "bottom_force_integrand": 4.342609428137283e-06,
+          "edge_top_force_integrand": 0.0019026592917676503,
+          "logdet_Y": -0.00016460898609366737,
+          "TM_force_integrand": 0.000953500950597894,
+          "TE_force_integrand": 0.000953500950597894,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 4.012782052111598,
+            "stator": 8.971168928812466,
+            "cross": 1.1221485012021848
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 7.858316896716947,
+              "condition_number_M_stator": 16.56440088546903,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.011204034080099352,
+                  "condition_number_Y": 1.0000023341576931,
+                  "d_logdet_d_z": -0.0014977557907435424,
+                  "logdet_Y": -2.0576123333845165e-05
+                },
+                "TE": {
+                  "reflection_weight": -0.011204034080099408,
+                  "condition_number_Y": 1.0000023341576931,
+                  "d_logdet_d_z": -0.0014977557907435424,
+                  "logdet_Y": -2.0576123333845165e-05
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.858316896714151,
+              "condition_number_M_stator": 16.564400885476314,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.011204034080099352,
+                  "condition_number_Y": 1.0000023341576931,
+                  "d_logdet_d_z": -0.001497755790794455,
+                  "logdet_Y": -2.0576123261569646e-05
+                },
+                "TE": {
+                  "reflection_weight": -0.011204034080099408,
+                  "condition_number_Y": 1.0000023341576931,
+                  "d_logdet_d_z": -0.001497755790794455,
+                  "logdet_Y": -2.0576123261569646e-05
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.8583168967116075,
+              "condition_number_M_stator": 16.564400885483685,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.011204034080099352,
+                  "condition_number_Y": 1.0000023341576931,
+                  "d_logdet_d_z": -0.0014977557908460038,
+                  "logdet_Y": -2.057612318984924e-05
+                },
+                "TE": {
+                  "reflection_weight": -0.011204034080099408,
+                  "condition_number_Y": 1.0000023341576931,
+                  "d_logdet_d_z": -0.0014977557908460038,
+                  "logdet_Y": -2.057612318984924e-05
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.858316896714151,
+              "condition_number_M_stator": 16.564400885476314,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.011204034080099352,
+                  "condition_number_Y": 1.0000023341576931,
+                  "d_logdet_d_z": -0.001497755790794455,
+                  "logdet_Y": -2.0576123261569646e-05
+                },
+                "TE": {
+                  "reflection_weight": -0.011204034080099408,
+                  "condition_number_Y": 1.0000023341576931,
+                  "d_logdet_d_z": -0.001497755790794455,
+                  "logdet_Y": -2.0576123261569646e-05
+                }
+              }
+            }
+          ],
+          "quadrature_index": 16,
+          "u": 0.7727107356944198,
+          "quadrature_weight_um_inv": 10.399091955065384,
+          "weighted_force_contribution": 0.019831088129019507,
+          "elapsed_seconds": 4.034522499998275
+        },
+        {
+          "kappa_um_inv": 46.83330269568798,
+          "epsilon_i_xi": 1.0241622308117124,
+          "d_logdet_d_z": -0.001840694992252875,
+          "force_integrand": 0.00029295570674154307,
+          "bottom_force_integrand": 2.0229593742070685e-07,
+          "edge_top_force_integrand": 0.00029275341080412236,
+          "logdet_Y": -2.0372526399812002e-05,
+          "TM_force_integrand": 0.00014647785337077,
+          "TE_force_integrand": 0.0001464778533707731,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 3.1849969929269193,
+            "stator": 6.852723951294589,
+            "cross": 0.7868402528356744
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 7.671318372024234,
+              "condition_number_M_stator": 16.240205797943602,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.005968664769648389,
+                  "condition_number_Y": 1.0000003057899616,
+                  "d_logdet_d_z": -0.00023008687403174198,
+                  "logdet_Y": -2.5465657999765e-06
+                },
+                "TE": {
+                  "reflection_weight": -0.005968664769648452,
+                  "condition_number_Y": 1.0000003057899616,
+                  "d_logdet_d_z": -0.00023008687403174683,
+                  "logdet_Y": -2.5465657999765e-06
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.671318372024233,
+              "condition_number_M_stator": 16.2402057979436,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.005968664769648389,
+                  "condition_number_Y": 1.0000003057899616,
+                  "d_logdet_d_z": -0.00023008687403160694,
+                  "logdet_Y": -2.5465657999765e-06
+                },
+                "TE": {
+                  "reflection_weight": -0.005968664769648452,
+                  "condition_number_Y": 1.0000003057899616,
+                  "d_logdet_d_z": -0.00023008687403161182,
+                  "logdet_Y": -2.5465657999765e-06
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.6713183720242295,
+              "condition_number_M_stator": 16.240205797943602,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.005968664769648389,
+                  "condition_number_Y": 1.0000003057899616,
+                  "d_logdet_d_z": -0.00023008687403147201,
+                  "logdet_Y": -2.5465657999765e-06
+                },
+                "TE": {
+                  "reflection_weight": -0.005968664769648452,
+                  "condition_number_Y": 1.0000003057899616,
+                  "d_logdet_d_z": -0.00023008687403147687,
+                  "logdet_Y": -2.5465657999765e-06
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.671318372024233,
+              "condition_number_M_stator": 16.2402057979436,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.005968664769648389,
+                  "condition_number_Y": 1.0000003057899616,
+                  "d_logdet_d_z": -0.00023008687403160694,
+                  "logdet_Y": -2.5465657999765e-06
+                },
+                "TE": {
+                  "reflection_weight": -0.005968664769648452,
+                  "condition_number_Y": 1.0000003057899616,
+                  "d_logdet_d_z": -0.00023008687403161182,
+                  "logdet_Y": -2.5465657999765e-06
+                }
+              }
+            }
+          ],
+          "quadrature_index": 17,
+          "u": 0.8240468259684878,
+          "quadrature_weight_um_inv": 15.76553089853483,
+          "weighted_force_contribution": 0.004618602246535906,
+          "elapsed_seconds": 4.065375900001527
+        },
+        {
+          "kappa_um_inv": 66.95983755273447,
+          "epsilon_i_xi": 1.0118232500420974,
+          "d_logdet_d_z": -0.00016189473384903955,
+          "force_integrand": 2.5766347152621432e-05,
+          "bottom_force_integrand": 2.5675496503092375e-09,
+          "edge_top_force_integrand": 2.5763779602971125e-05,
+          "logdet_Y": -1.3748504263443362e-06,
+          "TM_force_integrand": 1.2883173576310384e-05,
+          "TE_force_integrand": 1.2883173576311046e-05,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 2.1675554122765783,
+            "stator": 4.521214586985952,
+            "cross": 0.44952195148157925
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 7.497895422051916,
+              "condition_number_M_stator": 15.936221021174982,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.0029384669181899427,
+                  "condition_number_Y": 1.0000000213938325,
+                  "d_logdet_d_z": -2.0236841731129426e-05,
+                  "logdet_Y": -1.71856303293042e-07
+                },
+                "TE": {
+                  "reflection_weight": -0.002938466918190018,
+                  "condition_number_Y": 1.0000000213938325,
+                  "d_logdet_d_z": -2.0236841731130466e-05,
+                  "logdet_Y": -1.71856303293042e-07
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.497895422051916,
+              "condition_number_M_stator": 15.936221021174982,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.0029384669181899427,
+                  "condition_number_Y": 1.0000000213938325,
+                  "d_logdet_d_z": -2.0236841731129422e-05,
+                  "logdet_Y": -1.71856303293042e-07
+                },
+                "TE": {
+                  "reflection_weight": -0.002938466918190018,
+                  "condition_number_Y": 1.0000000213938325,
+                  "d_logdet_d_z": -2.0236841731130462e-05,
+                  "logdet_Y": -1.71856303293042e-07
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.497895422051916,
+              "condition_number_M_stator": 15.936221021174982,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.0029384669181899427,
+                  "condition_number_Y": 1.0000000213938325,
+                  "d_logdet_d_z": -2.023684173112942e-05,
+                  "logdet_Y": -1.71856303293042e-07
+                },
+                "TE": {
+                  "reflection_weight": -0.002938466918190018,
+                  "condition_number_Y": 1.0000000213938325,
+                  "d_logdet_d_z": -2.023684173113046e-05,
+                  "logdet_Y": -1.71856303293042e-07
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.497895422051916,
+              "condition_number_M_stator": 15.936221021174982,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.0029384669181899427,
+                  "condition_number_Y": 1.0000000213938325,
+                  "d_logdet_d_z": -2.0236841731129422e-05,
+                  "logdet_Y": -1.71856303293042e-07
+                },
+                "TE": {
+                  "reflection_weight": -0.002938466918190018,
+                  "condition_number_Y": 1.0000000213938325,
+                  "d_logdet_d_z": -2.0236841731130462e-05,
+                  "logdet_Y": -1.71856303293042e-07
+                }
+              }
+            }
+          ],
+          "quadrature_index": 18,
+          "u": 0.8700620957892772,
+          "quadrature_weight_um_inv": 25.52442595728612,
+          "weighted_force_contribution": 0.0006576712200868158,
+          "elapsed_seconds": 7.451680899997882
+        },
+        {
+          "kappa_um_inv": 101.11233703445359,
+          "epsilon_i_xi": 1.0051862202705104,
+          "d_logdet_d_z": -5.174167064373162e-06,
+          "force_integrand": 8.234942646782699e-07,
+          "bottom_force_integrand": 2.7226397842287003e-12,
+          "edge_top_force_integrand": 8.234915420384856e-07,
+          "logdet_Y": -3.118870939810981e-08,
+          "TM_force_integrand": 4.117471323391691e-07,
+          "TE_force_integrand": 4.1174713233910063e-07,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 1.100766598210025,
+            "stator": 2.298667638166012,
+            "cross": 0.17615771581205458
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 7.3598123725871885,
+              "condition_number_M_stator": 15.700733142194775,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.001293203816033071,
+                  "condition_number_Y": 1.0000000005875878,
+                  "d_logdet_d_z": -6.46770883046699e-07,
+                  "logdet_Y": -3.8985886747637265e-09
+                },
+                "TE": {
+                  "reflection_weight": -0.0012932038160329634,
+                  "condition_number_Y": 1.0000000005875878,
+                  "d_logdet_d_z": -6.467708830465914e-07,
+                  "logdet_Y": -3.8985886747637265e-09
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.3598123725871885,
+              "condition_number_M_stator": 15.700733142194775,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.001293203816033071,
+                  "condition_number_Y": 1.0000000005875878,
+                  "d_logdet_d_z": -6.46770883046699e-07,
+                  "logdet_Y": -3.8985886747637265e-09
+                },
+                "TE": {
+                  "reflection_weight": -0.0012932038160329634,
+                  "condition_number_Y": 1.0000000005875878,
+                  "d_logdet_d_z": -6.467708830465914e-07,
+                  "logdet_Y": -3.8985886747637265e-09
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.3598123725871885,
+              "condition_number_M_stator": 15.700733142194775,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.001293203816033071,
+                  "condition_number_Y": 1.0000000005875878,
+                  "d_logdet_d_z": -6.46770883046699e-07,
+                  "logdet_Y": -3.8985886747637265e-09
+                },
+                "TE": {
+                  "reflection_weight": -0.0012932038160329634,
+                  "condition_number_Y": 1.0000000005875878,
+                  "d_logdet_d_z": -6.467708830465914e-07,
+                  "logdet_Y": -3.8985886747637265e-09
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.3598123725871885,
+              "condition_number_M_stator": 15.700733142194775,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.001293203816033071,
+                  "condition_number_Y": 1.0000000005875878,
+                  "d_logdet_d_z": -6.46770883046699e-07,
+                  "logdet_Y": -3.8985886747637265e-09
+                },
+                "TE": {
+                  "reflection_weight": -0.0012932038160329634,
+                  "condition_number_Y": 1.0000000005875878,
+                  "d_logdet_d_z": -6.467708830465914e-07,
+                  "logdet_Y": -3.8985886747637265e-09
+                }
+              }
+            }
+          ],
+          "quadrature_index": 19,
+          "u": 0.9100009929869515,
+          "quadrature_weight_um_inv": 45.27660489441643,
+          "weighted_force_contribution": 3.728502445465601e-05,
+          "elapsed_seconds": 6.7541739999978745
+        },
+        {
+          "kappa_um_inv": 166.0804049403383,
+          "epsilon_i_xi": 1.0019226235822758,
+          "d_logdet_d_z": -2.1971287849030053e-08,
+          "force_integrand": 3.49683906726803e-09,
+          "bottom_force_integrand": 1.335315751027728e-17,
+          "edge_top_force_integrand": 3.496839053914872e-09,
+          "logdet_Y": -8.374279047989585e-11,
+          "TM_force_integrand": 1.7484195336343413e-09,
+          "TE_force_integrand": 1.748419533633688e-09,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 0.3093548464419215,
+            "stator": 0.7124490688742936,
+            "cross": 0.031588861444913796
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 7.319853743566842,
+              "condition_number_M_stator": 15.579703542600537,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.0004801943898728045,
+                  "condition_number_Y": 1.0000000000021714,
+                  "d_logdet_d_z": -2.7464109811292695e-09,
+                  "logdet_Y": -1.046784880998698e-11
+                },
+                "TE": {
+                  "reflection_weight": -0.00048019438987271476,
+                  "condition_number_Y": 1.0000000000021714,
+                  "d_logdet_d_z": -2.7464109811282434e-09,
+                  "logdet_Y": -1.046784880998698e-11
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.319853743566842,
+              "condition_number_M_stator": 15.579703542600537,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.0004801943898728045,
+                  "condition_number_Y": 1.0000000000021714,
+                  "d_logdet_d_z": -2.7464109811292695e-09,
+                  "logdet_Y": -1.046784880998698e-11
+                },
+                "TE": {
+                  "reflection_weight": -0.00048019438987271476,
+                  "condition_number_Y": 1.0000000000021714,
+                  "d_logdet_d_z": -2.7464109811282434e-09,
+                  "logdet_Y": -1.046784880998698e-11
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.319853743566842,
+              "condition_number_M_stator": 15.579703542600537,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.0004801943898728045,
+                  "condition_number_Y": 1.0000000000021714,
+                  "d_logdet_d_z": -2.7464109811292695e-09,
+                  "logdet_Y": -1.046784880998698e-11
+                },
+                "TE": {
+                  "reflection_weight": -0.00048019438987271476,
+                  "condition_number_Y": 1.0000000000021714,
+                  "d_logdet_d_z": -2.7464109811282434e-09,
+                  "logdet_Y": -1.046784880998698e-11
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.319853743566842,
+              "condition_number_M_stator": 15.579703542600537,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.0004801943898728045,
+                  "condition_number_Y": 1.0000000000021714,
+                  "d_logdet_d_z": -2.7464109811292695e-09,
+                  "logdet_Y": -1.046784880998698e-11
+                },
+                "TE": {
+                  "reflection_weight": -0.00048019438987271476,
+                  "condition_number_Y": 1.0000000000021714,
+                  "d_logdet_d_z": -2.7464109811282434e-09,
+                  "logdet_Y": -1.046784880998698e-11
+                }
+              }
+            }
+          ],
+          "quadrature_index": 20,
+          "u": 0.9432077635022005,
+          "quadrature_weight_um_inv": 91.92558251076828,
+          "weighted_force_contribution": 3.214489682050253e-07,
+          "elapsed_seconds": 7.190688999999111
+        },
+        {
+          "kappa_um_inv": 314.0154692904851,
+          "epsilon_i_xi": 1.0005378753233132,
+          "d_logdet_d_z": -7.031572581801038e-13,
+          "force_integrand": 1.1191095341030758e-13,
+          "bottom_force_integrand": 5.0419123304764635e-29,
+          "edge_top_force_integrand": 1.1191095341030753e-13,
+          "logdet_Y": -8.881784197001252e-16,
+          "TM_force_integrand": 5.595547670512627e-14,
+          "TE_force_integrand": 5.595547670518131e-14,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 0.021417834213812357,
+            "stator": 0.06472223903543944,
+            "cross": 0.0007393841567371096
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 7.319831758507601,
+              "condition_number_M_stator": 15.555529331872311,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.00013443267924799374,
+                  "condition_number_Y": 1.0000000000000002,
+                  "d_logdet_d_z": -8.789465727246975e-14,
+                  "logdet_Y": -1.1102230246251565e-16
+                },
+                "TE": {
+                  "reflection_weight": -0.00013443267924805985,
+                  "condition_number_Y": 1.0000000000000002,
+                  "d_logdet_d_z": -8.78946572725562e-14,
+                  "logdet_Y": -1.1102230246251565e-16
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.319831758507601,
+              "condition_number_M_stator": 15.555529331872311,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.00013443267924799374,
+                  "condition_number_Y": 1.0000000000000002,
+                  "d_logdet_d_z": -8.789465727246975e-14,
+                  "logdet_Y": -1.1102230246251565e-16
+                },
+                "TE": {
+                  "reflection_weight": -0.00013443267924805985,
+                  "condition_number_Y": 1.0000000000000002,
+                  "d_logdet_d_z": -8.78946572725562e-14,
+                  "logdet_Y": -1.1102230246251565e-16
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.319831758507601,
+              "condition_number_M_stator": 15.555529331872311,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.00013443267924799374,
+                  "condition_number_Y": 1.0000000000000002,
+                  "d_logdet_d_z": -8.789465727246975e-14,
+                  "logdet_Y": -1.1102230246251565e-16
+                },
+                "TE": {
+                  "reflection_weight": -0.00013443267924805985,
+                  "condition_number_Y": 1.0000000000000002,
+                  "d_logdet_d_z": -8.78946572725562e-14,
+                  "logdet_Y": -1.1102230246251565e-16
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.319831758507601,
+              "condition_number_M_stator": 15.555529331872311,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 0.00013443267924799374,
+                  "condition_number_Y": 1.0000000000000002,
+                  "d_logdet_d_z": -8.789465727246975e-14,
+                  "logdet_Y": -1.1102230246251565e-16
+                },
+                "TE": {
+                  "reflection_weight": -0.00013443267924805985,
+                  "condition_number_Y": 1.0000000000000002,
+                  "d_logdet_d_z": -8.78946572725562e-14,
+                  "logdet_Y": -1.1102230246251565e-16
+                }
+              }
+            }
+          ],
+          "quadrature_index": 21,
+          "u": 0.9691372760013663,
+          "quadrature_weight_um_inv": 232.42561346888948,
+          "weighted_force_contribution": 2.601097200027905e-11,
+          "elapsed_seconds": 22.35146900000109
+        },
+        {
+          "kappa_um_inv": 781.4070908371565,
+          "epsilon_i_xi": 1.0000868689095885,
+          "d_logdet_d_z": -4.969176606877176e-25,
+          "force_integrand": 7.908690200811145e-26,
+          "bottom_force_integrand": 2.3444985831024728e-63,
+          "edge_top_force_integrand": 7.908690200811145e-26,
+          "logdet_Y": 0.0,
+          "TM_force_integrand": 3.9543451004003676e-26,
+          "TE_force_integrand": 3.954345100410777e-26,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 5.34534901807761e-06,
+            "stator": 3.394310056298618e-05,
+            "cross": 5.4520715540350005e-09
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 7.319831743085511,
+              "condition_number_M_stator": 15.55507334101521,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 2.1716284172397633e-05,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -6.211470758588294e-26,
+                  "logdet_Y": 0.0
+                },
+                "TE": {
+                  "reflection_weight": -2.1716284172426215e-05,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -6.211470758604645e-26,
+                  "logdet_Y": 0.0
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.319831743085511,
+              "condition_number_M_stator": 15.55507334101521,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 2.1716284172397633e-05,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -6.211470758588294e-26,
+                  "logdet_Y": 0.0
+                },
+                "TE": {
+                  "reflection_weight": -2.1716284172426215e-05,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -6.211470758604645e-26,
+                  "logdet_Y": 0.0
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.319831743085511,
+              "condition_number_M_stator": 15.55507334101521,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 2.1716284172397633e-05,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -6.211470758588294e-26,
+                  "logdet_Y": 0.0
+                },
+                "TE": {
+                  "reflection_weight": -2.1716284172426215e-05,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -6.211470758604645e-26,
+                  "logdet_Y": 0.0
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.319831743085511,
+              "condition_number_M_stator": 15.55507334101521,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 2.1716284172397633e-05,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -6.211470758588294e-26,
+                  "logdet_Y": 0.0
+                },
+                "TE": {
+                  "reflection_weight": -2.1716284172426215e-05,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -6.211470758604645e-26,
+                  "logdet_Y": 0.0
+                }
+              }
+            }
+          ],
+          "quadrature_index": 22,
+          "u": 0.9873642779856547,
+          "quadrature_weight_um_inv": 893.4963608226643,
+          "weighted_force_contribution": 7.066385913298624e-23,
+          "elapsed_seconds": 30.24786529999983
+        },
+        {
+          "kappa_um_inv": 4145.602372770364,
+          "epsilon_i_xi": 1.000003086477085,
+          "d_logdet_d_z": -2.0514776614885795e-104,
+          "force_integrand": 3.265028104685094e-105,
+          "bottom_force_integrand": 3.1636686372266166e-303,
+          "edge_top_force_integrand": 3.265028104685094e-105,
+          "logdet_Y": 0.0,
+          "TM_force_integrand": 1.6325140524154423e-105,
+          "TE_force_integrand": 1.632514052269652e-105,
+          "normal_derivative_frobenius_norms": {
+            "rotor": 2.7073904272819758e-33,
+            "stator": 1.145537556222271e-29,
+            "cross": 6.891107387127226e-47
+          },
+          "symmetry_modes": [
+            {
+              "mode": 0,
+              "condition_number_M_rotor": 7.319831743085511,
+              "condition_number_M_stator": 15.555073339447338,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 7.716180804828325e-07,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -2.564347076975228e-105,
+                  "logdet_Y": 0.0
+                },
+                "TE": {
+                  "reflection_weight": -7.716180804483782e-07,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -2.564347076746221e-105,
+                  "logdet_Y": 0.0
+                }
+              }
+            },
+            {
+              "mode": 1,
+              "condition_number_M_rotor": 7.319831743085511,
+              "condition_number_M_stator": 15.555073339447338,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 7.716180804828325e-07,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -2.564347076975228e-105,
+                  "logdet_Y": 0.0
+                },
+                "TE": {
+                  "reflection_weight": -7.716180804483782e-07,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -2.564347076746221e-105,
+                  "logdet_Y": 0.0
+                }
+              }
+            },
+            {
+              "mode": 2,
+              "condition_number_M_rotor": 7.319831743085511,
+              "condition_number_M_stator": 15.555073339447338,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 7.716180804828325e-07,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -2.564347076975228e-105,
+                  "logdet_Y": 0.0
+                },
+                "TE": {
+                  "reflection_weight": -7.716180804483782e-07,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -2.564347076746221e-105,
+                  "logdet_Y": 0.0
+                }
+              }
+            },
+            {
+              "mode": 3,
+              "condition_number_M_rotor": 7.319831743085511,
+              "condition_number_M_stator": 15.555073339447338,
+              "channels": {
+                "TM": {
+                  "reflection_weight": 7.716180804828325e-07,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -2.564347076975228e-105,
+                  "logdet_Y": 0.0
+                },
+                "TE": {
+                  "reflection_weight": -7.716180804483782e-07,
+                  "condition_number_Y": 1.0,
+                  "d_logdet_d_z": -2.564347076746221e-105,
+                  "logdet_Y": 0.0
+                }
+              }
+            }
+          ],
+          "quadrature_index": 23,
+          "u": 0.9975936099985107,
+          "quadrature_weight_um_inv": 10656.054049425955,
+          "weighted_force_contribution": 3.479231595641915e-101,
+          "elapsed_seconds": 5.158466500000941
+        }
+      ]
+    },
+    "per_xi_integrands": [
+      {
+        "kappa_um_inv": 0.02412194682655332,
+        "epsilon_i_xi": 32886.427955934065,
+        "d_logdet_d_z": -649.3006776941039,
+        "force_integrand": 103.33941240793419,
+        "bottom_force_integrand": 4.362681773941297,
+        "edge_top_force_integrand": 98.9767306339929,
+        "logdet_Y": -53.62956743232101,
+        "TM_force_integrand": 51.66970620396708,
+        "TE_force_integrand": 51.66970620396708,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 6.328182690513412,
+          "stator": 16.48368265817829,
+          "cross": 2.548142847469959
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 8.029096612091143,
+            "condition_number_M_stator": 29.699389247237594,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.9890318498938734,
+                "condition_number_Y": 1.2545069942121656,
+                "d_logdet_d_z": -80.27749742533577,
+                "logdet_Y": -6.888917456894745
+              },
+              "TE": {
+                "reflection_weight": -0.9890318498938733,
+                "condition_number_Y": 1.2545069942121656,
+                "d_logdet_d_z": -80.27749742533577,
+                "logdet_Y": -6.888917456894745
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.811792013654247,
+            "condition_number_M_stator": 29.893690088614154,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.9890318498938734,
+                "condition_number_Y": 1.2563319174813081,
+                "d_logdet_d_z": -81.35695376549754,
+                "logdet_Y": -6.6312028072666624
+              },
+              "TE": {
+                "reflection_weight": -0.9890318498938733,
+                "condition_number_Y": 1.2563319174813081,
+                "d_logdet_d_z": -81.35695376549754,
+                "logdet_Y": -6.6312028072666624
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.760480199924513,
+            "condition_number_M_stator": 29.692601455560762,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.9890318498938734,
+                "condition_number_Y": 1.2581856667500526,
+                "d_logdet_d_z": -81.65893389072106,
+                "logdet_Y": -6.663460644732439
+              },
+              "TE": {
+                "reflection_weight": -0.9890318498938733,
+                "condition_number_Y": 1.2581856667500526,
+                "d_logdet_d_z": -81.65893389072106,
+                "logdet_Y": -6.663460644732439
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.811792013654247,
+            "condition_number_M_stator": 29.893690088614008,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.9890318498938734,
+                "condition_number_Y": 1.2563319174813081,
+                "d_logdet_d_z": -81.35695376549754,
+                "logdet_Y": -6.6312028072666624
+              },
+              "TE": {
+                "reflection_weight": -0.9890318498938733,
+                "condition_number_Y": 1.2563319174813081,
+                "d_logdet_d_z": -81.35695376549754,
+                "logdet_Y": -6.6312028072666624
+              }
+            }
+          }
+        ],
+        "quadrature_index": 0,
+        "u": 0.0024063900014893447,
+        "quadrature_weight_um_inv": 0.06200420253748477,
+        "weighted_force_contribution": 6.407477857046219,
+        "elapsed_seconds": 4.14032700000098
+      },
+      {
+        "kappa_um_inv": 0.12797426741145324,
+        "epsilon_i_xi": 2428.904339037178,
+        "d_logdet_d_z": -597.3621215259383,
+        "force_integrand": 95.07313445671457,
+        "bottom_force_integrand": 3.9950398831796305,
+        "edge_top_force_integrand": 91.07809457353494,
+        "logdet_Y": -48.433151635427706,
+        "TM_force_integrand": 47.53656722835728,
+        "TE_force_integrand": 47.53656722835728,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 6.327952691318231,
+          "stator": 16.48286508953072,
+          "cross": 2.547694728584819
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 8.017901269784964,
+            "condition_number_M_stator": 28.330913458780785,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.9602258500504549,
+                "condition_number_Y": 1.2302045027079147,
+                "d_logdet_d_z": -73.92282639388115,
+                "logdet_Y": -6.191843309759712
+              },
+              "TE": {
+                "reflection_weight": -0.9602258500504551,
+                "condition_number_Y": 1.2302045027079147,
+                "d_logdet_d_z": -73.92282639388115,
+                "logdet_Y": -6.191843309759712
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.829986222255738,
+            "condition_number_M_stator": 28.47066766415644,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.9602258500504549,
+                "condition_number_Y": 1.231382928666697,
+                "d_logdet_d_z": -74.83380325578771,
+                "logdet_Y": -5.998788239100513
+              },
+              "TE": {
+                "reflection_weight": -0.9602258500504551,
+                "condition_number_Y": 1.231382928666697,
+                "d_logdet_d_z": -74.83380325578771,
+                "logdet_Y": -5.998788239100513
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.779235678006526,
+            "condition_number_M_stator": 28.324548957277635,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.9602258500504549,
+                "condition_number_Y": 1.2325254112482833,
+                "d_logdet_d_z": -75.09062785751253,
+                "logdet_Y": -6.027156029753115
+              },
+              "TE": {
+                "reflection_weight": -0.9602258500504551,
+                "condition_number_Y": 1.2325254112482833,
+                "d_logdet_d_z": -75.09062785751253,
+                "logdet_Y": -6.027156029753115
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.829986222255738,
+            "condition_number_M_stator": 28.470667664156583,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.9602258500504549,
+                "condition_number_Y": 1.2313829286666973,
+                "d_logdet_d_z": -74.83380325578771,
+                "logdet_Y": -5.998788239100512
+              },
+              "TE": {
+                "reflection_weight": -0.9602258500504551,
+                "condition_number_Y": 1.2313829286666973,
+                "d_logdet_d_z": -74.83380325578771,
+                "logdet_Y": -5.998788239100512
+              }
+            }
+          }
+        ],
+        "quadrature_index": 1,
+        "u": 0.012635722014345263,
+        "quadrature_weight_um_inv": 0.14633159021960948,
+        "weighted_force_contribution": 13.912202952213791,
+        "elapsed_seconds": 4.0456387999984145
+      },
+      {
+        "kappa_um_inv": 0.31845564878045296,
+        "epsilon_i_xi": 462.1502835319319,
+        "d_logdet_d_z": -516.7739649875521,
+        "force_integrand": 82.24713098896696,
+        "bottom_force_integrand": 3.4328235527135136,
+        "edge_top_force_integrand": 78.81430743625346,
+        "logdet_Y": -40.51545211491779,
+        "TM_force_integrand": 41.12356549448348,
+        "TE_force_integrand": 41.12356549448348,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 6.326764871796491,
+          "stator": 16.478666162486782,
+          "cross": 2.5455385901848864
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 8.00105557512874,
+            "condition_number_M_stator": 26.22648159938899,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.9111019482399394,
+                "condition_number_Y": 1.1935985511642504,
+                "d_logdet_d_z": -64.0364411372475,
+                "logdet_Y": -5.150534101903844
+              },
+              "TE": {
+                "reflection_weight": -0.9111019482399394,
+                "condition_number_Y": 1.1935985511642504,
+                "d_logdet_d_z": -64.0364411372475,
+                "logdet_Y": -5.150534101903844
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.856581245902136,
+            "condition_number_M_stator": 26.304392428190255,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.9111019482399394,
+                "condition_number_Y": 1.1940376576974427,
+                "d_logdet_d_z": -64.71811489303059,
+                "logdet_Y": -5.028873847805366
+              },
+              "TE": {
+                "reflection_weight": -0.9111019482399394,
+                "condition_number_Y": 1.1940376576974427,
+                "d_logdet_d_z": -64.71811489303059,
+                "logdet_Y": -5.028873847805366
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.8095292464586565,
+            "condition_number_M_stator": 26.221053973951356,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.9111019482399394,
+                "condition_number_Y": 1.1944918497131152,
+                "d_logdet_d_z": -64.91431157046739,
+                "logdet_Y": -5.0494442599443214
+              },
+              "TE": {
+                "reflection_weight": -0.9111019482399394,
+                "condition_number_Y": 1.1944918497131152,
+                "d_logdet_d_z": -64.91431157046739,
+                "logdet_Y": -5.0494442599443214
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.856581245902136,
+            "condition_number_M_stator": 26.30439242819018,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.9111019482399394,
+                "condition_number_Y": 1.1940376576974427,
+                "d_logdet_d_z": -64.71811489303059,
+                "logdet_Y": -5.028873847805365
+              },
+              "TE": {
+                "reflection_weight": -0.9111019482399394,
+                "condition_number_Y": 1.1940376576974427,
+                "d_logdet_d_z": -64.71811489303059,
+                "logdet_Y": -5.028873847805365
+              }
+            }
+          }
+        ],
+        "quadrature_index": 2,
+        "u": 0.0308627239986336,
+        "quadrature_weight_um_inv": 0.23571211220157842,
+        "weighted_force_contribution": 19.386644967929296,
+        "elapsed_seconds": 3.88248190000013
+      },
+      {
+        "kappa_um_inv": 0.6021179924020734,
+        "epsilon_i_xi": 137.61304126717397,
+        "d_logdet_d_z": -420.0271975402062,
+        "force_integrand": 66.84940472155981,
+        "bottom_force_integrand": 2.7645948513227645,
+        "edge_top_force_integrand": 64.08480987023704,
+        "logdet_Y": -31.389087851267764,
+        "TM_force_integrand": 33.424702360779904,
+        "TE_force_integrand": 33.424702360779904,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 6.3233387464588535,
+          "stator": 16.466639837474656,
+          "cross": 2.539953792279665
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 7.982694456716156,
+            "condition_number_M_stator": 23.779311216811585,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.8429014037666456,
+                "condition_number_Y": 1.1515674214442768,
+                "d_logdet_d_z": -52.12696345431811,
+                "logdet_Y": -3.9728767692776326
+              },
+              "TE": {
+                "reflection_weight": -0.8429014037666455,
+                "condition_number_Y": 1.1515674214442768,
+                "d_logdet_d_z": -52.12696345431811,
+                "logdet_Y": -3.9728767692776326
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.884281944060922,
+            "condition_number_M_stator": 23.813140706865987,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.8429014037666456,
+                "condition_number_Y": 1.1516074808472168,
+                "d_logdet_d_z": -52.58265340782767,
+                "logdet_Y": -3.9037930565086487
+              },
+              "TE": {
+                "reflection_weight": -0.8429014037666455,
+                "condition_number_Y": 1.1516074808472168,
+                "d_logdet_d_z": -52.58265340782767,
+                "logdet_Y": -3.9037930565086487
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.845537019264891,
+            "condition_number_M_stator": 23.77528047944823,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.8429014037666456,
+                "condition_number_Y": 1.1517449363175238,
+                "d_logdet_d_z": -52.72132850012968,
+                "logdet_Y": -3.9140810433389537
+              },
+              "TE": {
+                "reflection_weight": -0.8429014037666455,
+                "condition_number_Y": 1.1517449363175238,
+                "d_logdet_d_z": -52.72132850012968,
+                "logdet_Y": -3.9140810433389537
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.884281944060922,
+            "condition_number_M_stator": 23.813140706865973,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.8429014037666456,
+                "condition_number_Y": 1.1516074808472168,
+                "d_logdet_d_z": -52.582653407827664,
+                "logdet_Y": -3.9037930565086483
+              },
+              "TE": {
+                "reflection_weight": -0.8429014037666455,
+                "condition_number_Y": 1.1516074808472168,
+                "d_logdet_d_z": -52.582653407827664,
+                "logdet_Y": -3.9037930565086483
+              }
+            }
+          }
+        ],
+        "quadrature_index": 3,
+        "u": 0.056792236497799464,
+        "quadrature_weight_um_inv": 0.33327259294471623,
+        "weighted_force_contribution": 22.279074448364995,
+        "elapsed_seconds": 4.002625200002512
+      },
+      {
+        "kappa_um_inv": 0.9889989978762477,
+        "epsilon_i_xi": 52.984517571312196,
+        "d_logdet_d_z": -320.4088898294172,
+        "force_integrand": 50.99465862693826,
+        "bottom_force_integrand": 2.076618969302103,
+        "edge_top_force_integrand": 48.91803965763616,
+        "logdet_Y": -22.503271368446907,
+        "TM_force_integrand": 25.497329313469127,
+        "TE_force_integrand": 25.497329313469127,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 6.3158847672092016,
+          "stator": 16.440630521888973,
+          "cross": 2.52929167748763
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 7.966058524590385,
+            "condition_number_M_stator": 21.285934455958643,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.758426286617673,
+                "condition_number_Y": 1.110729428555799,
+                "d_logdet_d_z": -39.824900022083774,
+                "logdet_Y": -2.839028784732491
+              },
+              "TE": {
+                "reflection_weight": -0.7584262866176729,
+                "condition_number_Y": 1.110729428555799,
+                "d_logdet_d_z": -39.824900022083774,
+                "logdet_Y": -2.839028784732491
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.907042167901638,
+            "condition_number_M_stator": 21.297265944556475,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.758426286617673,
+                "condition_number_Y": 1.1106676779680065,
+                "d_logdet_d_z": -40.09600532307922,
+                "logdet_Y": -2.803434338698953
+              },
+              "TE": {
+                "reflection_weight": -0.7584262866176729,
+                "condition_number_Y": 1.1106676779680065,
+                "d_logdet_d_z": -40.09600532307922,
+                "logdet_Y": -2.803434338698953
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.879843466651248,
+            "condition_number_M_stator": 21.283415400585756,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.758426286617673,
+                "condition_number_Y": 1.1107033172870688,
+                "d_logdet_d_z": -40.187534246466385,
+                "logdet_Y": -2.805738222093057
+              },
+              "TE": {
+                "reflection_weight": -0.7584262866176729,
+                "condition_number_Y": 1.1107033172870688,
+                "d_logdet_d_z": -40.187534246466385,
+                "logdet_Y": -2.805738222093057
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.907042167901638,
+            "condition_number_M_stator": 21.297265944556475,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.758426286617673,
+                "condition_number_Y": 1.1106676779680065,
+                "d_logdet_d_z": -40.09600532307921,
+                "logdet_Y": -2.803434338698953
+              },
+              "TE": {
+                "reflection_weight": -0.7584262866176729,
+                "condition_number_Y": 1.1106676779680065,
+                "d_logdet_d_z": -40.09600532307921,
+                "logdet_Y": -2.803434338698953
+              }
+            }
+          }
+        ],
+        "quadrature_index": 4,
+        "u": 0.08999900701304853,
+        "quadrature_weight_um_inv": 0.4428590830865533,
+        "weighted_force_contribution": 22.583447761837675,
+        "elapsed_seconds": 4.037733900000603
+      },
+      {
+        "kappa_um_inv": 1.4934325359025047,
+        "epsilon_i_xi": 24.121453466973367,
+        "d_logdet_d_z": -228.6650009795144,
+        "force_integrand": 36.39316521800281,
+        "bottom_force_integrand": 1.4407718895395345,
+        "edge_top_force_integrand": 34.95239332846327,
+        "logdet_Y": -14.878301076852196,
+        "TM_force_integrand": 18.196582609001403,
+        "TE_force_integrand": 18.196582609001403,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 6.3021043265736125,
+          "stator": 16.392664753683885,
+          "cross": 2.5120834546804414
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 7.951897350595353,
+            "condition_number_M_stator": 18.909856775795912,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.6616683600052746,
+                "condition_number_Y": 1.075510653346245,
+                "d_logdet_d_z": -28.462930996072227,
+                "logdet_Y": -1.8723720688829517
+              },
+              "TE": {
+                "reflection_weight": -0.6616683600052745,
+                "condition_number_Y": 1.075510653346245,
+                "d_logdet_d_z": -28.462930996072227,
+                "logdet_Y": -1.8723720688829517
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.921045423712886,
+            "condition_number_M_stator": 18.912667339109408,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.6616683600052746,
+                "condition_number_Y": 1.0754598048613921,
+                "d_logdet_d_z": -28.604789163994482,
+                "logdet_Y": -1.8560010347437501
+              },
+              "TE": {
+                "reflection_weight": -0.6616683600052745,
+                "condition_number_Y": 1.0754598048613921,
+                "d_logdet_d_z": -28.604789163994482,
+                "logdet_Y": -1.8560010347437501
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.90532609399209,
+            "condition_number_M_stator": 18.908569920397532,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.6616683600052746,
+                "condition_number_Y": 1.0754670413607217,
+                "d_logdet_d_z": -28.659991165695995,
+                "logdet_Y": -1.8547764000556461
+              },
+              "TE": {
+                "reflection_weight": -0.6616683600052745,
+                "condition_number_Y": 1.0754670413607217,
+                "d_logdet_d_z": -28.659991165695995,
+                "logdet_Y": -1.8547764000556461
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.921045423712886,
+            "condition_number_M_stator": 18.912667339109394,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.6616683600052746,
+                "condition_number_Y": 1.0754598048613921,
+                "d_logdet_d_z": -28.604789163994482,
+                "logdet_Y": -1.8560010347437501
+              },
+              "TE": {
+                "reflection_weight": -0.6616683600052745,
+                "condition_number_Y": 1.0754598048613921,
+                "d_logdet_d_z": -28.604789163994482,
+                "logdet_Y": -1.8560010347437501
+              }
+            }
+          }
+        ],
+        "quadrature_index": 5,
+        "u": 0.12993790421072282,
+        "quadrature_weight_um_inv": 0.5692816705958218,
+        "weighted_force_contribution": 20.717961893574394,
+        "elapsed_seconds": 3.952924499997607
+      },
+      {
+        "kappa_um_inv": 2.1352327135623335,
+        "epsilon_i_xi": 12.406271438271206,
+        "d_logdet_d_z": -151.83902584688693,
+        "force_integrand": 24.165931517790114,
+        "bottom_force_integrand": 0.9116266610429923,
+        "edge_top_force_integrand": 23.25430485674712,
+        "logdet_Y": -9.021048420273821,
+        "TM_force_integrand": 12.08296575889506,
+        "TE_force_integrand": 12.08296575889506,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 6.279172698876702,
+          "stator": 16.312657507951677,
+          "cross": 2.486854206780962
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 7.937995596802499,
+            "condition_number_M_stator": 17.5822636481787,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.5577426404740341,
+                "condition_number_Y": 1.0479282620811532,
+                "d_logdet_d_z": -18.92433764218417,
+                "logdet_Y": -1.1330200239523207
+              },
+              "TE": {
+                "reflection_weight": -0.5577426404740341,
+                "condition_number_Y": 1.0479282620811532,
+                "d_logdet_d_z": -18.92433764218417,
+                "logdet_Y": -1.1330200239523207
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.924115997502688,
+            "condition_number_M_stator": 17.58230933267644,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.5577426404740341,
+                "condition_number_Y": 1.0479038325714123,
+                "d_logdet_d_z": -18.98858454136287,
+                "logdet_Y": -1.1263940571243332
+              },
+              "TE": {
+                "reflection_weight": -0.5577426404740341,
+                "condition_number_Y": 1.0479038325714123,
+                "d_logdet_d_z": -18.98858454136287,
+                "logdet_Y": -1.1263940571243332
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.916950893028702,
+            "condition_number_M_stator": 17.581833029024633,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.5577426404740341,
+                "condition_number_Y": 1.0479048540048181,
+                "d_logdet_d_z": -19.018006198533573,
+                "logdet_Y": -1.1247160719359237
+              },
+              "TE": {
+                "reflection_weight": -0.5577426404740341,
+                "condition_number_Y": 1.0479048540048181,
+                "d_logdet_d_z": -19.018006198533573,
+                "logdet_Y": -1.1247160719359237
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.924115997502688,
+            "condition_number_M_stator": 17.58230933267644,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.5577426404740341,
+                "condition_number_Y": 1.0479038325714123,
+                "d_logdet_d_z": -18.988584541362865,
+                "logdet_Y": -1.1263940571243332
+              },
+              "TE": {
+                "reflection_weight": -0.5577426404740341,
+                "condition_number_Y": 1.0479038325714123,
+                "d_logdet_d_z": -18.988584541362865,
+                "logdet_Y": -1.1263940571243332
+              }
+            }
+          }
+        ],
+        "quadrature_index": 6,
+        "u": 0.17595317403151223,
+        "quadrature_weight_um_inv": 0.7187850393546718,
+        "weighted_force_contribution": 17.37011003705707,
+        "elapsed_seconds": 4.1111856000025
+      },
+      {
+        "kappa_um_inv": 2.9414534288994942,
+        "epsilon_i_xi": 7.043002900560628,
+        "d_logdet_d_z": -93.1430688552311,
+        "force_integrand": 14.824179823058795,
+        "bottom_force_integrand": 0.5191719184126977,
+        "edge_top_force_integrand": 14.3050079046461,
+        "logdet_Y": -4.981843165967254,
+        "TM_force_integrand": 7.412089911529398,
+        "TE_force_integrand": 7.412089911529398,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 6.243707770545113,
+          "stator": 16.188028607007276,
+          "cross": 2.4518846896933506
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 7.920061156483094,
+            "condition_number_M_stator": 17.79172965591076,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.45263449992189914,
+                "condition_number_Y": 1.028159275093202,
+                "d_logdet_d_z": -11.621016256133606,
+                "logdet_Y": -0.6247384497849477
+              },
+              "TE": {
+                "reflection_weight": -0.4526344999218991,
+                "condition_number_Y": 1.028159275093202,
+                "d_logdet_d_z": -11.621016256133606,
+                "logdet_Y": -0.6247384497849477
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.914761459264695,
+            "condition_number_M_stator": 17.791518947351992,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.45263449992189914,
+                "condition_number_Y": 1.0281532097596318,
+                "d_logdet_d_z": -11.645707983035592,
+                "logdet_Y": -0.6224112752904403
+              },
+              "TE": {
+                "reflection_weight": -0.4526344999218991,
+                "condition_number_Y": 1.0281532097596318,
+                "d_logdet_d_z": -11.645707983035592,
+                "logdet_Y": -0.6224112752904403
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.9123758226943215,
+            "condition_number_M_stator": 17.791623859094766,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.45263449992189914,
+                "condition_number_Y": 1.028153295327424,
+                "d_logdet_d_z": -11.65910220541076,
+                "logdet_Y": -0.6213605826177984
+              },
+              "TE": {
+                "reflection_weight": -0.4526344999218991,
+                "condition_number_Y": 1.028153295327424,
+                "d_logdet_d_z": -11.65910220541076,
+                "logdet_Y": -0.6213605826177984
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.914761459264695,
+            "condition_number_M_stator": 17.791518947351992,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.45263449992189914,
+                "condition_number_Y": 1.0281532097596318,
+                "d_logdet_d_z": -11.645707983035592,
+                "logdet_Y": -0.6224112752904403
+              },
+              "TE": {
+                "reflection_weight": -0.4526344999218991,
+                "condition_number_Y": 1.0281532097596318,
+                "d_logdet_d_z": -11.645707983035592,
+                "logdet_Y": -0.6224112752904403
+              }
+            }
+          }
+        ],
+        "quadrature_index": 7,
+        "u": 0.22728926430558022,
+        "quadrature_weight_um_inv": 0.8997448551418562,
+        "weighted_force_contribution": 13.337979527494863,
+        "elapsed_seconds": 4.150962899999286
+      },
+      {
+        "kappa_um_inv": 3.9490100168707847,
+        "epsilon_i_xi": 4.365041690679092,
+        "d_logdet_d_z": -52.38701098809997,
+        "force_integrand": 8.337651752565547,
+        "bottom_force_integrand": 0.26318596578352077,
+        "edge_top_force_integrand": 8.074465786782026,
+        "logdet_Y": -2.4896327688149373,
+        "TM_force_integrand": 4.1688258762827735,
+        "TE_force_integrand": 4.1688258762827735,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 6.191681697763255,
+          "stator": 16.00323817850722,
+          "cross": 2.4050314844720724
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 8.022027265927166,
+            "condition_number_M_stator": 17.925308033967077,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.3525974896782322,
+                "condition_number_Y": 1.0152125091467405,
+                "d_logdet_d_z": -6.541217467965005,
+                "logdet_Y": -0.3118398965320973
+              },
+              "TE": {
+                "reflection_weight": -0.3525974896782322,
+                "condition_number_Y": 1.0152125091467405,
+                "d_logdet_d_z": -6.541217467965005,
+                "logdet_Y": -0.3118398965320973
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 8.02142323494664,
+            "condition_number_M_stator": 17.925181734899986,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.3525974896782322,
+                "condition_number_Y": 1.015212513614617,
+                "d_logdet_d_z": -6.549084245737526,
+                "logdet_Y": -0.3111424618430988
+              },
+              "TE": {
+                "reflection_weight": -0.3525974896782322,
+                "condition_number_Y": 1.015212513614617,
+                "d_logdet_d_z": -6.549084245737526,
+                "logdet_Y": -0.3111424618430988
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 8.021984869463711,
+            "condition_number_M_stator": 17.92531757736336,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.3525974896782322,
+                "condition_number_Y": 1.015212517980085,
+                "d_logdet_d_z": -6.5541195346099315,
+                "logdet_Y": -0.3106915641891739
+              },
+              "TE": {
+                "reflection_weight": -0.3525974896782322,
+                "condition_number_Y": 1.015212517980085,
+                "d_logdet_d_z": -6.5541195346099315,
+                "logdet_Y": -0.3106915641891739
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 8.02142323494664,
+            "condition_number_M_stator": 17.925181734899986,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.3525974896782322,
+                "condition_number_Y": 1.015212513614617,
+                "d_logdet_d_z": -6.549084245737526,
+                "logdet_Y": -0.3111424618430988
+              },
+              "TE": {
+                "reflection_weight": -0.3525974896782322,
+                "condition_number_Y": 1.015212513614617,
+                "d_logdet_d_z": -6.549084245737526,
+                "logdet_Y": -0.3111424618430988
+              }
+            }
+          }
+        ],
+        "quadrature_index": 8,
+        "u": 0.28310324618697746,
+        "quadrature_weight_um_inv": 1.1237250776469492,
+        "weighted_force_contribution": 9.369228363044941,
+        "elapsed_seconds": 3.9959535999987565
+      },
+      {
+        "kappa_um_inv": 5.208631863279859,
+        "epsilon_i_xi": 2.939303479969003,
+        "d_logdet_d_z": -26.845372676351722,
+        "force_integrand": 4.27257376058548,
+        "bottom_force_integrand": 0.1179423920101292,
+        "edge_top_force_integrand": 4.154631368575352,
+        "logdet_Y": -1.1208822274330352,
+        "TM_force_integrand": 2.1362868802927406,
+        "TE_force_integrand": 2.1362868802927406,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 6.118204130304385,
+          "stator": 15.739203446423078,
+          "cross": 2.343608889514422
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 8.131824191114992,
+            "condition_number_M_stator": 17.972948820837566,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.26319969418833233,
+                "condition_number_Y": 1.0075131004476805,
+                "d_logdet_d_z": -3.353778854100984,
+                "logdet_Y": -0.14027653290787734
+              },
+              "TE": {
+                "reflection_weight": -0.2631996941883323,
+                "condition_number_Y": 1.0075131004476805,
+                "d_logdet_d_z": -3.353778854100984,
+                "logdet_Y": -0.14027653290787734
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 8.131572739658424,
+            "condition_number_M_stator": 17.97290080136124,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.26319969418833233,
+                "condition_number_Y": 1.0075131005642373,
+                "d_logdet_d_z": -3.3558003519572472,
+                "logdet_Y": -0.1401021275681094
+              },
+              "TE": {
+                "reflection_weight": -0.2631996941883323,
+                "condition_number_Y": 1.0075131005642373,
+                "d_logdet_d_z": -3.3558003519572472,
+                "logdet_Y": -0.1401021275681094
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 8.131801239941975,
+            "condition_number_M_stator": 17.972974569701588,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.26319969418833233,
+                "condition_number_Y": 1.0075131006801268,
+                "d_logdet_d_z": -3.3573067801603833,
+                "logdet_Y": -0.13996032567242148
+              },
+              "TE": {
+                "reflection_weight": -0.2631996941883323,
+                "condition_number_Y": 1.0075131006801268,
+                "d_logdet_d_z": -3.3573067801603833,
+                "logdet_Y": -0.13996032567242148
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 8.131572739658424,
+            "condition_number_M_stator": 17.97290080136124,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.26319969418833233,
+                "condition_number_Y": 1.0075131005642373,
+                "d_logdet_d_z": -3.3558003519572477,
+                "logdet_Y": -0.1401021275681094
+              },
+              "TE": {
+                "reflection_weight": -0.2631996941883323,
+                "condition_number_Y": 1.0075131005642373,
+                "d_logdet_d_z": -3.3558003519572477,
+                "logdet_Y": -0.1401021275681094
+              }
+            }
+          }
+        ],
+        "quadrature_index": 9,
+        "u": 0.3424786601519183,
+        "quadrature_weight_um_inv": 1.4071341257286474,
+        "weighted_force_contribution": 6.012084343212609,
+        "elapsed_seconds": 4.088295499997912
+      },
+      {
+        "kappa_um_inv": 6.790935435705376,
+        "epsilon_i_xi": 2.143032041553309,
+        "d_logdet_d_z": -12.487416823812875,
+        "force_integrand": 1.9874341139587146,
+        "bottom_force_integrand": 0.04662791135294884,
+        "edge_top_force_integrand": 1.9408062026057658,
+        "logdet_Y": -0.45401692863864135,
+        "TM_force_integrand": 0.9937170569793573,
+        "TE_force_integrand": 0.9937170569793573,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 6.01707168159761,
+          "stator": 15.372517981478062,
+          "cross": 2.2642699254778496
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 8.221725864441538,
+            "condition_number_M_stator": 17.935211810269717,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.18828198927638862,
+                "condition_number_Y": 1.0033790061050274,
+                "d_logdet_d_z": -1.5605377485240393,
+                "logdet_Y": -0.05678672598928766
+              },
+              "TE": {
+                "reflection_weight": -0.18828198927638864,
+                "condition_number_Y": 1.0033790061050274,
+                "d_logdet_d_z": -1.5605377485240393,
+                "logdet_Y": -0.05678672598928766
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 8.221642910340341,
+            "condition_number_M_stator": 17.935198944870493,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.18828198927638862,
+                "condition_number_Y": 1.0033790040189003,
+                "d_logdet_d_z": -1.560942545572514,
+                "logdet_Y": -0.05675150866690264
+              },
+              "TE": {
+                "reflection_weight": -0.18828198927638864,
+                "condition_number_Y": 1.0033790040189003,
+                "d_logdet_d_z": -1.560942545572514,
+                "logdet_Y": -0.05675150866690264
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 8.221714693783321,
+            "condition_number_M_stator": 17.935227494632166,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.18828198927638862,
+                "condition_number_Y": 1.003379002035845,
+                "d_logdet_d_z": -1.56128557223737,
+                "logdet_Y": -0.056718720996227705
+              },
+              "TE": {
+                "reflection_weight": -0.18828198927638864,
+                "condition_number_Y": 1.003379002035845,
+                "d_logdet_d_z": -1.56128557223737,
+                "logdet_Y": -0.056718720996227705
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 8.221642910340341,
+            "condition_number_M_stator": 17.935198944870493,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.18828198927638862,
+                "condition_number_Y": 1.0033790040189003,
+                "d_logdet_d_z": -1.5609425455725143,
+                "logdet_Y": -0.05675150866690264
+              },
+              "TE": {
+                "reflection_weight": -0.18828198927638864,
+                "condition_number_Y": 1.0033790040189003,
+                "d_logdet_d_z": -1.5609425455725143,
+                "logdet_Y": -0.05675150866690264
+              }
+            }
+          }
+        ],
+        "quadrature_index": 10,
+        "u": 0.40444056626319186,
+        "quadrature_weight_um_inv": 1.7739023892674497,
+        "weighted_force_contribution": 3.525514123263001,
+        "elapsed_seconds": 3.8596154999977443
+      },
+      {
+        "kappa_um_inv": 8.795987445929232,
+        "epsilon_i_xi": 1.6822886047322154,
+        "d_logdet_d_z": -5.266427434000424,
+        "force_integrand": 0.8381779585559339,
+        "bottom_force_integrand": 0.016264222058811464,
+        "edge_top_force_integrand": 0.8219137364971224,
+        "logdet_Y": -0.1656312185795421,
+        "TM_force_integrand": 0.41908897927796696,
+        "TE_force_integrand": 0.41908897927796696,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 5.87993884774456,
+          "stator": 14.874400110299145,
+          "cross": 2.1628405966001836
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 8.27895381548244,
+            "condition_number_M_stator": 17.822023339762694,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.129310718074357,
+                "condition_number_Y": 1.0013812671414881,
+                "d_logdet_d_z": -0.6582443191247396,
+                "logdet_Y": -0.020709352658548407
+              },
+              "TE": {
+                "reflection_weight": -0.12931071807435698,
+                "condition_number_Y": 1.0013812671414881,
+                "d_logdet_d_z": -0.6582443191247396,
+                "logdet_Y": -0.020709352658548407
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 8.27893358777421,
+            "condition_number_M_stator": 17.82202143597544,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.129310718074357,
+                "condition_number_Y": 1.001381267068096,
+                "d_logdet_d_z": -0.6583044443338614,
+                "logdet_Y": -0.020703895304172354
+              },
+              "TE": {
+                "reflection_weight": -0.12931071807435698,
+                "condition_number_Y": 1.001381267068096,
+                "d_logdet_d_z": -0.6583044443338614,
+                "logdet_Y": -0.020703895304172354
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 8.278949520205247,
+            "condition_number_M_stator": 17.822029671480603,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.129310718074357,
+                "condition_number_Y": 1.0013812669959317,
+                "d_logdet_d_z": -0.6583605092077498,
+                "logdet_Y": -0.020698466022877934
+              },
+              "TE": {
+                "reflection_weight": -0.12931071807435698,
+                "condition_number_Y": 1.0013812669959317,
+                "d_logdet_d_z": -0.6583605092077498,
+                "logdet_Y": -0.020698466022877934
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 8.27893358777421,
+            "condition_number_M_stator": 17.82202143597544,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.129310718074357,
+                "condition_number_Y": 1.001381267068096,
+                "d_logdet_d_z": -0.6583044443338614,
+                "logdet_Y": -0.020703895304172354
+              },
+              "TE": {
+                "reflection_weight": -0.12931071807435698,
+                "condition_number_Y": 1.001381267068096,
+                "d_logdet_d_z": -0.6583044443338614,
+                "logdet_Y": -0.020703895304172354
+              }
+            }
+          }
+        ],
+        "quadrature_index": 11,
+        "u": 0.4679715535686972,
+        "quadrature_weight_um_inv": 2.259958776379919,
+        "weighted_force_contribution": 1.894247633606687,
+        "elapsed_seconds": 4.101489300002868
+      },
+      {
+        "kappa_um_inv": 11.368820227941528,
+        "epsilon_i_xi": 1.4088670537217944,
+        "d_logdet_d_z": -2.0121302708010114,
+        "force_integrand": 0.3202404787428149,
+        "bottom_force_integrand": 0.004977920268628506,
+        "edge_top_force_integrand": 0.31526255847418644,
+        "logdet_Y": -0.0544559455334938,
+        "TM_force_integrand": 0.16012023937140746,
+        "TE_force_integrand": 0.16012023937140746,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 5.694964395905316,
+          "stator": 14.209451202636188,
+          "cross": 2.0341404489655046
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 8.291685493699559,
+            "condition_number_M_stator": 17.64814977460451,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.0854873011094267,
+                "condition_number_Y": 1.0005116511903276,
+                "d_logdet_d_z": -0.25151018148537985,
+                "logdet_Y": -0.006807595443390626
+              },
+              "TE": {
+                "reflection_weight": -0.08548730110942672,
+                "condition_number_Y": 1.0005116511903276,
+                "d_logdet_d_z": -0.25151018148537985,
+                "logdet_Y": -0.006807595443390626
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 8.291682157922896,
+            "condition_number_M_stator": 17.648149873061822,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.0854873011094267,
+                "condition_number_Y": 1.000511651189189,
+                "d_logdet_d_z": -0.2515163015335649,
+                "logdet_Y": -0.006806995600550272
+              },
+              "TE": {
+                "reflection_weight": -0.08548730110942672,
+                "condition_number_Y": 1.000511651189189,
+                "d_logdet_d_z": -0.2515163015335649,
+                "logdet_Y": -0.006806995600550272
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 8.29168430642841,
+            "condition_number_M_stator": 17.64815158695423,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.0854873011094267,
+                "condition_number_Y": 1.000511651188055,
+                "d_logdet_d_z": -0.25152235084799607,
+                "logdet_Y": -0.006806386122255728
+              },
+              "TE": {
+                "reflection_weight": -0.08548730110942672,
+                "condition_number_Y": 1.000511651188055,
+                "d_logdet_d_z": -0.25152235084799607,
+                "logdet_Y": -0.006806386122255728
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 8.291682157922896,
+            "condition_number_M_stator": 17.648149873061822,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.0854873011094267,
+                "condition_number_Y": 1.000511651189189,
+                "d_logdet_d_z": -0.2515163015335649,
+                "logdet_Y": -0.006806995600550272
+              },
+              "TE": {
+                "reflection_weight": -0.08548730110942672,
+                "condition_number_Y": 1.000511651189189,
+                "d_logdet_d_z": -0.2515163015335649,
+                "logdet_Y": -0.006806995600550272
+              }
+            }
+          }
+        ],
+        "quadrature_index": 12,
+        "u": 0.5320284464313028,
+        "quadrature_weight_um_inv": 2.920998376721503,
+        "weighted_force_contribution": 0.9354219185682793,
+        "elapsed_seconds": 4.094151500001317
+      },
+      {
+        "kappa_um_inv": 14.725511815974581,
+        "epsilon_i_xi": 1.2439175892180943,
+        "d_logdet_d_z": -0.6933060542861742,
+        "force_integrand": 0.11034308561518255,
+        "bottom_force_integrand": 0.001306623416819277,
+        "edge_top_force_integrand": 0.10903646219836327,
+        "logdet_Y": -0.016062129540041784,
+        "TM_force_integrand": 0.055171542807591276,
+        "TE_force_integrand": 0.055171542807591276,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 5.444894306071672,
+          "stator": 13.334767707725279,
+          "cross": 1.871925087635714
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 8.25247349678168,
+            "condition_number_M_stator": 17.427393202543502,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.05451234368676025,
+                "condition_number_Y": 1.000170179533887,
+                "d_logdet_d_z": -0.08666288157863308,
+                "logdet_Y": -0.0020078078285590446
+              },
+              "TE": {
+                "reflection_weight": -0.05451234368676034,
+                "condition_number_Y": 1.000170179533887,
+                "d_logdet_d_z": -0.08666288157863308,
+                "logdet_Y": -0.0020078078285590446
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 8.25247316349626,
+            "condition_number_M_stator": 17.42739330061521,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.05451234368676025,
+                "condition_number_Y": 1.000170179533881,
+                "d_logdet_d_z": -0.08666325555952602,
+                "logdet_Y": -0.0020077663436121667
+              },
+              "TE": {
+                "reflection_weight": -0.05451234368676034,
+                "condition_number_Y": 1.000170179533881,
+                "d_logdet_d_z": -0.08666325555952602,
+                "logdet_Y": -0.0020077663436121667
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 8.252473288774194,
+            "condition_number_M_stator": 17.42739354090749,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.05451234368676025,
+                "condition_number_Y": 1.0001701795338753,
+                "d_logdet_d_z": -0.08666363444540198,
+                "logdet_Y": -0.0020077242542375128
+              },
+              "TE": {
+                "reflection_weight": -0.05451234368676034,
+                "condition_number_Y": 1.0001701795338753,
+                "d_logdet_d_z": -0.08666363444540198,
+                "logdet_Y": -0.0020077242542375128
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 8.25247316349626,
+            "condition_number_M_stator": 17.42739330061521,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.05451234368676025,
+                "condition_number_Y": 1.000170179533881,
+                "d_logdet_d_z": -0.08666325555952602,
+                "logdet_Y": -0.0020077663436121667
+              },
+              "TE": {
+                "reflection_weight": -0.05451234368676034,
+                "condition_number_Y": 1.000170179533881,
+                "d_logdet_d_z": -0.08666325555952602,
+                "logdet_Y": -0.0020077663436121667
+              }
+            }
+          }
+        ],
+        "quadrature_index": 13,
+        "u": 0.5955594337368082,
+        "quadrature_weight_um_inv": 3.8465423270262793,
+        "weighted_force_contribution": 0.42443934931348426,
+        "elapsed_seconds": 4.1127993000009155
+      },
+      {
+        "kappa_um_inv": 19.198899562279742,
+        "epsilon_i_xi": 1.1435900164403818,
+        "d_logdet_d_z": -0.21242915437435284,
+        "force_integrand": 0.03380914997550957,
+        "bottom_force_integrand": 0.0002789195386356119,
+        "edge_top_force_integrand": 0.03353023043687396,
+        "logdet_Y": -0.004184267971441559,
+        "TM_force_integrand": 0.016904574987754783,
+        "TE_force_integrand": 0.016904574987754783,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 5.104876587448344,
+          "stator": 12.20093584510424,
+          "cross": 1.6692493801907657
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 8.161337370013069,
+            "condition_number_M_stator": 17.169056423818997,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.03353053829378235,
+                "condition_number_Y": 1.0000497236648485,
+                "d_logdet_d_z": -0.026553633314271297,
+                "logdet_Y": -0.0005230350012515047
+              },
+              "TE": {
+                "reflection_weight": -0.03353053829378229,
+                "condition_number_Y": 1.0000497236648485,
+                "d_logdet_d_z": -0.026553633314271297,
+                "logdet_Y": -0.0005230350012515047
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 8.161337352259212,
+            "condition_number_M_stator": 17.169056438385798,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.03353053829378235,
+                "condition_number_Y": 1.0000497236648485,
+                "d_logdet_d_z": -0.026553644253976376,
+                "logdet_Y": -0.000523033499154937
+              },
+              "TE": {
+                "reflection_weight": -0.03353053829378229,
+                "condition_number_Y": 1.0000497236648485,
+                "d_logdet_d_z": -0.026553644253976376,
+                "logdet_Y": -0.000523033499154937
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 8.161337350961055,
+            "condition_number_M_stator": 17.16905645833381,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.03353053829378235,
+                "condition_number_Y": 1.0000497236648485,
+                "d_logdet_d_z": -0.026553655364952345,
+                "logdet_Y": -0.0005230319861594011
+              },
+              "TE": {
+                "reflection_weight": -0.03353053829378229,
+                "condition_number_Y": 1.0000497236648485,
+                "d_logdet_d_z": -0.026553655364952345,
+                "logdet_Y": -0.0005230319861594011
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 8.161337352259212,
+            "condition_number_M_stator": 17.169056438385798,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.03353053829378235,
+                "condition_number_Y": 1.0000497236648485,
+                "d_logdet_d_z": -0.026553644253976376,
+                "logdet_Y": -0.000523033499154937
+              },
+              "TE": {
+                "reflection_weight": -0.03353053829378229,
+                "condition_number_Y": 1.0000497236648485,
+                "d_logdet_d_z": -0.026553644253976376,
+                "logdet_Y": -0.000523033499154937
+              }
+            }
+          }
+        ],
+        "quadrature_index": 14,
+        "u": 0.6575213398480817,
+        "quadrature_weight_um_inv": 5.186664648153707,
+        "weighted_force_contribution": 0.17535672296210228,
+        "elapsed_seconds": 4.002570699998614
+      },
+      {
+        "kappa_um_inv": 25.322802315715702,
+        "epsilon_i_xi": 1.082582263173357,
+        "d_logdet_d_z": -0.056076380190604104,
+        "force_integrand": 0.008924833098035084,
+        "bottom_force_integrand": 4.395280574048487e-05,
+        "edge_top_force_integrand": 0.008880880292294597,
+        "logdet_Y": -0.0009298157707935363,
+        "TM_force_integrand": 0.004462416549017541,
+        "TE_force_integrand": 0.004462416549017541,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 4.641069651754862,
+          "stator": 10.757995717477247,
+          "cross": 1.4198936907233128
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 8.025977880834642,
+            "condition_number_M_stator": 16.878993174310427,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.019834691222844744,
+                "condition_number_Y": 1.0000122208881743,
+                "d_logdet_d_z": -0.007009547423968486,
+                "logdet_Y": -0.00011622699261773839
+              },
+              "TE": {
+                "reflection_weight": -0.019834691222844824,
+                "condition_number_Y": 1.0000122208881743,
+                "d_logdet_d_z": -0.007009547423968486,
+                "logdet_Y": -0.00011622699261773839
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 8.02597788041522,
+            "condition_number_M_stator": 16.87899317499687,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.019834691222844744,
+                "condition_number_Y": 1.0000122208881743,
+                "d_logdet_d_z": -0.007009547523576985,
+                "logdet_Y": -0.00011622697136118248
+              },
+              "TE": {
+                "reflection_weight": -0.019834691222844824,
+                "condition_number_Y": 1.0000122208881743,
+                "d_logdet_d_z": -0.007009547523576985,
+                "logdet_Y": -0.00011622697136118248
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 8.02597788016534,
+            "condition_number_M_stator": 16.878993175741865,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.019834691222844744,
+                "condition_number_Y": 1.0000122208881743,
+                "d_logdet_d_z": -0.007009547624179592,
+                "logdet_Y": -0.00011622695005666479
+              },
+              "TE": {
+                "reflection_weight": -0.019834691222844824,
+                "condition_number_Y": 1.0000122208881743,
+                "d_logdet_d_z": -0.007009547624179592,
+                "logdet_Y": -0.00011622695005666479
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 8.02597788041522,
+            "condition_number_M_stator": 16.87899317499687,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.019834691222844744,
+                "condition_number_Y": 1.0000122208881743,
+                "d_logdet_d_z": -0.007009547523576985,
+                "logdet_Y": -0.00011622697136118248
+              },
+              "TE": {
+                "reflection_weight": -0.019834691222844824,
+                "condition_number_Y": 1.0000122208881743,
+                "d_logdet_d_z": -0.007009547523576985,
+                "logdet_Y": -0.00011622697136118248
+              }
+            }
+          }
+        ],
+        "quadrature_index": 15,
+        "u": 0.7168967538130225,
+        "quadrature_weight_um_inv": 7.205823200472544,
+        "weighted_force_contribution": 0.06431076939816646,
+        "elapsed_seconds": 3.5331710999998904
+      },
+      {
+        "kappa_um_inv": 33.996798663378364,
+        "epsilon_i_xi": 1.0458375124227224,
+        "d_logdet_d_z": -0.01198204632635691,
+        "force_integrand": 0.0019070019011957877,
+        "bottom_force_integrand": 4.342609428137283e-06,
+        "edge_top_force_integrand": 0.0019026592917676503,
+        "logdet_Y": -0.00016460898609366737,
+        "TM_force_integrand": 0.000953500950597894,
+        "TE_force_integrand": 0.000953500950597894,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 4.012782052111598,
+          "stator": 8.971168928812466,
+          "cross": 1.1221485012021848
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 7.858316896716947,
+            "condition_number_M_stator": 16.56440088546903,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.011204034080099352,
+                "condition_number_Y": 1.0000023341576931,
+                "d_logdet_d_z": -0.0014977557907435424,
+                "logdet_Y": -2.0576123333845165e-05
+              },
+              "TE": {
+                "reflection_weight": -0.011204034080099408,
+                "condition_number_Y": 1.0000023341576931,
+                "d_logdet_d_z": -0.0014977557907435424,
+                "logdet_Y": -2.0576123333845165e-05
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.858316896714151,
+            "condition_number_M_stator": 16.564400885476314,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.011204034080099352,
+                "condition_number_Y": 1.0000023341576931,
+                "d_logdet_d_z": -0.001497755790794455,
+                "logdet_Y": -2.0576123261569646e-05
+              },
+              "TE": {
+                "reflection_weight": -0.011204034080099408,
+                "condition_number_Y": 1.0000023341576931,
+                "d_logdet_d_z": -0.001497755790794455,
+                "logdet_Y": -2.0576123261569646e-05
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.8583168967116075,
+            "condition_number_M_stator": 16.564400885483685,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.011204034080099352,
+                "condition_number_Y": 1.0000023341576931,
+                "d_logdet_d_z": -0.0014977557908460038,
+                "logdet_Y": -2.057612318984924e-05
+              },
+              "TE": {
+                "reflection_weight": -0.011204034080099408,
+                "condition_number_Y": 1.0000023341576931,
+                "d_logdet_d_z": -0.0014977557908460038,
+                "logdet_Y": -2.057612318984924e-05
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.858316896714151,
+            "condition_number_M_stator": 16.564400885476314,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.011204034080099352,
+                "condition_number_Y": 1.0000023341576931,
+                "d_logdet_d_z": -0.001497755790794455,
+                "logdet_Y": -2.0576123261569646e-05
+              },
+              "TE": {
+                "reflection_weight": -0.011204034080099408,
+                "condition_number_Y": 1.0000023341576931,
+                "d_logdet_d_z": -0.001497755790794455,
+                "logdet_Y": -2.0576123261569646e-05
+              }
+            }
+          }
+        ],
+        "quadrature_index": 16,
+        "u": 0.7727107356944198,
+        "quadrature_weight_um_inv": 10.399091955065384,
+        "weighted_force_contribution": 0.019831088129019507,
+        "elapsed_seconds": 4.034522499998275
+      },
+      {
+        "kappa_um_inv": 46.83330269568798,
+        "epsilon_i_xi": 1.0241622308117124,
+        "d_logdet_d_z": -0.001840694992252875,
+        "force_integrand": 0.00029295570674154307,
+        "bottom_force_integrand": 2.0229593742070685e-07,
+        "edge_top_force_integrand": 0.00029275341080412236,
+        "logdet_Y": -2.0372526399812002e-05,
+        "TM_force_integrand": 0.00014647785337077,
+        "TE_force_integrand": 0.0001464778533707731,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 3.1849969929269193,
+          "stator": 6.852723951294589,
+          "cross": 0.7868402528356744
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 7.671318372024234,
+            "condition_number_M_stator": 16.240205797943602,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.005968664769648389,
+                "condition_number_Y": 1.0000003057899616,
+                "d_logdet_d_z": -0.00023008687403174198,
+                "logdet_Y": -2.5465657999765e-06
+              },
+              "TE": {
+                "reflection_weight": -0.005968664769648452,
+                "condition_number_Y": 1.0000003057899616,
+                "d_logdet_d_z": -0.00023008687403174683,
+                "logdet_Y": -2.5465657999765e-06
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.671318372024233,
+            "condition_number_M_stator": 16.2402057979436,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.005968664769648389,
+                "condition_number_Y": 1.0000003057899616,
+                "d_logdet_d_z": -0.00023008687403160694,
+                "logdet_Y": -2.5465657999765e-06
+              },
+              "TE": {
+                "reflection_weight": -0.005968664769648452,
+                "condition_number_Y": 1.0000003057899616,
+                "d_logdet_d_z": -0.00023008687403161182,
+                "logdet_Y": -2.5465657999765e-06
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.6713183720242295,
+            "condition_number_M_stator": 16.240205797943602,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.005968664769648389,
+                "condition_number_Y": 1.0000003057899616,
+                "d_logdet_d_z": -0.00023008687403147201,
+                "logdet_Y": -2.5465657999765e-06
+              },
+              "TE": {
+                "reflection_weight": -0.005968664769648452,
+                "condition_number_Y": 1.0000003057899616,
+                "d_logdet_d_z": -0.00023008687403147687,
+                "logdet_Y": -2.5465657999765e-06
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.671318372024233,
+            "condition_number_M_stator": 16.2402057979436,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.005968664769648389,
+                "condition_number_Y": 1.0000003057899616,
+                "d_logdet_d_z": -0.00023008687403160694,
+                "logdet_Y": -2.5465657999765e-06
+              },
+              "TE": {
+                "reflection_weight": -0.005968664769648452,
+                "condition_number_Y": 1.0000003057899616,
+                "d_logdet_d_z": -0.00023008687403161182,
+                "logdet_Y": -2.5465657999765e-06
+              }
+            }
+          }
+        ],
+        "quadrature_index": 17,
+        "u": 0.8240468259684878,
+        "quadrature_weight_um_inv": 15.76553089853483,
+        "weighted_force_contribution": 0.004618602246535906,
+        "elapsed_seconds": 4.065375900001527
+      },
+      {
+        "kappa_um_inv": 66.95983755273447,
+        "epsilon_i_xi": 1.0118232500420974,
+        "d_logdet_d_z": -0.00016189473384903955,
+        "force_integrand": 2.5766347152621432e-05,
+        "bottom_force_integrand": 2.5675496503092375e-09,
+        "edge_top_force_integrand": 2.5763779602971125e-05,
+        "logdet_Y": -1.3748504263443362e-06,
+        "TM_force_integrand": 1.2883173576310384e-05,
+        "TE_force_integrand": 1.2883173576311046e-05,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 2.1675554122765783,
+          "stator": 4.521214586985952,
+          "cross": 0.44952195148157925
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 7.497895422051916,
+            "condition_number_M_stator": 15.936221021174982,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.0029384669181899427,
+                "condition_number_Y": 1.0000000213938325,
+                "d_logdet_d_z": -2.0236841731129426e-05,
+                "logdet_Y": -1.71856303293042e-07
+              },
+              "TE": {
+                "reflection_weight": -0.002938466918190018,
+                "condition_number_Y": 1.0000000213938325,
+                "d_logdet_d_z": -2.0236841731130466e-05,
+                "logdet_Y": -1.71856303293042e-07
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.497895422051916,
+            "condition_number_M_stator": 15.936221021174982,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.0029384669181899427,
+                "condition_number_Y": 1.0000000213938325,
+                "d_logdet_d_z": -2.0236841731129422e-05,
+                "logdet_Y": -1.71856303293042e-07
+              },
+              "TE": {
+                "reflection_weight": -0.002938466918190018,
+                "condition_number_Y": 1.0000000213938325,
+                "d_logdet_d_z": -2.0236841731130462e-05,
+                "logdet_Y": -1.71856303293042e-07
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.497895422051916,
+            "condition_number_M_stator": 15.936221021174982,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.0029384669181899427,
+                "condition_number_Y": 1.0000000213938325,
+                "d_logdet_d_z": -2.023684173112942e-05,
+                "logdet_Y": -1.71856303293042e-07
+              },
+              "TE": {
+                "reflection_weight": -0.002938466918190018,
+                "condition_number_Y": 1.0000000213938325,
+                "d_logdet_d_z": -2.023684173113046e-05,
+                "logdet_Y": -1.71856303293042e-07
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.497895422051916,
+            "condition_number_M_stator": 15.936221021174982,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.0029384669181899427,
+                "condition_number_Y": 1.0000000213938325,
+                "d_logdet_d_z": -2.0236841731129422e-05,
+                "logdet_Y": -1.71856303293042e-07
+              },
+              "TE": {
+                "reflection_weight": -0.002938466918190018,
+                "condition_number_Y": 1.0000000213938325,
+                "d_logdet_d_z": -2.0236841731130462e-05,
+                "logdet_Y": -1.71856303293042e-07
+              }
+            }
+          }
+        ],
+        "quadrature_index": 18,
+        "u": 0.8700620957892772,
+        "quadrature_weight_um_inv": 25.52442595728612,
+        "weighted_force_contribution": 0.0006576712200868158,
+        "elapsed_seconds": 7.451680899997882
+      },
+      {
+        "kappa_um_inv": 101.11233703445359,
+        "epsilon_i_xi": 1.0051862202705104,
+        "d_logdet_d_z": -5.174167064373162e-06,
+        "force_integrand": 8.234942646782699e-07,
+        "bottom_force_integrand": 2.7226397842287003e-12,
+        "edge_top_force_integrand": 8.234915420384856e-07,
+        "logdet_Y": -3.118870939810981e-08,
+        "TM_force_integrand": 4.117471323391691e-07,
+        "TE_force_integrand": 4.1174713233910063e-07,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 1.100766598210025,
+          "stator": 2.298667638166012,
+          "cross": 0.17615771581205458
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 7.3598123725871885,
+            "condition_number_M_stator": 15.700733142194775,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.001293203816033071,
+                "condition_number_Y": 1.0000000005875878,
+                "d_logdet_d_z": -6.46770883046699e-07,
+                "logdet_Y": -3.8985886747637265e-09
+              },
+              "TE": {
+                "reflection_weight": -0.0012932038160329634,
+                "condition_number_Y": 1.0000000005875878,
+                "d_logdet_d_z": -6.467708830465914e-07,
+                "logdet_Y": -3.8985886747637265e-09
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.3598123725871885,
+            "condition_number_M_stator": 15.700733142194775,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.001293203816033071,
+                "condition_number_Y": 1.0000000005875878,
+                "d_logdet_d_z": -6.46770883046699e-07,
+                "logdet_Y": -3.8985886747637265e-09
+              },
+              "TE": {
+                "reflection_weight": -0.0012932038160329634,
+                "condition_number_Y": 1.0000000005875878,
+                "d_logdet_d_z": -6.467708830465914e-07,
+                "logdet_Y": -3.8985886747637265e-09
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.3598123725871885,
+            "condition_number_M_stator": 15.700733142194775,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.001293203816033071,
+                "condition_number_Y": 1.0000000005875878,
+                "d_logdet_d_z": -6.46770883046699e-07,
+                "logdet_Y": -3.8985886747637265e-09
+              },
+              "TE": {
+                "reflection_weight": -0.0012932038160329634,
+                "condition_number_Y": 1.0000000005875878,
+                "d_logdet_d_z": -6.467708830465914e-07,
+                "logdet_Y": -3.8985886747637265e-09
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.3598123725871885,
+            "condition_number_M_stator": 15.700733142194775,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.001293203816033071,
+                "condition_number_Y": 1.0000000005875878,
+                "d_logdet_d_z": -6.46770883046699e-07,
+                "logdet_Y": -3.8985886747637265e-09
+              },
+              "TE": {
+                "reflection_weight": -0.0012932038160329634,
+                "condition_number_Y": 1.0000000005875878,
+                "d_logdet_d_z": -6.467708830465914e-07,
+                "logdet_Y": -3.8985886747637265e-09
+              }
+            }
+          }
+        ],
+        "quadrature_index": 19,
+        "u": 0.9100009929869515,
+        "quadrature_weight_um_inv": 45.27660489441643,
+        "weighted_force_contribution": 3.728502445465601e-05,
+        "elapsed_seconds": 6.7541739999978745
+      },
+      {
+        "kappa_um_inv": 166.0804049403383,
+        "epsilon_i_xi": 1.0019226235822758,
+        "d_logdet_d_z": -2.1971287849030053e-08,
+        "force_integrand": 3.49683906726803e-09,
+        "bottom_force_integrand": 1.335315751027728e-17,
+        "edge_top_force_integrand": 3.496839053914872e-09,
+        "logdet_Y": -8.374279047989585e-11,
+        "TM_force_integrand": 1.7484195336343413e-09,
+        "TE_force_integrand": 1.748419533633688e-09,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 0.3093548464419215,
+          "stator": 0.7124490688742936,
+          "cross": 0.031588861444913796
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 7.319853743566842,
+            "condition_number_M_stator": 15.579703542600537,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.0004801943898728045,
+                "condition_number_Y": 1.0000000000021714,
+                "d_logdet_d_z": -2.7464109811292695e-09,
+                "logdet_Y": -1.046784880998698e-11
+              },
+              "TE": {
+                "reflection_weight": -0.00048019438987271476,
+                "condition_number_Y": 1.0000000000021714,
+                "d_logdet_d_z": -2.7464109811282434e-09,
+                "logdet_Y": -1.046784880998698e-11
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.319853743566842,
+            "condition_number_M_stator": 15.579703542600537,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.0004801943898728045,
+                "condition_number_Y": 1.0000000000021714,
+                "d_logdet_d_z": -2.7464109811292695e-09,
+                "logdet_Y": -1.046784880998698e-11
+              },
+              "TE": {
+                "reflection_weight": -0.00048019438987271476,
+                "condition_number_Y": 1.0000000000021714,
+                "d_logdet_d_z": -2.7464109811282434e-09,
+                "logdet_Y": -1.046784880998698e-11
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.319853743566842,
+            "condition_number_M_stator": 15.579703542600537,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.0004801943898728045,
+                "condition_number_Y": 1.0000000000021714,
+                "d_logdet_d_z": -2.7464109811292695e-09,
+                "logdet_Y": -1.046784880998698e-11
+              },
+              "TE": {
+                "reflection_weight": -0.00048019438987271476,
+                "condition_number_Y": 1.0000000000021714,
+                "d_logdet_d_z": -2.7464109811282434e-09,
+                "logdet_Y": -1.046784880998698e-11
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.319853743566842,
+            "condition_number_M_stator": 15.579703542600537,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.0004801943898728045,
+                "condition_number_Y": 1.0000000000021714,
+                "d_logdet_d_z": -2.7464109811292695e-09,
+                "logdet_Y": -1.046784880998698e-11
+              },
+              "TE": {
+                "reflection_weight": -0.00048019438987271476,
+                "condition_number_Y": 1.0000000000021714,
+                "d_logdet_d_z": -2.7464109811282434e-09,
+                "logdet_Y": -1.046784880998698e-11
+              }
+            }
+          }
+        ],
+        "quadrature_index": 20,
+        "u": 0.9432077635022005,
+        "quadrature_weight_um_inv": 91.92558251076828,
+        "weighted_force_contribution": 3.214489682050253e-07,
+        "elapsed_seconds": 7.190688999999111
+      },
+      {
+        "kappa_um_inv": 314.0154692904851,
+        "epsilon_i_xi": 1.0005378753233132,
+        "d_logdet_d_z": -7.031572581801038e-13,
+        "force_integrand": 1.1191095341030758e-13,
+        "bottom_force_integrand": 5.0419123304764635e-29,
+        "edge_top_force_integrand": 1.1191095341030753e-13,
+        "logdet_Y": -8.881784197001252e-16,
+        "TM_force_integrand": 5.595547670512627e-14,
+        "TE_force_integrand": 5.595547670518131e-14,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 0.021417834213812357,
+          "stator": 0.06472223903543944,
+          "cross": 0.0007393841567371096
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 7.319831758507601,
+            "condition_number_M_stator": 15.555529331872311,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.00013443267924799374,
+                "condition_number_Y": 1.0000000000000002,
+                "d_logdet_d_z": -8.789465727246975e-14,
+                "logdet_Y": -1.1102230246251565e-16
+              },
+              "TE": {
+                "reflection_weight": -0.00013443267924805985,
+                "condition_number_Y": 1.0000000000000002,
+                "d_logdet_d_z": -8.78946572725562e-14,
+                "logdet_Y": -1.1102230246251565e-16
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.319831758507601,
+            "condition_number_M_stator": 15.555529331872311,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.00013443267924799374,
+                "condition_number_Y": 1.0000000000000002,
+                "d_logdet_d_z": -8.789465727246975e-14,
+                "logdet_Y": -1.1102230246251565e-16
+              },
+              "TE": {
+                "reflection_weight": -0.00013443267924805985,
+                "condition_number_Y": 1.0000000000000002,
+                "d_logdet_d_z": -8.78946572725562e-14,
+                "logdet_Y": -1.1102230246251565e-16
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.319831758507601,
+            "condition_number_M_stator": 15.555529331872311,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.00013443267924799374,
+                "condition_number_Y": 1.0000000000000002,
+                "d_logdet_d_z": -8.789465727246975e-14,
+                "logdet_Y": -1.1102230246251565e-16
+              },
+              "TE": {
+                "reflection_weight": -0.00013443267924805985,
+                "condition_number_Y": 1.0000000000000002,
+                "d_logdet_d_z": -8.78946572725562e-14,
+                "logdet_Y": -1.1102230246251565e-16
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.319831758507601,
+            "condition_number_M_stator": 15.555529331872311,
+            "channels": {
+              "TM": {
+                "reflection_weight": 0.00013443267924799374,
+                "condition_number_Y": 1.0000000000000002,
+                "d_logdet_d_z": -8.789465727246975e-14,
+                "logdet_Y": -1.1102230246251565e-16
+              },
+              "TE": {
+                "reflection_weight": -0.00013443267924805985,
+                "condition_number_Y": 1.0000000000000002,
+                "d_logdet_d_z": -8.78946572725562e-14,
+                "logdet_Y": -1.1102230246251565e-16
+              }
+            }
+          }
+        ],
+        "quadrature_index": 21,
+        "u": 0.9691372760013663,
+        "quadrature_weight_um_inv": 232.42561346888948,
+        "weighted_force_contribution": 2.601097200027905e-11,
+        "elapsed_seconds": 22.35146900000109
+      },
+      {
+        "kappa_um_inv": 781.4070908371565,
+        "epsilon_i_xi": 1.0000868689095885,
+        "d_logdet_d_z": -4.969176606877176e-25,
+        "force_integrand": 7.908690200811145e-26,
+        "bottom_force_integrand": 2.3444985831024728e-63,
+        "edge_top_force_integrand": 7.908690200811145e-26,
+        "logdet_Y": 0.0,
+        "TM_force_integrand": 3.9543451004003676e-26,
+        "TE_force_integrand": 3.954345100410777e-26,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 5.34534901807761e-06,
+          "stator": 3.394310056298618e-05,
+          "cross": 5.4520715540350005e-09
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 7.319831743085511,
+            "condition_number_M_stator": 15.55507334101521,
+            "channels": {
+              "TM": {
+                "reflection_weight": 2.1716284172397633e-05,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -6.211470758588294e-26,
+                "logdet_Y": 0.0
+              },
+              "TE": {
+                "reflection_weight": -2.1716284172426215e-05,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -6.211470758604645e-26,
+                "logdet_Y": 0.0
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.319831743085511,
+            "condition_number_M_stator": 15.55507334101521,
+            "channels": {
+              "TM": {
+                "reflection_weight": 2.1716284172397633e-05,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -6.211470758588294e-26,
+                "logdet_Y": 0.0
+              },
+              "TE": {
+                "reflection_weight": -2.1716284172426215e-05,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -6.211470758604645e-26,
+                "logdet_Y": 0.0
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.319831743085511,
+            "condition_number_M_stator": 15.55507334101521,
+            "channels": {
+              "TM": {
+                "reflection_weight": 2.1716284172397633e-05,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -6.211470758588294e-26,
+                "logdet_Y": 0.0
+              },
+              "TE": {
+                "reflection_weight": -2.1716284172426215e-05,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -6.211470758604645e-26,
+                "logdet_Y": 0.0
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.319831743085511,
+            "condition_number_M_stator": 15.55507334101521,
+            "channels": {
+              "TM": {
+                "reflection_weight": 2.1716284172397633e-05,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -6.211470758588294e-26,
+                "logdet_Y": 0.0
+              },
+              "TE": {
+                "reflection_weight": -2.1716284172426215e-05,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -6.211470758604645e-26,
+                "logdet_Y": 0.0
+              }
+            }
+          }
+        ],
+        "quadrature_index": 22,
+        "u": 0.9873642779856547,
+        "quadrature_weight_um_inv": 893.4963608226643,
+        "weighted_force_contribution": 7.066385913298624e-23,
+        "elapsed_seconds": 30.24786529999983
+      },
+      {
+        "kappa_um_inv": 4145.602372770364,
+        "epsilon_i_xi": 1.000003086477085,
+        "d_logdet_d_z": -2.0514776614885795e-104,
+        "force_integrand": 3.265028104685094e-105,
+        "bottom_force_integrand": 3.1636686372266166e-303,
+        "edge_top_force_integrand": 3.265028104685094e-105,
+        "logdet_Y": 0.0,
+        "TM_force_integrand": 1.6325140524154423e-105,
+        "TE_force_integrand": 1.632514052269652e-105,
+        "normal_derivative_frobenius_norms": {
+          "rotor": 2.7073904272819758e-33,
+          "stator": 1.145537556222271e-29,
+          "cross": 6.891107387127226e-47
+        },
+        "symmetry_modes": [
+          {
+            "mode": 0,
+            "condition_number_M_rotor": 7.319831743085511,
+            "condition_number_M_stator": 15.555073339447338,
+            "channels": {
+              "TM": {
+                "reflection_weight": 7.716180804828325e-07,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -2.564347076975228e-105,
+                "logdet_Y": 0.0
+              },
+              "TE": {
+                "reflection_weight": -7.716180804483782e-07,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -2.564347076746221e-105,
+                "logdet_Y": 0.0
+              }
+            }
+          },
+          {
+            "mode": 1,
+            "condition_number_M_rotor": 7.319831743085511,
+            "condition_number_M_stator": 15.555073339447338,
+            "channels": {
+              "TM": {
+                "reflection_weight": 7.716180804828325e-07,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -2.564347076975228e-105,
+                "logdet_Y": 0.0
+              },
+              "TE": {
+                "reflection_weight": -7.716180804483782e-07,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -2.564347076746221e-105,
+                "logdet_Y": 0.0
+              }
+            }
+          },
+          {
+            "mode": 2,
+            "condition_number_M_rotor": 7.319831743085511,
+            "condition_number_M_stator": 15.555073339447338,
+            "channels": {
+              "TM": {
+                "reflection_weight": 7.716180804828325e-07,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -2.564347076975228e-105,
+                "logdet_Y": 0.0
+              },
+              "TE": {
+                "reflection_weight": -7.716180804483782e-07,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -2.564347076746221e-105,
+                "logdet_Y": 0.0
+              }
+            }
+          },
+          {
+            "mode": 3,
+            "condition_number_M_rotor": 7.319831743085511,
+            "condition_number_M_stator": 15.555073339447338,
+            "channels": {
+              "TM": {
+                "reflection_weight": 7.716180804828325e-07,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -2.564347076975228e-105,
+                "logdet_Y": 0.0
+              },
+              "TE": {
+                "reflection_weight": -7.716180804483782e-07,
+                "condition_number_Y": 1.0,
+                "d_logdet_d_z": -2.564347076746221e-105,
+                "logdet_Y": 0.0
+              }
+            }
+          }
+        ],
+        "quadrature_index": 23,
+        "u": 0.9975936099985107,
+        "quadrature_weight_um_inv": 10656.054049425955,
+        "weighted_force_contribution": 3.479231595641915e-101,
+        "elapsed_seconds": 5.158466500000941
+      }
+    ]
+  },
+  "wall_seconds": 155.0180958000019
+}

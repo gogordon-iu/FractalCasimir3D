@@ -24,7 +24,8 @@ import shutil
 import sys
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -41,6 +42,10 @@ from utils.metrics_logger import (  # noqa: E402
 )
 
 T = TypeVar("T")
+MODEL_ID = "FractalCasimirProvenance"
+# Reported Meep pressures are dimensionless. Convert to SI pressure by
+# multiplication, not division: pressure_pa = pressure_meep * MEEP_TO_PA.
+MEEP_TO_PA = 0.0316152649
 SCALING_LENGTHS = (
     0.30, 0.40, 0.50, 0.60, 0.80, 1.00, 1.20, 1.40, 2.00, 3.00, 4.00, 4.50
 )
@@ -86,6 +91,7 @@ class Metric:
     description: str
     group: str
     source: Source
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -331,7 +337,19 @@ class Registry:
         group: str,
         source: Source,
     ) -> None:
-        metric = Metric(name, finite_float(value, name), unit, description, group, source)
+        numeric_value = finite_float(value, name)
+        metadata: dict[str, Any] = {}
+        if unit == "reported pressure units":
+            metadata["pressure_unit_provenance"] = {
+                "pressure_meep": numeric_value,
+                "meep_unit": "dimensionless",
+                "pressure_pa": finite_float(numeric_value * MEEP_TO_PA, f"{name} (Pa)"),
+                "si_unit": "Pa",
+                "meep_to_pa": MEEP_TO_PA,
+                "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+                "basis": "specified Meep-to-SI pressure conversion; original value retained",
+            }
+        metric = Metric(name, numeric_value, unit, description, group, source, metadata)
         previous = self.metrics.get(name)
         if previous is not None and not math.isclose(
             previous.value, metric.value, rel_tol=1e-10, abs_tol=1e-12
@@ -453,7 +471,8 @@ def register_supplied_metrics(
     registry: Registry, documents: Sequence[TexDocument]
 ) -> None:
     register_macro_definitions(registry, documents)
-    # Force and pressure units are not guessed where the specification omits them.
+    # Force units are not guessed. Reported pressures retain their Meep values;
+    # Registry.add records the dimensionless and converted SI values together.
     groups: dict[str, list[tuple[str, float, str, str]]] = {
         "model_1": [
             ("model_1_ssr", 0.00928379, "reported units", "Offset sum of squared residuals"),
@@ -543,18 +562,18 @@ def register_supplied_metrics(
         "basis": "explicit experiment specification",
     }
     for index, row in enumerate(sweet_spots, start=1):
-        for field, value, unit in zip(
+        for field_name, value, unit in zip(
             ("alpha", "theta", "d", "pressure"),
             row,
             ("deg", "deg", "nm", "reported pressure units"),
             strict=True,
         ):
-            name = f"sweet_spot_{index}_{field}"
+            name = f"sweet_spot_{index}_{field_name}"
             registry.add(
                 name,
                 value,
                 unit,
-                f"Repulsive sweet spot {index}: {field}",
+                f"Repulsive sweet spot {index}: {field_name}",
                 "repulsive_sweet_spots",
                 specification_source(value, documents, registry, name),
             )
@@ -1015,21 +1034,20 @@ def logger_call(
         # log_step(name, data, metrics_path) stores the complete step payload.
         values = {**values, "data": dict(values)}
     if function is save_plot_provenance:
-        inputs_val = values.get("inputs", "results/provenance_metrics.json")
-        data_source_str = (
-            str(inputs_val[0])
-            if isinstance(inputs_val, (list, tuple)) and inputs_val
-            else str(inputs_val)
+        # Manuscript inputs describe grounding, not the figure's empirical data.
+        data_source = values.get(
+            "data_source",
+            values.get("metrics_path", "results/provenance_metrics.json"),
         )
         values = {
             **values,
-            "data_source": data_source_str,
+            "data_source": str(data_source),
             "columns_used": list(values.get("metrics", [])),
         }
-        # Bind the adapted fields rather than the original inputs/metrics.
         aliases = {
             **(aliases or {}),
             "data_source": "data_source",
+            "input_source": "data_source",
             "columns_used": "columns_used",
         }
     return invoke_logger(
@@ -1096,6 +1114,13 @@ def find_figures(manuscript: Path) -> list[Path]:
 
 
 def export_pipeline(args: argparse.Namespace) -> int:
+    executed_at = datetime.now(timezone.utc).isoformat()
+    freshness_metadata = {
+        "model": MODEL_ID,
+        "dataset": "manuscript_provenance_registry",
+        "status": "completed",
+        "executed_at": executed_at,
+    }
     manuscript = Path(args.manuscript).expanduser()
     if not manuscript.is_absolute():
         manuscript = REPO_ROOT / manuscript
@@ -1124,7 +1149,7 @@ def export_pipeline(args: argparse.Namespace) -> int:
         registry.warnings.append("No supported figure files were found.")
 
     registry_path = output_dir / "experiment_provenance_registry.json"
-    metrics_path = output_dir / "metrics.jsonl"
+    metrics_path = output_dir / "provenance_metrics.json"
     macros_path = output_dir / "macros_results.tex"
     map_path = output_dir / "manuscript_provenance_map.json"
     audit_path = output_dir / "provenance_audit_summary.json"
@@ -1135,6 +1160,7 @@ def export_pipeline(args: argparse.Namespace) -> int:
     write_json(
         registry_path,
         {
+            **freshness_metadata,
             "schema_version": 1,
             "script": relative_path(Path(__file__)),
             "script_sha256": digest(Path(__file__)),
@@ -1143,6 +1169,19 @@ def export_pipeline(args: argparse.Namespace) -> int:
                 {"path": relative_path(doc.path), "sha256": doc.sha256}
                 for doc in documents
             ],
+            "metadata": {
+                "pressure_unit_provenance": {
+                    "reported_pressure_unit": "dimensionless Meep pressure",
+                    "si_pressure_unit": "Pa",
+                    "meep_to_pa": MEEP_TO_PA,
+                    "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+                    "values": {
+                        metric.name: metric.metadata["pressure_unit_provenance"]
+                        for metric in all_metrics
+                        if "pressure_unit_provenance" in metric.metadata
+                    },
+                },
+            },
             "datasets": registry.datasets,
             "metrics": [asdict(metric) for metric in all_metrics],
             "selected_metric_names": logged_names,
@@ -1188,6 +1227,7 @@ def export_pipeline(args: argparse.Namespace) -> int:
                     "output_path": str(metrics_path),
                     "metrics_path": str(metrics_path),
                     "metadata": {
+                        **metric.metadata,
                         "group": metric.group,
                         "source": asdict(metric.source),
                     },
@@ -1195,14 +1235,25 @@ def export_pipeline(args: argparse.Namespace) -> int:
                 primary="value",
             )
 
-        # This run-specific ledger is independent of any logger append history.
-        atomic_write(
-            output_dir / "provenance_metrics.jsonl",
-            "".join(
-                json.dumps(asdict(metric), sort_keys=True, allow_nan=False) + "\n"
-                for metric in selected
-            ),
+        # Run-specific JSONL ledgers never receive the logger's JSON dictionary.
+        # Empty selections intentionally produce empty JSONL files.
+        jsonl_text = "".join(
+            json.dumps(
+                {
+                    **asdict(metric),
+                    "model": MODEL_ID,
+                    "dataset": metric.group,
+                    "status": "completed",
+                    "executed_at": executed_at,
+                    "metrics": {metric.name: metric.value},
+                },
+                sort_keys=True,
+                allow_nan=False,
+            ) + "\n"
+            for metric in selected
         )
+        atomic_write(output_dir / "provenance_metrics.jsonl", jsonl_text)
+        atomic_write(output_dir / "metrics.jsonl", jsonl_text)
 
         macros_result = logger_call(
             export_macros,
@@ -1230,6 +1281,7 @@ def export_pipeline(args: argparse.Namespace) -> int:
                 "script": relative_path(Path(__file__)),
                 "manuscript": relative_path(manuscript),
                 "registry": relative_path(registry_path),
+                "data_source": str(metrics_path),
                 "inputs": inputs,
                 "exported_metric_names": logged_names,
                 "lineage_status": "inventory association, not reconstructed generation lineage",
@@ -1248,6 +1300,8 @@ def export_pipeline(args: argparse.Namespace) -> int:
                     "script": script_path,
                     "params": {"manuscript": str(manuscript)},
                     "inputs": inputs + [str(registry_path)],
+                    "data_source": str(metrics_path),
+                    "metrics_path": str(metrics_path),
                     "metrics": logged_names,
                     "description": metadata["note"],
                     "metadata": metadata,
@@ -1269,6 +1323,8 @@ def export_pipeline(args: argparse.Namespace) -> int:
                     loaded = json.loads(conventional.read_text(encoding="utf-8"))
                     if isinstance(loaded, dict):
                         existing = loaded
+            existing["input_source"] = str(metrics_path)
+            existing["data_source"] = str(metrics_path)
             existing["grounded_experiment_export"] = metadata
             write_json(sidecar, existing)
             sidecars.append(relative_path(sidecar))
@@ -1292,7 +1348,11 @@ def export_pipeline(args: argparse.Namespace) -> int:
             REPO_ROOT / "results/manuscript_provenance_map.json",
             json_output=True,
         )
-        json.loads(map_path.read_text(encoding="utf-8"))
+        manuscript_map = json.loads(map_path.read_text(encoding="utf-8"))
+        if not isinstance(manuscript_map, dict):
+            manuscript_map = {"manuscript_map": manuscript_map}
+        manuscript_map.update(freshness_metadata)
+        write_json(map_path, manuscript_map)
 
     capped = len(selected) < len(all_metrics)
     status = (
@@ -1301,7 +1361,8 @@ def export_pipeline(args: argparse.Namespace) -> int:
         else "complete"
     )
     audit: dict[str, Any] = {
-        "status": status,
+        **freshness_metadata,
+        "export_status": status,
         "audit_status": "FAIL" if registry.errors else "PASS",
         "manuscript": relative_path(manuscript),
         "output_dir": str(output_dir),
@@ -1316,7 +1377,9 @@ def export_pipeline(args: argparse.Namespace) -> int:
         "figure_sidecars": sidecars,
         "artifacts": {
             "registry": relative_path(registry_path),
+            "logger_metrics": relative_path(metrics_path),
             "run_metrics": relative_path(output_dir / "provenance_metrics.jsonl"),
+            "metrics_jsonl": relative_path(output_dir / "metrics.jsonl"),
             "macros": relative_path(macros_path),
             "manuscript_map": relative_path(map_path),
             "audit": relative_path(audit_path),

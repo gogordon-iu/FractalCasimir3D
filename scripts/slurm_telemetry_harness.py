@@ -36,12 +36,13 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 MARKER = "# BIGRED200_TELEMETRY_HARNESS_V1"
 BLOCKED_SUFFIXES = (".pt", ".ckpt", ".bin", ".h5", ".safetensors", ".tar")
-PROXY = "http://proxy.uits.iu.edu:3128"
+PROXY = ""
 
 
 # Embedded verbatim into generated scripts; it does not import this module.
 _TELEMETRY_PYTHON = r'''
 import datetime
+import fcntl
 import json
 import os
 from pathlib import Path
@@ -50,7 +51,7 @@ import sys
 
 CONFIG = json.loads(__HARNESS_CONFIG__)
 BLOCKED_SUFFIXES = (".pt", ".ckpt", ".bin", ".h5", ".safetensors", ".tar")
-GIT_TIMEOUT_SECONDS = 45
+GIT_TIMEOUT_SECONDS = 180
 
 def diagnostic(message):
     print("[BigRed200 telemetry] " + str(message), file=sys.stderr, flush=True)
@@ -160,6 +161,20 @@ def write_report(report):
     return str(destination.relative_to(ROOT))
 
 def publish(paths, message):
+    # Keep the lock in Git metadata so it cannot be staged with job outputs.
+    git_directory = Path(git(["rev-parse", "--absolute-git-dir"]).stdout.strip())
+    lock_path = git_directory / "bigred200_telemetry.lock"
+    descriptor = os.open(
+        str(lock_path), os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600
+    )
+    with os.fdopen(descriptor, "a", encoding="utf-8", newline="\n") as lock:
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+        try:
+            sync_git(paths, message)
+        finally:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+
+def sync_git(paths, message):
     selected = sorted(set(paths))
     for relative in selected:
         if not safe_file(safe_path(relative)):
@@ -416,6 +431,7 @@ def configuration(namespace: argparse.Namespace) -> Dict[str, str]:
         "figures_dir": relative_directory(namespace.figures_dir),
         "logs_dir": relative_directory(namespace.logs_dir),
         "git_remote": remote,
+        "proxy": getattr(namespace, "proxy", PROXY),
         "auto_resubmit": "1" if getattr(namespace, "auto_resubmit", False) else "0",
     }
     if config["logs_dir"] == config["results_dir"]:
@@ -442,6 +458,17 @@ def harness_body(body: str, config: Dict[str, str]) -> str:
         "__HARNESS_CONFIG__", repr(json.dumps(config, sort_keys=True))
     ).strip()
     logs = shell_quote(config["logs_dir"])
+    proxy = config.get("proxy", PROXY)
+    if proxy:
+        quoted_proxy = shell_quote(proxy)
+        proxy_setup = (
+            f"export http_proxy={quoted_proxy}\n"
+            f"export https_proxy={quoted_proxy}\n"
+            f"export HTTP_PROXY={quoted_proxy}\n"
+            f"export HTTPS_PROXY={quoted_proxy}\n"
+        )
+    else:
+        proxy_setup = "unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY\n"
     auto_walltime = ""
     if config.get("auto_resubmit", "0") == "1":
         auto_walltime = (
@@ -458,9 +485,8 @@ def harness_body(body: str, config: Dict[str, str]) -> str:
         f"{MARKER}\n"
         "# SIGKILL/node loss cannot be trapped; publication is best-effort.\n"
         "# Logs must exist BEFORE sbatch; the generator creates them locally.\n"
-        'export http_proxy="http://proxy.uits.iu.edu:3128"\n'
-        'export https_proxy="http://proxy.uits.iu.edu:3128"\n'
-        'export no_proxy="localhost,127.0.0.1,*.iu.edu,*.uits.iu.edu"\n'
+        + proxy_setup
+        + 'export no_proxy="localhost,127.0.0.1,*.iu.edu,*.uits.iu.edu"\n'
         "export HF_HUB_OFFLINE=1\n"
         "export TRANSFORMERS_OFFLINE=1\n"
         "export WANDB_MODE=offline\n"
@@ -601,6 +627,7 @@ def generate_script(namespace: argparse.Namespace, config: Dict[str, str]) -> st
         f"#SBATCH --job-name={namespace.job_name}",
         f"#SBATCH --account={namespace.account}",
         f"#SBATCH --partition={namespace.partition}",
+        "#SBATCH --exclude=nid0394",
         "#SBATCH --nodes=1",
         "#SBATCH --ntasks=1",
         f"#SBATCH --cpus-per-task={namespace.cpus_per_task}",
@@ -709,10 +736,8 @@ def audit_script(source: str) -> List[Tuple[str, bool]]:
         )
 
     proxy = bool(
-        re.search(
-            r'\bhttp_proxy\s*=\s*["\']?http://proxy\.uits\.iu\.edu:3128(?:["\']|\s|$)',
-            source,
-        )
+        re.search(r"(?m)^\s*unset\s+http_proxy(?:\s|$)", source)
+        or "proxy.uits.iu.edu" not in source.lower()
     )
     commit = bool(
         re.search(r"\bgit\s+commit\b", source)
@@ -750,7 +775,7 @@ def audit_script(source: str) -> List[Tuple[str, bool]]:
         ("Bash EXIT trap", trapped("EXIT")),
         ("SIGUSR1 trap", trapped("SIGUSR1")),
         ("SIGTERM trap", trapped("SIGTERM")),
-        ("BigRed 200 HTTP proxy", proxy),
+        ("Dead IU proxy disabled or absent", proxy),
         ("SUCCESS and FAILED commit/push paths", commit and push and states),
         ("Explicit checkpoint staging exclusions", exclusions and guards),
         ("Resubmission / job chaining suppression", continuation),
@@ -847,6 +872,11 @@ def add_common_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--figures-dir", default="figures")
     parser.add_argument("--logs-dir", default="logs")
     parser.add_argument("--git-remote", default="origin")
+    parser.add_argument(
+        "--proxy",
+        default=PROXY,
+        help="Explicit HTTP/HTTPS proxy URL; proxy variables are unset by default",
+    )
     parser.add_argument(
         "--auto-resubmit",
         action="store_true",

@@ -12,6 +12,8 @@ Functions:
 3. Sends detailed email notification to gogordon@iu.edu via system mail/sendmail.
 4. Performs resilient Git commit and push (with rebase and retry) to origin/main
    so that real-time progress is instantly available locally for analysis.
+
+Passing --max-steps enables micro-probe mode, which skips Git synchronization.
 """
 
 import os
@@ -24,13 +26,16 @@ import random
 import argparse
 import datetime
 import subprocess
+from urllib.parse import urlsplit
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
+
 def get_effective_area(N, L):
     return ((8.0 / 9.0)**(N - 1)) * (L**2)
+
 
 def ensure_dirs():
     dirs = [
@@ -42,6 +47,7 @@ def ensure_dirs():
     ]
     for d in dirs:
         os.makedirs(d, exist_ok=True)
+
 
 def find_moments_count(task_id, nmax=1):
     """Counts completed moments from .tmp/chk_moments_* and .tmp/chk_v4_* files."""
@@ -114,8 +120,25 @@ def find_moments_count(task_id, nmax=1):
     max_total = moments_per_config * 2
     return min(total_done, max_total)
 
+
 def resilient_git_sync(commit_msg):
     """Performs git add, commit, fetch, rebase, and push with retries."""
+    git_env = os.environ.copy()
+    for key in (
+        "http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY",
+        "ALL_PROXY", "all_proxy"
+    ):
+        value = git_env.get(key, "").strip()
+        if not value:
+            continue
+        try:
+            proxy_url = value if "://" in value else "//" + value
+            hostname = urlsplit(proxy_url).hostname
+        except ValueError:
+            hostname = None
+        if hostname and hostname.lower().rstrip(".") == "proxy.uits.iu.edu":
+            git_env.pop(key, None)
+
     lock_file = os.path.join(REPO_ROOT, ".git", "index.lock")
     if os.path.exists(lock_file):
         try:
@@ -125,27 +148,53 @@ def resilient_git_sync(commit_msg):
 
     try:
         # Stage tracked results
-        subprocess.run(["git", "add", "results_clutch", "cluster_diagnostics", ".gitignore", "execution"], cwd=REPO_ROOT, check=False)
-        
+        subprocess.run(
+            ["git", "add", "results_clutch", "cluster_diagnostics", ".gitignore", "execution"],
+            cwd=REPO_ROOT, check=False, timeout=120, env=git_env
+        )
+
         # Check if there are changes to commit
-        diff_proc = subprocess.run(["git", "diff", "--staged", "--quiet"], cwd=REPO_ROOT, check=False)
+        diff_proc = subprocess.run(
+            ["git", "diff", "--staged", "--quiet"],
+            cwd=REPO_ROOT, check=False, timeout=120, env=git_env
+        )
         if diff_proc.returncode == 0:
             print("[Git Auto-Sync] Working tree clean, nothing to commit.")
             return
 
-        subprocess.run(["git", "commit", "-m", commit_msg], cwd=REPO_ROOT, check=False)
+        subprocess.run(
+            ["git", "commit", "-m", commit_msg],
+            cwd=REPO_ROOT, check=False, timeout=120, env=git_env
+        )
 
         max_retries = 3
         for attempt in range(max_retries):
             # Pull with rebase to incorporate concurrent pushes from other nodes
-            subprocess.run(["git", "fetch", "origin", "main"], cwd=REPO_ROOT, check=False)
-            rebase_res = subprocess.run(["git", "rebase", "origin/main"], cwd=REPO_ROOT, capture_output=True, text=True, check=False)
+            subprocess.run(
+                ["git", "fetch", "origin", "main"],
+                cwd=REPO_ROOT, check=False, timeout=120, env=git_env
+            )
+            rebase_res = subprocess.run(
+                ["git", "rebase", "origin/main"],
+                cwd=REPO_ROOT, capture_output=True, text=True, check=False,
+                timeout=120, env=git_env
+            )
             if rebase_res.returncode != 0:
-                subprocess.run(["git", "rebase", "--abort"], cwd=REPO_ROOT, check=False)
+                subprocess.run(
+                    ["git", "rebase", "--abort"],
+                    cwd=REPO_ROOT, check=False, timeout=120, env=git_env
+                )
                 # If rebase fails, try standard pull merge
-                subprocess.run(["git", "pull", "--no-edit", "origin", "main"], cwd=REPO_ROOT, check=False)
+                subprocess.run(
+                    ["git", "pull", "--no-edit", "origin", "main"],
+                    cwd=REPO_ROOT, check=False, timeout=120, env=git_env
+                )
 
-            push_res = subprocess.run(["git", "push", "origin", "main"], cwd=REPO_ROOT, capture_output=True, text=True, check=False)
+            push_res = subprocess.run(
+                ["git", "push", "origin", "main"],
+                cwd=REPO_ROOT, capture_output=True, text=True, check=False,
+                timeout=120, env=git_env
+            )
             if push_res.returncode == 0:
                 print(f"[Git Auto-Sync] SUCCESS: Changes pushed to origin main! (Attempt {attempt+1})")
                 return
@@ -158,11 +207,12 @@ def resilient_git_sync(commit_msg):
     except Exception as e:
         print(f"[Git Auto-Sync] Note: {e}")
 
+
 def update_master_dashboard():
     """Compiles results_clutch/CAMPAIGN_PROGRESS.md and .json from all task files."""
     progress_dir = os.path.join(REPO_ROOT, "results_clutch", "progress")
     cfg_files = sorted(glob.glob(os.path.join(REPO_ROOT, "sweep_configs_clutch", "config_*.json")))
-    
+
     tasks_summary = []
     total_moments_all = 0
     completed_moments_all = 0
@@ -173,7 +223,7 @@ def update_master_dashboard():
             cfg = json.load(f)
         tid = cfg["task_id"]
         status_file = os.path.join(progress_dir, f"task_{tid:03d}_status.json")
-        
+
         t_data = {
             "task_id": tid,
             "label": cfg["label"],
@@ -308,12 +358,17 @@ def update_master_dashboard():
 
     return dashboard_json, "\n".join(md_lines)
 
+
 def main():
     parser = argparse.ArgumentParser(description="Quantum Clutch Task Progress Tracker & Git Auto-Sync")
     parser.add_argument("--task-id", type=int, required=True, help="Task ID (1-10, or 999 for convergence)")
     parser.add_argument("--label", type=str, default="", help="Task label")
     parser.add_argument("--config-file", type=str, default="", help="Path to config JSON")
     parser.add_argument("--exit-code", type=int, default=0, help="Simulation process exit code")
+    parser.add_argument(
+        "--max-steps", type=int, default=None,
+        help="Micro-probe step limit; when supplied, skip Git synchronization (including staging and commits)"
+    )
     args = parser.parse_args()
 
     ensure_dirs()
@@ -410,9 +465,15 @@ def main():
     if f_net is not None:
         print(f"  -> Force: {f_net:+.6e}, Pressure: {p_val:+.4e} Pa")
 
+    # Micro-probes must not stage, commit, rebase, or push.
+    if args.max_steps is not None:
+        print("[Git Auto-Sync] Micro-probe mode (--max-steps): Git synchronization skipped.")
+        return
+
     # Git commit and push with elaborated reports and dashboard
     commit_msg = f"progress(clutch): Task {args.task_id} ({args.label}) {status} [{moments_done}/{total_m} moments ({pct:.1f}%)]"
     resilient_git_sync(commit_msg)
+
 
 if __name__ == "__main__":
     main()

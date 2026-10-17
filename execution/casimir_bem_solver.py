@@ -52,6 +52,7 @@ import tempfile
 import time
 from collections import Counter
 from collections.abc import Iterator, Mapping, Sequence
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Literal, TypeAlias, cast
 
@@ -74,6 +75,7 @@ PanelType: TypeAlias = Literal[
 ]
 
 MEEP_FORCE_TO_SI = 3.16152649e-14
+HBAR_C_EV_UM = 0.1973269804
 SYMMETRY_MULTIPLIER = 4.0
 SCALAR_MODEL = "dielectric_weighted_two_channel_scalar_yukawa"
 VECTOR_MODEL = "dielectric_weighted_tangential_vector_dyadic"
@@ -885,6 +887,20 @@ def _panel_pair_samples(
             yield delta, effective_distance, kernel, radial_derivative
 
 
+def _disk_self_term(areas: FloatArray, kappa: float) -> FloatArray:
+    """Equal-area disk self term with finite-kappa attenuation."""
+    x_self = kappa * np.sqrt(areas / math.pi)
+    atten = np.empty_like(x_self)
+    finite_kappa = x_self > 1.0e-6
+    # Masked evaluation avoids division by zero at kappa=0; expm1 avoids
+    # cancellation for small positive arguments.
+    atten[finite_kappa] = (
+        -np.expm1(-x_self[finite_kappa]) / x_self[finite_kappa]
+    )
+    atten[~finite_kappa] = 1.0 - 0.5 * x_self[~finite_kappa]
+    return np.sqrt(areas) / (2.0 * math.sqrt(math.pi)) * atten
+
+
 def _yukawa_blocks(
     target: BodyPanels,
     source: BodyPanels,
@@ -897,7 +913,7 @@ def _yukawa_blocks(
     Area-symmetrized finite-panel-regularized Yukawa kernels and analytic
     derivatives averaged over 2x2 bilinear quadrature on each panel.
 
-    The self value remains the kappa-independent equal-area disk value.
+    The self value uses the finite-kappa equal-area disk integral.
     Off-diagonal point pairs use sub-panel-area distance regularization.
     """
     kappa = _positive_float(kappa, "kappa", allow_zero=True)
@@ -923,8 +939,7 @@ def _yukawa_blocks(
         d_source -= np.einsum("ijk,jk->ij", gradient, source_normals)
 
     if self_block:
-        # G_ii = 1 / (2 sqrt(pi A_i)); multiply by sqrt(A_i A_i).
-        diagonal = np.sqrt(target.areas) / (2.0 * math.sqrt(math.pi))
+        diagonal = _disk_self_term(target.areas, kappa)
         np.fill_diagonal(single, diagonal)
         np.fill_diagonal(dz, 0.0)
         np.fill_diagonal(d_target, 0.0)
@@ -1020,7 +1035,7 @@ def _vector_dyadic_blocks(
 
     if self_block:
         indices = np.arange(target.count)
-        diagonal = np.sqrt(target.areas) / (2.0 * math.sqrt(math.pi))
+        diagonal = _disk_self_term(target.areas, kappa)
         single[indices, indices] = diagonal[:, None, None] * np.eye(2)
         dz[indices, indices] = 0.0
         d_target[indices, indices] = 0.0
@@ -1061,14 +1076,14 @@ class MaterialModel:
         wp = _positive_float(
             _pick(
                 material_values, ("plasma_frequency",),
-                required=False, default=9.03 / 1.239841984,
+                required=False, default=9.03 / HBAR_C_EV_UM,
             ),
             "plasma_frequency",
         )
         gamma = _positive_float(
             _pick(
                 material_values, ("gamma",),
-                required=False, default=0.053 / 1.239841984,
+                required=False, default=0.053 / HBAR_C_EV_UM,
             ),
             "gamma", allow_zero=True,
         )
@@ -1112,15 +1127,26 @@ class MaterialModel:
             raise FloatingPointError("Invalid imaginary-frequency permittivity.")
         return epsilon
 
-    def channel_weights(self, kappa: float) -> tuple[float, float, float | None]:
+    def channel_weights(
+        self, kappa: float, k_eff: float = 10.0
+    ) -> tuple[float, float, float | None]:
+        kappa = _positive_float(kappa, "kappa")
+        k_parallel = max(_finite_float(k_eff, "k_eff"), 1.0e-3)
         epsilon = self.epsilon(kappa)
         if epsilon is None:
             return 1.0, 1.0, None
-        # Normal-incidence Fresnel amplitudes, not an angle-resolved PMCHWT
-        # material operator. Products for two identical bodies are positive.
-        root = math.sqrt(epsilon)
-        tm = (epsilon - root) / (epsilon + root)
-        te = (1.0 - root) / (1.0 + root)
+        # Evanescent Fresnel amplitudes at a representative transverse
+        # wavenumber, not an angle-resolved PMCHWT material operator.
+        # For a dissipative Drude metal, kappa**2 * epsilon -> 0 as
+        # kappa -> 0, so the nonmagnetic TE static limit vanishes.
+        gamma_0 = math.hypot(kappa, k_parallel)
+        gamma_m = math.hypot(kappa * math.sqrt(epsilon), k_parallel)
+        # Divide the TM expression by epsilon to avoid eps*gamma_0 overflow.
+        gamma_m_over_epsilon = gamma_m / epsilon
+        tm = (gamma_0 - gamma_m_over_epsilon) / (
+            gamma_0 + gamma_m_over_epsilon
+        )
+        te = (gamma_0 - gamma_m) / (gamma_0 + gamma_m)
         if not all(math.isfinite(x) for x in (tm, te)):
             raise FloatingPointError("Invalid material channel weights.")
         return tm, te, epsilon
@@ -1280,7 +1306,23 @@ def _frequency_integrand(
     _formulation_qualification(formulation)
     rotor = mesh.sector_arrays("rotor")
     stator = mesh.sector_arrays("stator")
-    tm, te, epsilon = material.channel_weights(kappa)
+    # Estimate the characteristic gap from the nearest cross-body panel
+    # centroids, including all sectors, without allocating a full pair tensor.
+    char_gap_um = math.inf
+    if rotor.count and stator.count:
+        for sector in range(4):
+            source_positions = stator.centroids @ _rotation(sector).T
+            for centroid in rotor.centroids:
+                separation = float(np.min(
+                    np.linalg.norm(source_positions - centroid, axis=1)
+                ))
+                if not math.isfinite(separation):
+                    raise FloatingPointError("Non-finite cross-body separation.")
+                char_gap_um = min(char_gap_um, separation)
+    if not math.isfinite(char_gap_um):
+        char_gap_um = 0.100
+    k_eff = 1.0 / max(char_gap_um, 0.020)
+    tm, te, epsilon = material.channel_weights(kappa, k_eff=k_eff)
     dofs_per_panel = 2 if formulation == "vector_dyadic" else 1
     nr = dofs_per_panel * rotor.count
     ns = dofs_per_panel * stator.count
@@ -1432,6 +1474,8 @@ def _frequency_integrand(
     return {
         "kappa_um_inv": kappa,
         "epsilon_i_xi": epsilon,
+        "k_eff_um_inv": k_eff,
+        "char_gap_um": char_gap_um,
         "d_logdet_d_z": d_total,
         "force_integrand": -d_total / (2.0 * math.pi),
         "bottom_force_integrand": -d_bottom / (2.0 * math.pi),
@@ -1652,7 +1696,7 @@ def run_bem_casimir_solver(
     kappa_cut = 0.0
     if temperature_K > 0.0:
         delta_kappa = (
-            2.0 * math.pi * (8.617333262e-5 * temperature_K) / 0.1973269804
+            2.0 * math.pi * (8.617333262e-5 * temperature_K) / HBAR_C_EV_UM
         )
         if not math.isfinite(delta_kappa) or delta_kappa <= 0.0:
             raise FloatingPointError("Invalid Matsubara frequency spacing.")
@@ -1719,11 +1763,18 @@ def run_bem_casimir_solver(
         ),
         "kappa_0_um_inv": kappa_0,
         "dispersion_model": material.metadata(),
-        "channel_weights": "normal-incidence TM and TE Fresnel amplitudes",
+        "channel_weights": (
+            "evanescent TM and TE Fresnel amplitudes at "
+            "k_parallel=max(k_eff,1e-3), "
+            "k_eff=1/max(minimum cross-body centroid separation,0.020 um)"
+        ),
         "symmetry_multiplier": SYMMETRY_MULTIPLIER,
         "symmetry_method": "sum of four cyclic Fourier-block traces",
         "inter_sector_interactions": True,
-        "diagonal_self_term": "equal-area disk: 1/(2*sqrt(pi*A))",
+        "diagonal_self_term": (
+            "equal-area disk: 1/(2*sqrt(pi*A)) times "
+            "(1-exp(-x))/x, x=kappa*sqrt(A/pi), with static limit 1"
+        ),
         "off_diagonal_quadrature": (
             "2x2 Gauss-Legendre bilinear points per panel; 16 weighted point pairs "
             "with sqrt(distance^2 + (A_target + A_source)/(32*pi))"
@@ -1786,11 +1837,15 @@ def run_bem_casimir_solver(
         raise FloatingPointError("Force diagnostic partition does not sum to total.")
     _set_force(result, net)
     result.update({
-        "status": (
+        "status": "completed",
+        "qualification_status": (
             "completed_vector_approximation"
             if formulation == "vector_dyadic"
             else "completed_scalar_approximation"
         ),
+        "model": f"BEM_{formulation}_{material.material}",
+        "dataset": str(mesh.parameters.get("dataset", "casimir_bem_3d")),
+        "executed_at": datetime.now(timezone.utc).isoformat(),
         "physics_qualification": qualification,
         "time_truncated": max_steps > 0,
         "quadrature_incomplete": evaluated < n_xi,

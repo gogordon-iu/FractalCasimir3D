@@ -31,6 +31,7 @@ import tempfile
 import time
 import uuid
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
@@ -632,18 +633,32 @@ def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
             for angle in angles
         ]
 
-    points = tooth_points(center)
+    # Size the box in the unrotated tooth frame. Its half-diagonal bounds
+    # every rotation of that frame's rectangle, so a Cartesian square with
+    # this fixed half-span encloses the tooth without angle-dependent sizing.
+    points = tooth_points(0.0)
     min_x = min(point[0] for point in points)
     max_x = max(point[0] for point in points)
     min_y = min(point[1] for point in points)
     max_y = max(point[1] for point in points)
+    local_center_x = (min_x + max_x) / 2.0
+    local_center_y = (min_y + max_y) / 2.0
+    center_x = local_center_x * math.cos(center) - local_center_y * math.sin(center)
+    center_y = local_center_x * math.sin(center) + local_center_y * math.cos(center)
     margin = 2.0 / parameters.resolution
+    lateral_half_span = math.hypot(
+        (max_x - min_x) / 2.0, (max_y - min_y) / 2.0
+    ) + margin
     return tuple(
         box_faces(
-            [min_x - margin, min_y - margin, parameters.z_tip / 2.0],
             [
-                max_x + margin,
-                max_y + margin,
+                center_x - lateral_half_span,
+                center_y - lateral_half_span,
+                parameters.z_tip / 2.0,
+            ],
+            [
+                center_x + lateral_half_span,
+                center_y + lateral_half_span,
                 parameters.z_tip + parameters.h_teeth + margin,
             ],
         )
@@ -1178,6 +1193,10 @@ def run_numpy_micro_probe(
 
     result = {
         "status": "micro_probe_complete",
+        "cache_version": CACHE_VERSION,
+        "model": f"Meep_3D_FDTD_{parameters.material}_v{CACHE_VERSION}",
+        "dataset": "scoped_clutch_meep",
+        "executed_at": datetime.now(timezone.utc).isoformat(),
         "solver": "numpy",
         "solver_parameters": {
             "solver": "numpy",
@@ -1333,6 +1352,7 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
     canonical = {
         "version": CACHE_VERSION,
         "parameters": vars(parameters),
+        "stress_faces": [vars(face) for face in faces],
         "max_steps": args.max_steps,
         "force_direction": "z",
         "kernel_polarization": "field_type_E_stuff_H_stuff",
@@ -1603,6 +1623,10 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
         )
         return {
             "status": status,
+            "cache_version": CACHE_VERSION,
+            "model": f"Meep_3D_FDTD_{parameters.material}_v{CACHE_VERSION}",
+            "dataset": "scoped_clutch_meep",
+            "executed_at": datetime.now(timezone.utc).isoformat(),
             "solver": "meep",
             "solver_parameters": meep_solver_parameters(
                 parameters, args, latest_steps, latest_dt

@@ -36,27 +36,45 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 MARKER = "# BIGRED200_TELEMETRY_HARNESS_V1"
 BLOCKED_SUFFIXES = (".pt", ".ckpt", ".bin", ".h5", ".safetensors", ".tar")
-PROXY = "http://proxy.uits.iu.edu:3128"
 
 
 # Embedded verbatim into generated scripts; it does not import this module.
 _TELEMETRY_PYTHON = r'''
 import datetime
+import fcntl
 import json
 import os
 from pathlib import Path
 import subprocess
 import sys
+from urllib.parse import urlsplit
 
 CONFIG = json.loads(__HARNESS_CONFIG__)
 BLOCKED_SUFFIXES = (".pt", ".ckpt", ".bin", ".h5", ".safetensors", ".tar")
-GIT_TIMEOUT_SECONDS = 45
+GIT_TIMEOUT_SECONDS = 180
 
 def diagnostic(message):
     print("[BigRed200 telemetry] " + str(message), file=sys.stderr, flush=True)
 
+def sanitize_proxy_env(environment):
+    for key in (
+        "http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY",
+        "ALL_PROXY", "all_proxy",
+    ):
+        value = environment.get(key, "")
+        if not value:
+            continue
+        try:
+            parsed = urlsplit(value if "://" in value else "//" + value)
+            hostname = (parsed.hostname or "").lower().rstrip(".")
+        except ValueError:
+            continue
+        if hostname == "proxy.uits.iu.edu":
+            environment.pop(key, None)
+    return environment
+
 def run(command, check=True):
-    environment = dict(os.environ)
+    environment = sanitize_proxy_env(dict(os.environ))
     environment["GIT_TERMINAL_PROMPT"] = "0"
     environment["GIT_EDITOR"] = ":"
     environment["GIT_SEQUENCE_EDITOR"] = ":"
@@ -165,7 +183,6 @@ def publish(paths, message):
         if not safe_file(safe_path(relative)):
             raise ValueError("Unsafe staging candidate: " + relative)
 
-    git(["config", "user.name"], check=False)
     if git(["config", "--get", "user.name"], check=False).returncode != 0:
         git(["config", "user.name", "BigRed200-JobRunner"])
     if git(["config", "--get", "user.email"], check=False).returncode != 0:
@@ -315,7 +332,11 @@ def main():
         repository = Path(git(["rev-parse", "--show-toplevel"]).stdout.strip()).resolve()
         if repository != ROOT:
             raise RuntimeError("Submit from the repository root, not a subdirectory")
-        publish(paths, message)
+        git_directory = Path(git(["rev-parse", "--absolute-git-dir"]).stdout.strip())
+        # Keep the lock file in place so every publisher locks the same inode.
+        with (git_directory / "bigred200_telemetry.lock").open("a") as lock:
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+            publish(paths, message)
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
         diagnostic(error)
         report["telemetry_errors"].append(str(error))
@@ -458,9 +479,19 @@ def harness_body(body: str, config: Dict[str, str]) -> str:
         f"{MARKER}\n"
         "# SIGKILL/node loss cannot be trapped; publication is best-effort.\n"
         "# Logs must exist BEFORE sbatch; the generator creates them locally.\n"
-        'export http_proxy="http://proxy.uits.iu.edu:3128"\n'
-        'export https_proxy="http://proxy.uits.iu.edu:3128"\n'
-        'export no_proxy="localhost,127.0.0.1,*.iu.edu,*.uits.iu.edu"\n'
+        "# Remove only inherited proxies pointing to the retired IU proxy.\n"
+        "sanitize_proxy_env() {\n"
+        "    local proxy_variable proxy_value\n"
+        "    local proxy_pattern="
+        "'^([a-z][a-z0-9+.-]*://)?([^/@]*@)?proxy\\.uits\\.iu\\.edu\\.?(:[0-9]+)?([/?#].*)?$'\n"
+        "    for proxy_variable in http_proxy https_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY all_proxy; do\n"
+        '        proxy_value="${!proxy_variable-}"\n'
+        '        if [[ "${proxy_value,,}" =~ $proxy_pattern ]]; then\n'
+        '            unset "$proxy_variable"\n'
+        "        fi\n"
+        "    done\n"
+        "}\n"
+        "sanitize_proxy_env\n"
         "export HF_HUB_OFFLINE=1\n"
         "export TRANSFORMERS_OFFLINE=1\n"
         "export WANDB_MODE=offline\n"
@@ -502,16 +533,6 @@ def harness_body(body: str, config: Dict[str, str]) -> str:
         '          || "$TERMINATION_REASON" == "REQUEUED" ]]; then\n'
         '        TERMINATION_REASON="RESUBMITTED"\n'
         "        EXIT_CODE=0\n"
-        "    fi\n"
-        '    if [[ "$TERMINATION_REASON" != "RESUBMITTED" ]]; then\n'
-        "        (\n"
-        "            git config user.name >/dev/null 2>&1 || "
-        'git config user.name "BigRed200-JobRunner"\n'
-        "            git config user.email >/dev/null 2>&1 || "
-        'git config user.email "bigred200@iu.edu"\n'
-        '            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")\n'
-        "            export CURRENT_BRANCH\n"
-        "        )\n"
         "    fi\n"
         '    python3 - "$EXIT_CODE" "$TERMINATION_REASON" <<\'BIGRED200_TELEMETRY_PYTHON\'\n'
         + payload
@@ -601,6 +622,7 @@ def generate_script(namespace: argparse.Namespace, config: Dict[str, str]) -> st
         f"#SBATCH --job-name={namespace.job_name}",
         f"#SBATCH --account={namespace.account}",
         f"#SBATCH --partition={namespace.partition}",
+        "#SBATCH --exclude=nid0394",
         "#SBATCH --nodes=1",
         "#SBATCH --ntasks=1",
         f"#SBATCH --cpus-per-task={namespace.cpus_per_task}",
@@ -709,9 +731,25 @@ def audit_script(source: str) -> List[Tuple[str, bool]]:
         )
 
     proxy = bool(
-        re.search(
-            r'\bhttp_proxy\s*=\s*["\']?http://proxy\.uits\.iu\.edu:3128(?:["\']|\s|$)',
+        re.search(r"(?m)^\s*sanitize_proxy_env\s*\(\)\s*\{", source)
+        and re.search(r"(?m)^\s*sanitize_proxy_env\s*$", source)
+        and 'unset "$proxy_variable"' in source
+        and (
+            "proxy.uits.iu.edu" in source
+            or r"proxy\.uits\.iu\.edu" in source
+        )
+        and all(
+            re.search(r"\b" + variable + r"\b", source)
+            for variable in (
+                "http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY",
+                "ALL_PROXY", "all_proxy",
+            )
+        )
+        and not re.search(
+            r'\b(?:http_proxy|https_proxy|HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|all_proxy)'
+            r'\s*=\s*["\']?(?:https?://)?proxy\.uits\.iu\.edu(?=[:/"\'\s]|$)',
             source,
+            re.IGNORECASE,
         )
     )
     commit = bool(
@@ -750,7 +788,7 @@ def audit_script(source: str) -> List[Tuple[str, bool]]:
         ("Bash EXIT trap", trapped("EXIT")),
         ("SIGUSR1 trap", trapped("SIGUSR1")),
         ("SIGTERM trap", trapped("SIGTERM")),
-        ("BigRed 200 HTTP proxy", proxy),
+        ("Retired IU proxy environment sanitization", proxy),
         ("SUCCESS and FAILED commit/push paths", commit and push and states),
         ("Explicit checkpoint staging exclusions", exclusions and guards),
         ("Resubmission / job chaining suppression", continuation),

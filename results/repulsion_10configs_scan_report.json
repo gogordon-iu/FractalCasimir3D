@@ -1,0 +1,483 @@
+{
+  "model": "casimir_bem_10configs",
+  "dataset": "repulsion_10configs_scan",
+  "status": "completed",
+  "executed_at": "2026-10-17T03:02:51.226066+00:00",
+  "description": "Disengaged slot scan; repulsive iff validated F_net > 0.",
+  "caution": "Finite positive forces are numerical candidates. This scan alone does not establish convergence or agreement with physical experiment.",
+  "arguments": {
+    "formulation": "vector_dyadic",
+    "max_steps": 2,
+    "n_r": 2,
+    "n_phi_tooth": 3,
+    "n_phi_bridge": 3,
+    "n_z": 2,
+    "n_xi": 24,
+    "device": "cpu",
+    "configs": [
+      1
+    ],
+    "all_configs": false,
+    "output_dir": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\.tmp\\rep10_probe",
+    "skip_plot": false
+  },
+  "expected_runs": 1,
+  "completed_runs": 1,
+  "successful_runs": 1,
+  "configurations": [
+    {
+      "config_num": 1,
+      "slug": "cfg01_full_window_pass_through",
+      "complete": true,
+      "repulsive_formulations": [],
+      "repulsive_in_all_requested_formulations": false,
+      "sign_disagreement": null
+    }
+  ],
+  "runs": [
+    {
+      "model": "casimir_bem_10configs",
+      "dataset": "repulsion_10configs_scan",
+      "status": "completed",
+      "executed_at": "2026-10-17T03:02:36.921517+00:00",
+      "config_num": 1,
+      "slug": "cfg01_full_window_pass_through",
+      "label": "C1: Full-Window Pass-Through (z=-100nm)",
+      "formulation": "vector_dyadic",
+      "theta_deg": 0.0,
+      "step_id": "repulsion_scan_cfg01_full_window_pass_through_vector_dyadic",
+      "success": true,
+      "repulsive": false,
+      "error": null,
+      "provenance_error": null,
+      "solver": "bem",
+      "solver_parameters": {
+        "method": "dense area-symmetrized tangential-vector dyadic T-operator",
+        "formulation": "vector_dyadic",
+        "physical_model": "dielectric_weighted_tangential_vector_dyadic",
+        "exact_electromagnetic_fsc": false,
+        "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+        "n_xi": 24,
+        "n_xi_evaluated": 2,
+        "max_steps": 2,
+        "panel_resolution": {
+          "n_r": 2,
+          "n_phi_tooth": 3,
+          "n_phi_bridge": 3,
+          "n_z": 2
+        },
+        "n_panels_rotor": 384,
+        "n_panels_stator": 1104,
+        "n_panels_total": 1488,
+        "n_panels_rotor_sector": 96,
+        "n_panels_stator_sector": 276,
+        "dofs_per_panel": 2,
+        "n_dofs_rotor_sector": 192,
+        "n_dofs_stator_sector": 552,
+        "device": "cpu",
+        "requested_device": "cpu",
+        "dtype": "complex128",
+        "quadrature_rule": "Gauss-Legendre on u in (0,1)",
+        "kappa_mapping": "kappa_0*u/(1-u)",
+        "kappa_0_um_inv": 10.0,
+        "dispersion_model": {
+          "material": "Gold",
+          "model": "Drude-Lorentz",
+          "frequency_units": "um^-1 (xi/c)",
+          "epsilon_inf": 1.0,
+          "plasma_frequency": 45.76160838064494,
+          "gamma": 0.268589728037008,
+          "lorentz_oscillators": []
+        },
+        "channel_weights": "evanescent TM and TE Fresnel amplitudes at k_parallel=max(k_eff,1e-3), k_eff=1/max(minimum cross-body centroid separation,0.020 um)",
+        "symmetry_multiplier": 4.0,
+        "symmetry_method": "sum of four cyclic Fourier-block traces",
+        "inter_sector_interactions": true,
+        "diagonal_self_term": "equal-area disk: 1/(2*sqrt(pi*A)) times (1-exp(-x))/x, x=kappa*sqrt(A/pi), with static limit 1",
+        "off_diagonal_quadrature": "2x2 Gauss-Legendre bilinear points per panel; 16 weighted point pairs with sqrt(distance^2 + (A_target + A_source)/(32*pi))",
+        "normal_derivatives": "analytic finite-panel-regularized scalar kernel derivatives projected onto tangent bases; diagnostics only",
+        "condition_limit": 100000000000000.0,
+        "regularization": null,
+        "estimated_dense_memory_bytes": 89745408,
+        "max_memory_gib": 4.0,
+        "temperature_K": 0.0,
+        "force_derivative": "analytic rigid rotor z translation",
+        "diagnostic_decomposition": "partition of translation derivative by rotor panel; not an independently observable Maxwell-stress face force"
+      },
+      "config_file": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\.tmp\\rep10_probe\\configs\\cfg01_full_window_pass_through_vector_dyadic.json",
+      "F_net": -0.7708932304824445,
+      "f_net_N": -2.4371993691319238e-14,
+      "f_net_fN": -24.371993691319236,
+      "f_net_pN": -0.024371993691319236,
+      "F_bottom": 0.05950313026890518,
+      "F_lateral_top_edge": -0.8303963607513497,
+      "n_panels_total": 1488,
+      "elapsed_seconds": 6.747033300023759,
+      "solver_status": "completed",
+      "wall_seconds": 22.78836279999814
+    }
+  ],
+  "ranking_basis": "Descending maximum validated net force (pN) across formulations.",
+  "ranked_configurations": [
+    {
+      "config_num": 1,
+      "slug": "cfg01_full_window_pass_through",
+      "label": "C1: Full-Window Pass-Through (z=-100nm)",
+      "configuration": {
+        "config_num": 1,
+        "slug": "cfg01_full_window_pass_through",
+        "label": "C1: Full-Window Pass-Through (z=-100nm)",
+        "N": 2,
+        "R_min": 0.3,
+        "R_max": 1.35,
+        "w1_ratio": 0.23,
+        "min_tooth_w": 0.02,
+        "z_tip": -0.1,
+        "h_teeth": 0.25,
+        "t_membrane": 0.025,
+        "t_landing_pad": 0.15,
+        "tooth_arc_deg": 15.0,
+        "aperture_arc_deg": 30.0,
+        "rationale": "Baseline 250nm tooth spanning z=[-100,+150]nm with a 25nm membrane and 150nm landing pad."
+      },
+      "vector_dyadic": {
+        "status": "completed",
+        "f_net_fN": -24.371993691319236,
+        "f_net_pN": -0.024371993691319236,
+        "error": null
+      },
+      "scalar_yukawa": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "ranking_force_pN": -0.024371993691319236,
+      "rank": 1
+    },
+    {
+      "config_num": 2,
+      "slug": "cfg02_deep_below_membrane_peak",
+      "label": "C2: Deep Below-Membrane Peak (z=-250nm)",
+      "configuration": {
+        "config_num": 2,
+        "slug": "cfg02_deep_below_membrane_peak",
+        "label": "C2: Deep Below-Membrane Peak (z=-250nm)",
+        "N": 2,
+        "R_min": 0.3,
+        "R_max": 1.35,
+        "w1_ratio": 0.23,
+        "min_tooth_w": 0.02,
+        "z_tip": -0.25,
+        "h_teeth": 0.25,
+        "t_membrane": 0.025,
+        "t_landing_pad": 0.15,
+        "tooth_arc_deg": 15.0,
+        "aperture_arc_deg": 30.0,
+        "rationale": "250nm tooth spanning z=[-250,0]nm to probe below-membrane upward force."
+      },
+      "vector_dyadic": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "scalar_yukawa": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "ranking_force_pN": null,
+      "rank": null
+    },
+    {
+      "config_num": 3,
+      "slug": "cfg03_ultra_thin_membrane_levin",
+      "label": "C3: Ultra-Thin Membrane Levin (t=20nm, z=-45nm)",
+      "configuration": {
+        "config_num": 3,
+        "slug": "cfg03_ultra_thin_membrane_levin",
+        "label": "C3: Ultra-Thin Membrane Levin (t=20nm, z=-45nm)",
+        "N": 2,
+        "R_min": 0.3,
+        "R_max": 1.35,
+        "w1_ratio": 0.2,
+        "min_tooth_w": 0.02,
+        "z_tip": -0.045,
+        "h_teeth": 0.06,
+        "t_membrane": 0.02,
+        "t_landing_pad": 0.02,
+        "tooth_arc_deg": 15.0,
+        "aperture_arc_deg": 30.0,
+        "rationale": "20nm thin stator membrane with a 60nm compact tooth spanning z=[-45,+15]nm."
+      },
+      "vector_dyadic": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "scalar_yukawa": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "ranking_force_pN": null,
+      "rank": null
+    },
+    {
+      "config_num": 4,
+      "slug": "cfg04_high_radial_fill_tight_slot",
+      "label": "C4: High Radial Fill Tight Slot (w1=0.65)",
+      "configuration": {
+        "config_num": 4,
+        "slug": "cfg04_high_radial_fill_tight_slot",
+        "label": "C4: High Radial Fill Tight Slot (w1=0.65)",
+        "N": 2,
+        "R_min": 0.3,
+        "R_max": 1.35,
+        "w1_ratio": 0.65,
+        "min_tooth_w": 0.02,
+        "z_tip": -0.1,
+        "h_teeth": 0.25,
+        "t_membrane": 0.025,
+        "t_landing_pad": 0.15,
+        "tooth_arc_deg": 15.0,
+        "aperture_arc_deg": 30.0,
+        "rationale": "High radial tooth-to-slot width ratio (0.65) narrowing radial slot clearance by 2.2x."
+      },
+      "vector_dyadic": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "scalar_yukawa": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "ranking_force_pN": null,
+      "rank": null
+    },
+    {
+      "config_num": 5,
+      "slug": "cfg05_wide_angular_aperture",
+      "label": "C5: Wide Angular Aperture (50deg slot, 10deg tooth)",
+      "configuration": {
+        "config_num": 5,
+        "slug": "cfg05_wide_angular_aperture",
+        "label": "C5: Wide Angular Aperture (50deg slot, 10deg tooth)",
+        "N": 2,
+        "R_min": 0.3,
+        "R_max": 1.35,
+        "w1_ratio": 0.23,
+        "min_tooth_w": 0.02,
+        "z_tip": -0.1,
+        "h_teeth": 0.25,
+        "t_membrane": 0.025,
+        "t_landing_pad": 0.15,
+        "tooth_arc_deg": 10.0,
+        "aperture_arc_deg": 50.0,
+        "rationale": "50-deg open angular slot with 10-deg tooth to decouple azimuthal landing-pad pull-down."
+      },
+      "vector_dyadic": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "scalar_yukawa": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "ranking_force_pN": null,
+      "rank": null
+    },
+    {
+      "config_num": 6,
+      "slug": "cfg06_tall_slot_submerged_tooth",
+      "label": "C6: Tall Slot / Short Submerged Tooth (t=100nm, h=80nm)",
+      "configuration": {
+        "config_num": 6,
+        "slug": "cfg06_tall_slot_submerged_tooth",
+        "label": "C6: Tall Slot / Short Submerged Tooth (t=100nm, h=80nm)",
+        "N": 2,
+        "R_min": 0.3,
+        "R_max": 1.35,
+        "w1_ratio": 0.35,
+        "min_tooth_w": 0.02,
+        "z_tip": -0.18,
+        "h_teeth": 0.08,
+        "t_membrane": 0.1,
+        "t_landing_pad": 0.1,
+        "tooth_arc_deg": 15.0,
+        "aperture_arc_deg": 30.0,
+        "rationale": "80nm short tooth spanning z=[-180,-100]nm beneath a 100nm membrane."
+      },
+      "vector_dyadic": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "scalar_yukawa": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "ranking_force_pN": null,
+      "rank": null
+    },
+    {
+      "config_num": 7,
+      "slug": "cfg07_zero_landing_pad_backing",
+      "label": "C7: Zero Landing-Pad Backing (t_pad=0, z=-100nm)",
+      "configuration": {
+        "config_num": 7,
+        "slug": "cfg07_zero_landing_pad_backing",
+        "label": "C7: Zero Landing-Pad Backing (t_pad=0, z=-100nm)",
+        "N": 2,
+        "R_min": 0.3,
+        "R_max": 1.35,
+        "w1_ratio": 0.3,
+        "min_tooth_w": 0.02,
+        "z_tip": -0.1,
+        "h_teeth": 0.25,
+        "t_membrane": 0.025,
+        "t_landing_pad": 0.0,
+        "tooth_arc_deg": 15.0,
+        "aperture_arc_deg": 35.0,
+        "rationale": "Eliminates extra landing-pad backing thickness (t_landing_pad=0) with a 25nm membrane."
+      },
+      "vector_dyadic": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "scalar_yukawa": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "ranking_force_pN": null,
+      "rank": null
+    },
+    {
+      "config_num": 8,
+      "slug": "cfg08_compact_submicron_ring",
+      "label": "C8: Compact Sub-Micron Ring (R=0.2..0.9um)",
+      "configuration": {
+        "config_num": 8,
+        "slug": "cfg08_compact_submicron_ring",
+        "label": "C8: Compact Sub-Micron Ring (R=0.2..0.9um)",
+        "N": 2,
+        "R_min": 0.2,
+        "R_max": 0.9,
+        "w1_ratio": 0.45,
+        "min_tooth_w": 0.02,
+        "z_tip": -0.1,
+        "h_teeth": 0.25,
+        "t_membrane": 0.025,
+        "t_landing_pad": 0.15,
+        "tooth_arc_deg": 15.0,
+        "aperture_arc_deg": 36.0,
+        "rationale": "Sub-micron radial footprint R in [0.20, 0.90]um with tight sub-40nm radial slot clearances."
+      },
+      "vector_dyadic": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "scalar_yukawa": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "ranking_force_pN": null,
+      "rank": null
+    },
+    {
+      "config_num": 9,
+      "slug": "cfg09_single_track_N1_fundamental",
+      "label": "C9: Single-Track Fundamental Ring (N=1, w1=0.55)",
+      "configuration": {
+        "config_num": 9,
+        "slug": "cfg09_single_track_N1_fundamental",
+        "label": "C9: Single-Track Fundamental Ring (N=1, w1=0.55)",
+        "N": 1,
+        "R_min": 0.3,
+        "R_max": 1.35,
+        "w1_ratio": 0.55,
+        "min_tooth_w": 0.02,
+        "z_tip": -0.1,
+        "h_teeth": 0.25,
+        "t_membrane": 0.025,
+        "t_landing_pad": 0.15,
+        "tooth_arc_deg": 12.0,
+        "aperture_arc_deg": 40.0,
+        "rationale": "Single fundamental middle-third slot (N=1) without inter-track cross-talk."
+      },
+      "vector_dyadic": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "scalar_yukawa": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "ranking_force_pN": null,
+      "rank": null
+    },
+    {
+      "config_num": 10,
+      "slug": "cfg10_high_density_N3_fractal",
+      "label": "C10: High-Density 3-Level Fractal Ring (N=3, 7 tracks)",
+      "configuration": {
+        "config_num": 10,
+        "slug": "cfg10_high_density_N3_fractal",
+        "label": "C10: High-Density 3-Level Fractal Ring (N=3, 7 tracks)",
+        "N": 3,
+        "R_min": 0.3,
+        "R_max": 1.65,
+        "w1_ratio": 0.4,
+        "min_tooth_w": 0.015,
+        "z_tip": -0.1,
+        "h_teeth": 0.25,
+        "t_membrane": 0.025,
+        "t_landing_pad": 0.15,
+        "tooth_arc_deg": 12.0,
+        "aperture_arc_deg": 36.0,
+        "rationale": "3-level Cantor ring with 7 concentric slots/teeth multiplying radial perimeter edges by 2.33x."
+      },
+      "vector_dyadic": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "scalar_yukawa": {
+        "status": "not run",
+        "f_net_fN": null,
+        "f_net_pN": null,
+        "error": null
+      },
+      "ranking_force_pN": null,
+      "rank": null
+    }
+  ]
+}

@@ -8,6 +8,9 @@ Run from any directory:
 The repository's active-sector builder is reused directly, rather than
 duplicated. All reported forces and energies come from the repository solver.
 A micro-probe produces explicitly incomplete reports, never synthetic results.
+
+Freshness metadata describes completed report/table-record generation.
+campaign_status and source_status retain computation and measurement status.
 """
 
 from __future__ import annotations
@@ -28,6 +31,7 @@ import time
 import traceback
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal, cast
 
@@ -62,6 +66,8 @@ HBAR_C_PN_UM2 = 0.031615267735
 MEEP_FORCE_TO_SI_N = HBAR_C_PN_UM2 * 1e-12
 MEEP_CACHE_VERSION = 6
 SOLVER_NAME = "execution.casimir_bem_solver.run_bem_casimir_solver"
+REPORT_MODEL = "BEM_Meep_Nature6Step"
+REPORT_DATASET = "nature_6step_narrative"
 STEP_NAMES = (
     "step1_single_tooth_ztip",
     "step2_n0_angular_sweep",
@@ -246,6 +252,47 @@ def json_safe(value: Any) -> Any:
     if hasattr(value, "item"):
         return json_safe(value.item())
     return repr(value)
+
+
+def freshness_metadata(executed_at: str | None = None) -> dict[str, str]:
+    return {
+        "model": REPORT_MODEL,
+        "dataset": REPORT_DATASET,
+        "status": "completed",
+        "executed_at": (
+            executed_at
+            if executed_at is not None
+            else datetime.now(timezone.utc).isoformat()
+        ),
+    }
+
+
+def freshness_record(
+    row: Mapping[str, Any], executed_at: str
+) -> dict[str, Any]:
+    """Stamp an emitted record without disguising unavailable measurements."""
+    result = dict(row)
+    if "status" in result and result["status"] != "completed":
+        result["source_status"] = result["status"]
+    result.update(freshness_metadata(executed_at))
+    return result
+
+
+def freshness_tables(value: Any, executed_at: str) -> Any:
+    """Stamp JSON table rows after computation, leaving solver inputs untouched."""
+    if isinstance(value, Mapping):
+        return {
+            key: freshness_tables(item, executed_at)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [
+            freshness_record(freshness_tables(item, executed_at), executed_at)
+            if isinstance(item, Mapping)
+            else freshness_tables(item, executed_at)
+            for item in value
+        ]
+    return value
 
 
 def atomic_text(path: Path, text: str) -> None:
@@ -473,9 +520,7 @@ class ReferenceMeshAdapter:
             "n_phi_bridge": n_phi_bridge,
             "n_z": n_z,
         }
-        result = invoke_signature(
-            self.builder, context, label=self.builder_name
-        )
+        result = invoke_signature(self.builder, context, label=self.builder_name)
         if not isinstance(result, ClutchSurfaceMesh):
             raise TypeError(
                 f"{self.builder_name} returned {type(result).__name__}, "
@@ -864,6 +909,8 @@ def build_designs() -> dict[str, StudyDesign]:
     periodic = dataclasses.replace(
         flat, name="Ctrl_UniformPeriodic", tracks=periodic_tracks
     )
+    # Retain the existing control name and expose the requested baseline name.
+    uniform = dataclasses.replace(periodic, name="Uniform_3Track_Control")
     sorted_original = sorted(flat.tracks, key=lambda track: track.r_inner)
     ribs = [sorted_original[0].r_inner - flat.R_min]
     ribs.extend(
@@ -892,7 +939,9 @@ def build_designs() -> dict[str, StudyDesign]:
     monotonic = dataclasses.replace(
         flat, name="Ctrl_SizeMatched_Monotonic", tracks=tuple(monotonic_tracks)
     )
-    designs = (n0, n1, n2, n3, flat, hybrid, compact, single, periodic, monotonic)
+    designs = (
+        n0, n1, n2, n3, flat, hybrid, compact, single, periodic, uniform, monotonic
+    )
     return {design.name: design for design in designs}
 
 
@@ -943,6 +992,7 @@ def validate_controls(designs: Mapping[str, StudyDesign]) -> dict[str, Any]:
         "Cantor_N2_HybridRZ",
         "Ctrl_SingleWide",
         "Ctrl_UniformPeriodic",
+        "Uniform_3Track_Control",
         "Ctrl_SizeMatched_Monotonic",
     )
     metrics = {name: tooth_geometry_metrics(designs[name]) for name in names}
@@ -951,16 +1001,17 @@ def validate_controls(designs: Mapping[str, StudyDesign]) -> dict[str, Any]:
         for key in ("total_slot_width_um", "total_tooth_width_um"):
             if not math.isclose(metrics[name][key], reference[key], abs_tol=1e-10):
                 raise ValueError(f"{name} does not match {key}.")
-    for key in (
-        "full_tooth_planform_area_um2",
-        "full_tooth_planform_perimeter_um",
-        "full_slot_planform_area_um2",
-    ):
-        if not math.isclose(
-            metrics["Ctrl_UniformPeriodic"][key], reference[key],
-            rel_tol=1e-10, abs_tol=1e-12,
+    for name in ("Ctrl_UniformPeriodic", "Uniform_3Track_Control"):
+        for key in (
+            "full_tooth_planform_area_um2",
+            "full_tooth_planform_perimeter_um",
+            "full_slot_planform_area_um2",
         ):
-            raise ValueError(f"Uniform periodic control does not match {key}.")
+            if not math.isclose(
+                metrics[name][key], reference[key],
+                rel_tol=1e-10, abs_tol=1e-12,
+            ):
+                raise ValueError(f"{name} does not match {key}.")
     for key in ("slot_widths_um", "tooth_widths_um", "rib_widths_um"):
         left = sorted(reference[key])
         right = sorted(metrics["Ctrl_SizeMatched_Monotonic"][key])
@@ -1047,7 +1098,10 @@ class Campaign:
 
         loaded = 0
         for saved in saved_rows:
-            if not isinstance(saved, Mapping) or saved.get("status") not in ("ok", "complete"):
+            if not isinstance(saved, Mapping):
+                continue
+            source_status = saved.get("source_status", saved.get("status"))
+            if source_status not in ("ok", "complete", "completed"):
                 continue
             try:
                 key = resume_lookup_key(saved)
@@ -1077,9 +1131,20 @@ class Campaign:
                 if elapsed < 0.0:
                     continue
                 # Verify the content hash, not just the coarse narrative key.
-                # Step 1 deliberately reuses names at different z_tip values.
+                # Strip table-generation metadata from serialized track records.
+                saved_design = copy.deepcopy(parameters["design"])
+                if isinstance(saved_design, Mapping):
+                    saved_design = dict(saved_design)
+                    tracks = saved_design.get("tracks")
+                    if isinstance(tracks, list):
+                        track_fields = {item.name for item in dataclasses.fields(TrackSpec3D)}
+                        saved_design["tracks"] = [
+                            {name: value for name, value in track.items() if name in track_fields}
+                            if isinstance(track, Mapping) else track
+                            for track in tracks
+                        ]
                 content = {
-                    "design": parameters["design"],
+                    "design": saved_design,
                     "theta_deg": saved["theta_deg"],
                     "formulation": saved["formulation"],
                     "resolution": saved["resolution"],
@@ -1120,6 +1185,7 @@ class Campaign:
             "force_symmetry_multiplier": "applied internally by solver only",
             "mesh_builder": mesh_adapter().provenance,
         }
+        geometry_metrics = tooth_geometry_metrics(task.design)
         base = {
             "task_id": task_id,
             "step": task.step,
@@ -1135,6 +1201,8 @@ class Campaign:
             "landing_pad_overlap_fraction": landing_overlap(task.design, task.theta_deg),
             "footprint_um2": task.design.footprint_um2,
             "track_count": len(task.design.tracks),
+            "full_tooth_count": 4 * len(task.design.tracks),
+            "full_tooth_planform_area_um2": geometry_metrics["full_tooth_planform_area_um2"],
             "cache_key": task.cache_key,
             "solver_parameters": parameters,
         }
@@ -1240,6 +1308,23 @@ class Campaign:
             }
             self.cache[task.cache_key] = row
 
+        for denominator, label in (
+            (row["full_tooth_count"], "full tooth count"),
+            (row["footprint_um2"], "footprint"),
+            (row["full_tooth_planform_area_um2"], "tooth planform area"),
+        ):
+            if finite_float(denominator, label) <= 0.0:
+                raise ValueError(f"Nonpositive {label} normalization denominator.")
+        row["F_z_pN_per_tooth"] = finite_float(
+            row["F_z_pN"] / row["full_tooth_count"], "per-tooth force"
+        )
+        row["F_z_pN_per_um2"] = finite_float(
+            row["F_z_pN"] / row["footprint_um2"], "footprint-normalized force"
+        )
+        row["F_z_pN_per_tooth_area_um2"] = finite_float(
+            row["F_z_pN"] / row["full_tooth_planform_area_um2"],
+            "tooth-area-normalized force",
+        )
         self.rows.append(row)
         logged_id = log_step(
             task_id, json_safe(row),
@@ -1288,13 +1373,17 @@ def tasks_steps_1_to_5(
     for name in (
         "Cantor_N2_FlatZ", "Cantor_N2_HybridRZ", "Ctrl_SingleWide",
         "Ctrl_UniformPeriodic", "Ctrl_SizeMatched_Monotonic",
+        "Uniform_3Track_Control",
     ):
         for angle in (3.0, 48.0):
             tasks.append(Task(STEP_NAMES[3], designs[name], angle, formulation))
-    for name in (
+    step5_names = (
         "Rot_C8_Compact_N2", "Cantor_N2_FlatZ",
         "Cantor_N2_HybridRZ", "Fractal_N3_Cantor7Track",
-    ):
+        "Ctrl_SingleWide", "Ctrl_UniformPeriodic",
+        "Ctrl_SizeMatched_Monotonic", "Uniform_3Track_Control",
+    )
+    for name in step5_names:
         for angle in (3.0, 48.0):
             tasks.append(Task(STEP_NAMES[4], designs[name], angle, formulation))
     return tasks
@@ -1303,7 +1392,7 @@ def tasks_steps_1_to_5(
 def step5_scores(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
     candidates: dict[str, dict[float, Mapping[str, Any]]] = {}
     for row in rows:
-        if row["step"] == STEP_NAMES[4] and row["status"] == "ok":
+        if row["step"] == STEP_NAMES[4] and row["status"] in ("ok", "completed"):
             candidates.setdefault(str(row["design"]), {})[float(row["theta_deg"])] = row
     scores: list[dict[str, Any]] = []
     for name, angles in candidates.items():
@@ -1312,19 +1401,66 @@ def step5_scores(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
         repulsive = finite_float(angles[3.0]["F_z_pN"], "repulsive force")
         attractive = finite_float(angles[48.0]["F_z_pN"], "attractive force")
         footprint = finite_float(angles[3.0]["footprint_um2"], "footprint")
-        if footprint <= 0.0:
-            raise ValueError("Nonpositive force-density denominator.")
-        scores.append({
+        track_count = finite_float(angles[3.0]["track_count"], "track count")
+        tooth_count = 4.0 * track_count
+        parameters = angles[3.0].get("solver_parameters", {})
+        tooth_area_value = angles[3.0].get("full_tooth_planform_area_um2")
+        if tooth_area_value is None and isinstance(parameters, Mapping):
+            design = parameters.get("design")
+            if isinstance(design, Mapping):
+                tooth_area_value = 4.0 * sum(
+                    0.5 * math.radians(finite_float(design["tooth_arc_deg"], "tooth arc"))
+                    * (
+                        finite_float(track["r_tooth_out"], "outer tooth radius") ** 2
+                        - finite_float(track["r_tooth_in"], "inner tooth radius") ** 2
+                    )
+                    for track in design["tracks"]
+                )
+        tooth_area = (
+            finite_float(tooth_area_value, "tooth planform area")
+            if tooth_area_value is not None else None
+        )
+        if footprint <= 0.0 or tooth_count <= 0.0:
+            raise ValueError("Nonpositive force-efficiency denominator.")
+        if tooth_area is not None and tooth_area <= 0.0:
+            raise ValueError("Nonpositive tooth-area denominator.")
+        swing = finite_float(repulsive - attractive, "force swing")
+        score = {
             "design": name,
+            "candidate_kind": (
+                "control" if name.startswith("Ctrl_") or name == "Uniform_3Track_Control"
+                else "fractal"
+            ),
             "F_rep_pN": repulsive,
             "F_att_pN": attractive,
-            "Delta_F_pN": repulsive - attractive,
-            "F_rep_pN_per_um2": repulsive / footprint,
+            "Delta_F_pN": swing,
+            "F_rep_pN_per_um2": finite_float(repulsive / footprint, "repulsion density"),
+            "F_att_pN_per_um2": finite_float(attractive / footprint, "attraction density"),
+            "Delta_F_pN_per_um2": finite_float(swing / footprint, "swing density"),
+            "F_rep_pN_per_tooth": finite_float(repulsive / tooth_count, "per-tooth repulsion"),
+            "F_att_pN_per_tooth": finite_float(attractive / tooth_count, "per-tooth attraction"),
+            "Delta_F_pN_per_tooth": finite_float(swing / tooth_count, "per-tooth swing"),
+            "F_rep_pN_per_tooth_area_um2": (
+                finite_float(repulsive / tooth_area, "tooth-area repulsion")
+                if tooth_area is not None else None
+            ),
+            "F_att_pN_per_tooth_area_um2": (
+                finite_float(attractive / tooth_area, "tooth-area attraction")
+                if tooth_area is not None else None
+            ),
+            "Delta_F_pN_per_tooth_area_um2": (
+                finite_float(swing / tooth_area, "tooth-area swing")
+                if tooth_area is not None else None
+            ),
             "footprint_um2": footprint,
+            "track_count": track_count,
+            "full_tooth_count": tooth_count,
+            "full_tooth_planform_area_um2": tooth_area,
             "repulsive_state_verified": repulsive > 0.0,
             "attractive_state_verified": attractive < 0.0,
             "sampling_note": "Specified theta=3 and 48 deg states; not global extrema.",
-        })
+        }
+        scores.append(score)
     return scores
 
 
@@ -1708,12 +1844,32 @@ def derive_analysis(campaign: Campaign) -> dict[str, Any]:
         "maximum_swing_champion": swing_champion,
         "maximum_repulsion_champion": rep_champion,
         "compact_N2_swing_champion": compact_champion,
+        "maximum_per_tooth_swing_champion": (
+            max(scores, key=lambda item: item["Delta_F_pN_per_tooth"])
+            if scores else None
+        ),
+        "maximum_footprint_normalized_swing_champion": (
+            max(scores, key=lambda item: item["Delta_F_pN_per_um2"])
+            if scores else None
+        ),
+        "normalization_conventions": {
+            "raw_force": "F_rep_pN, F_att_pN and Delta_F_pN are full-device forces in pN.",
+            "per_tooth": "Full-device force divided by 4 * track_count; pN/tooth.",
+            "per_area": "Fields ending _per_um2 use the full annular footprint; pN/um^2.",
+            "per_tooth_area": (
+                "Fields ending _per_tooth_area_um2 use full-device tooth planform area; pN/um^2."
+            ),
+            "control_alias": "Uniform_3Track_Control has the same geometry as Ctrl_UniformPeriodic.",
+        },
         "nominated_N3_champion_confirmed_for_both": (
             swing_champion["design"] == "Fractal_N3_Cantor7Track"
             and rep_champion["design"] == "Fractal_N3_Cantor7Track"
             if swing_champion and rep_champion else None
         ),
-        "policy": "Champions are inferred from computed results, not stipulated.",
+        "policy": (
+            "Raw-force champions include evaluated controls and are inferred from "
+            "computed results, not stipulated. Normalized efficiencies are reported separately."
+        ),
     }
 
     validation = [row for row in rows if row["step"] == STEP_NAMES[5]]
@@ -1817,10 +1973,13 @@ def derive_analysis(campaign: Campaign) -> dict[str, Any]:
 
 
 CSV_COLUMNS = (
+    "model", "dataset", "status", "executed_at", "source_status",
     "task_id", "step", "design", "theta_deg", "z_tip_um", "max_z_top_um",
-    "formulation", "boundary", "tier", "track_count", "F_z_pN",
+    "formulation", "boundary", "tier", "track_count", "full_tooth_count",
+    "F_z_pN", "F_z_pN_per_tooth", "F_z_pN_per_um2",
+    "F_z_pN_per_tooth_area_um2", "full_tooth_planform_area_um2",
     "energy_hbar_c_per_um", "tau_z_pN_um", "landing_pad_overlap_fraction",
-    "footprint_um2", "solver_elapsed_s", "reused_from_task_id", "status",
+    "footprint_um2", "solver_elapsed_s", "reused_from_task_id",
 )
 
 
@@ -1831,11 +1990,14 @@ def write_csv(path: Path, rows: Sequence[Mapping[str, Any]], analysis: Mapping[s
         item["task_id"]: item["tau_z_pN_um"]
         for item in analysis[STEP_NAMES[1]]["torque"]
     }
+    executed_at = datetime.now(timezone.utc).isoformat()
     buffer = io.StringIO(newline="")
     writer = csv.DictWriter(buffer, fieldnames=CSV_COLUMNS, extrasaction="ignore")
     writer.writeheader()
     for row in rows:
-        writer.writerow({**row, "tau_z_pN_um": torque.get(row["task_id"])})
+        writer.writerow(freshness_record(
+            {**row, "tau_z_pN_um": torque.get(row["task_id"])}, executed_at
+        ))
     atomic_text(path, buffer.getvalue())
 
 
@@ -1861,7 +2023,7 @@ def plot_campaign(
         "B  N=0 angular response",
         "C  Fractal hierarchy",
         "D  Fractal and matched controls",
-        "E  Active-configuration force swing",
+        "E  Active-configuration raw force swing",
         "F  Monolithic and convergence validation",
     )
     colors = plt.get_cmap("tab10")
@@ -1934,8 +2096,9 @@ def plot_campaign(
     control_names = (
         "Cantor_N2_FlatZ", "Cantor_N2_HybridRZ", "Ctrl_SingleWide",
         "Ctrl_UniformPeriodic", "Ctrl_SizeMatched_Monotonic",
+        "Uniform_3Track_Control",
     )
-    control_labels = ("Flat Z", "Hybrid RZ", "Wide", "Periodic", "Monotonic")
+    control_labels = ("Flat Z", "Hybrid RZ", "Wide", "Periodic", "Monotonic", "Uniform 3")
     for index, angle in enumerate((3.0, 48.0)):
         selected = {
             row["design"]: row for row in rows
@@ -1948,7 +2111,7 @@ def plot_campaign(
                 [selected[control_names[number]]["F_z_pN"] for number in x],
                 width=0.36, color=colors(index), label=f"{angle:g}°",
             )
-    axis.set_xticks(range(5), control_labels, rotation=30, ha="right")
+    axis.set_xticks(range(len(control_names)), control_labels, rotation=30, ha="right")
     axis.set_ylabel(r"$F_z$ (pN)")
 
     axis = axes[1, 1]
@@ -1957,7 +2120,11 @@ def plot_campaign(
         labels = [
             score["design"].replace("Cantor_N2_", "N2 ").replace(
                 "Fractal_N3_Cantor7Track", "N3 / 7"
-            ).replace("Rot_C8_Compact_N2", "Compact N2")
+            ).replace("Rot_C8_Compact_N2", "Compact N2").replace(
+                "Ctrl_SizeMatched_Monotonic", "Monotonic"
+            ).replace("Ctrl_UniformPeriodic", "Periodic").replace(
+                "Uniform_3Track_Control", "Uniform 3"
+            ).replace("Ctrl_SingleWide", "Wide")
             for score in scores
         ]
         for index, (key, label) in enumerate((
@@ -1971,7 +2138,7 @@ def plot_campaign(
                 width=0.25, color=colors(index), label=label,
             )
         axis.set_xticks(range(len(scores)), labels, rotation=30, ha="right")
-    axis.set_ylabel("Force / force swing (pN)")
+    axis.set_ylabel("Raw force / force swing (pN)")
 
     axis = axes[1, 2]
     validation = [row for row in rows if row["step"] == STEP_NAMES[5]]
@@ -2074,7 +2241,7 @@ def markdown_report(report: Mapping[str, Any]) -> str:
     lines = [
         "# Fractal Casimir Rotary Clutch: six-step narrative",
         "",
-        f"- Status: **{report['status']}**",
+        f"- Status: **{report.get('campaign_status', report['status'])}**",
         f"- Solver: `{SOLVER_NAME}`",
         f"- Formulation for steps 1–5: `{report['configuration']['formulation']}`",
         f"- Device: `{report['configuration']['device']}`",
@@ -2088,9 +2255,18 @@ def markdown_report(report: Mapping[str, Any]) -> str:
         "- All forces and energies below are solver outputs, not fitted or stipulated.",
         "- Meshes contain one 90-degree sector; the solver supplies fourfold symmetry.",
         "- Positive vertical force denotes repulsion; negative denotes attraction.",
-        "- Force density uses the full annular active footprint, not tooth area.",
+        "- Raw force is full-device force in pN; per-tooth efficiency divides by",
+        "  four times the track count (the full-device tooth count).",
+        "- Footprint-normalized efficiency uses the full annular active footprint;",
+        "  tooth-area-normalized efficiency instead uses full tooth planform area.",
+        "- Raw-force rankings are distinct from normalized-efficiency rankings.",
+        "- Uniform_3Track_Control is the named alias of Ctrl_UniformPeriodic;",
+        "  both are reported transparently and are not independent geometries.",
         "- Pad overlap is an analytic projected-area fraction, not a solver observable.",
         "- Missing measurements are unavailable, never filled with zeros.",
+        "- Freshness status `completed` denotes report/table-record generation;",
+        "  `campaign_status` and row `source_status` retain actual solver availability",
+        "  and incomplete/failed campaign states.",
         "- Scalar/vector agreement and convergence are tested rather than assumed.",
         "- Passive support validation includes union-boundary spider spokes and collars",
         "  at z = 0.350–0.470 µm and the trench slab at z = −0.650–−0.550 µm.",
@@ -2148,20 +2324,43 @@ def markdown_report(report: Mapping[str, Any]) -> str:
             scores = analysis[step]["scores"]
             if scores:
                 lines.extend((
-                    "| Candidate | Repulsion (pN) | Attraction (pN) | Swing (pN) | Repulsion density (pN/µm²) |",
-                    "|---|---:|---:|---:|---:|",
+                    "### Raw full-device force",
+                    "",
+                    "| Candidate | Kind | Repulsion (pN) | Attraction (pN) | Swing (pN) |",
+                    "|---|---|---:|---:|---:|",
                 ))
                 for score in scores:
                     lines.append(
-                        f"| {score['design']} | {score['F_rep_pN']:.8g} "
-                        f"| {score['F_att_pN']:.8g} | {score['Delta_F_pN']:.8g} "
-                        f"| {score['F_rep_pN_per_um2']:.8g} |"
+                        f"| {score['design']} | {score['candidate_kind']} "
+                        f"| {score['F_rep_pN']:.8g} | {score['F_att_pN']:.8g} "
+                        f"| {score['Delta_F_pN']:.8g} |"
+                    )
+                lines.extend((
+                    "",
+                    "### Normalized efficiency",
+                    "",
+                    "| Candidate | Full tooth count | Repulsion (pN/tooth) | Swing (pN/tooth) | Repulsion / footprint (pN/µm²) | Swing / footprint (pN/µm²) | Repulsion / tooth area (pN/µm²) |",
+                    "|---|---:|---:|---:|---:|---:|---:|",
+                ))
+                for score in scores:
+                    lines.append(
+                        f"| {score['design']} | {score['full_tooth_count']:g} "
+                        f"| {score['F_rep_pN_per_tooth']:.8g} "
+                        f"| {score['Delta_F_pN_per_tooth']:.8g} "
+                        f"| {score['F_rep_pN_per_um2']:.8g} "
+                        f"| {score['Delta_F_pN_per_um2']:.8g} "
+                        f"| {format_number(score['F_rep_pN_per_tooth_area_um2'])} |"
                     )
                 lines.append("")
                 for key, label in (
-                    ("maximum_swing_champion", "Maximum-swing champion"),
-                    ("maximum_repulsion_champion", "Maximum-repulsion champion"),
-                    ("compact_N2_swing_champion", "Compact N=2 champion"),
+                    ("maximum_swing_champion", "Maximum raw-swing champion"),
+                    ("maximum_repulsion_champion", "Maximum raw-repulsion champion"),
+                    ("compact_N2_swing_champion", "Compact N=2 raw-swing champion"),
+                    ("maximum_per_tooth_swing_champion", "Maximum per-tooth-swing champion"),
+                    (
+                        "maximum_footprint_normalized_swing_champion",
+                        "Maximum footprint-normalized-swing champion",
+                    ),
                 ):
                     champion = analysis[step][key]
                     lines.append(
@@ -2220,7 +2419,7 @@ def markdown_report(report: Mapping[str, Any]) -> str:
             f"| {format_number(item.get('theta_deg'))} "
             f"| {format_number(item.get('R'))} | {format_number(item.get('dt'))} "
             f"| {item.get('cache_version') if item.get('cache_version') is not None else 'not recorded'} "
-            f"| {item['status']} | {format_number(item.get('F_2pass_pN'))} "
+            f"| {item.get('source_status', item['status'])} | {format_number(item.get('F_2pass_pN'))} "
             f"| {format_number(item.get('F_stator_only_pN'))} "
             f"| {format_number(item.get('f_net_pN'))} |"
         )
@@ -2419,8 +2618,10 @@ def main() -> int:
     )
     unique_evaluations = len({row["cache_key"] for row in campaign.rows})
     report: dict[str, Any] = {
+        **freshness_metadata(),
         "schema_version": 1,
-        "status": status,
+        "campaign_status": status,
+        "freshness_status_scope": "report and table-record generation, not solver success",
         "configuration": configuration,
         "elapsed_s": time.perf_counter() - campaign.started,
         "micro_probe_runtime_target_s": 20.0 if micro_probe else None,
@@ -2449,6 +2650,8 @@ def main() -> int:
         "units": {
             "length": "um",
             "force": "pN",
+            "force_per_tooth": "pN/tooth",
+            "force_per_area": "pN/um^2",
             "energy_hbar_c_per_um": "hbar*c/um",
             "torque": "pN*um",
             "mesh_face_angles": "radians",
@@ -2480,6 +2683,10 @@ def main() -> int:
                     "derived_quantities": {
                         "Delta_F_pN": "F_z_pN(theta=3) - F_z_pN(theta=48)",
                         "F_rep_pN_per_um2": "F_z_pN(theta=3) / footprint_um2",
+                        "F_rep_pN_per_tooth": "F_z_pN(theta=3) / (4 * track_count)",
+                        "F_rep_pN_per_tooth_area_um2": (
+                            "F_z_pN(theta=3) / full_tooth_planform_area_um2"
+                        ),
                     },
                     "meep_sources": [
                         {
@@ -2509,7 +2716,13 @@ def main() -> int:
         for score in analysis[STEP_NAMES[4]]["scores"]:
             for key in (
                 "F_rep_pN", "F_att_pN", "Delta_F_pN", "F_rep_pN_per_um2",
+                "F_att_pN_per_um2", "Delta_F_pN_per_um2",
+                "F_rep_pN_per_tooth", "F_att_pN_per_tooth", "Delta_F_pN_per_tooth",
+                "F_rep_pN_per_tooth_area_um2", "F_att_pN_per_tooth_area_um2",
+                "Delta_F_pN_per_tooth_area_um2",
             ):
+                if score[key] is None:
+                    continue
                 log_metric(
                     f"nature_{score['design']}_{key}", score[key],
                     solver_name=SOLVER_NAME,
@@ -2518,6 +2731,9 @@ def main() -> int:
                         "design": score["design"],
                         "derived_from_step": STEP_NAMES[4],
                         "sample_angles_deg": [3.0, 48.0],
+                        "full_tooth_count": score["full_tooth_count"],
+                        "footprint_um2": score["footprint_um2"],
+                        "full_tooth_planform_area_um2": score["full_tooth_planform_area_um2"],
                     },
                 )
     except Exception:
@@ -2613,15 +2829,23 @@ def main() -> int:
         if micro_probe:
             report["micro_probe_runtime_target_met"] = report["total_elapsed_s"] < 20.0
         if artifact_error:
-            report["status"] = "failed"
+            report["campaign_status"] = "failed"
+        report["executed_at"] = datetime.now(timezone.utc).isoformat()
+        serialized_report = freshness_tables(json_safe(report), report["executed_at"])
+        # Named mappings are also tabular records, even without a list container.
+        for container_name in ("designs", "matched_control_validation"):
+            serialized_report[container_name] = {
+                name: freshness_record(row, report["executed_at"])
+                for name, row in serialized_report[container_name].items()
+            }
         atomic_text(
             json_path,
-            json.dumps(json_safe(report), indent=2, sort_keys=True, allow_nan=False) + "\n",
+            json.dumps(serialized_report, indent=2, sort_keys=True, allow_nan=False) + "\n",
         )
         atomic_text(markdown_path, markdown_report(report))
 
     print(
-        f"Campaign {report['status']}; "
+        f"Campaign {report['campaign_status']}; "
         f"{len(campaign.rows)} records, {unique_evaluations} unique evaluations "
         f"represented, {campaign.solver_evaluations} new BEM evaluations, "
         f"{report['total_elapsed_s']:.3f} s.\n"

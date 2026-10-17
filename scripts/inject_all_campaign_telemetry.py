@@ -14,6 +14,7 @@ Each batch file is restored if injection or validation fails.
 from __future__ import annotations
 
 import argparse
+import ast
 import logging
 import math
 import os
@@ -29,6 +30,10 @@ from typing import Sequence
 
 MARKER = "# BIGRED200_TELEMETRY_HARNESS_V1"
 LOGGER = logging.getLogger("campaign_telemetry")
+DEAD_PROXY = "http://proxy.uits.iu.edu:3128"
+PROXY_UNSET = "unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY"
+GIT_TIMEOUT_SECONDS = 180
+GIT_LOCK_DEADLINE_SECONDS = 300
 
 TARGET_NAMES: tuple[str, ...] = (
     "submit_concentric_ring.sbatch",
@@ -57,11 +62,108 @@ TARGET_NAMES: tuple[str, ...] = (
     "submit_sync.sbatch",
 )
 
-# These two scripts do not launch simulations. Plot/analyzer names are handled
-# separately below.
 NON_SIMULATION_NAMES: frozenset[str] = frozenset(
     {"submit_postprocess.sbatch", "submit_sync.sbatch"}
 )
+
+RESULTS_DIRECTORIES: tuple[tuple[str, str], ...] = (
+    ("cantor_forest", "results_cantor_forest"),
+    ("fractal_rotary_clutch", "results_fractal_rotary_clutch"),
+    ("geometric_repulsion", "results_geometric_repulsion"),
+    ("rotary_casimir_clutch", "results_rotary_clutch"),
+    ("concentric_ring", "results_concentric_ring"),
+    ("clutch_pilot", "results_clutch_pilot"),
+    ("nature_meep_verification", "results_nature_meep_verification"),
+    ("rotational_z_eff_meep", "results_rotational_z_eff_meep"),
+    ("fractal_control", "results_fractal_control"),
+)
+
+# This helper is inserted into the harness's embedded Python supervisor.
+# Only blocking subprocess APIs are wrapped, so the lock covers completion,
+# not merely process creation.
+SUPERVISOR_GIT_HELPER = '''
+def _bigred200_telemetry_git_call(_call, *args, **kwargs):
+    import fcntl as _fcntl
+    import os as _os
+    import shlex as _shlex
+    import time as _time
+    from pathlib import Path as _Path
+
+    _command = args[0] if args else kwargs.get("args")
+    if isinstance(_command, (str, bytes)):
+        try:
+            _argv = _shlex.split(_os.fsdecode(_command))
+        except ValueError:
+            raise RuntimeError("Cannot safely parse telemetry subprocess command")
+    elif isinstance(_command, (list, tuple)):
+        _argv = [_os.fsdecode(_item) for _item in _command]
+    else:
+        return _call(*args, **kwargs)
+
+    if not _argv or _Path(_argv[0]).name != "git":
+        return _call(*args, **kwargs)
+
+    _cwd = kwargs.get("cwd")
+    _root = _Path(_os.fsdecode(_cwd)) if _cwd is not None else _Path.cwd()
+    _root = _root.resolve()
+    _index = 1
+    while _index < len(_argv):
+        _option = _argv[_index]
+        if _option == "-C":
+            if _index + 1 >= len(_argv):
+                raise RuntimeError("Missing git -C directory")
+            _directory = _Path(_argv[_index + 1])
+            _root = (_root / _directory).resolve()
+            _index += 2
+        elif _option.startswith("-C") and len(_option) > 2:
+            _root = (_root / _option[2:]).resolve()
+            _index += 1
+        elif _option in ("-c", "--git-dir", "--work-tree"):
+            if _index + 1 >= len(_argv):
+                raise RuntimeError("Missing git option value")
+            if _option == "--git-dir":
+                raise RuntimeError("Explicit git directories are not supported by telemetry")
+            _index += 2
+        elif _option.startswith("--git-dir="):
+            raise RuntimeError("Explicit git directories are not supported by telemetry")
+        elif _option.startswith("-"):
+            _index += 1
+        else:
+            break
+
+    _git_dir = None
+    for _parent in (_root, *_root.parents):
+        _candidate = _parent / ".git"
+        if _candidate.is_dir():
+            _git_dir = _candidate
+            break
+        if _candidate.is_file():
+            _reference = _candidate.read_text(encoding="utf-8").strip()
+            if not _reference.startswith("gitdir:"):
+                raise RuntimeError("Invalid repository .git file")
+            _git_dir = (_parent / _reference.split(":", 1)[1].strip()).resolve()
+            break
+    if _git_dir is None or not _git_dir.is_dir():
+        raise RuntimeError("Cannot locate repository for telemetry git lock")
+
+    _deadline = _time.monotonic() + 300
+    with (_git_dir / "bigred200_telemetry.lock").open("a+b") as _lock:
+        while True:
+            try:
+                _fcntl.flock(_lock.fileno(), _fcntl.LOCK_EX | _fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                _remaining = _deadline - _time.monotonic()
+                if _remaining <= 0:
+                    raise TimeoutError("Telemetry git lock exceeded 300 seconds")
+                _time.sleep(min(0.1, _remaining))
+        try:
+            kwargs["timeout"] = 180
+            return _call(*args, **kwargs)
+        finally:
+            _fcntl.flock(_lock.fileno(), _fcntl.LOCK_UN)
+
+'''
 
 
 class TelemetryError(RuntimeError):
@@ -116,8 +218,6 @@ class Harness:
 
         arguments.extend(auto_resubmit_arguments(interface, campaign.auto_resubmit))
 
-        # If an output option is advertised, explicitly request an in-place
-        # result instead of allowing a separate generated file.
         for output_flag in ("--output", "--output-script", "--output-path"):
             if output_flag in interface.options:
                 arguments.extend((output_flag, str(campaign.path)))
@@ -204,8 +304,6 @@ def inspect_interface(help_text: str, subcommand: str) -> CommandInterface:
 
 
 def option_takes_value(interface: CommandInterface, flag: str) -> bool:
-    # Inspect only argparse syntax, never description text. In an option
-    # listing, two or more spaces separate the declaration from its help.
     declarations: list[str] = []
     for line in interface.help_text.splitlines():
         stripped = line.lstrip()
@@ -219,8 +317,6 @@ def option_takes_value(interface: CommandInterface, flag: str) -> bool:
     if usage is not None:
         declarations.append(usage.group(0))
 
-    # Valued options have a metavar or choices after the flag. A store_true
-    # flag ends at the declaration or at its usage closing bracket.
     expression = (
         re.escape(flag)
         + r"(?![a-zA-Z0-9-])"
@@ -236,8 +332,6 @@ def auto_resubmit_arguments(
     if flag not in interface.options:
         raise TelemetryError("Harness inject does not advertise --auto-resubmit.")
 
-    # Supply a boolean string only when the option syntax includes a value.
-    # Description words following a store_true flag are not metavars.
     if option_takes_value(interface, flag):
         choice_match = re.search(
             re.escape(flag) + r"\s+\{([^}\n]+)\}", interface.help_text
@@ -261,8 +355,6 @@ def auto_resubmit_arguments(
     if "--no-auto-resubmit" in interface.options:
         return ["--no-auto-resubmit"]
 
-    # Normal argparse store_true semantics: omission selects False. Refuse
-    # an explicitly documented True default, since it cannot be overridden.
     if re.search(
         r"--auto-resubmit[^\n]*(?:default[:=]\s*True)",
         interface.help_text,
@@ -322,7 +414,6 @@ def build_harness(repository: Path, path: Path, timeout: float) -> Harness:
         if not option_takes_value(inject_interface, flag):
             raise TelemetryError(f"Cannot determine the value syntax for {flag}.")
 
-    # Verify both settings before modifying any file.
     auto_resubmit_arguments(inject_interface, True)
     auto_resubmit_arguments(inject_interface, False)
     return Harness(path, repository, timeout, inject_interface, interfaces["validate"])
@@ -330,13 +421,19 @@ def build_harness(repository: Path, path: Path, timeout: float) -> Harness:
 
 def campaign_for(repository: Path, name: str) -> Campaign:
     lower_name = name.lower()
-    if "concentric_ring" in lower_name:
-        results_dir = figures_dir = "results_concentric_ring"
-    elif "clutch" in lower_name:
-        results_dir = figures_dir = "results_clutch"
-    else:
-        results_dir = "results"
-        figures_dir = "Papers/Fractal_Casimir_Nature_EM/figures"
+    results_dir = next(
+        (
+            directory
+            for fragment, directory in RESULTS_DIRECTORIES
+            if fragment in lower_name
+        ),
+        "results_clutch" if "clutch" in lower_name else "results",
+    )
+    figures_dir = (
+        results_dir
+        if "concentric_ring" in lower_name or "clutch" in lower_name
+        else "Papers/Fractal_Casimir_Nature_EM/figures"
+    )
 
     analysis_only = (
         "plot" in lower_name
@@ -346,7 +443,7 @@ def campaign_for(repository: Path, name: str) -> Campaign:
     return Campaign(
         path=repository / "execution" / name,
         results_dir=results_dir,
-        logs_dir="cluster_diagnostics/raw_logs",
+        logs_dir="logs",
         figures_dir=figures_dir,
         auto_resubmit=not analysis_only,
     )
@@ -368,6 +465,8 @@ def read_script(path: Path) -> bytes:
 
 
 def atomic_write(path: Path, data: bytes, mode: int) -> None:
+    # Binary writes preserve exact bytes, including during rollback, without
+    # platform newline translation. All successful writes are normalized to LF.
     temporary: Path | None = None
     try:
         with tempfile.NamedTemporaryFile(
@@ -402,8 +501,6 @@ def standalone_git_command(line: str) -> tuple[str, ...] | None:
     stripped = line.strip()
     if not stripped.startswith("git "):
         return None
-    # Do not rewrite expansions, shell operators, continuations, or commands
-    # whose execution is conditional.
     if any(character in stripped for character in ("$", "`", "\\", ";", "|", "&", "<", ">")):
         return None
     try:
@@ -416,18 +513,12 @@ def standalone_git_command(line: str) -> tuple[str, ...] | None:
 
 
 def clean_duplicate_git_commands(text: str) -> tuple[str, int]:
-    """Remove only consecutive identical standalone git commit/push commands.
-
-    No non-adjacent git commands or heredoc contents are rewritten: those may
-    have intentional semantics. A shell no-op preserves otherwise-empty blocks.
-    """
+    """Remove only consecutive identical standalone git commit/push commands."""
     lines = text.splitlines(keepends=True)
     output: list[str] = []
     previous: tuple[str, ...] | None = None
     removed = 0
 
-    # Heredocs require shell-aware parsing. Conservatively leave such scripts
-    # untouched instead of modifying embedded Python or other literal content.
     if "<<" in text:
         return text, 0
 
@@ -451,6 +542,241 @@ def clean_duplicate_git_commands(text: str) -> tuple[str, int]:
     return "".join(output), removed
 
 
+def harden_shell_header(text: str) -> str:
+    lines = text.splitlines(keepends=True)
+    for index, line in enumerate(lines):
+        if DEAD_PROXY not in line:
+            continue
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            lines[index] = line.replace(DEAD_PROXY, "[removed obsolete proxy]")
+            continue
+        try:
+            tokens = shlex.split(stripped, comments=True)
+        except ValueError as exc:
+            raise TelemetryError("Cannot safely remove obsolete proxy setting.") from exc
+        assignments = tokens[1:] if tokens and tokens[0] == "export" else tokens
+        proxy_names = {"http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY"}
+        if not assignments or any(
+            "=" not in token or token.split("=", 1)[0] not in proxy_names
+            for token in assignments
+        ):
+            raise TelemetryError(
+                "Obsolete proxy occurs outside a standalone proxy assignment; "
+                "repair that command before rerunning."
+            )
+        lines[index] = "# Removed obsolete cluster proxy.\n"
+
+    header_end = 0
+    for index, line in enumerate(lines):
+        if line.strip() and not line.lstrip().startswith("#"):
+            break
+        header_end = index + 1
+
+    exclude_found = False
+    for index, line in enumerate(lines[:header_end]):
+        match = re.match(
+            r"^([ \t]*#SBATCH[ \t]+--exclude(?:=|[ \t]+))([^\s#]+)(.*)\n$",
+            line,
+        )
+        if match is None:
+            continue
+        exclude_found = True
+        value = match.group(2)
+        quote = value[0] if value[0] in "'\"" else ""
+        if quote:
+            if not value.endswith(quote):
+                raise TelemetryError("Cannot safely update quoted SBATCH exclusion.")
+            value = value[1:-1]
+        if "nid0394" not in value.split(","):
+            value = f"{value},nid0394"
+        lines[index] = (
+            f"{match.group(1)}{quote}{value}{quote}{match.group(3)}\n"
+        )
+
+    if not exclude_found:
+        insertion = 1 if lines and lines[0].startswith("#!") else 0
+        lines.insert(insertion, "#SBATCH --exclude=nid0394\n")
+        header_end += 1
+
+    if not any(line.strip() == PROXY_UNSET for line in lines):
+        lines.insert(header_end, PROXY_UNSET + "\n")
+
+    return "".join(lines)
+
+
+def harden_python_supervisor(source: str) -> str:
+    """Patch the supervisor without reformatting its unrelated Python code."""
+    try:
+        tree = ast.parse(source)
+    except SyntaxError as exc:
+        raise TelemetryError("Cannot parse embedded telemetry supervisor.") from exc
+
+    data = source.encode("utf-8")
+    offsets = [0]
+    for line in data.splitlines(keepends=True):
+        offsets.append(offsets[-1] + len(line))
+
+    def start(node: ast.AST) -> int:
+        return offsets[node.lineno - 1] + node.col_offset
+
+    def end(node: ast.AST) -> int:
+        return offsets[node.end_lineno - 1] + node.end_col_offset
+
+    edits: list[tuple[int, int, bytes]] = []
+    for node in ast.walk(tree):
+        targets: list[ast.expr] = []
+        value: ast.expr | None = None
+        if isinstance(node, ast.Assign):
+            targets = node.targets
+            value = node.value
+        elif isinstance(node, ast.AnnAssign):
+            targets = [node.target]
+            value = node.value
+        if value is not None and any(
+            isinstance(target, ast.Name) and target.id == "GIT_TIMEOUT_SECONDS"
+            for target in targets
+        ):
+            edits.append((start(value), end(value), str(GIT_TIMEOUT_SECONDS).encode()))
+
+    helper_name = "_bigred200_telemetry_git_call"
+    if not any(
+        isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and node.name == helper_name
+        for node in tree.body
+    ):
+        module_names = {"subprocess"}
+        callable_names: set[str] = set()
+        blocking_apis = {"run", "call", "check_call", "check_output"}
+        popen_names: set[str] = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name == "subprocess":
+                        module_names.add(alias.asname or alias.name)
+            elif isinstance(node, ast.ImportFrom) and node.module == "subprocess":
+                for alias in node.names:
+                    if alias.name in blocking_apis:
+                        callable_names.add(alias.asname or alias.name)
+                    elif alias.name == "Popen":
+                        popen_names.add(alias.asname or alias.name)
+
+        wrapped = 0
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            function = node.func
+            is_module_call = (
+                isinstance(function, ast.Attribute)
+                and isinstance(function.value, ast.Name)
+                and function.value.id in module_names
+            )
+            if (
+                is_module_call and function.attr == "Popen"
+            ) or (
+                isinstance(function, ast.Name) and function.id in popen_names
+            ):
+                raise TelemetryError(
+                    "Telemetry supervisor uses Popen; cannot safely serialize "
+                    "its git operations through a blocking subprocess wrapper."
+                )
+            if not (
+                is_module_call and function.attr in blocking_apis
+                or isinstance(function, ast.Name) and function.id in callable_names
+            ):
+                continue
+            opening = data.find(b"(", end(function), end(node))
+            if opening < 0:
+                raise TelemetryError("Cannot locate supervisor subprocess arguments.")
+            original_function = data[start(function):end(function)]
+            edits.append(
+                (
+                    start(function),
+                    opening + 1,
+                    helper_name.encode() + b"(" + original_function + b", ",
+                )
+            )
+            wrapped += 1
+
+        if not wrapped:
+            raise TelemetryError(
+                "Cannot locate blocking git subprocess calls in telemetry supervisor."
+            )
+
+        insertion_line = 0
+        for index, node in enumerate(tree.body):
+            is_docstring = (
+                index == 0
+                and isinstance(node, ast.Expr)
+                and isinstance(node.value, ast.Constant)
+                and isinstance(node.value.value, str)
+            )
+            is_future = isinstance(node, ast.ImportFrom) and node.module == "__future__"
+            if not is_docstring and not is_future:
+                break
+            insertion_line = node.end_lineno
+        position = offsets[insertion_line]
+        edits.append((position, position, SUPERVISOR_GIT_HELPER.encode("utf-8")))
+
+    for first, last, replacement in sorted(edits, reverse=True):
+        data = data[:first] + replacement + data[last:]
+
+    result = data.decode("utf-8")
+    try:
+        ast.parse(result)
+    except SyntaxError as exc:
+        raise TelemetryError("Patched telemetry supervisor is not valid Python.") from exc
+    return result
+
+
+def harden_injected_script(data: bytes) -> bytes:
+    text = normalize_lf(data).decode("utf-8")
+    # Existing injections also need the corrected tracked log location.
+    text = text.replace("cluster_diagnostics/raw_logs", "logs")
+
+    heredoc = re.compile(
+        r"(?m)^[^\n]*<<(?P<tabs>-?)[ \t]*"
+        r"(?P<quote>['\"]?)(?P<delimiter>[A-Za-z_][A-Za-z0-9_]*)"
+        r"(?P=quote)[^\n]*\n"
+    )
+    edits: list[tuple[int, int, str]] = []
+    cursor = 0
+    supervisors = 0
+    while True:
+        match = heredoc.search(text, cursor)
+        if match is None:
+            break
+        prefix = r"\t*" if match.group("tabs") else ""
+        terminator = re.compile(
+            r"(?m)^" + prefix + re.escape(match.group("delimiter")) + r"\n"
+        ).search(text, match.end())
+        if terminator is None:
+            raise TelemetryError("Unterminated heredoc in injected batch script.")
+        body = text[match.end():terminator.start()]
+        if "GIT_TIMEOUT_SECONDS" in body:
+            if match.group("tabs"):
+                body = "".join(
+                    line.lstrip("\t") for line in body.splitlines(keepends=True)
+                )
+            patched = harden_python_supervisor(body)
+            edits.append((match.end(), terminator.start(), patched))
+            supervisors += 1
+        cursor = terminator.end()
+
+    if not supervisors:
+        raise TelemetryError(
+            "Cannot locate embedded telemetry supervisor with GIT_TIMEOUT_SECONDS; "
+            "cannot safely install the required git serialization."
+        )
+    for first, last, replacement in reversed(edits):
+        text = text[:first] + replacement + text[last:]
+
+    text = harden_shell_header(text)
+    if DEAD_PROXY in text:
+        raise TelemetryError("Obsolete cluster proxy remains in injected script.")
+    return normalize_lf(text.encode("utf-8"))
+
+
 def verify_generated_script(path: Path) -> bytes:
     data = read_script(path)
     if b"\r" in data:
@@ -462,6 +788,8 @@ def verify_generated_script(path: Path) -> bytes:
         raise TelemetryError(
             f"Expected exactly one telemetry marker in {path}; found {count}."
         )
+    if harden_injected_script(data) != data:
+        raise TelemetryError(f"Required telemetry safety settings are missing in {path}.")
     return data
 
 
@@ -477,20 +805,20 @@ def process_campaign(harness: Harness, campaign: Campaign) -> bool:
 
     try:
         if existing_markers == 1:
-            LOGGER.info("Already injected; validating %s", path.name)
-            # Validate before accepting an existing marker as a successful skip.
-            harness.validate(path)
-            normalized = normalize_lf(original)
-            if normalized != original:
-                atomic_write(path, normalized, original_mode)
-                LOGGER.info("Normalized line endings: %s", path.name)
-                harness.validate(path)
+            LOGGER.info("Already injected; hardening and validating %s", path.name)
+            prepared = harden_injected_script(original)
+            if prepared != original:
+                atomic_write(path, prepared, original_mode)
             verify_generated_script(path)
+            harness.validate(path)
+            verify_generated_script(path)
+            if stat.S_IMODE(path.stat().st_mode) != original_mode:
+                atomic_write(path, read_script(path), original_mode)
             return False
 
         normalized = normalize_lf(original)
         cleaned, removed = clean_duplicate_git_commands(normalized.decode("utf-8"))
-        prepared = cleaned.encode("utf-8")
+        prepared = harden_shell_header(cleaned).encode("utf-8")
         if prepared != original:
             atomic_write(path, prepared, original_mode)
         if removed:
@@ -506,19 +834,18 @@ def process_campaign(harness: Harness, campaign: Campaign) -> bool:
         harness.inject(campaign)
 
         generated = read_script(path)
-        normalized_generated = normalize_lf(generated)
-        # Preserve original executable/access permissions even if the harness
-        # replaced the file.
+        hardened = harden_injected_script(generated)
         if (
-            generated != normalized_generated
+            generated != hardened
             or stat.S_IMODE(path.stat().st_mode) != original_mode
         ):
-            atomic_write(path, normalized_generated, original_mode)
+            atomic_write(path, hardened, original_mode)
 
         verify_generated_script(path)
         harness.validate(path)
-        # Validation must not invalidate the checked file.
         verify_generated_script(path)
+        if stat.S_IMODE(path.stat().st_mode) != original_mode:
+            atomic_write(path, read_script(path), original_mode)
         return True
     except BaseException:
         try:
@@ -535,7 +862,7 @@ def process_campaign(harness: Harness, campaign: Campaign) -> bool:
 def positive_int(value: str) -> int:
     try:
         parsed = int(value)
-    except ValueError as exc:
+    except (TypeError, ValueError) as exc:
         raise argparse.ArgumentTypeError("must be an integer") from exc
     if parsed <= 0:
         raise argparse.ArgumentTypeError("must be greater than zero")
@@ -545,7 +872,7 @@ def positive_int(value: str) -> int:
 def positive_float(value: str) -> float:
     try:
         parsed = float(value)
-    except ValueError as exc:
+    except (TypeError, ValueError) as exc:
         raise argparse.ArgumentTypeError("must be a number") from exc
     if not math.isfinite(parsed) or parsed <= 0:
         raise argparse.ArgumentTypeError("must be finite and greater than zero")
@@ -599,7 +926,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         if not campaigns:
             raise TelemetryError("No campaign scripts selected.")
 
-        # Preflight every selected target before modifying the first one.
         for campaign in campaigns:
             data = read_script(campaign.path)
             if marker_count(data) > 1:
@@ -621,8 +947,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             else:
                 skipped += 1
 
-        # Final LF/marker verification covers every selected script, including
-        # scripts that were already injected.
         for campaign in campaigns:
             verify_generated_script(campaign.path)
 

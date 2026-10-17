@@ -19,6 +19,7 @@
 # SIGKILL/node loss cannot be trapped; publication is best-effort.
 # Logs must exist BEFORE sbatch; the generator creates them locally.
 
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY all_proxy
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
 export WANDB_MODE=offline
@@ -731,7 +732,7 @@ import time
 CONFIG = json.loads('{"auto_resubmit": "0", "figures_dir": "figures", "git_remote": "origin", "logs_dir": "logs", "results_dir": "results_clutch_pilot", "strict_telemetry": "0"}')
 BLOCKED_SUFFIXES = (".pt", ".ckpt", ".bin", ".h5", ".safetensors", ".tar")
 MAX_GIT_FILE_BYTES = 50 * 1024 * 1024
-GIT_TIMEOUT_SECONDS = 45
+GIT_TIMEOUT_SECONDS = 180
 SYNC_FAILURE_NOTICE = (
     "NOTICE: Workload completed successfully (exit 0), but remote Git sync "
     "failed. All results and logs are safely preserved on cluster disk."
@@ -1285,9 +1286,9 @@ run_user_job() (
 
     ENV_PREFIX=""
     for candidate in \
-        /N/u/gogordon/BigRed200/.conda/envs/meep \
-        "$HOME/.conda/envs/meep" \
-        "$HOME/miniconda3/envs/meep"
+        /N/u/gogordon/BigRed200/.conda/envs/pymeep \
+        "$HOME/.conda/envs/pymeep" \
+        "$HOME/miniconda3/envs/pymeep"
     do
         if [[ -x "$candidate/bin/python" ]]; then
             ENV_PREFIX="$candidate"
@@ -1315,11 +1316,16 @@ run_user_job() (
         fi
     fi
 
-    if (( CONDA_READY == 1 )) && [[ -n "$ENV_PREFIX" ]]; then
-        conda activate "$ENV_PREFIX"
+    if (( CONDA_READY == 1 )); then
+        if [[ -n "$ENV_PREFIX" ]]; then
+            conda activate "$ENV_PREFIX"
+        else
+            conda activate pymeep
+            ENV_PREFIX="$CONDA_PREFIX"
+        fi
     elif [[ -n "$ENV_PREFIX" ]]; then
         export CONDA_PREFIX="$ENV_PREFIX"
-        export CONDA_DEFAULT_ENV=meep
+        export CONDA_DEFAULT_ENV=pymeep
     fi
 
     if [[ -n "$ENV_PREFIX" ]]; then
@@ -1336,6 +1342,9 @@ run_user_job() (
     export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
     export PYTHONPATH="/N/project/gorengor_werewolf/FractalCasimir3D:${PYTHONPATH:-}"
 
+    # Conda activation and library-path setup must precede the Meep preflight.
+    "$PYTHON_BIN" -c "import meep"
+
     echo "Starting clutch pilot task $TASK_ID with $CONFIG_FILE on $(hostname)"
     echo "Python binary: $PYTHON_BIN"
 
@@ -1344,12 +1353,14 @@ run_user_job() (
             "$PYTHON_BIN" execution/run_scoped_clutch_meep.py \
             --config-file "$CONFIG_FILE" \
             --task-id "$TASK_ID" \
+            --output-dir results_clutch_pilot \
             --config all \
             --max-walltime-hours 7.5
     else
         "$PYTHON_BIN" execution/run_scoped_clutch_meep.py \
             --config-file "$CONFIG_FILE" \
             --task-id "$TASK_ID" \
+            --output-dir results_clutch_pilot \
             --config all \
             --max-walltime-hours 7.5
     fi

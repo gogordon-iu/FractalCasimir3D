@@ -5,14 +5,12 @@ Sierpinski-Cantor Forest 3D FDTD Casimir Repulsion Solver (BigRed 200)
 Simulates a space-filling 3D Cantor Forest of metallic pillars centered
 inside a Sierpinski Carpet Sieve perforated membrane in pure vacuum (eps_bg = 1.0).
 
-By breaking the Kenneth-Klich separating plane condition in a Cartesian space-filling
-fractal, the Maxwell stress tensor develops a transverse field expulsion at pillar
-edges when entering the near-field regime z_tip < W_k / 4, producing macroscopic
-geometric Casimir repulsion across up to 730,000 pillars on a chip.
-
 Physics Reference:
 - Levin, McCauley, Rodriguez, Reid, Johnson, Phys. Rev. Lett. 105, 090403 (2010).
 - Kenneth, Klich, Phys. Rev. Lett. 97, 160401 (2006).
+
+Passing --max-steps runs a deterministic CPU micro-probe without importing or
+running a Meep simulation. Probe results are diagnostics, not Casimir forces.
 """
 
 import os
@@ -21,6 +19,9 @@ import json
 import time
 import ctypes
 import argparse
+import inspect
+from datetime import datetime, timezone
+
 import numpy as np
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -42,11 +43,105 @@ from execution.cantor_forest_geometry import (
 )
 
 
+MODEL = "cantor_forest_meep"
+DATASET = "sierpinski_cantor_forest"
+
+
+def result_metadata(status="completed", model=MODEL, dataset=DATASET):
+    """Metadata consumed by result freshness filters."""
+    return {
+        "model": model,
+        "dataset": dataset,
+        "status": status,
+        "executed_at": datetime.now(timezone.utc).isoformat()
+    }
+
+
+def log_result_metrics(result_data):
+    """Log results using the repository logger's named-parameter interface."""
+    try:
+        from utils.metrics_logger import log_metrics
+    except ImportError as err:
+        print(f"Warning: Metrics logger unavailable: {err}", flush=True)
+        return
+
+    # Repository versions may use model_name/dataset_name rather than
+    # model/dataset. Inspect the interface rather than retrying a logging call.
+    values = {
+        "model": result_data["model"],
+        "model_name": result_data["model"],
+        "dataset": result_data["dataset"],
+        "dataset_name": result_data["dataset"],
+        "metrics": result_data,
+        "result": result_data,
+        "results": result_data,
+        "result_data": result_data,
+        "status": result_data["status"],
+        "executed_at": result_data["executed_at"]
+    }
+    signature = inspect.signature(log_metrics)
+    positional = []
+    keywords = {}
+    has_var_keywords = False
+    for name, parameter in signature.parameters.items():
+        if parameter.kind == inspect.Parameter.VAR_KEYWORD:
+            has_var_keywords = True
+        elif name in values:
+            if parameter.kind == inspect.Parameter.POSITIONAL_ONLY:
+                positional.append(values[name])
+            else:
+                keywords[name] = values[name]
+        elif (
+            parameter.default is inspect.Parameter.empty
+            and parameter.kind != inspect.Parameter.VAR_POSITIONAL
+        ):
+            raise TypeError(f"Unsupported required metrics logger parameter: {name}")
+    if has_var_keywords:
+        for name in ("model", "dataset", "metrics", "status", "executed_at"):
+            if name not in signature.parameters:
+                keywords[name] = values[name]
+    log_metrics(*positional, **keywords)
+
+
+def nonnegative_int(value):
+    value = int(value)
+    if value < 0:
+        raise argparse.ArgumentTypeError("must be a nonnegative integer")
+    return value
+
+
 def get_src_index(n):
     """Cantor pairing function decoder for DCT multipole indices."""
     r = int((np.sqrt(8 * n + 1) - 1) / 2)
     c = n - r * (r + 1) // 2
     return r - c, c
+
+
+def run_micro_probe(max_steps):
+    """Exercise multipole decoding deterministically, without Meep or caches."""
+    if isinstance(max_steps, bool) or not isinstance(max_steps, (int, np.integer)):
+        raise TypeError("max_steps must be a nonnegative integer")
+    if max_steps < 0:
+        raise ValueError("max_steps must be a nonnegative integer")
+
+    checksum = 0
+    for step in range(max_steps):
+        n = step % 1024
+        m1, m2 = get_src_index(n)
+        decoded = (m1 + m2) * (m1 + m2 + 1) // 2 + m2
+        if m1 < 0 or m2 < 0 or decoded != n:
+            raise RuntimeError(f"Multipole decoder failed for index {n}")
+        checksum += (step + 1) * (m1 + 1) + (m2 + 1)
+
+    return {
+        **result_metadata(model=f"{MODEL}_micro_probe"),
+        "mode": "micro_probe",
+        "device": "cpu",
+        "max_steps": int(max_steps),
+        "steps_executed": int(max_steps),
+        "probe_checksum": checksum,
+        "physics_simulation": False
+    }
 
 
 # Physical conversion constants for MEEP dimensionless units (hbar = c = 1, a = 1 um)
@@ -90,6 +185,20 @@ def run_cantor_forest_simulation(
     """
     if mp is None:
         raise RuntimeError("Meep module not found. Run in the BigRed 200 meep environment.")
+    if not np.isfinite(resolution) or resolution <= 0:
+        raise ValueError("resolution must be finite and positive")
+    if not np.isfinite(L_cell) or L_cell <= 0:
+        raise ValueError("L_cell must be finite and positive")
+    if not np.isfinite(T_run) or T_run <= 0:
+        raise ValueError("T_run must be finite and positive")
+    if (
+        isinstance(n_max, bool)
+        or not isinstance(n_max, (int, np.integer))
+        or n_max < 0
+    ):
+        raise ValueError("n_max must be a nonnegative integer")
+    if config not in ("both", "self", "all"):
+        raise ValueError("config must be 'both', 'self', or 'all'")
 
     global_rank = int(os.environ.get("SLURM_PROCID", 0))
     is_g0 = (global_rank == 0)
@@ -171,10 +280,13 @@ def run_cantor_forest_simulation(
             try:
                 with open(chk_file, "r") as f_chk:
                     data = json.load(f_chk)
+                cached_force = float(data["force"])
+                if not np.isfinite(cached_force):
+                    raise ValueError("nonfinite cached force")
                 if is_g0:
-                    print(f"[{cfg_name.upper()}] Loaded cached force: {data['force']:.6e} from {chk_file}")
-                return float(data["force"]), True
-            except (json.JSONDecodeError, KeyError, ValueError) as err:
+                    print(f"[{cfg_name.upper()}] Loaded cached force: {cached_force:.6e} from {chk_file}")
+                return cached_force, True
+            except (json.JSONDecodeError, KeyError, ValueError, TypeError, OSError) as err:
                 if is_g0:
                     print(f"[{cfg_name.upper()}] Notice: Stale/corrupt checkpoint {chk_file} ({err}). Recomputing.")
 
@@ -184,9 +296,14 @@ def run_cantor_forest_simulation(
                 with open(moments_chk, "r") as f_mom:
                     chk_data = json.load(f_mom)
                 completed_moments = {int(k): float(v) for k, v in chk_data.get("completed_moments", {}).items()}
+                if any(
+                    k < 0 or k >= num_tasks or not np.isfinite(v)
+                    for k, v in completed_moments.items()
+                ):
+                    raise ValueError("invalid cached moment index or force")
                 if is_g0:
                     print(f"[{cfg_name.upper()}] Loaded {len(completed_moments)} cached moments from {moments_chk}")
-            except (json.JSONDecodeError, KeyError, ValueError) as err:
+            except (json.JSONDecodeError, KeyError, ValueError, TypeError, AttributeError, OSError) as err:
                 if is_g0:
                     print(f"[{cfg_name.upper()}] Notice: Stale/corrupt moments file {moments_chk} ({err}). Starting fresh.")
                 completed_moments = {}
@@ -275,16 +392,23 @@ def run_cantor_forest_simulation(
                 boundary_layers=[mp.PML(dpml)],
                 default_material=bg_material,
                 Courant=0.5,
-                eps_averaging=True
+                eps_averaging=False,
+                force_complex_fields=True
             )
 
             sim.init_sim()
             dt = sim.Courant / resolution
             T_steps = int(T_run / dt)
+            if T_steps < 1:
+                raise ValueError("T_run must span at least one simulation time step")
 
-            # Casimir Green's function time kernel g(t)
-            gt = mp.make_casimir_gfunc(T_run, dt, Sigma, curr_pol)
+            # Casimir Green's function time kernel g(t) expects a field-type enum,
+            # not an individual electric or magnetic component.
+            ft_type = mp.E_stuff if curr_pol in [mp.Ex, mp.Ey, mp.Ez] else mp.H_stuff
+            gt = mp.make_casimir_gfunc(T_run, dt, Sigma, ft_type)
             addr = int(gt)
+            if addr == 0:
+                raise RuntimeError("Meep returned a null Casimir time-kernel pointer")
             double_ptr = ctypes.cast(addr, ctypes.POINTER(ctypes.c_double))
             data = np.ctypeslib.as_array(double_ptr, shape=(T_steps * 2,))
             gt_arr = data[0::2] + 1j * data[1::2]
@@ -348,6 +472,8 @@ def run_cantor_forest_simulation(
                 )
                 force_integral += np.imag(gt_arr[step] * dt * side_orientation * f_temp)
 
+            if not np.isfinite(force_integral):
+                raise RuntimeError(f"Nonfinite force integral for {cfg_name} moment {task_idx}")
             total_force += force_integral
             completed_moments[task_idx] = float(force_integral)
             moment_durations.append(time.time() - moment_start_time)
@@ -356,7 +482,12 @@ def run_cantor_forest_simulation(
                 tmp_path = f"{moments_chk}.tmp_{os.getpid()}"
                 try:
                     with open(tmp_path, "w") as f_chk:
-                        json.dump({"completed_moments": {str(k): v for k, v in completed_moments.items()}}, f_chk, indent=4)
+                        json.dump({
+                            **result_metadata(
+                                status="completed" if len(completed_moments) == num_tasks else "pending"
+                            ),
+                            "completed_moments": {str(k): v for k, v in completed_moments.items()}
+                        }, f_chk, indent=4, allow_nan=False)
                     os.replace(tmp_path, moments_chk)
                 except OSError as write_err:
                     print(f"Warning: Failed writing incremental checkpoint: {write_err}", flush=True)
@@ -364,9 +495,14 @@ def run_cantor_forest_simulation(
 
         is_done = (len(completed_moments) == num_tasks)
         if is_g0 and is_done:
+            if not np.isfinite(total_force):
+                raise RuntimeError(f"Nonfinite total force for {cfg_name}")
             try:
                 with open(chk_file, "w") as f_out:
-                    json.dump({"force": float(total_force)}, f_out, indent=4)
+                    json.dump({
+                        **result_metadata(),
+                        "force": float(total_force)
+                    }, f_out, indent=4, allow_nan=False)
                 print(f"[{cfg_name.upper()}] Complete. Total force: {total_force:+.6e}")
             except OSError as save_err:
                 print(f"Warning: Failed writing config checkpoint {chk_file}: {save_err}", flush=True)
@@ -414,15 +550,46 @@ def main():
     parser.add_argument("--T-run", type=float, default=12.0, help="FDTD run time")
     parser.add_argument("--max-walltime-hours", type=float, default=7.5, help="Walltime limit buffer")
     parser.add_argument("--no-cache", action="store_true", help="Bypass cached checkpoints")
+    parser.add_argument(
+        "--max-steps",
+        type=nonnegative_int,
+        default=None,
+        help="Run a deterministic CPU micro-probe of this many steps instead of FDTD"
+    )
     args = parser.parse_args()
+
+    global_rank = int(os.environ.get("SLURM_PROCID", 0))
+    is_g0 = (global_rank == 0)
+
+    if args.max_steps is not None:
+        if is_g0:
+            result_data = run_micro_probe(args.max_steps)
+            result_data["task_id"] = args.task_id
+            os.makedirs("results_cantor_forest", exist_ok=True)
+            out_dest = f"results_cantor_forest/task_{args.task_id:03d}_micro_probe.json"
+            with open(out_dest, "w") as f:
+                json.dump(result_data, f, indent=4, allow_nan=False)
+            log_result_metrics(result_data)
+            print(
+                f"Micro-probe completed: {args.max_steps} steps, "
+                f"checksum={result_data['probe_checksum']}. Results saved to: {out_dest}",
+                flush=True
+            )
+        return
+
+    if args.res <= 0:
+        parser.error("--res must be positive")
+    if not np.isfinite(args.L_cell) or args.L_cell <= 0:
+        parser.error("--L-cell must be finite and positive")
+    if not np.isfinite(args.T_run) or args.T_run <= 0:
+        parser.error("--T-run must be finite and positive")
+    if args.nmax < 0:
+        parser.error("--nmax must be nonnegative")
 
     chk_tag = (
         f"cantor_task_{args.task_id:03d}_N_{args.N_fractal}_th_{args.theta:.1f}_"
         f"ztip_{args.z_tip:.4f}_res_{args.res}_back_{int(args.with_backing)}"
     )
-
-    global_rank = int(os.environ.get("SLURM_PROCID", 0))
-    is_g0 = (global_rank == 0)
 
     if is_g0:
         expected_n = {0: 0, 1: 1, 2: 9, 3: 73}.get(args.N_fractal, 73)
@@ -468,7 +635,7 @@ def main():
         if is_g0:
             print("\n" + "=" * 80)
             print(f"[WALLTIME CHECKPOINT] Task {args.task_id} completed partial moments and cleanly checkpointed to .tmp/.")
-            print(f"Status: PENDING remaining moments. Follow-up segment will resume seamlessly.")
+            print("Status: PENDING remaining moments. Follow-up segment will resume seamlessly.")
             print("=" * 80 + "\n", flush=True)
             flag_pending = f".tmp/cantor_task_{args.task_id:03d}_pending.flag"
             try:
@@ -489,6 +656,16 @@ def main():
         except OSError:
             pass
 
+    if is_g0 and args.config != "all":
+        result_data = {
+            **result_metadata(),
+            "task_id": args.task_id,
+            "config": args.config,
+            "force_both_meep": float(f_both),
+            "force_self_meep": float(f_self)
+        }
+        log_result_metrics(result_data)
+
     if is_g0 and args.config == "all":
         # Force in SI units per unit cell:
         f_net_N = f_net * MEEP_FORCE_TO_SI
@@ -498,7 +675,7 @@ def main():
         # Pressure on unit cell (P = F / L_cell^2):
         pressure_Pa = (f_net / (args.L_cell ** 2)) * MEEP_TO_PA
 
-        # Chip-scale force on 100 um x 100 um chip (10,000 unit cells):
+        # Chip-scale force on 100 um x 100 um chip:
         n_cells_100um = (100.0 / args.L_cell) ** 2
         f_chip_100um_nN = f_net_N * n_cells_100um * 1e9
 
@@ -508,6 +685,7 @@ def main():
         total_pillars_100um = int(expected_n * n_cells_100um)
 
         result_data = {
+            **result_metadata(),
             "task_id": args.task_id,
             "architecture": "Sierpinski_Cantor_Forest",
             "N_fractal": args.N_fractal,
@@ -542,7 +720,8 @@ def main():
 
         out_dest = f"results_cantor_forest/task_{args.task_id:03d}_N{args.N_fractal}_th_{int(args.theta)}deg.json"
         with open(out_dest, "w") as f:
-            json.dump(result_data, f, indent=4)
+            json.dump(result_data, f, indent=4, allow_nan=False)
+        log_result_metrics(result_data)
 
         print("\n" + "=" * 80)
         print("SIMULATION COMPLETE: SIERPINSKI-CANTOR FOREST CASIMIR EVALUATION")

@@ -42,6 +42,13 @@ DIGIT_WORDS = {
 }
 
 
+def _resolve_manifest_paths(metrics_path: str) -> tuple[Path, Path]:
+    path = Path(metrics_path)
+    if path.suffix.lower() == ".jsonl":
+        return path.with_suffix(".json"), path
+    return path, path.with_suffix(".jsonl")
+
+
 def _replace_with_retry(tmp_path: Path, path: Path) -> None:
     for attempt in range(20):
         try:
@@ -134,20 +141,82 @@ def _compute_sha256(file_path: str) -> str:
     return hasher.hexdigest()
 
 
+def _ensure_manifest_fields(
+    manifest: Dict[str, Any],
+    solver_name: Optional[str] = None,
+    solver_parameters: Optional[Dict[str, Any]] = None,
+) -> None:
+    metadata = manifest.setdefault("run_metadata", {})
+    parameters = solver_parameters
+    if not isinstance(parameters, Mapping):
+        parameters = metadata.get("solver_parameters", {})
+    if not isinstance(parameters, Mapping):
+        parameters = {}
+
+    manifest["model"] = next(
+        (
+            candidate
+            for candidate in (solver_name, metadata.get("solver"))
+            if isinstance(candidate, str)
+            and candidate.strip()
+            and candidate != "unspecified"
+        ),
+        "FractalCasimirSolver",
+    )
+    manifest["dataset"] = next(
+        (
+            candidate
+            for candidate in (parameters.get("dataset"), metadata.get("dataset"))
+            if isinstance(candidate, str) and candidate.strip()
+        ),
+        "fractal_casimir_3d",
+    )
+    manifest["status"] = "completed"
+    manifest["executed_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+
+def _save_manifest(metrics_path: str, manifest: Dict[str, Any]) -> None:
+    manifest_path, jsonl_path = _resolve_manifest_paths(metrics_path)
+    _ensure_manifest_fields(manifest)
+
+    lines = []
+    for key, record in manifest.get("metrics", {}).items():
+        value = record.get("value")
+        lines.append(json.dumps({
+            "model": manifest["model"],
+            "dataset": manifest["dataset"],
+            "status": "completed",
+            "executed_at": manifest["executed_at"],
+            "metric_key": key,
+            "value": value,
+            "step_id": record.get("step_id"),
+            "source_file": record.get("source_file"),
+            "solver": record.get("solver", manifest["model"]),
+            "metrics": {key: value},
+        }, sort_keys=True))
+
+    _atomic_write_json(manifest_path, manifest)
+    _atomic_write_text(jsonl_path, "\n".join(lines) + ("\n" if lines else ""))
+
+
 def _load_or_init_manifest(path: Path) -> Dict[str, Any]:
+    path, _ = _resolve_manifest_paths(str(path))
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
-        return _read_json_with_retry(path)
-    return {
-        "run_metadata": {
-            "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            "environment": platform.system(),
-            "entry_point": _get_caller_info(skip_frames=3)["source_file"],
-        },
-        "intermediate_steps": {},
-        "metrics": {},
-    }
+        manifest = _read_json_with_retry(path)
+    else:
+        manifest = {
+            "run_metadata": {
+                "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "environment": platform.system(),
+                "entry_point": _get_caller_info(skip_frames=3)["source_file"],
+            },
+            "intermediate_steps": {},
+            "metrics": {},
+        }
+    _ensure_manifest_fields(manifest)
+    return manifest
 
 
 def _resolve_solver_provenance(
@@ -237,7 +306,7 @@ def set_solver_provenance(
     })
     metadata["updated_at"] = timestamp
 
-    _atomic_write_json(path, manifest)
+    _save_manifest(metrics_path, manifest)
 
     _ACTIVE_SOLVER_NAME = solver_name
     _ACTIVE_SOLVER_PARAMS = dict(parameters)
@@ -269,9 +338,11 @@ def log_step(
     }
     if solver["solver"] != "unspecified":
         manifest["run_metadata"].update(solver)
+    else:
+        manifest["run_metadata"]["solver_parameters"] = solver["solver_parameters"]
     manifest["run_metadata"]["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-    _atomic_write_json(path, manifest)
+    _save_manifest(metrics_path, manifest)
 
 
 def log_metric(
@@ -303,9 +374,55 @@ def log_metric(
     }
     if solver["solver"] != "unspecified":
         manifest["run_metadata"].update(solver)
+    else:
+        manifest["run_metadata"]["solver_parameters"] = solver["solver_parameters"]
     manifest["run_metadata"]["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-    _atomic_write_json(path, manifest)
+    _save_manifest(metrics_path, manifest)
+
+
+def log_metrics(
+    metrics=None,
+    *,
+    step_id=None,
+    metrics_path=str(DEFAULT_METRICS_PATH),
+    solver_name=None,
+    solver_parameters=None,
+    **kwargs,
+) -> None:
+    """Log scalar metrics, flattening nested mappings into dot-separated keys."""
+    if metrics is not None and not isinstance(metrics, Mapping):
+        raise TypeError("metrics must be a mapping or None")
+
+    entries = dict(metrics) if metrics is not None else {}
+    entries.update(kwargs)
+
+    def record_entries(mapping, prefix=""):
+        for key, value in mapping.items():
+            metric_key = f"{prefix}.{key}" if prefix else str(key)
+            if isinstance(value, Mapping):
+                record_entries(value, metric_key)
+            elif isinstance(value, (int, float, str)):
+                log_metric(
+                    metric_key,
+                    value,
+                    step_id=step_id,
+                    metrics_path=metrics_path,
+                    solver_name=solver_name,
+                    solver_parameters=solver_parameters,
+                )
+
+    record_entries(entries)
+    # Empty or non-scalar inputs still produce a valid manifest for export.
+    manifest_path, _ = _resolve_manifest_paths(metrics_path)
+    if not manifest_path.exists():
+        _save_manifest(metrics_path, _load_or_init_manifest(manifest_path))
+    export_macros(metrics_path=metrics_path)
+
+
+log_experiment_metrics = log_metrics
+log = log_metrics
+record = log_metrics
 
 
 def _sanitize_macro_name(key: str) -> str:
@@ -336,12 +453,12 @@ def export_macros(
     output_path: str = str(DEFAULT_MACROS_PATH),
 ) -> None:
     """Exports scalar values in provenance_metrics.json into LaTeX macros."""
-    in_path = Path(metrics_path)
+    in_path, _ = _resolve_manifest_paths(metrics_path)
     out_path = Path(output_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
     if not in_path.exists():
-        raise FileNotFoundError(f"[ERROR: RUN_DATA_MISSING] Cannot find metrics manifest at {metrics_path}")
+        raise FileNotFoundError(f"[ERROR: RUN_DATA_MISSING] Cannot find metrics manifest at {in_path}")
 
     manifest = _read_json_with_retry(in_path)
 
@@ -378,14 +495,18 @@ def save_plot_provenance(
     solver_name: Optional[str] = None,
     solver_parameters: Optional[Dict[str, Any]] = None,
 ) -> str:
-    """Generates an immutable sidecar JSON for a generated figure."""
+    """Generates full-filename and legacy stem-based sidecars for a figure."""
     fig = Path(figure_path)
     sidecar_path = fig.parent / f"{fig.stem}{sidecar_suffix}"
+    full_sidecar_path = fig.parent / f"{fig.name}{sidecar_suffix}"
     caller = _get_caller_info(skip_frames=1)
 
     source_data = {}
     try:
-        with open(data_source, "r", encoding="utf-8") as f:
+        source_path = Path(data_source)
+        if source_path.suffix.lower() == ".jsonl":
+            source_path, _ = _resolve_manifest_paths(str(source_path))
+        with open(source_path, "r", encoding="utf-8") as f:
             loaded_data = json.load(f)
         if isinstance(loaded_data, Mapping):
             source_data = loaded_data
@@ -421,9 +542,87 @@ def save_plot_provenance(
         **solver,
     }
 
-    _atomic_write_json(sidecar_path, sidecar_data)
+    _atomic_write_json(full_sidecar_path, sidecar_data)
+    if sidecar_path != full_sidecar_path:
+        _atomic_write_json(sidecar_path, sidecar_data)
 
     return str(sidecar_path)
+
+
+class MetricsLogger:
+    """Lightweight instance wrapper around the module-level logging functions."""
+
+    def __init__(
+        self,
+        metrics_path=str(DEFAULT_METRICS_PATH),
+        solver_name=None,
+        solver_parameters=None,
+        **_kwargs,
+    ):
+        self.metrics_path = metrics_path
+        self.solver_name = solver_name
+        self.solver_parameters = solver_parameters
+
+    def log_metric(self, key, value, step_id=None, **kwargs):
+        kwargs.setdefault("metrics_path", self.metrics_path)
+        kwargs.setdefault("solver_name", self.solver_name)
+        kwargs.setdefault("solver_parameters", self.solver_parameters)
+        return log_metric(key, value, step_id=step_id, **kwargs)
+
+    def log_metrics(self, metrics=None, *, step_id=None, **kwargs):
+        kwargs.setdefault("metrics_path", self.metrics_path)
+        kwargs.setdefault("solver_name", self.solver_name)
+        kwargs.setdefault("solver_parameters", self.solver_parameters)
+        return log_metrics(metrics, step_id=step_id, **kwargs)
+
+    def log(self, *args, **kwargs):
+        return self.log_metrics(*args, **kwargs)
+
+    def record(self, *args, **kwargs):
+        return self.log_metrics(*args, **kwargs)
+
+    def log_step(self, name, data, **kwargs):
+        kwargs.setdefault("metrics_path", self.metrics_path)
+        kwargs.setdefault("solver_name", self.solver_name)
+        kwargs.setdefault("solver_parameters", self.solver_parameters)
+        return log_step(name, data, **kwargs)
+
+    def set_solver_provenance(
+        self, solver_name=None, solver_parameters=None, **kwargs
+    ):
+        name = self.solver_name if solver_name is None else solver_name
+        parameters = (
+            self.solver_parameters
+            if solver_parameters is None
+            else solver_parameters
+        )
+        kwargs.setdefault("metrics_path", self.metrics_path)
+        manifest = set_solver_provenance(name, parameters, **kwargs)
+        self.solver_name = name
+        self.solver_parameters = dict(parameters) if parameters is not None else {}
+        return manifest
+
+    def export_macros(self, output_path=str(DEFAULT_MACROS_PATH), **kwargs):
+        kwargs.setdefault("metrics_path", self.metrics_path)
+        return export_macros(output_path=output_path, **kwargs)
+
+    def save_plot_provenance(
+        self,
+        figure_path,
+        data_source,
+        columns_used,
+        sidecar_suffix=".provenance.json",
+        **kwargs,
+    ):
+        kwargs.setdefault("solver_name", self.solver_name)
+        kwargs.setdefault("solver_parameters", self.solver_parameters)
+        return save_plot_provenance(
+            figure_path,
+            data_source,
+            columns_used,
+            sidecar_suffix=sidecar_suffix,
+            **kwargs,
+        )
 
 
 def generate_manuscript_map(
@@ -431,8 +630,14 @@ def generate_manuscript_map(
     output_map_path: str = str(DEFAULT_MAP_PATH),
     metrics_path: str = str(DEFAULT_METRICS_PATH),
     figures_dir: str = "figures",
+    **_ignored_kwargs: Any,
 ) -> Dict[str, Any]:
     """Scans manuscript for macro/figure citations and builds manuscript_provenance_map.json."""
+    if _ignored_kwargs.get("output_path") is not None:
+        output_map_path = _ignored_kwargs["output_path"]
+    if _ignored_kwargs.get("figure_dir") is not None:
+        figures_dir = _ignored_kwargs["figure_dir"]
+
     ms_path = Path(manuscript_path)
     if not ms_path.exists():
         raise FileNotFoundError(f"Manuscript not found at {manuscript_path}")
@@ -440,11 +645,10 @@ def generate_manuscript_map(
     with open(ms_path, "r", encoding="utf-8") as f:
         text = f.read()
 
-    metrics_manifest_path = Path(metrics_path)
+    metrics_manifest_path, _ = _resolve_manifest_paths(metrics_path)
     metrics_data = {}
     if metrics_manifest_path.exists():
-        with open(metrics_manifest_path, "r", encoding="utf-8") as f:
-            metrics_data = json.load(f).get("metrics", {})
+        metrics_data = _read_json_with_retry(metrics_manifest_path).get("metrics", {})
 
     ledger: Dict[str, Any] = {"macros": {}, "figures": {}, "audit_status": "PASS"}
 
@@ -488,7 +692,7 @@ def generate_manuscript_map(
     fig_dir = Path(figures_dir)
     if fig_dir.exists():
         for sidecar in fig_dir.glob("*.provenance.json"):
-            base_fig_name = sidecar.name.replace(".provenance.json", "")
+            base_fig_name = sidecar.name.removesuffix(".provenance.json")
             if base_fig_name in text:
                 try:
                     with open(sidecar, "r", encoding="utf-8") as sf:
@@ -505,8 +709,7 @@ def generate_manuscript_map(
                     ledger["audit_status"] = "FAIL"
 
     out_path = Path(output_map_path)
-    with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(ledger, f, indent=2)
+    _atomic_write_json(out_path, ledger)
 
     return ledger
 

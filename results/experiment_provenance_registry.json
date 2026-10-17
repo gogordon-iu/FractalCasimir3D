@@ -1,4 +1,5 @@
 {
+  "dataset": "manuscript_provenance_registry",
   "datasets": {
     "levitation_equilibria": {
       "actual_count": 22,
@@ -31,9 +32,9 @@
       "expected_count": 13,
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "verification_basis": "reported manuscript equilibria; stability not recomputed"
     },
@@ -230,8 +231,8 @@
       "rows": [
         {
           "L": 0.3,
-          "pressure_R30": -1.124637,
-          "pressure_R40": -1.124345
+          "pressure_R30": -1.12464,
+          "pressure_R40": -1.12434
         },
         {
           "L": 0.4,
@@ -286,33 +287,315 @@
   "documents": [
     {
       "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-      "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+      "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
     },
     {
       "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-      "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+      "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
     },
     {
       "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_sweet_spot_repulsion.tex",
-      "sha256": "8686575f6ff610d4b21a264d4012b36685ea65c23a25d27e7401fcaf6c5959a0"
+      "sha256": "7994810b03c8361f9539634fdfb32e56a63a40811a3fc304dd86ddbdbc8c0982"
     },
     {
       "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-      "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+      "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
     }
   ],
   "errors": [],
+  "executed_at": "2026-10-17T04:59:25.377625+00:00",
   "manuscript": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+  "metadata": {
+    "pressure_unit_provenance": {
+      "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+      "meep_to_pa": 0.0316152649,
+      "reported_pressure_unit": "dimensionless Meep pressure",
+      "si_pressure_unit": "Pa",
+      "values": {
+        "asymmetric_cavity_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.014294,
+          "pressure_pa": -0.0004519085964806,
+          "si_unit": "Pa"
+        },
+        "frontier_1_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.218758,
+          "pressure_pa": -0.0069160921189942,
+          "si_unit": "Pa"
+        },
+        "frontier_2_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.006736,
+          "pressure_pa": -0.0002129604243664,
+          "si_unit": "Pa"
+        },
+        "lifshitz_d_100_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.00395,
+          "pressure_pa": -0.000124880296355,
+          "si_unit": "Pa"
+        },
+        "lifshitz_d_150_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.0034,
+          "pressure_pa": 0.00010749190066,
+          "si_unit": "Pa"
+        },
+        "lifshitz_d_200_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.00376,
+          "pressure_pa": 0.00011887339602400001,
+          "si_unit": "Pa"
+        },
+        "lifshitz_d_250_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.00305,
+          "pressure_pa": 9.642655794500002e-05,
+          "si_unit": "Pa"
+        },
+        "lifshitz_d_300_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.00231,
+          "pressure_pa": 7.303126191900001e-05,
+          "si_unit": "Pa"
+        },
+        "lifshitz_d_400_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.00129,
+          "pressure_pa": 4.0783691721e-05,
+          "si_unit": "Pa"
+        },
+        "lifshitz_d_500_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.000748,
+          "pressure_pa": 2.36482181452e-05,
+          "si_unit": "Pa"
+        },
+        "scaling_L_0p30_R_30_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -1.12464,
+          "pressure_pa": -0.035555791517136004,
+          "si_unit": "Pa"
+        },
+        "scaling_L_0p30_R_40_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -1.12434,
+          "pressure_pa": -0.035546306937666,
+          "si_unit": "Pa"
+        },
+        "scaling_L_0p40_R_30_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.910253,
+          "pressure_pa": -0.0287778897210197,
+          "si_unit": "Pa"
+        },
+        "scaling_L_0p40_R_40_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.980524,
+          "pressure_pa": -0.0309995260008076,
+          "si_unit": "Pa"
+        },
+        "scaling_L_0p50_R_30_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.73338,
+          "pressure_pa": -0.023186002972362004,
+          "si_unit": "Pa"
+        },
+        "scaling_L_0p50_R_40_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.78935,
+          "pressure_pa": -0.024955509348815002,
+          "si_unit": "Pa"
+        },
+        "scaling_L_0p60_R_30_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.614698,
+          "pressure_pa": -0.0194338401035002,
+          "si_unit": "Pa"
+        },
+        "scaling_L_0p60_R_40_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.635006,
+          "pressure_pa": -0.0200758829030894,
+          "si_unit": "Pa"
+        },
+        "scaling_L_0p80_R_30_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.73929,
+          "pressure_pa": -0.023372849187921003,
+          "si_unit": "Pa"
+        },
+        "scaling_L_1p00_R_30_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.555834,
+          "pressure_pa": -0.0175728391504266,
+          "si_unit": "Pa"
+        },
+        "scaling_L_1p20_R_30_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.427396,
+          "pressure_pa": -0.013512237757200401,
+          "si_unit": "Pa"
+        },
+        "scaling_L_1p40_R_30_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.336049,
+          "pressure_pa": -0.0106242781543801,
+          "si_unit": "Pa"
+        },
+        "scaling_L_2p00_R_40_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.118022,
+          "pressure_pa": -0.0037312967940278004,
+          "si_unit": "Pa"
+        },
+        "scaling_L_3p00_R_40_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.057953,
+          "pressure_pa": -0.0018321994467497,
+          "si_unit": "Pa"
+        },
+        "scaling_L_4p00_R_40_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.034166,
+          "pressure_pa": -0.0010801671405734,
+          "si_unit": "Pa"
+        },
+        "scaling_L_4p50_R_40_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.0274,
+          "pressure_pa": -0.00086625825826,
+          "si_unit": "Pa"
+        },
+        "sweet_spot_1_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 3.610842,
+          "pressure_pa": 0.11415772634204581,
+          "si_unit": "Pa"
+        },
+        "sweet_spot_2_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 3.57548,
+          "pressure_pa": 0.11303974734465201,
+          "si_unit": "Pa"
+        },
+        "sweet_spot_3_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.90161,
+          "pressure_pa": 0.028504638986489004,
+          "si_unit": "Pa"
+        },
+        "sweet_spot_4_pressure": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.049422,
+          "pressure_pa": 0.0015624896218878002,
+          "si_unit": "Pa"
+        }
+      }
+    }
+  },
   "metrics": [
     {
       "description": "Offset sum of squared residuals",
       "group": "model_1",
+      "metadata": {},
       "name": "model_1_ssr",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 55,
+        "line": 1264,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported units",
       "value": 0.00928379
@@ -320,12 +603,13 @@
     {
       "description": "Pure power-law sum of squared residuals",
       "group": "model_2",
+      "metadata": {},
       "name": "model_2_ssr",
       "source": {
         "basis": "experiment specification; matching metric macro \\ModelTwoSsr used in manuscript (occurrence alone is not semantic verification)",
         "line": 442,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported units",
       "value": 0.03148498
@@ -333,12 +617,13 @@
     {
       "description": "Dual power-law sum of squared residuals",
       "group": "model_3",
+      "metadata": {},
       "name": "model_3_ssr",
       "source": {
         "basis": "experiment specification; matching metric macro \\ModelTwoSsr used in manuscript (occurrence alone is not semantic verification)",
         "line": 442,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported units",
       "value": 0.03148498
@@ -346,12 +631,13 @@
     {
       "description": "Screened power-law screening length",
       "group": "model_4",
+      "metadata": {},
       "name": "model_4_lambda",
       "source": {
         "basis": "experiment specification; matching metric macro \\ModelFourLambda used in manuscript (occurrence alone is not semantic verification)",
         "line": 48,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "um",
       "value": 1.223087
@@ -359,12 +645,13 @@
     {
       "description": "Screened power-law sum of squared residuals",
       "group": "model_4",
+      "metadata": {},
       "name": "model_4_ssr",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 67,
+        "line": 1276,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported units",
       "value": 0.00440022
@@ -372,12 +659,23 @@
     {
       "description": "Table 3 semi-analytical Lifshitz pressure at d=100 nm",
       "group": "lifshitz",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.00395,
+          "pressure_pa": -0.000124880296355,
+          "si_unit": "Pa"
+        }
+      },
       "name": "lifshitz_d_100_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 45,
+        "line": 1238,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported pressure units",
       "value": -0.00395
@@ -385,12 +683,23 @@
     {
       "description": "Table 3 semi-analytical Lifshitz pressure at d=150 nm",
       "group": "lifshitz",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.0034,
+          "pressure_pa": 0.00010749190066,
+          "si_unit": "Pa"
+        }
+      },
       "name": "lifshitz_d_150_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 46,
+        "line": 1239,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported pressure units",
       "value": 0.0034
@@ -398,12 +707,23 @@
     {
       "description": "Table 3 semi-analytical Lifshitz pressure at d=200 nm",
       "group": "lifshitz",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.00376,
+          "pressure_pa": 0.00011887339602400001,
+          "si_unit": "Pa"
+        }
+      },
       "name": "lifshitz_d_200_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 47,
+        "line": 1240,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported pressure units",
       "value": 0.00376
@@ -411,12 +731,23 @@
     {
       "description": "Table 3 semi-analytical Lifshitz pressure at d=250 nm",
       "group": "lifshitz",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.00305,
+          "pressure_pa": 9.642655794500002e-05,
+          "si_unit": "Pa"
+        }
+      },
       "name": "lifshitz_d_250_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 48,
+        "line": 1241,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported pressure units",
       "value": 0.00305
@@ -424,12 +755,23 @@
     {
       "description": "Table 3 semi-analytical Lifshitz pressure at d=300 nm",
       "group": "lifshitz",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.00231,
+          "pressure_pa": 7.303126191900001e-05,
+          "si_unit": "Pa"
+        }
+      },
       "name": "lifshitz_d_300_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 49,
+        "line": 1242,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported pressure units",
       "value": 0.00231
@@ -437,12 +779,23 @@
     {
       "description": "Table 3 semi-analytical Lifshitz pressure at d=400 nm",
       "group": "lifshitz",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.00129,
+          "pressure_pa": 4.0783691721e-05,
+          "si_unit": "Pa"
+        }
+      },
       "name": "lifshitz_d_400_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 50,
+        "line": 1243,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported pressure units",
       "value": 0.00129
@@ -450,12 +803,23 @@
     {
       "description": "Table 3 semi-analytical Lifshitz pressure at d=500 nm",
       "group": "lifshitz",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.000748,
+          "pressure_pa": 2.36482181452e-05,
+          "si_unit": "Pa"
+        }
+      },
       "name": "lifshitz_d_500_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 51,
+        "line": 1244,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported pressure units",
       "value": 0.000748
@@ -463,12 +827,13 @@
     {
       "description": "Combined force",
       "group": "asymmetric_cavity",
+      "metadata": {},
       "name": "asymmetric_cavity_F_both",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 5,
+        "line": 393,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported force units",
       "value": -0.583529
@@ -476,12 +841,13 @@
     {
       "description": "Self-force",
       "group": "asymmetric_cavity",
+      "metadata": {},
       "name": "asymmetric_cavity_F_self",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 7,
+        "line": 395,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported force units",
       "value": -0.538354
@@ -489,12 +855,13 @@
     {
       "description": "Net force",
       "group": "asymmetric_cavity",
+      "metadata": {},
       "name": "asymmetric_cavity_F_net",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 6,
+        "line": 394,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported force units",
       "value": -0.045175
@@ -502,12 +869,13 @@
     {
       "description": "Effective area",
       "group": "asymmetric_cavity",
+      "metadata": {},
       "name": "asymmetric_cavity_A_eff",
       "source": {
         "basis": "experiment specification; matching metric macro \\AsymmetricCavityAEff used in manuscript (occurrence alone is not semantic verification)",
         "line": 514,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported area units",
       "value": 3.160494
@@ -515,12 +883,23 @@
     {
       "description": "Net pressure",
       "group": "asymmetric_cavity",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.014294,
+          "pressure_pa": -0.0004519085964806,
+          "si_unit": "Pa"
+        }
+      },
       "name": "asymmetric_cavity_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 8,
+        "line": 396,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported pressure units",
       "value": -0.014294
@@ -528,12 +907,13 @@
     {
       "description": "Suppression factor",
       "group": "asymmetric_cavity",
+      "metadata": {},
       "name": "asymmetric_cavity_suppression_factor",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 9,
+        "line": 397,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "dimensionless",
       "value": 8.25
@@ -541,12 +921,23 @@
     {
       "description": "Stepped-sieve pressure",
       "group": "frontier_1",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.218758,
+          "pressure_pa": -0.0069160921189942,
+          "si_unit": "Pa"
+        }
+      },
       "name": "frontier_1_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 16,
+        "line": 1206,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported pressure units",
       "value": -0.218758
@@ -554,12 +945,13 @@
     {
       "description": "Combined force",
       "group": "frontier_2",
+      "metadata": {},
       "name": "frontier_2_F_both",
       "source": {
         "basis": "experiment specification; matching metric macro \\FrontierTwoFBoth used in manuscript (occurrence alone is not semantic verification)",
         "line": 556,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported force units",
       "value": 4838.044314
@@ -567,12 +959,13 @@
     {
       "description": "Self-force",
       "group": "frontier_2",
+      "metadata": {},
       "name": "frontier_2_F_self",
       "source": {
         "basis": "experiment specification; matching metric macro \\FrontierTwoFBoth used in manuscript (occurrence alone is not semantic verification)",
         "line": 556,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported force units",
       "value": 4838.065605
@@ -580,12 +973,13 @@
     {
       "description": "Reported net force",
       "group": "frontier_2",
+      "metadata": {},
       "name": "frontier_2_F_net",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 18,
+        "line": 1208,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported force units",
       "value": -0.02129
@@ -593,12 +987,23 @@
     {
       "description": "Net pressure",
       "group": "frontier_2",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.006736,
+          "pressure_pa": -0.0002129604243664,
+          "si_unit": "Pa"
+        }
+      },
       "name": "frontier_2_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 21,
+        "line": 1211,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported pressure units",
       "value": -0.006736
@@ -606,12 +1011,13 @@
     {
       "description": "Reported cancellation percentage",
       "group": "frontier_2",
+      "metadata": {},
       "name": "frontier_2_cancellation_percent",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 665,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "%",
       "value": 94.3
@@ -619,12 +1025,13 @@
     {
       "description": "Reported reduction ratio",
       "group": "frontier_2",
+      "metadata": {},
       "name": "frontier_2_reduction_ratio",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 22,
+        "line": 1212,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "dimensionless",
       "value": 17.52
@@ -632,12 +1039,13 @@
     {
       "description": "Lamb frequency shift",
       "group": "atomic_cqed",
+      "metadata": {},
       "name": "atomic_cqed_lamb_shift_delta_nu",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 12,
+        "line": 400,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "kHz",
       "value": 2.4
@@ -645,12 +1053,13 @@
     {
       "description": "Lamb energy shift",
       "group": "atomic_cqed",
+      "metadata": {},
       "name": "atomic_cqed_lamb_shift_delta_E",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 11,
+        "line": 399,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "eV",
       "value": 1e-11
@@ -658,12 +1067,13 @@
     {
       "description": "Minimum lifetime variation",
       "group": "atomic_cqed",
+      "metadata": {},
       "name": "atomic_cqed_purcell_lifetime_variation_min",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 320,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "%",
       "value": 10.0
@@ -671,12 +1081,13 @@
     {
       "description": "Maximum lifetime variation",
       "group": "atomic_cqed",
+      "metadata": {},
       "name": "atomic_cqed_purcell_lifetime_variation_max",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 320,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "%",
       "value": 50.0
@@ -684,12 +1095,13 @@
     {
       "description": "Casimir-Polder energy shift",
       "group": "atomic_cqed",
+      "metadata": {},
       "name": "atomic_cqed_cp_shift",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 10,
+        "line": 398,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "eV",
       "value": 1e-06
@@ -697,12 +1109,13 @@
     {
       "description": "Scattering deviation",
       "group": "atomic_cqed",
+      "metadata": {},
       "name": "atomic_cqed_scattering_deviation",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 45,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported units",
       "value": 3e-19
@@ -710,12 +1123,13 @@
     {
       "description": "Repulsive sweet spot 1: alpha",
       "group": "repulsive_sweet_spots",
+      "metadata": {},
       "name": "sweet_spot_1_alpha",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 572,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "deg",
       "value": 75.0
@@ -723,12 +1137,13 @@
     {
       "description": "Repulsive sweet spot 1: theta",
       "group": "repulsive_sweet_spots",
+      "metadata": {},
       "name": "sweet_spot_1_theta",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 87,
+        "line": 1736,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "deg",
       "value": 82.0
@@ -736,12 +1151,13 @@
     {
       "description": "Repulsive sweet spot 1: d",
       "group": "repulsive_sweet_spots",
+      "metadata": {},
       "name": "sweet_spot_1_d",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 320,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "nm",
       "value": 50.0
@@ -749,12 +1165,23 @@
     {
       "description": "Repulsive sweet spot 1: pressure",
       "group": "repulsive_sweet_spots",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 3.610842,
+          "pressure_pa": 0.11415772634204581,
+          "si_unit": "Pa"
+        }
+      },
       "name": "sweet_spot_1_pressure",
       "source": {
-        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 10,
-        "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_sweet_spot_repulsion.tex",
-        "sha256": "8686575f6ff610d4b21a264d4012b36685ea65c23a25d27e7401fcaf6c5959a0"
+        "basis": "experiment specification; matching metric macro \\SweetSpotOnePressure used in manuscript (occurrence alone is not semantic verification)",
+        "line": 49,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
       "value": 3.610842
@@ -762,12 +1189,13 @@
     {
       "description": "Repulsive sweet spot 2: alpha",
       "group": "repulsive_sweet_spots",
+      "metadata": {},
       "name": "sweet_spot_2_alpha",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 572,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "deg",
       "value": 75.0
@@ -775,12 +1203,13 @@
     {
       "description": "Repulsive sweet spot 2: theta",
       "group": "repulsive_sweet_spots",
+      "metadata": {},
       "name": "sweet_spot_2_theta",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 381,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "deg",
       "value": 90.0
@@ -788,12 +1217,13 @@
     {
       "description": "Repulsive sweet spot 2: d",
       "group": "repulsive_sweet_spots",
+      "metadata": {},
       "name": "sweet_spot_2_d",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 495,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "nm",
       "value": 150.0
@@ -801,12 +1231,23 @@
     {
       "description": "Repulsive sweet spot 2: pressure",
       "group": "repulsive_sweet_spots",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 3.57548,
+          "pressure_pa": 0.11303974734465201,
+          "si_unit": "Pa"
+        }
+      },
       "name": "sweet_spot_2_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 90,
+        "line": 1739,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported pressure units",
       "value": 3.57548
@@ -814,12 +1255,13 @@
     {
       "description": "Repulsive sweet spot 3: alpha",
       "group": "repulsive_sweet_spots",
+      "metadata": {},
       "name": "sweet_spot_3_alpha",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 572,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "deg",
       "value": 75.0
@@ -827,12 +1269,13 @@
     {
       "description": "Repulsive sweet spot 3: theta",
       "group": "repulsive_sweet_spots",
+      "metadata": {},
       "name": "sweet_spot_3_theta",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 572,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "deg",
       "value": 94.0
@@ -840,12 +1283,13 @@
     {
       "description": "Repulsive sweet spot 3: d",
       "group": "repulsive_sweet_spots",
+      "metadata": {},
       "name": "sweet_spot_3_d",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 320,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "nm",
       "value": 50.0
@@ -853,12 +1297,23 @@
     {
       "description": "Repulsive sweet spot 3: pressure",
       "group": "repulsive_sweet_spots",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.90161,
+          "pressure_pa": 0.028504638986489004,
+          "si_unit": "Pa"
+        }
+      },
       "name": "sweet_spot_3_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 94,
+        "line": 1743,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported pressure units",
       "value": 0.90161
@@ -866,12 +1321,13 @@
     {
       "description": "Repulsive sweet spot 4: alpha",
       "group": "repulsive_sweet_spots",
+      "metadata": {},
       "name": "sweet_spot_4_alpha",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 572,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "deg",
       "value": 60.0
@@ -879,12 +1335,13 @@
     {
       "description": "Repulsive sweet spot 4: theta",
       "group": "repulsive_sweet_spots",
+      "metadata": {},
       "name": "sweet_spot_4_theta",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 99,
+        "line": 1748,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "deg",
       "value": 91.1
@@ -892,12 +1349,13 @@
     {
       "description": "Repulsive sweet spot 4: d",
       "group": "repulsive_sweet_spots",
+      "metadata": {},
       "name": "sweet_spot_4_d",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 49,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "nm",
       "value": 100.0
@@ -905,12 +1363,23 @@
     {
       "description": "Repulsive sweet spot 4: pressure",
       "group": "repulsive_sweet_spots",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.049422,
+          "pressure_pa": 0.0015624896218878002,
+          "si_unit": "Pa"
+        }
+      },
       "name": "sweet_spot_4_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 98,
+        "line": 1747,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "e24cbe757b59d4817576edf3ad352494d080c13a5dfb6c2d95daddfd5d4be77d"
+        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
       },
       "unit": "reported pressure units",
       "value": 0.049422
@@ -918,38 +1387,71 @@
     {
       "description": "Scaling pressure at L=0.30, R=30",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -1.12464,
+          "pressure_pa": -0.035555791517136004,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_0p30_R_30_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
-      "value": -1.124637
+      "value": -1.12464
     },
     {
       "description": "Scaling pressure at L=0.30, R=40",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -1.12434,
+          "pressure_pa": -0.035546306937666,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_0p30_R_40_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
-      "value": -1.124345
+      "value": -1.12434
     },
     {
       "description": "Scaling pressure at L=0.40, R=30",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.910253,
+          "pressure_pa": -0.0287778897210197,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_0p40_R_30_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
       "value": -0.910253
@@ -957,12 +1459,23 @@
     {
       "description": "Scaling pressure at L=0.40, R=40",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.980524,
+          "pressure_pa": -0.0309995260008076,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_0p40_R_40_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
       "value": -0.980524
@@ -970,12 +1483,23 @@
     {
       "description": "Scaling pressure at L=0.50, R=30",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.73338,
+          "pressure_pa": -0.023186002972362004,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_0p50_R_30_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
       "value": -0.73338
@@ -983,12 +1507,23 @@
     {
       "description": "Scaling pressure at L=0.50, R=40",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.78935,
+          "pressure_pa": -0.024955509348815002,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_0p50_R_40_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
       "value": -0.78935
@@ -996,12 +1531,23 @@
     {
       "description": "Scaling pressure at L=0.60, R=30",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.614698,
+          "pressure_pa": -0.0194338401035002,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_0p60_R_30_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
       "value": -0.614698
@@ -1009,12 +1555,23 @@
     {
       "description": "Scaling pressure at L=0.60, R=40",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.635006,
+          "pressure_pa": -0.0200758829030894,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_0p60_R_40_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
       "value": -0.635006
@@ -1022,12 +1579,23 @@
     {
       "description": "Scaling pressure at L=0.80, R=30",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.73929,
+          "pressure_pa": -0.023372849187921003,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_0p80_R_30_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
       "value": -0.73929
@@ -1035,12 +1603,23 @@
     {
       "description": "Scaling pressure at L=1.00, R=30",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.555834,
+          "pressure_pa": -0.0175728391504266,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_1p00_R_30_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
       "value": -0.555834
@@ -1048,12 +1627,23 @@
     {
       "description": "Scaling pressure at L=1.20, R=30",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.427396,
+          "pressure_pa": -0.013512237757200401,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_1p20_R_30_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
       "value": -0.427396
@@ -1061,12 +1651,23 @@
     {
       "description": "Scaling pressure at L=1.40, R=30",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.336049,
+          "pressure_pa": -0.0106242781543801,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_1p40_R_30_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
       "value": -0.336049
@@ -1074,12 +1675,23 @@
     {
       "description": "Scaling pressure at L=2.00, R=40",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.118022,
+          "pressure_pa": -0.0037312967940278004,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_2p00_R_40_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
       "value": -0.118022
@@ -1087,12 +1699,23 @@
     {
       "description": "Scaling pressure at L=3.00, R=40",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.057953,
+          "pressure_pa": -0.0018321994467497,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_3p00_R_40_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
       "value": -0.057953
@@ -1100,12 +1723,23 @@
     {
       "description": "Scaling pressure at L=4.00, R=40",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.034166,
+          "pressure_pa": -0.0010801671405734,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_4p00_R_40_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
       "value": -0.034166
@@ -1113,12 +1747,23 @@
     {
       "description": "Scaling pressure at L=4.50, R=40",
       "group": "scaling",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.0274,
+          "pressure_pa": -0.00086625825826,
+          "si_unit": "Pa"
+        }
+      },
       "name": "scaling_L_4p50_R_40_pressure",
       "source": {
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported pressure units",
       "value": -0.0274
@@ -1126,12 +1771,13 @@
     {
       "description": "Model 1 (Offset): a",
       "group": "model_1",
+      "metadata": {},
       "name": "model_1_a",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 419,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported fit units",
       "value": 0.641077
@@ -1139,12 +1785,13 @@
     {
       "description": "Model 1 (Offset): alpha",
       "group": "model_1",
+      "metadata": {},
       "name": "model_1_alpha",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 419,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported fit units",
       "value": 0.652603
@@ -1152,12 +1799,13 @@
     {
       "description": "Model 1 (Offset): b",
       "group": "model_1",
+      "metadata": {},
       "name": "model_1_b",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 419,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported fit units",
       "value": 0.241057
@@ -1165,12 +1813,13 @@
     {
       "description": "Model 2 (Pure Power Law): a",
       "group": "model_2",
+      "metadata": {},
       "name": "model_2_a",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 420,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported fit units",
       "value": 0.357367
@@ -1178,12 +1827,13 @@
     {
       "description": "Model 2 (Pure Power Law): alpha",
       "group": "model_2",
+      "metadata": {},
       "name": "model_2_alpha",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 420,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported fit units",
       "value": 1.01624
@@ -1191,12 +1841,13 @@
     {
       "description": "Model 3 (Dual Power Law): a1",
       "group": "model_3",
+      "metadata": {},
       "name": "model_3_a1",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 421,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported fit units",
       "value": 0.310783
@@ -1204,12 +1855,13 @@
     {
       "description": "Model 3 (Dual Power Law): alpha1",
       "group": "model_3",
+      "metadata": {},
       "name": "model_3_alpha1",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 421,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported fit units",
       "value": 1.01625
@@ -1217,12 +1869,13 @@
     {
       "description": "Model 3 (Dual Power Law): a2",
       "group": "model_3",
+      "metadata": {},
       "name": "model_3_a2",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 421,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported fit units",
       "value": 0.046584
@@ -1230,12 +1883,13 @@
     {
       "description": "Model 3 (Dual Power Law): alpha2",
       "group": "model_3",
+      "metadata": {},
       "name": "model_3_alpha2",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 421,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported fit units",
       "value": 1.01619
@@ -1243,12 +1897,13 @@
     {
       "description": "Model 4 (Screened Power Law): a",
       "group": "model_4",
+      "metadata": {},
       "name": "model_4_a",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 422,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported fit units",
       "value": 0.87666
@@ -1256,12 +1911,13 @@
     {
       "description": "Model 4 (Screened Power Law): alpha",
       "group": "model_4",
+      "metadata": {},
       "name": "model_4_alpha",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 422,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
       },
       "unit": "reported fit units",
       "value": 0.426889
@@ -1269,12 +1925,13 @@
     {
       "description": "Verified equilibrium 1: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_01_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 135.16
@@ -1282,12 +1939,13 @@
     {
       "description": "Verified equilibrium 2: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_02_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 248.82
@@ -1295,12 +1953,13 @@
     {
       "description": "Verified equilibrium 3: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_03_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 199.84
@@ -1308,12 +1967,13 @@
     {
       "description": "Verified equilibrium 4: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_04_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 149.22
@@ -1321,12 +1981,13 @@
     {
       "description": "Verified equilibrium 5: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_05_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 323.36
@@ -1334,12 +1995,13 @@
     {
       "description": "Verified equilibrium 6: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_06_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 130.57
@@ -1347,12 +2009,13 @@
     {
       "description": "Verified equilibrium 7: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_07_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 130.32
@@ -1360,12 +2023,13 @@
     {
       "description": "Verified equilibrium 8: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_08_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 300.04
@@ -1373,12 +2037,13 @@
     {
       "description": "Verified equilibrium 9: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_09_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 130.57
@@ -1386,12 +2051,13 @@
     {
       "description": "Verified equilibrium 10: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_10_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 250.14
@@ -1399,12 +2065,13 @@
     {
       "description": "Verified equilibrium 11: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_11_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 294.23
@@ -1412,12 +2079,13 @@
     {
       "description": "Verified equilibrium 12: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_12_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 189.92
@@ -1425,12 +2093,13 @@
     {
       "description": "Verified equilibrium 13: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_13_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 200.13
@@ -1438,12 +2107,13 @@
     {
       "description": "Verified equilibrium 14: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_14_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 110.74
@@ -1451,12 +2121,13 @@
     {
       "description": "Verified equilibrium 15: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_15_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 252.06
@@ -1464,12 +2135,13 @@
     {
       "description": "Verified equilibrium 16: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_16_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 201.49
@@ -1477,12 +2149,13 @@
     {
       "description": "Verified equilibrium 17: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_17_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 300.12
@@ -1490,12 +2163,13 @@
     {
       "description": "Verified equilibrium 18: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_18_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 152.18
@@ -1503,12 +2177,13 @@
     {
       "description": "Verified equilibrium 19: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_19_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 250.11
@@ -1516,12 +2191,13 @@
     {
       "description": "Verified equilibrium 20: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_20_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 199.9
@@ -1529,12 +2205,13 @@
     {
       "description": "Verified equilibrium 21: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_21_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 149.93
@@ -1542,20 +2219,22 @@
     {
       "description": "Verified equilibrium 22: height",
       "group": "levitation_equilibria",
+      "metadata": {},
       "name": "levitation_equilibrium_22_d_eq",
       "source": {
         "basis": "manuscript table",
-        "line": 6,
+        "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "a9a959c1fc480dbcc83d7000adc9c5eb351604e8b32b09fb9cb485a1536d4a37"
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
       },
       "unit": "nm",
       "value": 100.0
     }
   ],
+  "model": "FractalCasimirProvenance",
   "schema_version": 1,
   "script": "execution/export_provenance_pipeline.py",
-  "script_sha256": "c9f13d9a4c61620d58f85f32f2e36a5674f2bded7add5d3e52cd113dec76a632",
+  "script_sha256": "718c2a4ea1aedfa1a1c2d85d86a8cb834bbbb22b9fe9f316e6601a42ffd4fe9f",
   "selected_metric_names": [
     "model_1_ssr",
     "model_2_ssr",
@@ -1654,6 +2333,7 @@
     "levitation_equilibrium_21_d_eq",
     "levitation_equilibrium_22_d_eq"
   ],
+  "status": "completed",
   "warnings": [
     "frontier_2: force subtraction differs from reported F_net by 1e-06; retained the reported value (rounding-level difference)."
   ]

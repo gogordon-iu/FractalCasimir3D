@@ -6,7 +6,7 @@ Frequency and mesh resolution increase together. The ladder measures combined di
 
 | Design | θ (deg) | State | Tier | ξ nodes | Panels | Vector DOFs | Scalar DOFs | Vector (pN) | Scalar (pN) | PFA (pN) | Vector / scalar / PFA runtime (s) | BEM signs agree | All signs agree |
 |---|---:|---|---|---:|---:|---:|---:|---:|---:|---:|---|---|---|
-| Rot_C4_TightSlot_N2 | 6 | Aperture | Standard | 2 | 1504 | 3008 | 3008 | 1.1185051 | 1.0388427 | -0 | 43.343 / 37.157 / 0.000 | True | False |
+| Rot_C4_TightSlot_N2 | 6 | Aperture | Standard | 4 | 1504 | 3008 | 1504 | 1.4846215 | 3.8888906 | -0 | 28.267 / 18.152 / 0.000 | True | False |
 
 ## Convergence and non-additive residual
 
@@ -15,6 +15,10 @@ Relative differences use the finer-tier force magnitude as denominator; a numeri
 ```json
 [
   {
+    "model": "rotational_clutch_3solver_verification",
+    "dataset": "rotational_clutch_3solver_verification",
+    "status": "completed",
+    "executed_at": "2026-10-17T03:16:27.797899+00:00",
     "design": "Rot_C4_TightSlot_N2",
     "theta_deg": 6.0,
     "highest_tier": "Standard",
@@ -37,16 +41,603 @@ Relative differences use the finer-tier force magnitude as denominator; a numeri
 Imported comparison from the real-world NEMS clutch campaign; not an additional solver execution in this verification.
 
 Source: `C:\Users\gorengor\Goren\IUB\Research\FractalCasimirEffect\Code\3Dsimulations\results\real_world_nems_clutch_report.json`
-SHA256: `97e11f0ee0e8fc86dbfcd40f46891fb4bf4eb9780649c23c9e286324c84855a8`
+SHA256: `d45a3ba941eab4757981253948fba9f5d67745d5d4621cf38e33991334c2fff8`
 
 ```json
 {
   "schema_version": 1,
-  "verification_status": "PREPARATION FAILED",
+  "model": "BEM and continuum dispersive Lifshitz-PFA",
+  "dataset": "real_world_nems_clutch",
+  "status": "completed",
+  "executed_at": "2026-10-17T03:14:53.577006+00:00",
+  "verification_status": "MICRO-PROBE: NOT A COMPLETE VERIFICATION",
   "complete_device_verified": false,
-  "error": "RepositoryAPIError: Repository constant H_TEETH_UM=0.1; required 0.25.",
-  "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\execution\\run_real_world_nems_clutch.py\", line 2430, in <module>\n    raise SystemExit(main())\n                     ~~~~^^\n  File \"C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\execution\\run_real_world_nems_clutch.py\", line 2137, in main\n    designs = [get_design(name) for name in DESIGN_NAMES]\n               ~~~~~~~~~~^^^^^^\n  File \"C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\execution\\run_real_world_nems_clutch.py\", line 347, in get_design\n    repo = repository()\n  File \"C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\execution\\run_real_world_nems_clutch.py\", line 193, in repository\n    raise RepositoryAPIError(\n        f\"Repository constant {name}={actual!r}; required {value!r}.\"\n    )\nRepositoryAPIError: Repository constant H_TEETH_UM=0.1; required 0.25.\n",
-  "elapsed_s": 2.0872878000081982
+  "mechanical_connectivity_verified": true,
+  "full_angle_sampling_completed": false,
+  "numerical_checks_passed": false,
+  "successful_bem_measurements": 2,
+  "designs": {
+    "Rot_C4_TightSlot_N2": {
+      "R_min_um": 0.3,
+      "R_max_um": 1.35,
+      "ring_intervals_um": [
+        [
+          0.3,
+          0.4166666666666667
+        ],
+        [
+          0.5333333333333333,
+          0.65
+        ],
+        [
+          1.0,
+          1.1166666666666667
+        ],
+        [
+          1.2333333333333334,
+          1.35
+        ]
+      ],
+      "tooth_intervals_um": [
+        [
+          0.4370833333333333,
+          0.5129166666666667
+        ],
+        [
+          0.7112499999999999,
+          0.93875
+        ],
+        [
+          1.1370833333333334,
+          1.2129166666666666
+        ]
+      ],
+      "aperture_arc_deg": 36.0,
+      "tooth_arc_deg": 15.0,
+      "theta_deg": [
+        0.0
+      ],
+      "full_monolithic_fz_N": [
+        1.198463495659994e-12
+      ],
+      "isolated_active_zone_fz_N": [
+        1.4846215362842287e-12
+      ],
+      "continuum_lifshitz_pfa_fz_N": [
+        -3.327385549259522e-14
+      ]
+    },
+    "Rot_C8_Compact_N2": {
+      "R_min_um": 0.2,
+      "R_max_um": 0.9,
+      "ring_intervals_um": [
+        [
+          0.2,
+          0.2777777777777778
+        ],
+        [
+          0.35555555555555557,
+          0.43333333333333335
+        ],
+        [
+          0.6666666666666667,
+          0.7444444444444445
+        ],
+        [
+          0.8222222222222223,
+          0.9
+        ]
+      ],
+      "tooth_intervals_um": [
+        [
+          0.29916666666666664,
+          0.33416666666666667
+        ],
+        [
+          0.49750000000000005,
+          0.6025
+        ],
+        [
+          0.7658333333333335,
+          0.8008333333333334
+        ]
+      ],
+      "aperture_arc_deg": 36.0,
+      "tooth_arc_deg": 15.0,
+      "theta_deg": [],
+      "full_monolithic_fz_N": [],
+      "isolated_active_zone_fz_N": [],
+      "continuum_lifshitz_pfa_fz_N": []
+    },
+    "Rot_C10_Fractal_N3": {
+      "R_min_um": 0.3,
+      "R_max_um": 1.65,
+      "ring_intervals_um": [
+        [
+          0.3,
+          0.35
+        ],
+        [
+          0.39999999999999997,
+          0.44999999999999996
+        ],
+        [
+          0.6,
+          0.65
+        ],
+        [
+          0.7,
+          0.75
+        ],
+        [
+          1.2,
+          1.25
+        ],
+        [
+          1.2999999999999998,
+          1.3499999999999999
+        ],
+        [
+          1.5,
+          1.55
+        ],
+        [
+          1.5999999999999999,
+          1.65
+        ]
+      ],
+      "tooth_intervals_um": [
+        [
+          0.365,
+          0.385
+        ],
+        [
+          0.4949999999999999,
+          0.5549999999999999
+        ],
+        [
+          0.665,
+          0.685
+        ],
+        [
+          0.885,
+          1.065
+        ],
+        [
+          1.265,
+          1.285
+        ],
+        [
+          1.3949999999999998,
+          1.4549999999999998
+        ],
+        [
+          1.565,
+          1.585
+        ]
+      ],
+      "aperture_arc_deg": 36.0,
+      "tooth_arc_deg": 12.0,
+      "theta_deg": [],
+      "full_monolithic_fz_N": [],
+      "isolated_active_zone_fz_N": [],
+      "continuum_lifshitz_pfa_fz_N": []
+    }
+  },
+  "geometry_audits": [
+    {
+      "design_name": "Rot_C4_TightSlot_N2",
+      "theta_deg": 0.0,
+      "status": "ok",
+      "mesh": {
+        "rotor": {
+          "panels": 424,
+          "vertices": 416,
+          "triangles": 848,
+          "occupied_cells": 108,
+          "connected_components": 1,
+          "watertight": true,
+          "orientation_consistent": true,
+          "volume_um3": 0.40555408613865007,
+          "component_panel_counts": {
+            "active": 60,
+            "foundation": 120,
+            "spider": 244
+          }
+        },
+        "stator": {
+          "panels": 1168,
+          "vertices": 1152,
+          "triangles": 2336,
+          "occupied_cells": 552,
+          "connected_components": 1,
+          "watertight": true,
+          "orientation_consistent": true,
+          "volume_um3": 2.829828852629725,
+          "component_panel_counts": {
+            "active": 508,
+            "foundation": 660
+          }
+        }
+      },
+      "collision": {
+        "full_geometry_collision_free": true,
+        "intersections": [],
+        "minimum_named_vertical_gap_um": 0.015,
+        "repository_angular_state": {
+          "state": "aperture",
+          "aperture_fraction": 1.0,
+          "landing_pad_fraction": 0.0,
+          "delta_z_eff_um": -0.1,
+          "z_tip_fixed_um": -0.1
+        },
+        "repository_collision_certificate": {
+          "collision_free_for_all_angles": true,
+          "minimum_elevated_rib_radial_clearance_um": 0.02041666666666664,
+          "landing_pad_vertical_clearance_um": 0.015,
+          "z_tip_fixed_um": -0.1,
+          "z_rotor_top_um": 0.0,
+          "z_pad_top_um": -0.115,
+          "z_pad_bottom_um": -0.265,
+          "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+        },
+        "repository_certificate_scope": "Repository active-zone certificate is supplementary; the full occupancy intersection audit is authoritative for extended shanks and landing-sector rib clamps."
+      },
+      "zero_floating_parts": true
+    }
+  ],
+  "solver_results": [
+    {
+      "design_name": "Rot_C4_TightSlot_N2",
+      "theta_deg": 0.0,
+      "variant": "full",
+      "kernel": "vector_dyadic",
+      "subdivisions": 1,
+      "n_xi": 4,
+      "device": "cpu",
+      "convergence": false,
+      "status": "ok",
+      "fz_N": 1.198463495659994e-12,
+      "elapsed_s": 21.096621100004995,
+      "solver_sector_panels": {
+        "rotor": 132,
+        "stator": 328
+      },
+      "solver_sector_deg": 90.0,
+      "solver_symmetry_multiplier": 4,
+      "force_conversion": "f_net_N already in SI Newtons; no conversion",
+      "measurement_status": "ok",
+      "model": "BEM and continuum dispersive Lifshitz-PFA",
+      "dataset": "real_world_nems_clutch",
+      "executed_at": "2026-10-17T03:14:53.577006+00:00"
+    },
+    {
+      "design_name": "Rot_C4_TightSlot_N2",
+      "theta_deg": 0.0,
+      "variant": "isolated",
+      "kernel": "vector_dyadic",
+      "subdivisions": 1,
+      "n_xi": 4,
+      "device": "cpu",
+      "convergence": false,
+      "status": "ok",
+      "fz_N": 1.4846215362842287e-12,
+      "elapsed_s": 13.381331700016744,
+      "solver_sector_panels": {
+        "rotor": 96,
+        "stator": 280
+      },
+      "solver_sector_deg": 90.0,
+      "solver_symmetry_multiplier": 4,
+      "force_conversion": "f_net_N already in SI Newtons; no conversion",
+      "measurement_status": "ok",
+      "model": "BEM and continuum dispersive Lifshitz-PFA",
+      "dataset": "real_world_nems_clutch",
+      "executed_at": "2026-10-17T03:14:53.577006+00:00"
+    }
+  ],
+  "lifshitz_pfa": [
+    {
+      "design_name": "Rot_C4_TightSlot_N2",
+      "theta_deg": 0.0,
+      "quadrature": {
+        "gauss_legendre": 128,
+        "gauss_laguerre": 96
+      },
+      "areas_um2": {
+        "landing_pad": 0.0,
+        "spider_to_rib": 0.4031710572106901,
+        "tooth_to_floor": 0.3275764839836856
+      },
+      "gaps_um": {
+        "landing_pad": 0.015,
+        "spider_to_rib": 0.35,
+        "tooth_to_floor": 0.45
+      },
+      "limitations": [
+        "Pairwise projected planar areas; not an exact many-body solution.",
+        "Only unshielded aperture tooth area is assigned to the trench floor.",
+        "No positive-force stepped-edge contribution is invented.",
+        "Hub sidewalls and corner diffraction are not planar PFA terms."
+      ],
+      "all_gold": {
+        "fz_N": -3.327385549259522e-14,
+        "components_N": {
+          "landing_pad": -0.0,
+          "spider_to_rib": -2.5288879143087007e-14,
+          "tooth_to_floor": -7.984976349508213e-15
+        }
+      },
+      "hybrid_silicon_nitride": {
+        "fz_N": -1.0914936535027023e-14,
+        "components_N": {
+          "landing_pad": -0.0,
+          "spider_to_rib": -8.299340238803797e-15,
+          "tooth_to_floor": -2.6155962962232263e-15
+        }
+      },
+      "hybrid_silica": {
+        "fz_N": -6.982463645074131e-15,
+        "components_N": {
+          "landing_pad": -0.0,
+          "spider_to_rib": -5.356542101991504e-15,
+          "tooth_to_floor": -1.625921543082627e-15
+        }
+      },
+      "contrast_weights": {
+        "silicon_nitride": {
+          "spider": 0.32818141886974506,
+          "foundation": 0.32756468920340864
+        },
+        "silica": {
+          "spider": 0.21181413662834378,
+          "foundation": 0.2036225872081344
+        }
+      }
+    }
+  ],
+  "comparison": [
+    {
+      "design_name": "Rot_C4_TightSlot_N2",
+      "theta_deg": 0.0,
+      "solver": "vector_dyadic",
+      "model": "homogeneous BEM",
+      "stack": "all_gold_full",
+      "fz_N": 1.198463495659994e-12,
+      "status": "completed",
+      "measurement_status": "ok",
+      "dataset": "real_world_nems_clutch",
+      "executed_at": "2026-10-17T03:14:53.577006+00:00"
+    },
+    {
+      "design_name": "Rot_C4_TightSlot_N2",
+      "theta_deg": 0.0,
+      "solver": "vector_dyadic",
+      "model": "homogeneous BEM",
+      "stack": "all_gold_isolated",
+      "fz_N": 1.4846215362842287e-12,
+      "status": "completed",
+      "measurement_status": "ok",
+      "dataset": "real_world_nems_clutch",
+      "executed_at": "2026-10-17T03:14:53.577006+00:00"
+    },
+    {
+      "design_name": "Rot_C4_TightSlot_N2",
+      "theta_deg": 0.0,
+      "solver": "vector_dyadic",
+      "model": "component-weighted BEM approximation",
+      "stack": "hybrid_silicon_nitride",
+      "status": "completed",
+      "fz_N": null,
+      "measurement_status": "unavailable",
+      "dataset": "real_world_nems_clutch",
+      "executed_at": "2026-10-17T03:14:53.577006+00:00"
+    },
+    {
+      "design_name": "Rot_C4_TightSlot_N2",
+      "theta_deg": 0.0,
+      "solver": "vector_dyadic",
+      "model": "component-weighted BEM approximation",
+      "stack": "hybrid_silica",
+      "status": "completed",
+      "fz_N": null,
+      "measurement_status": "unavailable",
+      "dataset": "real_world_nems_clutch",
+      "executed_at": "2026-10-17T03:14:53.577006+00:00"
+    },
+    {
+      "design_name": "Rot_C4_TightSlot_N2",
+      "theta_deg": 0.0,
+      "solver": "scalar_yukawa",
+      "model": "homogeneous BEM",
+      "stack": "all_gold_full",
+      "fz_N": null,
+      "status": "completed",
+      "measurement_status": "unavailable",
+      "dataset": "real_world_nems_clutch",
+      "executed_at": "2026-10-17T03:14:53.577006+00:00"
+    },
+    {
+      "design_name": "Rot_C4_TightSlot_N2",
+      "theta_deg": 0.0,
+      "solver": "scalar_yukawa",
+      "model": "homogeneous BEM",
+      "stack": "all_gold_isolated",
+      "fz_N": null,
+      "status": "completed",
+      "measurement_status": "unavailable",
+      "dataset": "real_world_nems_clutch",
+      "executed_at": "2026-10-17T03:14:53.577006+00:00"
+    },
+    {
+      "design_name": "Rot_C4_TightSlot_N2",
+      "theta_deg": 0.0,
+      "solver": "scalar_yukawa",
+      "model": "component-weighted BEM approximation",
+      "stack": "hybrid_silicon_nitride",
+      "status": "completed",
+      "fz_N": null,
+      "measurement_status": "unavailable",
+      "dataset": "real_world_nems_clutch",
+      "executed_at": "2026-10-17T03:14:53.577006+00:00"
+    },
+    {
+      "design_name": "Rot_C4_TightSlot_N2",
+      "theta_deg": 0.0,
+      "solver": "scalar_yukawa",
+      "model": "component-weighted BEM approximation",
+      "stack": "hybrid_silica",
+      "status": "completed",
+      "fz_N": null,
+      "measurement_status": "unavailable",
+      "dataset": "real_world_nems_clutch",
+      "executed_at": "2026-10-17T03:14:53.577006+00:00"
+    },
+    {
+      "design_name": "Rot_C4_TightSlot_N2",
+      "theta_deg": 0.0,
+      "solver": "continuum_lifshitz_pfa",
+      "model": "zero-temperature projected-area Lifshitz-PFA",
+      "stack": "all_gold",
+      "status": "completed",
+      "fz_N": -3.327385549259522e-14,
+      "landing_pad": -0.0,
+      "spider_to_rib": -2.5288879143087007e-14,
+      "tooth_to_floor": -7.984976349508213e-15,
+      "measurement_status": "ok",
+      "dataset": "real_world_nems_clutch",
+      "executed_at": "2026-10-17T03:14:53.577006+00:00"
+    },
+    {
+      "design_name": "Rot_C4_TightSlot_N2",
+      "theta_deg": 0.0,
+      "solver": "continuum_lifshitz_pfa",
+      "model": "zero-temperature projected-area Lifshitz-PFA",
+      "stack": "hybrid_silicon_nitride",
+      "status": "completed",
+      "fz_N": -1.0914936535027023e-14,
+      "landing_pad": -0.0,
+      "spider_to_rib": -8.299340238803797e-15,
+      "tooth_to_floor": -2.6155962962232263e-15,
+      "measurement_status": "ok",
+      "dataset": "real_world_nems_clutch",
+      "executed_at": "2026-10-17T03:14:53.577006+00:00"
+    },
+    {
+      "design_name": "Rot_C4_TightSlot_N2",
+      "theta_deg": 0.0,
+      "solver": "continuum_lifshitz_pfa",
+      "model": "zero-temperature projected-area Lifshitz-PFA",
+      "stack": "hybrid_silica",
+      "status": "completed",
+      "fz_N": -6.982463645074131e-15,
+      "landing_pad": -0.0,
+      "spider_to_rib": -5.356542101991504e-15,
+      "tooth_to_floor": -1.625921543082627e-15,
+      "measurement_status": "ok",
+      "dataset": "real_world_nems_clutch",
+      "executed_at": "2026-10-17T03:14:53.577006+00:00"
+    }
+  ],
+  "convergence": [
+    {
+      "theta_deg": 0.0,
+      "kernel": "vector_dyadic",
+      "expected_sign": "repulsive",
+      "relative_change": null,
+      "within_tolerance": false,
+      "expected_sign_verified": false
+    },
+    {
+      "theta_deg": 0.0,
+      "kernel": "scalar_yukawa",
+      "expected_sign": "repulsive",
+      "relative_change": null,
+      "within_tolerance": false,
+      "expected_sign_verified": false
+    },
+    {
+      "theta_deg": 48.0,
+      "kernel": "vector_dyadic",
+      "expected_sign": "attractive",
+      "relative_change": null,
+      "within_tolerance": false,
+      "expected_sign_verified": false
+    },
+    {
+      "theta_deg": 48.0,
+      "kernel": "scalar_yukawa",
+      "expected_sign": "attractive",
+      "relative_change": null,
+      "within_tolerance": false,
+      "expected_sign_verified": false
+    }
+  ],
+  "convergence_relative_tolerance": 0.05,
+  "limitations": [
+    "Part 2 specifies collars ending at R_min-0.03 and starting at R_max+0.03; part 3 explicitly occupies collars through R_min and from R_max. The mesh follows the explicit part-3 occupancy.",
+    "Surviving Cantor ring ribs extend to z=0 in the landing-pad sector to provide pedestal clamps. Connectivity and rotor clearance are audited on the full geometry.",
+    "An actuator ring is specified, but comb fingers, suspension, shaft bearings, drive electrodes, and electrical routing are not. Their mechanics and actuation are not verified by this script.",
+    "Solver support macro-boxes use 2 nm clearances at adjoining boundaries to avoid overlapping or coincident interface panels. They approximate, rather than exactly reproduce, the connected full-geometry audit mesh.",
+    "Selective metallization is a component-weighted homogeneous-BEM approximation, not an exact heterogeneous or finite-thickness coating solve.",
+    "The silica comparison uses the specified static dielectric constant; a silica dispersion curve was not supplied.",
+    "PFA is a zero-temperature planar projected-area comparison and cannot verify stepped-edge repulsion.",
+    "The convergence check increases n_xi to max(12, 2 * baseline n_xi); panel subdivisions may also increase. Separate mesh and quadrature error contributions are not independently established.",
+    "No load-bearing stress, buckling, release fabrication, stiction, electrical actuation, shaft bearing, or finite-temperature verification is claimed.",
+    "Solves run in-process without a deadline by default. An explicitly requested deadline bounds the solver subprocess, not arbitrary third-party import, plotting, or filesystem latency."
+  ],
+  "warnings": [
+    "save_plot_provenance: RepositoryAPIError: Unsupported required argument 'data_source' in save_plot_provenance(figure_path: str, data_source: str, columns_used: List[str], sidecar_suffix: str = '.provenance.json', solver_name: str | None = None, solver_parameters: Dict[str, Any] | None = None) -> str. Extend the explicit repository adapter for this API.",
+    "save_plot_provenance: RepositoryAPIError: Unsupported required argument 'data_source' in save_plot_provenance(figure_path: str, data_source: str, columns_used: List[str], sidecar_suffix: str = '.provenance.json', solver_name: str | None = None, solver_parameters: Dict[str, Any] | None = None) -> str. Extend the explicit repository adapter for this API."
+  ],
+  "provenance": {
+    "run_id": "real_world_nems_clutch_1792206895198703200",
+    "script": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\execution\\run_real_world_nems_clutch.py",
+    "device": "cpu",
+    "python": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]",
+    "numpy": "2.4.6",
+    "arguments": {
+      "max_steps": 5,
+      "device": "auto",
+      "plot": true,
+      "n_xi": 6,
+      "subdivisions": 1,
+      "convergence_subdivisions": 1,
+      "convergence_tolerance": 0.05,
+      "solver_timeout": 0.0,
+      "threads": 8,
+      "strict": false
+    },
+    "micro_probe": true,
+    "force_units": "N",
+    "length_units": "um",
+    "full_360_degree_mesh": true,
+    "solver_sector_deg": 90.0,
+    "solver_face_angular_unit": "rad",
+    "solver_symmetry_multiplier": 4,
+    "temperature_K": 0.0,
+    "gold_model": {
+      "model": "Drude",
+      "eps_inf": 1.0,
+      "omega_p_inv_um": 45.76160838064494,
+      "gamma_inv_um": 0.268589728037008,
+      "hbar_c_eV_um": 0.1973269804,
+      "frequency_convention": "angular wavenumber, rad/um",
+      "note": "The specified Drude-Lorentz stack has no Lorentz poles for Au."
+    },
+    "hybrid_model": "component-weighted BEM approximation",
+    "no_fabricated_solver_results": true,
+    "model": "BEM and continuum dispersive Lifshitz-PFA",
+    "dataset": "real_world_nems_clutch",
+    "executed_at": "2026-10-17T03:14:53.577006+00:00",
+    "sampled_angles": {
+      "Rot_C4_TightSlot_N2": [
+        0.0
+      ]
+    }
+  },
+  "elapsed_s": 42.40805090000504,
+  "micro_probe_under_15s": false
 }
 ```
 

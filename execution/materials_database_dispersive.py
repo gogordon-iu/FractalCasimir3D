@@ -94,7 +94,7 @@ def evaluate_lorentz_eps_imag(xi_meep, eps_inf, oscillators):
     """
     Evaluates epsilon(i*xi) along the imaginary frequency axis for a multi-oscillator Lorentz model.
     eps(i*xi) = eps_inf + sum_k [ f_k / (omega_0k^2 + xi^2 + gamma_k * xi) ]
-    
+
     Parameters:
     -----------
     xi_meep : float or np.ndarray
@@ -103,7 +103,7 @@ def evaluate_lorentz_eps_imag(xi_meep, eps_inf, oscillators):
         High-frequency permittivity limit.
     oscillators : list of dict
         Oscillator parameters with 'E0_eV', 'f_eV2', 'gamma_eV'.
-        
+
     Returns:
     --------
     float or np.ndarray
@@ -111,23 +111,23 @@ def evaluate_lorentz_eps_imag(xi_meep, eps_inf, oscillators):
     """
     # Convert xi from MEEP units to eV: xi_eV = xi_meep / EV_TO_MEEP_FREQ
     xi_eV = xi_meep / EV_TO_MEEP_FREQ
-    
+
     eps_val = np.full_like(xi_eV, float(eps_inf), dtype=float) if isinstance(xi_eV, np.ndarray) else float(eps_inf)
-    
+
     for osc in oscillators:
         w0 = osc["E0_eV"]
         f_k = osc["f_eV2"]
         gam = osc["gamma_eV"]
         denom = w0**2 + xi_eV**2 + gam * xi_eV + 1e-30
         eps_val += f_k / denom
-        
+
     return eps_val
 
 
 def get_dielectric_tensor_imag(material_name, xi_meep, theta_deg=0.0):
     """
     Returns the full 3x3 dielectric tensor epsilon(i*xi) rotated by angle theta in the xy-plane.
-    
+
     Returns:
     --------
     eps_xx, eps_yy, eps_zz, eps_xy : float or np.ndarray
@@ -135,8 +135,8 @@ def get_dielectric_tensor_imag(material_name, xi_meep, theta_deg=0.0):
     theta_rad = np.radians(theta_deg)
     C = np.cos(theta_rad)
     S = np.sin(theta_rad)
-    
-    if material_name in ["BlackPhosphorus", "Phosphorene", "BP_realistic"]:
+
+    if material_name in ["BlackPhosphorus", "Phosphorene", "Phosphorene_tuned", "BP_realistic"]:
         eps_x = evaluate_lorentz_eps_imag(xi_meep, BP_EPS_INF_X, BP_OSCILLATORS_X)
         eps_y = evaluate_lorentz_eps_imag(xi_meep, BP_EPS_INF_Y, BP_OSCILLATORS_Y)
         eps_z = evaluate_lorentz_eps_imag(xi_meep, BP_EPS_INF_Z, BP_OSCILLATORS_Z)
@@ -171,7 +171,7 @@ def get_dielectric_tensor_imag(material_name, xi_meep, theta_deg=0.0):
     eps_yy = eps_x * S**2 + eps_y * C**2
     eps_zz = eps_z
     eps_xy = (eps_x - eps_y) * S * C
-    
+
     return eps_xx, eps_yy, eps_zz, eps_xy
 
 
@@ -189,55 +189,65 @@ def get_meep_dispersive_medium(material_name, Sigma, ft, theta_deg=0.0):
 
     cond_attr = {"D_conductivity" if ft == mp.E_stuff else "B_conductivity": Sigma}
 
-    if material_name in ["BlackPhosphorus", "Phosphorene", "BP_realistic"]:
-        # Build MEEP Lorentzian susceptibilities matching experimental BP
-        eps_xx_inf = BP_EPS_INF_X * C**2 + BP_EPS_INF_Y * S**2
-        eps_yy_inf = BP_EPS_INF_X * S**2 + BP_EPS_INF_Y * C**2
-        eps_zz_inf = BP_EPS_INF_Z
-        eps_xy_inf = (BP_EPS_INF_X - BP_EPS_INF_Y) * S * C
+    if material_name in ["BlackPhosphorus", "Phosphorene", "Phosphorene_tuned", "BP_realistic", "ReS2"]:
+        if material_name == "ReS2":
+            eps_inf_x = RES2_EPS_INF_A
+            eps_inf_y = RES2_EPS_INF_B
+            eps_inf_z = 4.5
+            oscillators_x = RES2_OSCILLATORS_A
+            oscillators_y = RES2_OSCILLATORS_B
+            oscillators_z = []
+        else:
+            eps_inf_x = BP_EPS_INF_X
+            eps_inf_y = BP_EPS_INF_Y
+            eps_inf_z = BP_EPS_INF_Z
+            oscillators_x = BP_OSCILLATORS_X
+            oscillators_y = BP_OSCILLATORS_Y
+            oscillators_z = BP_OSCILLATORS_Z
+
+        eps_xx_inf = eps_inf_x * C**2 + eps_inf_y * S**2
+        eps_yy_inf = eps_inf_x * S**2 + eps_inf_y * C**2
+        eps_zz_inf = eps_inf_z
+        eps_xy_inf = (eps_inf_x - eps_inf_y) * S * C
 
         susceptibilities = []
-        # Add in-plane and out-of-plane oscillator branches
-        for i, osc in enumerate(BP_OSCILLATORS_X):
+
+        # Each principal-axis oscillator retains its own resonance and damping.
+        # Sigma is applied only through the medium conductivity.
+        for osc in oscillators_x:
             freq_meep = osc["E0_eV"] * EV_TO_MEEP_FREQ
             gamma_meep = osc["gamma_eV"] * EV_TO_MEEP_FREQ
-            sig_x = (osc["f_eV2"] * (EV_TO_MEEP_FREQ**2)) / (freq_meep**2)
+            sig_x = (osc["f_eV2"] * EV_TO_MEEP_FREQ**2) / freq_meep**2
 
-            # Match corresponding Y oscillator if present
-            sig_y = 0.0
-            if i < len(BP_OSCILLATORS_Y):
-                osc_y = BP_OSCILLATORS_Y[i]
-                sig_y = (osc_y["f_eV2"] * (EV_TO_MEEP_FREQ**2)) / (freq_meep**2)
-
-            # Susceptibility rotation
-            sig_xx = sig_x * C**2 + sig_y * S**2
-            sig_yy = sig_x * S**2 + sig_y * C**2
-            sig_zz = 0.0
-            sig_xy = (sig_x - sig_y) * S * C
-
-            gamma_val = gamma_meep + Sigma if ft == mp.E_stuff else gamma_meep
-
-            sus = mp.LorentzianSusceptibility(
+            susceptibilities.append(mp.LorentzianSusceptibility(
                 frequency=freq_meep,
-                gamma=gamma_val,
-                sigma_diag=mp.Vector3(sig_xx, sig_yy, sig_zz),
-                sigma_offdiag=mp.Vector3(sig_xy, 0.0, 0.0)
-            )
-            susceptibilities.append(sus)
+                gamma=gamma_meep,
+                sigma_diag=mp.Vector3(sig_x * C**2, sig_x * S**2, 0.0),
+                sigma_offdiag=mp.Vector3(0.0, 0.0, sig_x * S * C)
+            ))
 
-        # Add z-axis out-of-plane polarizations
-        for osc_z in BP_OSCILLATORS_Z:
+        for osc_y in oscillators_y:
+            freq_meep = osc_y["E0_eV"] * EV_TO_MEEP_FREQ
+            gamma_meep = osc_y["gamma_eV"] * EV_TO_MEEP_FREQ
+            sig_y = (osc_y["f_eV2"] * EV_TO_MEEP_FREQ**2) / freq_meep**2
+
+            susceptibilities.append(mp.LorentzianSusceptibility(
+                frequency=freq_meep,
+                gamma=gamma_meep,
+                sigma_diag=mp.Vector3(sig_y * S**2, sig_y * C**2, 0.0),
+                sigma_offdiag=mp.Vector3(0.0, 0.0, -sig_y * S * C)
+            ))
+
+        for osc_z in oscillators_z:
             freq_meep = osc_z["E0_eV"] * EV_TO_MEEP_FREQ
             gamma_meep = osc_z["gamma_eV"] * EV_TO_MEEP_FREQ
-            sig_z = (osc_z["f_eV2"] * (EV_TO_MEEP_FREQ**2)) / (freq_meep**2)
-            gamma_val = gamma_meep + Sigma if ft == mp.E_stuff else gamma_meep
+            sig_z = (osc_z["f_eV2"] * EV_TO_MEEP_FREQ**2) / freq_meep**2
 
-            sus = mp.LorentzianSusceptibility(
+            susceptibilities.append(mp.LorentzianSusceptibility(
                 frequency=freq_meep,
-                gamma=gamma_val,
+                gamma=gamma_meep,
                 sigma_diag=mp.Vector3(0.0, 0.0, sig_z)
-            )
-            susceptibilities.append(sus)
+            ))
 
         return mp.Medium(
             epsilon_diag=mp.Vector3(eps_xx_inf, eps_yy_inf, eps_zz_inf),
@@ -252,7 +262,7 @@ def get_meep_dispersive_medium(material_name, Sigma, ft, theta_deg=0.0):
         for sus in base_medium.E_susceptibilities:
             freq = sus.frequency
             gamma = sus.gamma
-            gamma_val = gamma + Sigma if ft == mp.E_stuff else gamma
+            gamma_val = gamma
             if isinstance(sus, mp.DrudeSusceptibility):
                 if freq < 1e-5:
                     sigma_val = sus.sigma_diag.x * (freq ** 2)
@@ -278,8 +288,17 @@ def get_meep_dispersive_medium(material_name, Sigma, ft, theta_deg=0.0):
         )
     elif material_name in IMMERSION_MEDIA:
         med = IMMERSION_MEDIA[material_name]
+        susceptibilities = []
+        sigma_uv = med["eps_static"] - med["eps_inf"]
+        if sigma_uv != 0.0:
+            susceptibilities.append(mp.LorentzianSusceptibility(
+                frequency=med["uv_pole_eV"] * EV_TO_MEEP_FREQ,
+                gamma=0.1 * EV_TO_MEEP_FREQ,
+                sigma=sigma_uv
+            ))
         return mp.Medium(
-            epsilon=med["eps_static"],
+            epsilon=med["eps_inf"],
+            E_susceptibilities=susceptibilities,
             **cond_attr
         )
     else:

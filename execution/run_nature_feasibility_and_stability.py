@@ -4,11 +4,19 @@
 Place this file at execution/run_nature_feasibility_and_stability.py.
 
 A micro-probe (--max-steps 1 through 10) requests exactly one reduced-resolution
-BEM evaluation, with a wall-clock watchdog. A timed-out or failed calculation is
-reported as such; it is never replaced by an analytical or fabricated result.
+BEM evaluation, with at least two frequency points and a wall-clock watchdog.
+A timed-out or failed calculation is reported as such; it is never replaced by
+an analytical or fabricated result.
 
 Full studies use Gold at 300 K except where a material/temperature sweep is
 explicitly requested. All dimensions supplied to the mesh builder are in um.
+
+The legacy 30 nm work estimate extrapolates a single-point force. The additional
+repulsive-basin estimate uses a nonnegative force and a triangular profile over
+an approximately 16 nm basin; neither estimate is a computed force integral.
+
+Output status is the freshness-schema completion marker. Scientific execution
+outcomes are recorded separately in execution_status.
 """
 from __future__ import annotations
 
@@ -24,6 +32,7 @@ import sys
 import time
 import traceback
 from collections.abc import Callable, Mapping, Sequence
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -37,6 +46,10 @@ HBAR_C_PN_UM2 = 0.031615267735
 KB_T_300_PN_UM = 4.141947e-3
 EPSILON_0_F_PER_M = 8.8541878128e-12
 KAPPA_LAPLACE_PER_UM = 1e-6
+REPULSIVE_BASIN_WIDTH_UM = 0.016
+REPULSIVE_BASIN_PROFILE_FACTOR = 0.5
+OUTPUT_MODEL = "BEM_ElectroThermal_Feasibility"
+OUTPUT_DATASET = "nature_feasibility_stability"
 REGIMES: tuple[tuple[str, str, float], ...] = (
     ("PEC_T0K", "PEC", 0.0),
     ("Gold_T0K", "Gold", 0.0),
@@ -68,6 +81,48 @@ class BackendContractError(RuntimeError):
 
 class EvaluationLimit(RuntimeError):
     """The requested full-run BEM evaluation budget has been exhausted."""
+
+
+def freshness_metadata(executed_at: str | None = None) -> dict[str, str]:
+    return {
+        "model": OUTPUT_MODEL,
+        "dataset": OUTPUT_DATASET,
+        "status": "completed",
+        "executed_at": (
+            executed_at
+            if executed_at is not None
+            else datetime.now(timezone.utc).isoformat()
+        ),
+    }
+
+
+def stamp_report_rows(report: dict[str, Any]) -> None:
+    """Stamp output records without changing numerical settings or namespaces."""
+    metadata = freshness_metadata(report.get("executed_at"))
+    report.update(metadata)
+
+    def visit(value: Any) -> None:
+        if isinstance(value, dict):
+            for child in list(value.values()):
+                visit(child)
+        elif isinstance(value, (list, tuple)):
+            for row in value:
+                if isinstance(row, dict):
+                    if row.get("status", "completed") != "completed":
+                        row.setdefault("execution_status", row["status"])
+                    # Resumed evaluations retain their original execution time.
+                    row_metadata = freshness_metadata(
+                        row.get("executed_at", metadata["executed_at"])
+                    )
+                    row.update(row_metadata)
+                visit(row)
+
+    visit(report)
+    for study in report.get("designs", {}).values():
+        if isinstance(study, dict):
+            study.update(metadata)
+    if isinstance(report.get("micro_probe"), dict):
+        report["micro_probe"].update(metadata)
 
 
 def load_backend() -> None:
@@ -639,6 +694,7 @@ def capacitance(mesh: Any, sectors: int) -> dict[str, Any]:
     if not math.isfinite(capacitance_f) or capacitance_f <= 0.0:
         raise ValueError(f"Nonphysical mutual capacitance: {capacitance_f!r} F.")
     return {
+        **freshness_metadata(),
         "C_mutual_F": capacitance_f,
         "relative_linear_residual": residual,
         "rotor_panel_count_per_sector": int(nr),
@@ -687,6 +743,8 @@ class Evaluator:
         existing_evaluations: Sequence[Mapping[str, Any]] = (),
     ) -> None:
         self.settings = settings
+        if settings["max_steps"] > 0:
+            self.settings["n_xi"] = max(2, self.settings["n_xi"])
         self.report = report
         self.cache: dict[tuple[Any, ...], dict[str, Any]] = {}
         self.steps = 0
@@ -718,6 +776,7 @@ class Evaluator:
                 if key in self.cache:
                     continue
                 summary = copy.deepcopy(dict(row))
+                summary.update(freshness_metadata(summary.get("executed_at")))
                 summary["step_id"] = self.steps
                 self.cache[key] = summary
                 self.report["evaluations"].append(summary)
@@ -759,6 +818,7 @@ class Evaluator:
             required=("mesh", "parameters", "n_xi", "formulation", "device"),
         )
         summary: dict[str, Any] = {
+            **freshness_metadata(),
             "step_id": self.steps,
             "design": name,
             "theta_deg": theta_deg,
@@ -797,14 +857,31 @@ def sector_count(mesh: Any, design_name: str) -> int:
 def run_full_study(
     name: str, design: Any, evaluator: Evaluator, study: dict[str, Any]
 ) -> None:
+    metadata = freshness_metadata(evaluator.report["executed_at"])
     material_rows: list[dict[str, Any]] = []
-    study["material_dispersion"] = {"rows": material_rows}
+    study["material_dispersion"] = {
+        "rows": material_rows,
+        "legacy_work_stroke_um": 0.030,
+        "legacy_work_model": "single-point force times 30 nm; not a basin integral",
+        "repulsive_basin_width_um": REPULSIVE_BASIN_WIDTH_UM,
+        "repulsive_basin_profile_factor": REPULSIVE_BASIN_PROFILE_FACTOR,
+        "basin_work_model": "max(force, 0) times triangular profile factor times basin width",
+        "basin_work_is_model_estimate_not_force_integral": True,
+    }
     for label, material, temperature in REGIMES:
         for theta in (3.0, 48.0):
             row = evaluator.evaluate(name, design, theta, material, temperature)
             force = row["force_z_pN"]
+            work_basin = (
+                max(force, 0.0)
+                * REPULSIVE_BASIN_PROFILE_FACTOR
+                * REPULSIVE_BASIN_WIDTH_UM
+                if theta == 3.0
+                else None
+            )
             material_rows.append(
                 {
+                    **metadata,
                     "regime": label,
                     "theta_deg": theta,
                     "force_z_pN": force,
@@ -812,6 +889,12 @@ def run_full_study(
                     "W_rep_30nm_pN_um": force * 0.030 if theta == 3.0 else None,
                     "W_rep_30nm_over_kBT300": (
                         force * 0.030 / KB_T_300_PN_UM if theta == 3.0 else None
+                    ),
+                    "work_basin_pN_um": work_basin,
+                    "work_basin_over_kBT300": (
+                        work_basin / KB_T_300_PN_UM
+                        if work_basin is not None
+                        else None
                     ),
                     "expected_force_sign_observed": (
                         force > 0.0 if theta == 3.0 else force < 0.0
@@ -868,6 +951,7 @@ def run_full_study(
             "V_crit_status": critical_status,
             "voltage_rows": [
                 {
+                    **metadata,
                     "V_patch_mV": voltage,
                     "F_net_pN": force_rep - 0.5 * coefficient * voltage**2,
                 }
@@ -892,6 +976,7 @@ def run_full_study(
         )
         lateral_rows.append(
             {
+                **metadata,
                 "delta_r_um": delta_r,
                 "energy_hbar_c_per_um": row["energy_hbar_c_per_um"],
                 "energy_pN_um": row["energy_pN_um"],
@@ -949,6 +1034,7 @@ def run_full_study(
         swing = rep - engaged
         tolerance_rows.append(
             {
+                **metadata,
                 "delta_w_tooth_um": delta_w,
                 "delta_w_tooth_nm": delta_w * 1e3,
                 "F_rep_pN": rep,
@@ -966,13 +1052,14 @@ def run_full_study(
     tolerance["engaged_attraction_preserved_at_all_CDs"] = all(
         row["attraction_preserved"] for row in tolerance_rows
     )
-    study["status"] = "complete"
+    study["execution_status"] = "complete"
 
 
 def new_report(settings: dict[str, Any]) -> dict[str, Any]:
     return {
+        **freshness_metadata(),
         "schema_version": 1,
-        "status": "running",
+        "execution_status": "running",
         "mode": "micro_probe" if 0 < settings["max_steps"] <= 10 else "full",
         "solver": "bem",
         "settings": settings,
@@ -980,6 +1067,8 @@ def new_report(settings: dict[str, Any]) -> dict[str, Any]:
             "HBAR_C_PN_UM2": HBAR_C_PN_UM2,
             "kBT300_pN_um": KB_T_300_PN_UM,
             "epsilon0_F_per_m": EPSILON_0_F_PER_M,
+            "repulsive_basin_width_um": REPULSIVE_BASIN_WIDTH_UM,
+            "repulsive_basin_profile_factor": REPULSIVE_BASIN_PROFILE_FACTOR,
         },
         "units": {
             "mesh_length": "um",
@@ -994,6 +1083,11 @@ def new_report(settings: dict[str, Any]) -> dict[str, Any]:
             "The active-sector 3D BEM backend is the only Casimir source.",
             "Material labels are passed to the backend without substituting a material model.",
             "Finite mesh/frequency settings require a separate convergence study.",
+            "W_rep_30nm_pN_um is retained as a legacy single-point force times "
+            "30 nm extrapolation, not work integrated over the repulsive basin.",
+            "work_basin_pN_um uses max(force, 0) * 0.5 * 0.016 um for an "
+            "approximately 16 nm triangular repulsive basin; it is a bounded "
+            "profile-model estimate, not a computed force-displacement integral.",
             "The voltage test is a mutual-capacitance residual/RMS-voltage bound; "
             "it does not integrate a spatial patch-potential spectrum.",
             "Three radial samples test one collective tooth-shift coordinate, "
@@ -1001,6 +1095,8 @@ def new_report(settings: dict[str, Any]) -> dict[str, Any]:
             "The requested positive-offset origin-energy estimate assumes vanishing "
             "first derivative and is not a centered stiffness at zero displacement.",
             "Axial lift uses a linearized suspension, not a force-displacement equilibrium solve.",
+            "status='completed' marks output-record completion for freshness filtering; "
+            "execution_status records scientific success, failure, timeout, or budget exhaustion.",
         ],
         "evaluations": [],
         "designs": {},
@@ -1037,11 +1133,13 @@ def execute(settings: dict[str, Any]) -> dict[str, Any]:
         designs = prepare_designs()
         report["design_definitions"] = {
             "Cantor_N2_HybridRZ": {
+                **freshness_metadata(report["executed_at"]),
                 "source": "Cantor_RZ_ScaleMatched",
                 "z_tip_um": [-0.090, -0.100, -0.090],
                 "h_teeth_um": [0.090, 0.100, 0.090],
             },
             "Rot_C8_Compact_N2": {
+                **freshness_metadata(report["executed_at"]),
                 "source": "execution.clutch_geometry_redesign.get_scoped_clutch_elements",
                 "N": 2,
                 "R_min": 0.20,
@@ -1057,25 +1155,29 @@ def execute(settings: dict[str, Any]) -> dict[str, Any]:
             name = "Cantor_N2_HybridRZ"
             row = evaluator.evaluate(name, designs[name], 3.0, "PEC", 0.0)
             report["micro_probe"] = row
-            report["status"] = "micro_probe_complete"
+            report["execution_status"] = "micro_probe_complete"
             report["caveats"].append(
                 "Only one reduced-resolution point was evaluated; none of the "
                 "four full feasibility/stability benchmarks has been certified."
             )
         else:
             for name, design in designs.items():
-                study: dict[str, Any] = {"status": "running"}
+                study: dict[str, Any] = {
+                    **freshness_metadata(report["executed_at"]),
+                    "execution_status": "running",
+                }
                 report["designs"][name] = study
                 run_full_study(name, design, evaluator, study)
-            report["status"] = "complete"
+            report["execution_status"] = "complete"
     except EvaluationLimit as exc:
-        report["status"] = "evaluation_limit_reached"
+        report["execution_status"] = "evaluation_limit_reached"
         report["error"] = str(exc)
     except Exception as exc:
-        report["status"] = "failed"
+        report["execution_status"] = "failed"
         report["error"] = f"{type(exc).__name__}: {exc}"
         report["traceback"] = traceback.format_exc()
     report["compute_elapsed_seconds"] = time.monotonic() - started
+    stamp_report_rows(report)
     return report
 
 
@@ -1116,7 +1218,7 @@ def run_micro_with_watchdog(
             process.kill()
             process.join(0.25)
         report = new_report(settings)
-        report["status"] = "micro_probe_timeout"
+        report["execution_status"] = "micro_probe_timeout"
         report["error"] = (
             f"The real BEM micro-probe exceeded its {timeout_seconds:g} s "
             "compute watchdog. No benchmark result was fabricated."
@@ -1125,11 +1227,12 @@ def run_micro_with_watchdog(
         report = json.loads(temporary.read_text(encoding="utf-8"))
     else:
         report = new_report(settings)
-        report["status"] = "failed"
+        report["execution_status"] = "failed"
         report["error"] = f"Micro-probe worker exited with code {process.exitcode}."
     if temporary.exists():
         temporary.unlink()
     report["watchdog_elapsed_seconds"] = time.monotonic() - started
+    stamp_report_rows(report)
     return report
 
 
@@ -1147,7 +1250,7 @@ def markdown_report(report: Mapping[str, Any]) -> str:
     lines = [
         "# Nature feasibility and stability: real 3D BEM",
         "",
-        f"**Status:** `{report['status']}`",
+        f"**Status:** `{report['execution_status']}`",
         f"**Mode:** `{report['mode']}`",
         f"**Completed BEM evaluations:** {len(report['evaluations'])}",
         "",
@@ -1179,15 +1282,23 @@ def markdown_report(report: Mapping[str, Any]) -> str:
             ]
         )
     for name, study in report["designs"].items():
-        lines.extend([f"## {name}", "", f"Study status: `{study['status']}`", ""])
+        lines.extend(
+            [f"## {name}", "", f"Study status: `{study['execution_status']}`", ""]
+        )
         material = study.get("material_dispersion", {})
         if material:
             lines.extend(
                 [
                     "### 1. Material dispersion and temperature",
                     "",
-                    "| Regime | Angle (deg) | Fz (pN) | Wrep(30 nm)/kBT300 | Expected sign |",
-                    "|---|---:|---:|---:|:---:|",
+                    "Legacy 30 nm work is the single-point force × 0.030 um "
+                    "extrapolation. Basin work is max(force, 0) × 0.5 × 0.016 um, "
+                    "using an approximately 16 nm triangular repulsive profile. "
+                    "Neither is a computed force integral.",
+                    "",
+                    "| Regime | Angle (deg) | Fz (pN) | Legacy Wrep(30 nm)/kBT300 | "
+                    "Basin work (pN um) | Basin work/kBT300 | Expected sign |",
+                    "|---|---:|---:|---:|---:|---:|:---:|",
                 ]
             )
             for row in material["rows"]:
@@ -1195,6 +1306,8 @@ def markdown_report(report: Mapping[str, Any]) -> str:
                     f"| {row['regime']} | {fmt(row['theta_deg'])} | "
                     f"{fmt(row['force_z_pN'])} | "
                     f"{fmt(row['W_rep_30nm_over_kBT300'])} | "
+                    f"{fmt(row['work_basin_pN_um'])} | "
+                    f"{fmt(row['work_basin_over_kBT300'])} | "
                     f"{fmt(row['expected_force_sign_observed'])} |"
                 )
             lines.append("")
@@ -1381,10 +1494,12 @@ def make_figure(report: Mapping[str, Any], figures_dir: Path) -> tuple[Path, Pat
         else:
             axis.text(
                 0.5, 0.5,
-                "Not evaluated\n" + str(report["status"]).replace("_", " "),
+                "Not evaluated\n" + str(report["execution_status"]).replace("_", " "),
                 transform=axis.transAxes, ha="center", va="center", color="0.4",
             )
-    figure.suptitle(f"Nature feasibility / stability — {report['status']}", fontsize=13)
+    figure.suptitle(
+        f"Nature feasibility / stability — {report['execution_status']}", fontsize=13
+    )
     pdf = figures_dir / "fig_nature_feasibility_stability.pdf"
     png = figures_dir / "fig_nature_feasibility_stability.png"
     try:
@@ -1405,6 +1520,7 @@ def persist_artifacts(report: dict[str, Any], output_root: Path) -> None:
 
     # Save scientific results before ancillary plotting/logging, so diagnostics
     # survive failures in optional presentation infrastructure.
+    stamp_report_rows(report)
     write_json(json_path, report)
     atomic_text(md_path, markdown_report(report))
 
@@ -1416,13 +1532,20 @@ def persist_artifacts(report: dict[str, Any], output_root: Path) -> None:
         save_plot_provenance,
     )
 
+    metadata = freshness_metadata(report["executed_at"])
     solver_params: dict[str, Any] = {
         **report["settings"],
+        **metadata,
         "benchmark": "nature_feasibility_and_stability",
-        "status": report["status"],
+        "execution_status": report["execution_status"],
         "backend_signatures": report.get("backend_signatures", {}),
         "materials_and_temperatures": [
-            {"regime": label, "material": material, "temperature_K": temperature}
+            {
+                **metadata,
+                "regime": label,
+                "material": material,
+                "temperature_K": temperature,
+            }
             for label, material, temperature in REGIMES
         ],
         "laplace_kappa_per_um": KAPPA_LAPLACE_PER_UM,
@@ -1537,6 +1660,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     effective_resolution = (
         {key: 1 for key in requested_resolution} if micro else requested_resolution.copy()
     )
+    if arguments.max_steps > 0:
+        effective_resolution["n_xi"] = max(2, effective_resolution["n_xi"])
     settings: dict[str, Any] = {
         "max_steps": arguments.max_steps,
         "formulation": arguments.formulation,
@@ -1573,13 +1698,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     report["total_elapsed_seconds"] = time.monotonic() - started
     write_json(results_dir / "nature_feasibility_stability_report.json", report)
     print(
-        f"{report['status']}: {len(report['evaluations'])} BEM evaluation(s), "
+        f"{report['execution_status']}: {len(report['evaluations'])} BEM evaluation(s), "
         f"{report['total_elapsed_seconds']:.2f} s\n"
         f"Report: {results_dir / 'nature_feasibility_stability_report.json'}"
     )
-    if report["status"] in {"complete", "micro_probe_complete"}:
+    if report["execution_status"] in {"complete", "micro_probe_complete"}:
         return 0
-    if report["status"] in {"evaluation_limit_reached", "micro_probe_timeout"}:
+    if report["execution_status"] in {"evaluation_limit_reached", "micro_probe_timeout"}:
         return 2
     return 1
 

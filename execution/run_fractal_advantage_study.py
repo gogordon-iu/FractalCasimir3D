@@ -17,6 +17,7 @@ import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -629,9 +630,14 @@ def extract_force_pN(result: Any) -> float:
 
 
 def record_step(step: int, name: str, data: Mapping[str, Any]) -> None:
+    metadata = {
+        key: SOLVER_PROVENANCE[key]
+        for key in ("model", "dataset", "status", "executed_at")
+        if key in SOLVER_PROVENANCE
+    }
     log_step(
         f"{name}_{step}",
-        data=dict(data),
+        data={**dict(data), **metadata},
         solver_name="bem",
         solver_parameters=SOLVER_PROVENANCE,
     )
@@ -731,7 +737,7 @@ def export_report(report: Mapping[str, Any]) -> None:
     lines = [
         "# Optimal Fractal Advantage: grounded BEM study",
         "",
-        f"- Status: **{report['status']}**",
+        f"- Status: **{report.get('study_status', report['status'])}**",
         f"- Formulation: `{report['configuration']['formulation']}`",
         f"- Device: `{report['configuration']['resolved_device']}`",
         f"- Completed tasks: {len(report['samples'])}/{report['planned_tasks']}",
@@ -882,9 +888,16 @@ def main() -> int:
     RESULTS.mkdir(parents=True, exist_ok=True)
     FIGURES.mkdir(parents=True, exist_ok=True)
     start = time.monotonic()
+    freshness_metadata = {
+        "model": "BEM_FractalAdvantageStudy",
+        "dataset": "fractal_advantage_study",
+        "status": "completed",
+        "executed_at": datetime.now(timezone.utc).isoformat(),
+    }
     micro = 0 < args.max_steps <= 10
     configuration = {**vars(args), "resolved_device": device, "micro_probe": micro}
     provenance = {
+        **freshness_metadata,
         "solver": "execution.casimir_bem_solver.run_bem_casimir_solver",
         "formulation": args.formulation,
         "device": device,
@@ -911,8 +924,10 @@ def main() -> int:
     records: list[dict[str, Any]] = []
     force_cache: dict[tuple[str, float, float], float] = {}
     report: dict[str, Any] = {
+        **freshness_metadata,
         "schema_version": 1,
         "status": "running",
+        "study_status": "running",
         "configuration": configuration,
         "designs": [dataclasses.asdict(d) for d in designs],
         "planned_tasks": len(tasks),
@@ -932,6 +947,7 @@ def main() -> int:
     for index, task in enumerate(selected, start=1):
         task_id = f"fractal_{task.design.name}_{task.experiment}_{index}"
         context = {
+            **freshness_metadata,
             "design": task.design.name,
             "experiment": task.experiment,
             "theta_deg": task.theta_deg,
@@ -984,12 +1000,14 @@ def main() -> int:
         report["switching"], report["windows"] = summaries(designs, records)
         export_report(report)
 
-    report["status"] = "micro_probe_complete" if micro else "complete"
+    report["status"] = "completed"
+    report["study_status"] = "micro_probe_complete" if micro else "complete"
     report["elapsed_seconds"] = time.monotonic() - start
 
     # Defer provenance writes until all BEM tasks have finished.
     set_solver_provenance(
-        "bem", {"formulation": args.formulation, "n_xi": args.n_xi},
+        "bem",
+        {**freshness_metadata, "formulation": args.formulation, "n_xi": args.n_xi},
     )
     record_step(0, "study_configuration", configuration)
     for index, record in enumerate(records, start=1):
@@ -1016,6 +1034,7 @@ def main() -> int:
                     record_metric(
                         f"fractal_{entry['design']}_{key}", float(value), unit,
                         {
+                            **freshness_metadata,
                             "experiment": group,
                             "design": entry["design"],
                             "step_id": f"fractal_{entry['design']}_{group}",
@@ -1023,6 +1042,7 @@ def main() -> int:
                     )
     record_step(len(selected) + 1, "study_completed", {
         "status": report["status"],
+        "study_status": report["study_status"],
         "completed_tasks": len(records),
         "elapsed_seconds": report["elapsed_seconds"],
     })
@@ -1037,7 +1057,7 @@ def main() -> int:
     report["elapsed_seconds"] = time.monotonic() - start
     export_report(report)
     print(
-        f"{report['status']}: {len(records)} BEM task(s), "
+        f"{report['study_status']}: {len(records)} BEM task(s), "
         f"{report['elapsed_seconds']:.2f} s; report: {REPORT_JSON}"
     )
     return 0

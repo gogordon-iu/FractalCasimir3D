@@ -1,4 +1,5 @@
 #!/bin/bash
+#SBATCH --exclude=nid0394
 #SBATCH -J hybrid_casimir_sweep
 #SBATCH -A r01540
 #SBATCH -p general
@@ -9,14 +10,15 @@
 
 # Activate Conda environment
 #SBATCH --signal=B:SIGUSR1@120
-#SBATCH -o cluster_diagnostics/raw_logs/%x_%j.out
-#SBATCH -e cluster_diagnostics/raw_logs/%x_%j.err
+#SBATCH -o logs/%x_%j.out
+#SBATCH -e logs/%x_%j.err
 
 # BIGRED200_TELEMETRY_HARNESS_V1
 # SIGKILL/node loss cannot be trapped; publication is best-effort.
 # Logs must exist BEFORE sbatch; the generator creates them locally.
-export http_proxy="http://proxy.uits.iu.edu:3128"
-export https_proxy="http://proxy.uits.iu.edu:3128"
+# Removed obsolete cluster proxy.
+# Removed obsolete cluster proxy.
+unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
 export no_proxy="localhost,127.0.0.1,*.iu.edu,*.uits.iu.edu"
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
@@ -69,6 +71,88 @@ handle_job_exit() {
         )
     fi
     python3 - "$EXIT_CODE" "$TERMINATION_REASON" <<'BIGRED200_TELEMETRY_PYTHON'
+
+def _bigred200_telemetry_git_call(_call, *args, **kwargs):
+    import fcntl as _fcntl
+    import os as _os
+    import shlex as _shlex
+    import time as _time
+    from pathlib import Path as _Path
+
+    _command = args[0] if args else kwargs.get("args")
+    if isinstance(_command, (str, bytes)):
+        try:
+            _argv = _shlex.split(_os.fsdecode(_command))
+        except ValueError:
+            raise RuntimeError("Cannot safely parse telemetry subprocess command")
+    elif isinstance(_command, (list, tuple)):
+        _argv = [_os.fsdecode(_item) for _item in _command]
+    else:
+        return _call(*args, **kwargs)
+
+    if not _argv or _Path(_argv[0]).name != "git":
+        return _call(*args, **kwargs)
+
+    _cwd = kwargs.get("cwd")
+    _root = _Path(_os.fsdecode(_cwd)) if _cwd is not None else _Path.cwd()
+    _root = _root.resolve()
+    _index = 1
+    while _index < len(_argv):
+        _option = _argv[_index]
+        if _option == "-C":
+            if _index + 1 >= len(_argv):
+                raise RuntimeError("Missing git -C directory")
+            _directory = _Path(_argv[_index + 1])
+            _root = (_root / _directory).resolve()
+            _index += 2
+        elif _option.startswith("-C") and len(_option) > 2:
+            _root = (_root / _option[2:]).resolve()
+            _index += 1
+        elif _option in ("-c", "--git-dir", "--work-tree"):
+            if _index + 1 >= len(_argv):
+                raise RuntimeError("Missing git option value")
+            if _option == "--git-dir":
+                raise RuntimeError("Explicit git directories are not supported by telemetry")
+            _index += 2
+        elif _option.startswith("--git-dir="):
+            raise RuntimeError("Explicit git directories are not supported by telemetry")
+        elif _option.startswith("-"):
+            _index += 1
+        else:
+            break
+
+    _git_dir = None
+    for _parent in (_root, *_root.parents):
+        _candidate = _parent / ".git"
+        if _candidate.is_dir():
+            _git_dir = _candidate
+            break
+        if _candidate.is_file():
+            _reference = _candidate.read_text(encoding="utf-8").strip()
+            if not _reference.startswith("gitdir:"):
+                raise RuntimeError("Invalid repository .git file")
+            _git_dir = (_parent / _reference.split(":", 1)[1].strip()).resolve()
+            break
+    if _git_dir is None or not _git_dir.is_dir():
+        raise RuntimeError("Cannot locate repository for telemetry git lock")
+
+    _deadline = _time.monotonic() + 300
+    with (_git_dir / "bigred200_telemetry.lock").open("a+b") as _lock:
+        while True:
+            try:
+                _fcntl.flock(_lock.fileno(), _fcntl.LOCK_EX | _fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                _remaining = _deadline - _time.monotonic()
+                if _remaining <= 0:
+                    raise TimeoutError("Telemetry git lock exceeded 300 seconds")
+                _time.sleep(min(0.1, _remaining))
+        try:
+            kwargs["timeout"] = 180
+            return _call(*args, **kwargs)
+        finally:
+            _fcntl.flock(_lock.fileno(), _fcntl.LOCK_UN)
+
 import datetime
 import json
 import os
@@ -76,9 +160,9 @@ from pathlib import Path
 import subprocess
 import sys
 
-CONFIG = json.loads('{"auto_resubmit": "1", "figures_dir": "Papers/Fractal_Casimir_Nature_EM/figures", "git_remote": "origin", "logs_dir": "cluster_diagnostics/raw_logs", "results_dir": "results"}')
+CONFIG = json.loads('{"auto_resubmit": "1", "figures_dir": "Papers/Fractal_Casimir_Nature_EM/figures", "git_remote": "origin", "logs_dir": "logs", "results_dir": "results"}')
 BLOCKED_SUFFIXES = (".pt", ".ckpt", ".bin", ".h5", ".safetensors", ".tar")
-GIT_TIMEOUT_SECONDS = 45
+GIT_TIMEOUT_SECONDS = 180
 
 def diagnostic(message):
     print("[BigRed200 telemetry] " + str(message), file=sys.stderr, flush=True)
@@ -88,7 +172,7 @@ def run(command, check=True):
     environment["GIT_TERMINAL_PROMPT"] = "0"
     environment["GIT_EDITOR"] = ":"
     environment["GIT_SEQUENCE_EDITOR"] = ":"
-    result = subprocess.run(
+    result = _bigred200_telemetry_git_call(subprocess.run, 
         command, cwd=str(ROOT), env=environment,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         text=True, errors="replace", timeout=GIT_TIMEOUT_SECONDS,
@@ -392,7 +476,7 @@ trap 'TERMINATION_REASON="SIGINT"; handle_job_exit 130' SIGINT
 trap 'handle_walltime' SIGUSR1
 set -Eeuo pipefail
 cd -- "${SLURM_SUBMIT_DIR:-$PWD}"
-mkdir -p -- 'cluster_diagnostics/raw_logs'
+mkdir -p -- 'logs'
 
 run_user_job() (
     # Job control gives this subshell its own process group.

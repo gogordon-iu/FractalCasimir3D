@@ -1,0 +1,14 @@
+MATERIAL ClutchGold
+  Eps(w) = (1)-(7.2831861773766162)^2/(w*(w+ii*(0.042747382879397638)))
+  Mu(w) = 1.0
+ENDMATERIAL
+
+OBJECT Stator
+  MESHFILE stator.msh
+  MATERIAL ClutchGold
+ENDOBJECT
+
+OBJECT Rotor
+  MESHFILE rotor.msh
+  MATERIAL ClutchGold
+ENDOBJECT

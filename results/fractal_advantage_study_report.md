@@ -14,19 +14,19 @@
 
 | Design | Disengaged (pN) | Engaged (pN) | Swing (pN) | Ratio |
 |---|---:|---:|---:|---:|
-| Cantor_FlatZ | 0.204373 | -0.350259 | 0.554632 | 1.71383 |
-| Cantor_RZ_ScaleMatched | 0.200237 | -0.349377 | 0.549615 | 1.74482 |
-| Cantor_Z_Staircase | 0.231145 | -0.294478 | 0.525623 | 1.274 |
-| Ctrl_SingleWide | -0.00580473 | -0.0456744 | 0.0398696 | 4.56744e+07 |
-| Ctrl_UniformPeriodic | 0.164012 | -0.326268 | 0.49028 | 1.98929 |
-| Ctrl_SizeMatched_Monotonic | 0.234393 | -0.39639 | 0.630784 | 1.69113 |
+| Cantor_FlatZ | 0.753799 | -2.00038 | 2.75418 | 2.65373 |
+| Cantor_RZ_ScaleMatched | 0.758875 | -1.79509 | 2.55397 | 2.36547 |
+| Cantor_Z_Staircase | 0.856782 | -1.47431 | 2.3311 | 1.72076 |
+| Ctrl_SingleWide | -0.00383356 | -0.241699 | 0.237865 | 2.41699e+08 |
+| Ctrl_UniformPeriodic | 0.628297 | -1.9226 | 2.5509 | 3.06002 |
+| Ctrl_SizeMatched_Monotonic | 0.883106 | -2.21904 | 3.10215 | 2.51277 |
 
 ## Experiment B
 
 | Design | Peak (pN) | Window (um) | Work (fN um = aJ) | Censored |
 |---|---:|---:|---:|---|
-| Cantor_FlatZ | 0.204373 | 0.0760685 | 12.593 | True |
-| Cantor_RZ_ScaleMatched | 0.210702 | 0.0762877 | 12.8196 | True |
-| Cantor_Z_Staircase | 0.231145 | 0.0869598 | 13.8108 | True |
-| Ctrl_UniformPeriodic | 0.183815 | 0.0757815 | 10.865 | True |
-| Ctrl_SizeMatched_Monotonic | 0.234393 | 0.0751278 | 13.993 | True |
+| Cantor_FlatZ | 0.753799 | 0.0793433 | 45.8415 | True |
+| Cantor_RZ_ScaleMatched | 0.758875 | 0.0798693 | 47.3765 | True |
+| Cantor_Z_Staircase | 0.856782 | 0.0924051 | 51.3539 | True |
+| Ctrl_UniformPeriodic | 0.658097 | 0.0799499 | 40.2652 | True |
+| Ctrl_SizeMatched_Monotonic | 0.883106 | 0.0782395 | 51.9568 | True |
