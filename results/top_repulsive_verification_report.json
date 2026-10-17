@@ -1,50 +1,80 @@
 {
   "convergence": {
     "C4": {
-      "available": false,
-      "reason": "Both baseline and high-resolution results are required."
+      "available": true,
+      "baseline_force_N": -2.222740700646019e-12,
+      "high_resolution_force_N": -2.4735768985370853e-12,
+      "absolute_difference_N": 2.5083619789106627e-13,
+      "relative_difference_max_normalized": 0.10140626638266835,
+      "relative_tolerance": 0.05,
+      "within_tolerance": false,
+      "sign_preserved": true,
+      "high_resolution_repulsive": false,
+      "step_limited_run": false,
+      "interpretation": "Joint azimuthal mesh/quadrature comparison; does not isolate their errors."
     },
     "C8": {
-      "available": false,
-      "reason": "Both baseline and high-resolution results are required."
+      "available": true,
+      "baseline_force_N": -1.939001382359053e-12,
+      "high_resolution_force_N": -2.2580396047069377e-12,
+      "absolute_difference_N": 3.190382223478849e-13,
+      "relative_difference_max_normalized": 0.14128991434997068,
+      "relative_tolerance": 0.05,
+      "within_tolerance": false,
+      "sign_preserved": true,
+      "high_resolution_repulsive": false,
+      "step_limited_run": false,
+      "interpretation": "Joint azimuthal mesh/quadrature comparison; does not isolate their errors."
     },
     "C10": {
-      "available": false,
-      "reason": "Both baseline and high-resolution results are required."
+      "available": true,
+      "baseline_force_N": -3.901036422606641e-12,
+      "high_resolution_force_N": -3.901036622614539e-12,
+      "absolute_difference_N": 2.0000789872095064e-19,
+      "relative_difference_max_normalized": 5.127044887543302e-08,
+      "relative_tolerance": 0.05,
+      "within_tolerance": true,
+      "sign_preserved": true,
+      "high_resolution_repulsive": false,
+      "step_limited_run": false,
+      "interpretation": "Quadrature-only comparison at fixed mesh."
     }
   },
   "characterization": {
     "C4": {
       "disengaged_task": "C4_disengaged_base",
-      "disengaged_force_N": -5.801572922427307e-14,
-      "off_center_force_N": null,
-      "engaged_force_N": null,
-      "bipolar_observed": null,
+      "disengaged_force_N": -2.222740700646019e-12,
+      "off_center_force_N": -2.3890353551973242e-12,
+      "engaged_force_N": -3.732935299370892e-12,
+      "bipolar_observed": false,
       "bipolar_contrast_ratio": null,
       "bipolar_contrast_ratio_definition": "F_disengaged / abs(F_engaged), only for repulsive disengaged and attractive engaged forces; null if unavailable or nonfinite.",
-      "step_limited_run": true
+      "step_limited_run": false,
+      "offset_delta_force_N": -1.662946545513052e-13
     },
     "C8": {
       "disengaged_task": "C8_disengaged_base",
-      "disengaged_force_N": null,
-      "off_center_force_N": null,
-      "engaged_force_N": null,
-      "bipolar_observed": null,
+      "disengaged_force_N": -1.939001382359053e-12,
+      "off_center_force_N": -1.851274291862883e-12,
+      "engaged_force_N": -4.105359200188733e-12,
+      "bipolar_observed": false,
       "bipolar_contrast_ratio": null,
       "bipolar_contrast_ratio_definition": "F_disengaged / abs(F_engaged), only for repulsive disengaged and attractive engaged forces; null if unavailable or nonfinite.",
-      "step_limited_run": true
+      "step_limited_run": false,
+      "offset_delta_force_N": 8.772709049616976e-14
     },
     "C10": {
       "disengaged_task": "C10_disengaged_base",
-      "disengaged_force_N": null,
-      "off_center_force_N": null,
-      "engaged_force_N": null,
-      "bipolar_observed": null,
+      "disengaged_force_N": -3.901036422606641e-12,
+      "off_center_force_N": -4.046324954988368e-12,
+      "engaged_force_N": -1.2216633679625594e-11,
+      "bipolar_observed": false,
       "bipolar_contrast_ratio": null,
       "bipolar_contrast_ratio_definition": "F_disengaged / abs(F_engaged), only for repulsive disengaged and attractive engaged forces; null if unavailable or nonfinite.",
-      "step_limited_run": true
+      "step_limited_run": false,
+      "offset_delta_force_N": -1.452885323817275e-13
     }
   },
-  "successful_tasks": 1,
+  "successful_tasks": 12,
   "failed_tasks": 0
 }

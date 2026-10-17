@@ -1,6 +1,6 @@
 # Real-world monolithic NEMS clutch verification
 
-**Status: MICRO-PROBE: NOT A COMPLETE VERIFICATION**
+**Status: NOT VERIFIED: SPECIFICATION OR MODEL LIMITATIONS**
 
 Forces are in SI newtons; positive force is upward on the rotor. Unavailable values are not zero forces.
 
@@ -24,11 +24,23 @@ Artifact status `completed` indicates output generation only; `measurement_statu
 | Design | Angle (deg) | Rotor components | Stator components | Watertight | Collision-free |
 |---|---:|---:|---:|:---:|:---:|
 | Rot_C4_TightSlot_N2 | 0 | 1 | 1 | True | True |
+| Rot_C4_TightSlot_N2 | 18 | 1 | 1 | True | True |
+| Rot_C4_TightSlot_N2 | 36 | 1 | 1 | True | True |
+| Rot_C4_TightSlot_N2 | 48 | 1 | 1 | True | True |
+| Rot_C8_Compact_N2 | 0 | 1 | 1 | True | True |
+| Rot_C8_Compact_N2 | 18 | 1 | 1 | True | True |
+| Rot_C8_Compact_N2 | 36 | 1 | 1 | True | True |
+| Rot_C8_Compact_N2 | 48 | 1 | 1 | True | True |
+| Rot_C10_Fractal_N3 | 0 | 1 | 1 | True | True |
+| Rot_C10_Fractal_N3 | 3 | 1 | 1 | True | True |
+| Rot_C10_Fractal_N3 | 21 | 1 | 1 | True | True |
+| Rot_C10_Fractal_N3 | 30 | 1 | 1 | True | True |
+| Rot_C10_Fractal_N3 | 48 | 1 | 1 | True | True |
 
 ## Solver execution
 
-- Requested BEM measurements: 2
-- Successful BEM measurements: 2
+- Requested BEM measurements: 108
+- Successful BEM measurements: 108
 - BEM receives one 90-degree sector with face angles in radians; the repository solver applies four-fold cyclic symmetry.
 - Repository `f_net_N` results are already SI newtons.
 - Continuum PFA: 128-point Gauss-Legendre × 96-point Gauss-Laguerre, zero temperature.
@@ -39,10 +51,10 @@ Artifact status `completed` indicates output generation only; `measurement_statu
 
 | Angle | Kernel | Relative refined/baseline change | Sign |
 |---:|---|---:|---|
-| 0 | vector_dyadic | unavailable | unavailable |
-| 0 | scalar_yukawa | unavailable | unavailable |
-| 48 | vector_dyadic | unavailable | unavailable |
-| 48 | scalar_yukawa | unavailable | unavailable |
+| 0 | vector_dyadic | 0.00146277 | repulsive |
+| 0 | scalar_yukawa | 0.0020304 | repulsive |
+| 48 | vector_dyadic | 0.00331499 | attractive |
+| 48 | scalar_yukawa | 0.0042928 | attractive |
 
 ## Provenance/output warnings
 
