@@ -6,8 +6,8 @@
 - Device: `cpu`
 - Executed task records: 77
 - Unique solver evaluations represented: 55
-- New BEM evaluations this run: 55
-- Elapsed time before report generation: 1373.860 s
+- New BEM evaluations this run: 0
+- Elapsed time before report generation: 709.436 s
 
 ## Numerical and provenance conventions
 
@@ -243,7 +243,7 @@ Two-pass and stator-only forces are converted using `F * MEEP_FORCE_TO_SI_N * 1e
 | 1 | SingleTooth_Track0 | 3 | 50 | 0.006 | 6 | complete | 0.3918759 | 0.47371419 | -0.081838289 |
 | 2 | SingleTooth_Track0 | 48 | 50 | 0.006 | 6 | complete | 4.7657683 | 22.860887 | -18.095119 |
 | 3 | SingleTooth_Track0 | 3 | 50 | 0.006 | not recorded | complete | -0.15574774 | -0.03254325 | -0.12320449 |
-| 4 | Ctrl_UniformPeriodic | 3 | 50 | 0.006 | not recorded | complete | 1.6388295 | 1.5948457 | 0.043983753 |
+| 4 | Ctrl_UniformPeriodic | 3 | 50 | 0.006 | 6 | complete | 1.6388295 | 1.5948457 | 0.043983753 |
 | 5 | Ctrl_UniformPeriodic | 48 | 50 | 0.006 | not recorded | complete | 5.6370602 | 62.398644 | -56.761583 |
 | 6 | Cantor_N2_FlatZ | 3 | 50 | 0.006 | not recorded | complete | 2.5225305 | 1.2690929 | 1.2534376 |
 | 7 | Cantor_N2_FlatZ | 48 | 50 | 0.006 | not recorded | complete | 5.0732259 | 60.555412 | -55.482186 |

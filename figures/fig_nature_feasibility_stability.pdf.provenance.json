@@ -220,74 +220,45 @@
     "script": "execution/export_provenance_pipeline.py"
   },
   "input_source": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\results\\provenance_metrics.json",
-  "solver": "meep",
+  "solver": "Meep 3D FDTD Richardson extrapolation",
   "solver_parameters": {
-    "channel_weights": "evanescent TM and TE Fresnel amplitudes at k_parallel=max(k_eff,1e-3), k_eff=1/max(minimum cross-body centroid separation,0.020 um)",
-    "condition_limit": 100000000000000.0,
-    "configurations": [
-      "both",
-      "rotor",
-      "stator",
-      "vac"
+    "design": "Cantor_N2_HybridRZ",
+    "method": "Three-point least-squares Richardson fit F(R)=F_inf+C*(1/R)^4.",
+    "order": 4,
+    "resolutions": [
+      40,
+      50,
+      60
     ],
-    "courant": 0.3,
-    "dataset": "rotational_z_eff_clutch",
-    "device": "cpu",
-    "diagnostic_decomposition": "partition of translation derivative by rotor panel; not an independently observable Maxwell-stress face force",
-    "diagonal_self_term": "equal-area disk: 1/(2*sqrt(pi*A)) times (1-exp(-x))/x, x=kappa*sqrt(A/pi), with static limit 1",
-    "dispersion_model": {
-      "epsilon_inf": 1.0,
-      "frequency_units": "um^-1 (xi/c)",
-      "gamma": 0.268589728037008,
-      "lorentz_oscillators": [],
-      "material": "Gold",
-      "model": "Drude-Lorentz",
-      "plasma_frequency": 45.76160838064494
-    },
-    "dofs_per_panel": 2,
-    "dtype": "complex128",
-    "dx_um": 0.02,
-    "estimated_dense_memory_bytes": 407871488,
-    "executed_at": "2026-10-17T05:28:24.770906+00:00",
-    "force_complex_fields": true,
-    "force_derivative": "analytic rigid rotor z translation",
-    "inclusion_exclusion_passes": 4,
-    "inter_sector_interactions": true,
-    "kappa_0_um_inv": 10.0,
-    "kappa_mapping": "kappa_0*u/(1-u)",
-    "max_memory_gib": 4.0,
-    "max_steps": 0,
-    "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
-    "model": "BEM_Meep_RotationalZEff",
-    "moments_per_config": 36,
-    "n_dofs_rotor_sector": 448,
-    "n_dofs_stator_sector": 1136,
-    "n_panels_rotor": 896,
-    "n_panels_rotor_sector": 224,
-    "n_panels_stator": 2272,
-    "n_panels_stator_sector": 568,
-    "n_panels_total": 3168,
-    "nmax": 1,
-    "normal_derivatives": "analytic finite-panel-regularized scalar kernel derivatives projected onto tangent bases; diagnostics only",
-    "off_diagonal_quadrature": "2x2 Gauss-Legendre bilinear points per panel; 16 weighted point pairs with sqrt(distance^2 + (A_target + A_source)/(32*pi))",
-    "panel_resolution": {
-      "n_phi_bridge": 3,
-      "n_phi_tooth": 3,
-      "n_r": 2,
-      "n_z": 2
-    },
-    "pml_thickness": 0.25,
-    "quadrature_rule": "Gauss-Legendre on u in (0,1)",
-    "regularization": null,
-    "requested_device": "cpu",
-    "resolution": 50,
-    "sigma": 33.333333333333336,
-    "solver": "meep",
-    "status": "completed",
-    "symmetry_method": "sum of four cyclic Fourier-block traces",
-    "symmetry_multiplier": 4.0,
-    "t_run": 3.0,
-    "temperature_K": 0.0
+    "source_files": [
+      {
+        "config_path": "sweep_configs_nature_meep_verification\\config_008.json",
+        "config_sha256": "474faf6330c92084063c9f054a99d9571757ce0198c58cdfda377d0043c9a974",
+        "result_path": "results_nature_meep_verification\\task_8_meep.json",
+        "result_sha256": "04a72ce214cca19f015245ccc2d06d12c93e4e37c8e7915f4ab74669fb498097",
+        "task_id": 8
+      },
+      {
+        "config_path": "sweep_configs_nature_meep_verification\\config_011.json",
+        "config_sha256": "5d7bde81ebb86d991ce74c8ad58899195e703bb89eb6c06b28fd7e5a7729119e",
+        "result_path": "results_nature_meep_verification\\task_11_meep.json",
+        "result_sha256": "04278cfefc30b821e2aa28d2acd33380e8fd01aa8ab84b53044d98aac924afb7",
+        "task_id": 11
+      },
+      {
+        "config_path": "sweep_configs_nature_meep_verification\\config_012.json",
+        "config_sha256": "780c6548307de34819865e33abf8e3d7229ebab175b3172b27b6a532ffc294f8",
+        "result_path": "results_nature_meep_verification\\task_12_meep.json",
+        "result_sha256": "bdc700ebfa3d5efd720d710d30bf675ad61ecdf5c9d6faa39ef89b44802393ca",
+        "task_id": 12
+      }
+    ],
+    "task_ids": [
+      11,
+      8,
+      12
+    ],
+    "theta_deg": 3.0
   },
-  "timestamp": "2026-10-17T05:38:25.768733+00:00"
+  "timestamp": "2026-10-17T17:43:05.301837+00:00"
 }

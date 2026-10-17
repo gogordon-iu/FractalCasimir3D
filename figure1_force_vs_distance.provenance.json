@@ -1,9 +1,9 @@
 {
   "figure_file": "C:/Users/gorengor/Goren/IUB/Research/FractalCasimirEffect/Code/3Dsimulations/figure1_force_vs_distance.svg",
-  "timestamp": "2026-10-08T14:42:59.882382+00:00",
+  "timestamp": "2026-10-17T17:43:00.044045+00:00",
   "input_source": {
-    "path": "C:/Users/gorengor/Goren/IUB/Research/FractalCasimirEffect/Code/3Dsimulations/Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-    "sha256": "b95616a2f8ffa8ad5a01989253808cb45230462b51bf4a5e539bfda1699b389d"
+    "path": "C:/Users/gorengor/Goren/IUB/Research/FractalCasimirEffect/Code/3Dsimulations/results/provenance_metrics.json",
+    "sha256": "85261030d55cfc4461825d5f95467d9dd46e56fc32e9e9921378e42a8a3ac336"
   },
   "data_slices_columns": [
     "model_1_ssr",
@@ -106,6 +106,46 @@
   "generating_code": {
     "source_file": "utils/metrics_logger.py",
     "source_function": "save_plot_provenance",
-    "line_number": 200
+    "line_number": 502
+  },
+  "solver": "Meep 3D FDTD Richardson extrapolation",
+  "solver_parameters": {
+    "task_ids": [
+      11,
+      8,
+      12
+    ],
+    "resolutions": [
+      40,
+      50,
+      60
+    ],
+    "order": 4,
+    "method": "Three-point least-squares Richardson fit F(R)=F_inf+C*(1/R)^4.",
+    "design": "Cantor_N2_HybridRZ",
+    "theta_deg": 3.0,
+    "source_files": [
+      {
+        "task_id": 8,
+        "result_path": "results_nature_meep_verification\\task_8_meep.json",
+        "config_path": "sweep_configs_nature_meep_verification\\config_008.json",
+        "result_sha256": "04a72ce214cca19f015245ccc2d06d12c93e4e37c8e7915f4ab74669fb498097",
+        "config_sha256": "474faf6330c92084063c9f054a99d9571757ce0198c58cdfda377d0043c9a974"
+      },
+      {
+        "task_id": 11,
+        "result_path": "results_nature_meep_verification\\task_11_meep.json",
+        "config_path": "sweep_configs_nature_meep_verification\\config_011.json",
+        "result_sha256": "04278cfefc30b821e2aa28d2acd33380e8fd01aa8ab84b53044d98aac924afb7",
+        "config_sha256": "5d7bde81ebb86d991ce74c8ad58899195e703bb89eb6c06b28fd7e5a7729119e"
+      },
+      {
+        "task_id": 12,
+        "result_path": "results_nature_meep_verification\\task_12_meep.json",
+        "config_path": "sweep_configs_nature_meep_verification\\config_012.json",
+        "result_sha256": "bdc700ebfa3d5efd720d710d30bf675ad61ecdf5c9d6faa39ef89b44802393ca",
+        "config_sha256": "780c6548307de34819865e33abf8e3d7229ebab175b3172b27b6a532ffc294f8"
+      }
+    ]
   }
 }
