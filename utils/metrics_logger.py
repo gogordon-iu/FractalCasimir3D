@@ -141,6 +141,31 @@ def _compute_sha256(file_path: str) -> str:
     return hasher.hexdigest()
 
 
+def _compact_step_data(obj: Any) -> Any:
+    """Summarize bulky diagnostics without changing scalars or solver parameters."""
+    if isinstance(obj, Mapping):
+        compacted = {}
+        for key, value in obj.items():
+            if key == "solver_parameters":
+                compacted[key] = value
+            elif (
+                key in ("per_xi_integrands", "frequency_contributions")
+                and isinstance(value, (list, tuple))
+                and all(isinstance(item, Mapping) for item in value)
+            ):
+                compacted[key] = {"count": len(value)}
+            elif key in ("panels", "vertices") and isinstance(value, (list, tuple)):
+                compacted[key] = {"count": len(value)}
+            else:
+                compacted[key] = _compact_step_data(value)
+        return compacted
+    if isinstance(obj, list):
+        return [_compact_step_data(item) for item in obj]
+    if isinstance(obj, tuple):
+        return tuple(_compact_step_data(item) for item in obj)
+    return obj
+
+
 def _ensure_manifest_fields(
     manifest: Dict[str, Any],
     solver_name: Optional[str] = None,
@@ -178,6 +203,12 @@ def _ensure_manifest_fields(
 def _save_manifest(metrics_path: str, manifest: Dict[str, Any]) -> None:
     manifest_path, jsonl_path = _resolve_manifest_paths(metrics_path)
     _ensure_manifest_fields(manifest)
+
+    # Compact historical steps as well as newly logged data.
+    if "intermediate_steps" in manifest:
+        manifest["intermediate_steps"] = _compact_step_data(
+            manifest["intermediate_steps"]
+        )
 
     lines = []
     for key, record in manifest.get("metrics", {}).items():
@@ -333,7 +364,7 @@ def log_step(
         "source_file": caller["source_file"],
         "source_function": caller["source_function"],
         "line_number": caller["line_number"],
-        "data_summary": data,
+        "data_summary": _compact_step_data(data),
         **solver,
     }
     if solver["solver"] != "unspecified":
