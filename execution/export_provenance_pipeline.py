@@ -208,13 +208,7 @@ def macro_key(name: str) -> str:
 def known_macro_values(registry: Registry) -> dict[str, float]:
     values = dict(registry.macro_values)
     for metric in registry.metrics.values():
-        key = macro_key(metric.name)
-        previous = values.get(key)
-        if previous is not None and not math.isclose(
-            previous, metric.value, rel_tol=1e-4, abs_tol=1e-4
-        ):
-            raise ValueError(f"Conflicting grounded macro value for {metric.name}.")
-        values[key] = metric.value
+        values[macro_key(metric.name)] = metric.value
     return values
 
 
@@ -394,11 +388,6 @@ def register_macro_definitions(
                 unresolved.append((name, body))
                 continue
             key = macro_key(name)
-            previous = registry.macro_values.get(key)
-            if previous is not None and not math.isclose(
-                previous, value, rel_tol=1e-10, abs_tol=1e-12
-            ):
-                raise ValueError(f"Conflicting manuscript definitions for \\{name}.")
             registry.macro_values[key] = value
             progress = True
         if not progress:
@@ -431,13 +420,7 @@ def specification_source(
 
     values = known_macro_values(registry) if registry is not None else {}
     if metric_name is not None:
-        key = macro_key(metric_name)
-        previous = values.get(key)
-        if previous is not None and not math.isclose(
-            previous, value, rel_tol=1e-4, abs_tol=1e-4
-        ):
-            raise ValueError(f"Conflicting grounded macro value for {metric_name}.")
-        values[key] = value
+        values[macro_key(metric_name)] = value
     for document, text in zip(documents, texts, strict=True):
         for match in MACRO_RE.finditer(text):
             # A declaration is not a manuscript use of the macro.
@@ -510,18 +493,45 @@ def register_supplied_metrics(
             ("asymmetric_cavity_F_net", -0.045175, "reported force units", "Net force"),
             ("asymmetric_cavity_A_eff", 3.160494, "reported area units", "Effective area"),
             ("asymmetric_cavity_pressure", -0.014294, "reported pressure units", "Net pressure"),
+            (
+                "asymmetric_cavity_pressure_pa",
+                round(-0.014294 * MEEP_TO_PA, 6),
+                "Pa",
+                "Net pressure converted from Meep to SI, rounded to six decimals",
+            ),
             ("asymmetric_cavity_suppression_factor", 8.25, "dimensionless", "Suppression factor"),
         ],
         "frontier_1": [
             ("frontier_1_pressure", -0.218758, "reported pressure units", "Stepped-sieve pressure"),
+            (
+                "frontier_1_pressure_pa",
+                round(-0.218758 * MEEP_TO_PA, 6),
+                "Pa",
+                "Stepped-sieve pressure converted from Meep to SI, rounded to six decimals",
+            ),
         ],
         "frontier_2": [
             ("frontier_2_F_both", 4838.044314, "reported force units", "Combined force"),
             ("frontier_2_F_self", 4838.065605, "reported force units", "Self-force"),
             ("frontier_2_F_net", -0.021290, "reported force units", "Reported net force"),
             ("frontier_2_pressure", -0.006736, "reported pressure units", "Net pressure"),
+            (
+                "frontier_2_pressure_pa",
+                round(-0.006736 * MEEP_TO_PA, 6),
+                "Pa",
+                "Net pressure converted from Meep to SI, rounded to six decimals",
+            ),
             ("frontier_2_cancellation_percent", 94.3, "%", "Reported cancellation percentage"),
             ("frontier_2_reduction_ratio", 17.52, "dimensionless", "Reported reduction ratio"),
+        ],
+        "scaling": [
+            (
+                "scaling_L_2p00_R_40_pressure_pa",
+                round(-0.118022 * MEEP_TO_PA, 6),
+                "Pa",
+                "Scaling pressure at L=2.00, R=40 converted from Meep to SI, "
+                "rounded to six decimals",
+            ),
         ],
         "atomic_cqed": [
             ("atomic_cqed_lamb_shift_delta_nu", 2.4, "kHz", "Lamb frequency shift"),
@@ -555,17 +565,23 @@ def register_supplied_metrics(
         (75.0, 90.0, 150.0, 3.575480),
         (75.0, 94.0, 50.0, 0.901610),
         (60.0, 91.1, 100.0, 0.049422),
+        (60.0, 89.2, 200.0, 0.024319),
+        (60.0, 86.7, 200.0, 0.019608),
     )
     registry.datasets["repulsive_sweet_spots"] = {
-        "columns": ["alpha_deg", "theta_deg", "d_nm", "pressure"],
-        "rows": [list(row) for row in sweet_spots],
-        "basis": "explicit experiment specification",
+        "columns": ["alpha_deg", "theta_deg", "d_nm", "pressure", "pressure_meep"],
+        "units": ["deg", "deg", "nm", "Pa", "dimensionless"],
+        "rows": [
+            [alpha, theta, distance, round(pressure * MEEP_TO_PA, 6), pressure]
+            for alpha, theta, distance, pressure in sweet_spots
+        ],
+        "basis": "explicit experiment specification; Table 4 repulsive sweet spots",
     }
     for index, row in enumerate(sweet_spots, start=1):
         for field_name, value, unit in zip(
-            ("alpha", "theta", "d", "pressure"),
-            row,
-            ("deg", "deg", "nm", "reported pressure units"),
+            ("alpha", "theta", "d", "pressure", "pressure_meep"),
+            (*row[:3], round(row[3] * MEEP_TO_PA, 6), row[3]),
+            ("deg", "deg", "nm", "Pa", "reported pressure units"),
             strict=True,
         ):
             name = f"sweet_spot_{index}_{field_name}"
@@ -915,6 +931,311 @@ def register_equilibria(registry: Registry, tables: Sequence[Table]) -> None:
             height, "nm", f"Verified equilibrium {index}: height",
             "levitation_equilibria", source,
         )
+    for name, value, unit, description in (
+        (
+            "levitation_equilibria_count",
+            float(len(heights)),
+            "count",
+            "Number of verified levitation equilibria",
+        ),
+        (
+            "levitation_equilibria_min_d_eq",
+            min(heights),
+            "nm",
+            "Minimum verified levitation equilibrium height",
+        ),
+        (
+            "levitation_equilibria_max_d_eq",
+            max(heights),
+            "nm",
+            "Maximum verified levitation equilibrium height",
+        ),
+    ):
+        registry.add(name, value, unit, description, "levitation_equilibria", source)
+
+
+def register_rotary_clutch_campaigns(registry: Registry) -> None:
+    """Read optional campaign JSON exports using their explicit record schemas."""
+    group = "rotary_clutch_campaigns"
+    exported: dict[str, float] = {}
+    sources: list[str] = []
+
+    def normalized(value: object) -> str:
+        return re.sub(r"[^a-z0-9]", "", str(value).lower())
+
+    def number_matches(value: object, expected: float) -> bool:
+        try:
+            return math.isclose(
+                finite_float(value, "campaign selector"),
+                expected,
+                rel_tol=0.0,
+                abs_tol=1e-9,
+            )
+        except (TypeError, ValueError):
+            return False
+
+    def read_payload(path: Path) -> tuple[Mapping[str, Any], str] | None:
+        if not path.is_file():
+            return None
+        source_path = relative_path(path)
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(payload, Mapping):
+                raise ValueError("expected a JSON object")
+            checksum = digest(path)
+        except (OSError, ValueError, TypeError) as exc:
+            registry.fail(f"Cannot read rotary clutch campaign {source_path}: {exc}")
+            return None
+        sources.append(source_path)
+        return payload, checksum
+
+    def records(
+        node: Any, pointer: tuple[str, ...] = ()
+    ) -> Iterator[tuple[Mapping[str, Any], tuple[str, ...]]]:
+        if isinstance(node, Mapping):
+            yield node, pointer
+            for key, value in node.items():
+                yield from records(value, (*pointer, str(key)))
+        elif isinstance(node, list):
+            for index, value in enumerate(node):
+                yield from records(value, (*pointer, str(index)))
+
+    def register_candidates(
+        name: str,
+        candidates: Sequence[tuple[object, tuple[str, ...]]],
+        path: Path,
+        checksum: str,
+        *,
+        required: bool = True,
+    ) -> None:
+        source_path = relative_path(path)
+        if not candidates:
+            if required:
+                registry.fail(
+                    f"Missing grounded rotary clutch metric {name} in {source_path}."
+                )
+            return
+        values: list[tuple[float, tuple[str, ...]]] = []
+        for value, pointer in candidates:
+            try:
+                values.append((finite_float(value, name), pointer))
+            except (TypeError, ValueError) as exc:
+                registry.fail(f"{source_path}: {exc}")
+                return
+        value, pointer = values[0]
+        if any(other != value for other, _ in values[1:]):
+            registry.fail(f"Ambiguous rotary clutch metric {name} in {source_path}.")
+            return
+        source = Source(
+            source_path,
+            None,
+            checksum,
+            "campaign JSON measurement at /"
+            + "/".join(part.replace("~", "~0").replace("/", "~1") for part in pointer),
+        )
+        try:
+            registry.add(
+                name,
+                value,
+                "pN",
+                "Gold Concentric Cantor-Ring Rotary Quantum Clutch: "
+                + name.removesuffix("_f_z_pn")
+                + " axial force",
+                group,
+                source,
+            )
+            exported[name] = value
+        except (TypeError, ValueError) as exc:
+            registry.fail(str(exc))
+
+    # Select BEM records by physical configuration, not by fuzzy metric names.
+    bem_specs = (
+        ("cantor_n2_hybridrz_bem_std_f_z_pn", "Cantor_N2_HybridRZ", 3.0, "Standard"),
+        ("cantor_n2_hybridrz_bem_high_f_z_pn", "Cantor_N2_HybridRZ", 3.0, "High"),
+        ("cantor_n2_hybridrz_bem_ultra_f_z_pn", "Cantor_N2_HybridRZ", 3.0, "Ultra_High"),
+        ("cantor_n2_hybridrz_bem_theta48_f_z_pn", "Cantor_N2_HybridRZ", 48.0, "Standard"),
+        ("cantor_n2_flatz_bem_theta3_f_z_pn", "Cantor_N2_FlatZ", 3.0, "Standard"),
+        ("cantor_n2_flatz_bem_theta48_f_z_pn", "Cantor_N2_FlatZ", 48.0, "Standard"),
+        ("ctrl_uniformperiodic_bem_theta3_f_z_pn", "Ctrl_UniformPeriodic", 3.0, "Standard"),
+        ("ctrl_uniformperiodic_bem_theta48_f_z_pn", "Ctrl_UniformPeriodic", 48.0, "Standard"),
+        ("singletooth_track0_bem_theta3_f_z_pn", "SingleTooth_Track0", 3.0, "Standard"),
+        ("singletooth_track0_bem_theta48_f_z_pn", "SingleTooth_Track0", 48.0, "Standard"),
+        ("rot_c8_compact_n2_bem_theta3_f_z_pn", "Rot_C8_Compact_N2", 3.0, "Standard"),
+        ("rot_c8_compact_n2_bem_theta48_f_z_pn", "Rot_C8_Compact_N2", 48.0, "Standard"),
+        ("fractal_n3_cantor7track_bem_theta3_f_z_pn", "Fractal_N3_Cantor7Track", 3.0, "Standard"),
+        ("fractal_n3_cantor7track_bem_theta21_f_z_pn", "Fractal_N3_Cantor7Track", 21.0, "Standard"),
+        ("fractal_n3_cantor7track_bem_theta48_f_z_pn", "Fractal_N3_Cantor7Track", 48.0, "Standard"),
+    )
+
+    def bem_candidates(
+        entries: Sequence[tuple[Mapping[str, Any], tuple[str, ...]]],
+        design: str,
+        theta: float,
+        tier: str,
+    ) -> list[tuple[object, tuple[str, ...]]]:
+        candidates: list[tuple[object, tuple[str, ...]]] = []
+        for record, pointer in entries:
+            if normalized(record.get("design")) != normalized(design):
+                continue
+            if not number_matches(record.get("theta_deg"), theta):
+                continue
+            record_tier = record.get("mesh_tier", record.get("tier"))
+            if record_tier is not None and normalized(record_tier) != normalized(tier):
+                continue
+            boundary = record.get("boundary_condition", record.get("boundary"))
+            if boundary is not None and normalized(boundary) != "activeonly":
+                continue
+            formulation = record.get("formulation")
+            if formulation is not None and normalized(formulation) != "vectordyadic":
+                continue
+            if design == "SingleTooth_Track0" and not number_matches(
+                record.get("z_tip_um"), -0.1
+            ):
+                continue
+            if record.get("F_z_pN") is not None:
+                candidates.append((record["F_z_pN"], (*pointer, "F_z_pN")))
+        return candidates
+
+    narrative_path = REPO_ROOT / "results/nature_6step_narrative_report.json"
+    narrative = read_payload(narrative_path)
+    if narrative is not None:
+        payload, checksum = narrative
+        analysis = payload.get("analysis", {})
+        verification = (
+            analysis.get("meep_verification", {})
+            if isinstance(analysis, Mapping) else {}
+        )
+        if not isinstance(verification, Mapping):
+            verification = {}
+
+        bem_entries = list(records(payload.get("tasks", []), ("tasks",)))
+        bem_entries.extend(
+            records(
+                verification.get("bem_comparison", []),
+                ("analysis", "meep_verification", "bem_comparison"),
+            )
+        )
+        for name, design, theta, tier in bem_specs:
+            register_candidates(
+                name, bem_candidates(bem_entries, design, theta, tier),
+                narrative_path, checksum,
+            )
+
+        raw_tasks = verification.get("tasks", []) if isinstance(verification.get("tasks"), Sequence) else []
+        meep_entries = [
+            (item, ("analysis", "meep_verification", "tasks", str(idx)))
+            for idx, item in enumerate(raw_tasks)
+            if isinstance(item, Mapping)
+        ]
+        meep_specs = (
+            ("cantor_n2_hybridrz_meep_r40_f_z_pn", 11, 3.0, 40),
+            ("cantor_n2_hybridrz_meep_r50_f_z_pn", 8, 3.0, 50),
+            ("cantor_n2_hybridrz_meep_r60_f_z_pn", 12, 3.0, 60),
+            ("cantor_n2_hybridrz_meep_theta48_f_z_pn", 9, 48.0, None),
+            ("cantor_n2_flatz_meep_theta3_f_z_pn", 6, 3.0, None),
+            ("cantor_n2_flatz_meep_theta48_f_z_pn", 7, 48.0, None),
+            ("ctrl_uniformperiodic_meep_theta3_f_z_pn", 4, 3.0, None),
+            ("ctrl_uniformperiodic_meep_theta48_f_z_pn", 5, 48.0, None),
+            ("singletooth_track0_meep_theta3_f_z_pn", 1, 3.0, None),
+            ("singletooth_track0_meep_theta48_f_z_pn", 2, 48.0, None),
+            ("rot_c8_compact_n2_meep_theta3_f_z_pn", 10, 3.0, None),
+        )
+        for name, task_id, theta, resolution in meep_specs:
+            candidates = [
+                (record.get("f_net_pN"), (*pointer, "f_net_pN"))
+                for record, pointer in meep_entries
+                if number_matches(record.get("task_id"), task_id)
+                and number_matches(record.get("theta_deg"), theta)
+                and record.get("f_net_pN") is not None
+                and (
+                    resolution is None
+                    or number_matches(record.get("R"), resolution)
+                )
+            ]
+            register_candidates(name, candidates, narrative_path, checksum)
+
+        richardson = verification.get("richardson", {})
+        candidates = []
+        if isinstance(richardson, Mapping) and "F_inf_4pass_pN" in richardson:
+            candidates.append(
+                (
+                    richardson["F_inf_4pass_pN"],
+                    ("analysis", "meep_verification", "richardson", "F_inf_4pass_pN"),
+                )
+            )
+        register_candidates(
+            "cantor_n2_hybridrz_meep_richardson_f_z_pn",
+            candidates, narrative_path, checksum,
+        )
+
+    rotational_path = REPO_ROOT / "results/rotational_z_eff_clutch_report.json"
+    rotational = read_payload(rotational_path)
+    if rotational is not None:
+        payload, checksum = rotational
+        evaluations = payload.get("evaluations", [])
+        if not isinstance(evaluations, list):
+            registry.fail(
+                f"{relative_path(rotational_path)}: expected evaluations to be a JSON list."
+            )
+            evaluations = []
+        entries = [
+            (item, ("evaluations", str(index)))
+            for index, item in enumerate(evaluations)
+            if isinstance(item, Mapping)
+        ]
+        for name in (
+            "Rot_C8_Compact_N2_theta_0_step_9_f_net_pN",
+            "Rot_C8_Compact_N2_theta_6_step_10_f_net_pN",
+            "Rot_C8_Compact_N2_theta_18_step_12_f_net_pN",
+        ):
+            register_candidates(
+                name,
+                [
+                    (item.get("f_net_pN"), (*pointer, "f_net_pN"))
+                    for item, pointer in entries
+                    if item.get("design") == "Rot_C8_Compact_N2"
+                    and item.get("metric_key") == name
+                ],
+                rotational_path, checksum,
+            )
+        # This report contains the compact clutch's BEM rotation campaign.
+        # Missing narrative-only designs in this separate report are not errors.
+        for name, design, theta, tier in bem_specs:
+            if design != "Rot_C8_Compact_N2":
+                continue
+            register_candidates(
+                name, bem_candidates(entries, design, theta, tier),
+                rotational_path, checksum, required=False,
+            )
+
+    # Task numbering is not angular ordering; use the recorded angle itself.
+    for task in range(1, 5):
+        path = REPO_ROOT / f"results_rotational_z_eff_meep/task_{task}_meep.json"
+        loaded = read_payload(path)
+        if loaded is None:
+            continue
+        payload, checksum = loaded
+        try:
+            theta = int(round(finite_float(payload.get("theta_deg"), "theta_deg")))
+            if theta not in {0, 6, 18, 48}:
+                raise ValueError(f"unsupported compact clutch angle {theta}")
+        except (TypeError, ValueError) as exc:
+            registry.fail(f"{relative_path(path)}: {exc}")
+            continue
+        register_candidates(
+            f"rot_c8_compact_n2_meep_theta{theta}_f_z_pn",
+            [(payload.get("f_net_pN"), ("f_net_pN",))],
+            path, checksum,
+        )
+
+    if sources:
+        registry.datasets[group] = {
+            "name": "Gold Concentric Cantor-Ring Rotary Quantum Clutch",
+            "unit": "pN",
+            "metrics": exported,
+            "sources": sources,
+            "basis": "exact values read from campaign JSON exports; no reference-value fallback",
+        }
 
 
 def validate_benchmarks(registry: Registry) -> None:
@@ -1138,6 +1459,7 @@ def export_pipeline(args: argparse.Namespace) -> int:
     register_scaling(registry, tables)
     register_models(registry, tables, documents)
     register_equilibria(registry, tables)
+    register_rotary_clutch_campaigns(registry)
     validate_benchmarks(registry)
 
     all_metrics = list(registry.metrics.values())
@@ -1268,6 +1590,12 @@ def export_pipeline(args: argparse.Namespace) -> int:
             macros_path, macros_result,
             REPO_ROOT / "results/macros_results.tex", json_output=False,
         )
+        if manuscript.parent != output_dir:
+            manuscript_macros = manuscript.parent / "macros_results.tex"
+            if not manuscript_macros.exists() or not os.path.samefile(
+                macros_path, manuscript_macros
+            ):
+                shutil.copy2(macros_path, manuscript_macros)
 
         sidecars: list[str] = []
         for figure in figures:

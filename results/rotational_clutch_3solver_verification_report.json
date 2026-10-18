@@ -2,13 +2,13 @@
   "model": "rotational_clutch_3solver_verification",
   "dataset": "rotational_clutch_3solver_verification",
   "status": "completed",
-  "executed_at": "2026-10-17T03:15:38.728258+00:00",
+  "executed_at": "2026-10-17T05:43:43.776008+00:00",
   "provenance": {
     "campaign": "rotational_clutch_3solver_verification",
     "solver_name": "rotational_clutch_3solver_verification",
     "device": "cpu",
-    "micro_probe": true,
-    "max_steps": 5,
+    "micro_probe": false,
+    "max_steps": 0,
     "max_memory_gib": 8.0,
     "symmetry_order": 4,
     "sector_deg": 90.0,
@@ -37,14 +37,14 @@
     "geometry_source_sha256": "b3ed094428c7be8401ac4d2dc8f3f9c52373791c25dd37e3e2ec54839bc9aaf5",
     "bem_source_sha256": "48911f2d372e71faebe6043376f70a84592f0dce19a05b417cb57bcf2c54f8bd",
     "lifshitz_pressure_Pa": -2880.438769502036,
-    "lifshitz_pressure_runtime_s": 0.0061126000073272735
+    "lifshitz_pressure_runtime_s": 0.014446799992583692
   },
   "tasks": [
     {
       "model": "rotational_clutch_3solver_verification",
       "dataset": "rotational_clutch_3solver_verification",
       "status": "completed",
-      "executed_at": "2026-10-17T03:16:27.797899+00:00",
+      "executed_at": "2026-10-17T05:47:48.829863+00:00",
       "task_id": "Rot_C4_TightSlot_N2_Standard_theta_006p0",
       "design": "Rot_C4_TightSlot_N2",
       "theta_deg": 6.0,
@@ -57,22 +57,22 @@
         "n_phi_tooth": 3,
         "n_phi_bridge": 3,
         "n_z": 2,
-        "n_xi": 4
+        "n_xi": 24
       },
       "forces_pN": {
         "lifshitz_pfa": -0.0,
-        "vector_dyadic": 1.4846215362842268,
-        "scalar_yukawa": 3.888890619858015
+        "vector_dyadic": 1.4688216076756786,
+        "scalar_yukawa": 3.8038563223726922
       },
       "panel_count": 1504,
       "vector_dofs": 3008,
       "scalar_dofs": 1504,
       "runtime_s": {
-        "lifshitz_pfa": 4.429998807609081e-05,
-        "vector_dyadic": 28.267300600011367,
-        "scalar_yukawa": 18.152127500012284
+        "lifshitz_pfa": 4.2400002712383866e-05,
+        "vector_dyadic": 167.3433681000024,
+        "scalar_yukawa": 74.18500700002187
       },
-      "mesh_runtime_s": 0.06091749999905005,
+      "mesh_runtime_s": 0.061592299985932186,
       "polar_overlap_um2": 0.0,
       "landing_pad_fraction": 0.0,
       "collision_certificate": {
@@ -110,6 +110,1639 @@
         "externally_executed": false,
         "material_equivalence_verified": false
       }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T05:52:22.462863+00:00",
+      "task_id": "Rot_C4_TightSlot_N2_Standard_theta_018p0",
+      "design": "Rot_C4_TightSlot_N2",
+      "theta_deg": 18.0,
+      "state": "Straddling",
+      "tier": "Standard",
+      "tier_index": 0,
+      "resolution": {
+        "tier": "Standard",
+        "n_r": 2,
+        "n_phi_tooth": 3,
+        "n_phi_bridge": 3,
+        "n_z": 2,
+        "n_xi": 24
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -283.0692013331313,
+        "vector_dyadic": -2.3443662559007676,
+        "scalar_yukawa": -11.51361483036251
+      },
+      "panel_count": 1504,
+      "vector_dofs": 3008,
+      "scalar_dofs": 1504,
+      "runtime_s": {
+        "lifshitz_pfa": 6.6100008552894e-05,
+        "vector_dyadic": 164.66953720001038,
+        "scalar_yukawa": 74.40901999999187
+      },
+      "mesh_runtime_s": 0.10967220002203248,
+      "polar_overlap_um2": 0.0982729451951057,
+      "landing_pad_fraction": 0.30000000000000004,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.02041666666666664,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": null,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_Standard_theta_018p0_rotor.msh",
+            "sha256": "edfddb33dcb74c771837975f4c5437c5e1e041de9fd853765db807f30c705681",
+            "triangle_count": 768,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_Standard_theta_018p0_stator.msh",
+            "sha256": "849d949fb9df0cdf3fd510a63a6cfba475529c5f445fe353e172d3dde8ec2792",
+            "triangle_count": 2240,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_Standard_theta_018p0.scuffgeo",
+        "scuffgeo_sha256": "83973fa7914e9787c7cd8cf29d2ce8e9c744becd0698d0c240575d0a4b9d7f64",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T05:56:57.722096+00:00",
+      "task_id": "Rot_C4_TightSlot_N2_Standard_theta_048p0",
+      "design": "Rot_C4_TightSlot_N2",
+      "theta_deg": 48.0,
+      "state": "Landing Pad",
+      "tier": "Standard",
+      "tier_index": 0,
+      "resolution": {
+        "tier": "Standard",
+        "n_r": 2,
+        "n_phi_tooth": 3,
+        "n_phi_bridge": 3,
+        "n_z": 2,
+        "n_xi": 24
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -943.5640044437707,
+        "vector_dyadic": -3.104458928080679,
+        "scalar_yukawa": -20.1881129928039
+      },
+      "panel_count": 1504,
+      "vector_dofs": 3008,
+      "scalar_dofs": 1504,
+      "runtime_s": {
+        "lifshitz_pfa": 6.200000643730164e-05,
+        "vector_dyadic": 165.59951759999967,
+        "scalar_yukawa": 74.99900890002027
+      },
+      "mesh_runtime_s": 0.11335630001849495,
+      "polar_overlap_um2": 0.3275764839836856,
+      "landing_pad_fraction": 1.0,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.02041666666666664,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": -1,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_Standard_theta_048p0_rotor.msh",
+            "sha256": "edfef8e06c5c086180e22024147115e6a5d7139609625c983118376a8b00a16e",
+            "triangle_count": 768,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_Standard_theta_048p0_stator.msh",
+            "sha256": "849d949fb9df0cdf3fd510a63a6cfba475529c5f445fe353e172d3dde8ec2792",
+            "triangle_count": 2240,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_Standard_theta_048p0.scuffgeo",
+        "scuffgeo_sha256": "501f884be1ae1b7a49b103bda9af6cf3fad1a8be8fa845d63cc74b4e7af357f8",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T06:14:17.071624+00:00",
+      "task_id": "Rot_C4_TightSlot_N2_High_theta_006p0",
+      "design": "Rot_C4_TightSlot_N2",
+      "theta_deg": 6.0,
+      "state": "Aperture",
+      "tier": "High",
+      "tier_index": 1,
+      "resolution": {
+        "tier": "High",
+        "n_r": 3,
+        "n_phi_tooth": 4,
+        "n_phi_bridge": 4,
+        "n_z": 3,
+        "n_xi": 32
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -0.0,
+        "vector_dyadic": 2.5671873047125136,
+        "scalar_yukawa": 5.2100834826963265
+      },
+      "panel_count": 3120,
+      "vector_dofs": 6240,
+      "scalar_dofs": 3120,
+      "runtime_s": {
+        "lifshitz_pfa": 6.459999713115394e-05,
+        "vector_dyadic": 723.487389899994,
+        "scalar_yukawa": 280.06967490000534
+      },
+      "mesh_runtime_s": 0.2453758000046946,
+      "polar_overlap_um2": 0.0,
+      "landing_pad_fraction": 0.0,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.02041666666666664,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": false,
+      "expected_bem_sign": 1,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_High_theta_006p0_rotor.msh",
+            "sha256": "25761871cfbcbfb139346be87667bcb099b81eb85b48b7c8932797e7079086c6",
+            "triangle_count": 1584,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_High_theta_006p0_stator.msh",
+            "sha256": "101a84530f08b330ac6706e50d61f1fb306a68c2c0e7adbfc02338f903f0d983",
+            "triangle_count": 4656,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_High_theta_006p0.scuffgeo",
+        "scuffgeo_sha256": "a6b266e66585c56ae955eabbb11d2494ea3fa6560b37d123e77a8b1314dd3173",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T06:31:33.867146+00:00",
+      "task_id": "Rot_C4_TightSlot_N2_High_theta_018p0",
+      "design": "Rot_C4_TightSlot_N2",
+      "theta_deg": 18.0,
+      "state": "Straddling",
+      "tier": "High",
+      "tier_index": 1,
+      "resolution": {
+        "tier": "High",
+        "n_r": 3,
+        "n_phi_tooth": 4,
+        "n_phi_bridge": 4,
+        "n_z": 3,
+        "n_xi": 32
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -283.0692013331313,
+        "vector_dyadic": -3.4858616324331444,
+        "scalar_yukawa": -19.33523634204006
+      },
+      "panel_count": 3120,
+      "vector_dofs": 6240,
+      "scalar_dofs": 3120,
+      "runtime_s": {
+        "lifshitz_pfa": 6.589997792616487e-05,
+        "vector_dyadic": 722.1574572999962,
+        "scalar_yukawa": 278.4659800999798
+      },
+      "mesh_runtime_s": 0.2471316000155639,
+      "polar_overlap_um2": 0.0982729451951057,
+      "landing_pad_fraction": 0.30000000000000004,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.02041666666666664,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": null,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_High_theta_018p0_rotor.msh",
+            "sha256": "bcc890d10efc4e7b687e11a254a8452634075239beb5663cee2aaa92b12ac643",
+            "triangle_count": 1584,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_High_theta_018p0_stator.msh",
+            "sha256": "101a84530f08b330ac6706e50d61f1fb306a68c2c0e7adbfc02338f903f0d983",
+            "triangle_count": 4656,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_High_theta_018p0.scuffgeo",
+        "scuffgeo_sha256": "c8367979b363b91a1e64122774ed0878314fc20fb4d67759266527ff050ca346",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T06:48:53.357286+00:00",
+      "task_id": "Rot_C4_TightSlot_N2_High_theta_048p0",
+      "design": "Rot_C4_TightSlot_N2",
+      "theta_deg": 48.0,
+      "state": "Landing Pad",
+      "tier": "High",
+      "tier_index": 1,
+      "resolution": {
+        "tier": "High",
+        "n_r": 3,
+        "n_phi_tooth": 4,
+        "n_phi_bridge": 4,
+        "n_z": 3,
+        "n_xi": 32
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -943.5640044437707,
+        "vector_dyadic": -9.651661751478139,
+        "scalar_yukawa": -39.72763545025814
+      },
+      "panel_count": 3120,
+      "vector_dofs": 6240,
+      "scalar_dofs": 3120,
+      "runtime_s": {
+        "lifshitz_pfa": 6.459999713115394e-05,
+        "vector_dyadic": 720.8336049999925,
+        "scalar_yukawa": 281.95734389999416
+      },
+      "mesh_runtime_s": 0.25009079999290407,
+      "polar_overlap_um2": 0.3275764839836856,
+      "landing_pad_fraction": 1.0,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.02041666666666664,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": -1,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_High_theta_048p0_rotor.msh",
+            "sha256": "8fff4da2608704b43f345aab4f6a0c6f8eebb3bc3446886c887d9808b0fda59a",
+            "triangle_count": 1584,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_High_theta_048p0_stator.msh",
+            "sha256": "101a84530f08b330ac6706e50d61f1fb306a68c2c0e7adbfc02338f903f0d983",
+            "triangle_count": 4656,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_High_theta_048p0.scuffgeo",
+        "scuffgeo_sha256": "1601df6dc78f4b8e4bd77cf3bd8a05823b5a21f14d2d99bda956ac019065f261",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T07:36:53.930628+00:00",
+      "task_id": "Rot_C4_TightSlot_N2_Ultra_High_theta_006p0",
+      "design": "Rot_C4_TightSlot_N2",
+      "theta_deg": 6.0,
+      "state": "Aperture",
+      "tier": "Ultra_High",
+      "tier_index": 2,
+      "resolution": {
+        "tier": "Ultra_High",
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_bridge": 6,
+        "n_z": 4,
+        "n_xi": 40
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -0.0,
+        "vector_dyadic": 4.334988190172457,
+        "scalar_yukawa": 7.567892434686884
+      },
+      "panel_count": 6016,
+      "vector_dofs": 12032,
+      "scalar_dofs": 6016,
+      "runtime_s": {
+        "lifshitz_pfa": 6.489999941550195e-05,
+        "vector_dyadic": 2243.724676599988,
+        "scalar_yukawa": 598.849134100019
+      },
+      "mesh_runtime_s": 0.460439700022107,
+      "polar_overlap_um2": 0.0,
+      "landing_pad_fraction": 0.0,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.02041666666666664,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": false,
+      "expected_bem_sign": 1,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_Ultra_High_theta_006p0_rotor.msh",
+            "sha256": "0df7652dbdc0b370a60ddfded07090abba9530ae1ecf697cbd0f2078e0779855",
+            "triangle_count": 3072,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_Ultra_High_theta_006p0_stator.msh",
+            "sha256": "948a30be97e683c94c6703f8bf0297ec8c8ec09afb3769ae4b4ae600381c6da0",
+            "triangle_count": 8960,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_Ultra_High_theta_006p0.scuffgeo",
+        "scuffgeo_sha256": "f421329783e6a3e374d6ad04b2074ccc5855b5e98a0c3158874630eb8d479c35",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T08:18:00.813923+00:00",
+      "task_id": "Rot_C4_TightSlot_N2_Ultra_High_theta_018p0",
+      "design": "Rot_C4_TightSlot_N2",
+      "theta_deg": 18.0,
+      "state": "Straddling",
+      "tier": "Ultra_High",
+      "tier_index": 2,
+      "resolution": {
+        "tier": "Ultra_High",
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_bridge": 6,
+        "n_z": 4,
+        "n_xi": 40
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -283.0692013331313,
+        "vector_dyadic": -7.910190956685444,
+        "scalar_yukawa": -30.213534832596252
+      },
+      "panel_count": 6016,
+      "vector_dofs": 12032,
+      "scalar_dofs": 6016,
+      "runtime_s": {
+        "lifshitz_pfa": 4.909999552182853e-05,
+        "vector_dyadic": 1833.6677220000129,
+        "scalar_yukawa": 612.0691172000079
+      },
+      "mesh_runtime_s": 0.1917556000116747,
+      "polar_overlap_um2": 0.0982729451951057,
+      "landing_pad_fraction": 0.30000000000000004,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.02041666666666664,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": null,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_Ultra_High_theta_018p0_rotor.msh",
+            "sha256": "8b6f0e51bfe41469baf0d4c9c62de9d451041f467b774ea08ecdc256cdc0a560",
+            "triangle_count": 3072,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_Ultra_High_theta_018p0_stator.msh",
+            "sha256": "948a30be97e683c94c6703f8bf0297ec8c8ec09afb3769ae4b4ae600381c6da0",
+            "triangle_count": 8960,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_Ultra_High_theta_018p0.scuffgeo",
+        "scuffgeo_sha256": "8d3c327aff1f7869d78e897ba0809f1ce6845ff87a9931548e7d97e073d26ef9",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T08:58:27.340270+00:00",
+      "task_id": "Rot_C4_TightSlot_N2_Ultra_High_theta_048p0",
+      "design": "Rot_C4_TightSlot_N2",
+      "theta_deg": 48.0,
+      "state": "Landing Pad",
+      "tier": "Ultra_High",
+      "tier_index": 2,
+      "resolution": {
+        "tier": "Ultra_High",
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_bridge": 6,
+        "n_z": 4,
+        "n_xi": 40
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -943.5640044437707,
+        "vector_dyadic": -25.23400529006872,
+        "scalar_yukawa": -95.0093940137375
+      },
+      "panel_count": 6016,
+      "vector_dofs": 12032,
+      "scalar_dofs": 6016,
+      "runtime_s": {
+        "lifshitz_pfa": 4.320000880397856e-05,
+        "vector_dyadic": 1795.9083451999759,
+        "scalar_yukawa": 609.0866215999995
+      },
+      "mesh_runtime_s": 0.1955747000174597,
+      "polar_overlap_um2": 0.3275764839836856,
+      "landing_pad_fraction": 1.0,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.02041666666666664,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": -1,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_Ultra_High_theta_048p0_rotor.msh",
+            "sha256": "7473847277b68d3dbb3bd6b834137d3ef0f4e475e9ba4b76f030ced7d72b4b39",
+            "triangle_count": 3072,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_Ultra_High_theta_048p0_stator.msh",
+            "sha256": "948a30be97e683c94c6703f8bf0297ec8c8ec09afb3769ae4b4ae600381c6da0",
+            "triangle_count": 8960,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C4_TightSlot_N2_Ultra_High_theta_048p0.scuffgeo",
+        "scuffgeo_sha256": "d20096685b2a5e97f1d183e1b0b3623710b868ebe491b7af2ae6294c006f51e1",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T09:01:15.839959+00:00",
+      "task_id": "Rot_C8_Compact_N2_Standard_theta_006p0",
+      "design": "Rot_C8_Compact_N2",
+      "theta_deg": 6.0,
+      "state": "Aperture",
+      "tier": "Standard",
+      "tier_index": 0,
+      "resolution": {
+        "tier": "Standard",
+        "n_r": 2,
+        "n_phi_tooth": 3,
+        "n_phi_bridge": 3,
+        "n_z": 2,
+        "n_xi": 24
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -0.0,
+        "vector_dyadic": 1.4913558992535647,
+        "scalar_yukawa": 3.322856398004461
+      },
+      "panel_count": 1504,
+      "vector_dofs": 3008,
+      "scalar_dofs": 1504,
+      "runtime_s": {
+        "lifshitz_pfa": 3.9000005926936865e-05,
+        "vector_dyadic": 99.86987399999634,
+        "scalar_yukawa": 47.45018529999652
+      },
+      "mesh_runtime_s": 0.04922580000129528,
+      "polar_overlap_um2": 0.0,
+      "landing_pad_fraction": 0.0,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.021388888888888846,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": false,
+      "expected_bem_sign": 1,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Standard_theta_006p0_rotor.msh",
+            "sha256": "fdd39713fc40f066759848a927de56c28d51b787aa28dfd76d23e49252b9a7a7",
+            "triangle_count": 768,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Standard_theta_006p0_stator.msh",
+            "sha256": "0afca875627f91830ce693063141c3ca7e02e72edcc7aac5ff1e303216ce948b",
+            "triangle_count": 2240,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Standard_theta_006p0.scuffgeo",
+        "scuffgeo_sha256": "20bd1fde62c55a7086798d42cef0e76093692d64458075a4726bca61938e42af",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T09:04:08.201007+00:00",
+      "task_id": "Rot_C8_Compact_N2_Standard_theta_018p0",
+      "design": "Rot_C8_Compact_N2",
+      "theta_deg": 18.0,
+      "state": "Straddling",
+      "tier": "Standard",
+      "tier_index": 0,
+      "resolution": {
+        "tier": "Standard",
+        "n_r": 2,
+        "n_phi_tooth": 3,
+        "n_phi_bridge": 3,
+        "n_z": 2,
+        "n_xi": 24
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -87.09821579480962,
+        "vector_dyadic": -2.3347090640379373,
+        "scalar_yukawa": -9.517691367626654
+      },
+      "panel_count": 1504,
+      "vector_dofs": 3008,
+      "scalar_dofs": 1504,
+      "runtime_s": {
+        "lifshitz_pfa": 3.540000761859119e-05,
+        "vector_dyadic": 102.79516839998541,
+        "scalar_yukawa": 47.908092300000135
+      },
+      "mesh_runtime_s": 0.046909599972423166,
+      "polar_overlap_um2": 0.03023782929080175,
+      "landing_pad_fraction": 0.30000000000000004,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.021388888888888846,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": null,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Standard_theta_018p0_rotor.msh",
+            "sha256": "0a3b7f03f154b854cfe7f998e13c789179708453ec32e758cd2356db47d64eb9",
+            "triangle_count": 768,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Standard_theta_018p0_stator.msh",
+            "sha256": "0afca875627f91830ce693063141c3ca7e02e72edcc7aac5ff1e303216ce948b",
+            "triangle_count": 2240,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Standard_theta_018p0.scuffgeo",
+        "scuffgeo_sha256": "0d69fab426e62fd8d106a36802b73fb486069de589230455f5e8328ce6a71a1e",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T09:06:57.942152+00:00",
+      "task_id": "Rot_C8_Compact_N2_Standard_theta_048p0",
+      "design": "Rot_C8_Compact_N2",
+      "theta_deg": 48.0,
+      "state": "Landing Pad",
+      "tier": "Standard",
+      "tier_index": 0,
+      "resolution": {
+        "tier": "Standard",
+        "n_r": 2,
+        "n_phi_tooth": 3,
+        "n_phi_bridge": 3,
+        "n_z": 2,
+        "n_xi": 24
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -290.3273859826987,
+        "vector_dyadic": -4.291877864032742,
+        "scalar_yukawa": -20.872078498786845
+      },
+      "panel_count": 1504,
+      "vector_dofs": 3008,
+      "scalar_dofs": 1504,
+      "runtime_s": {
+        "lifshitz_pfa": 3.4500000765547156e-05,
+        "vector_dyadic": 100.10130589999608,
+        "scalar_yukawa": 47.52614140001242
+      },
+      "mesh_runtime_s": 0.0462398000236135,
+      "polar_overlap_um2": 0.10079276430267249,
+      "landing_pad_fraction": 1.0,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.021388888888888846,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": -1,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Standard_theta_048p0_rotor.msh",
+            "sha256": "3d8116d8ad38a02e086d2cc820b1fac940fb129bf8083e03a5382c047f3c1177",
+            "triangle_count": 768,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Standard_theta_048p0_stator.msh",
+            "sha256": "0afca875627f91830ce693063141c3ca7e02e72edcc7aac5ff1e303216ce948b",
+            "triangle_count": 2240,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Standard_theta_048p0.scuffgeo",
+        "scuffgeo_sha256": "674645f58e7eb18f48aad4e7e195bc5fd85a75fd116fecbf86203c6dcf40642c",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T09:17:29.327117+00:00",
+      "task_id": "Rot_C8_Compact_N2_High_theta_006p0",
+      "design": "Rot_C8_Compact_N2",
+      "theta_deg": 6.0,
+      "state": "Aperture",
+      "tier": "High",
+      "tier_index": 1,
+      "resolution": {
+        "tier": "High",
+        "n_r": 3,
+        "n_phi_tooth": 4,
+        "n_phi_bridge": 4,
+        "n_z": 3,
+        "n_xi": 32
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -0.0,
+        "vector_dyadic": 2.6233199497073616,
+        "scalar_yukawa": 4.455663056776004
+      },
+      "panel_count": 3120,
+      "vector_dofs": 6240,
+      "scalar_dofs": 3120,
+      "runtime_s": {
+        "lifshitz_pfa": 4.1099992813542485e-05,
+        "vector_dyadic": 426.95813069998985,
+        "scalar_yukawa": 182.00872290000552
+      },
+      "mesh_runtime_s": 0.11096590000670403,
+      "polar_overlap_um2": 0.0,
+      "landing_pad_fraction": 0.0,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.021388888888888846,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": false,
+      "expected_bem_sign": 1,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_High_theta_006p0_rotor.msh",
+            "sha256": "87c7633a54c4193a0f7a4896777eddb3b083a149bb11891225ab96f2b8330e6a",
+            "triangle_count": 1584,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_High_theta_006p0_stator.msh",
+            "sha256": "5533f3a2e008e205916ec3f18c97b460c4d20f2dcb6828e7dffb4a6c39342052",
+            "triangle_count": 4656,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_High_theta_006p0.scuffgeo",
+        "scuffgeo_sha256": "3669b4abcb65293b435fbfbf29ce597da6c7e5f2e72b059216ff8a6c07e4724d",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T09:28:12.979960+00:00",
+      "task_id": "Rot_C8_Compact_N2_High_theta_018p0",
+      "design": "Rot_C8_Compact_N2",
+      "theta_deg": 18.0,
+      "state": "Straddling",
+      "tier": "High",
+      "tier_index": 1,
+      "resolution": {
+        "tier": "High",
+        "n_r": 3,
+        "n_phi_tooth": 4,
+        "n_phi_bridge": 4,
+        "n_z": 3,
+        "n_xi": 32
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -87.09821579480962,
+        "vector_dyadic": -3.7400609308875037,
+        "scalar_yukawa": -15.440375101019107
+      },
+      "panel_count": 3120,
+      "vector_dofs": 6240,
+      "scalar_dofs": 3120,
+      "runtime_s": {
+        "lifshitz_pfa": 4.0099985199049115e-05,
+        "vector_dyadic": 441.50039810000453,
+        "scalar_yukawa": 177.7692031999759
+      },
+      "mesh_runtime_s": 0.11476340002263896,
+      "polar_overlap_um2": 0.03023782929080175,
+      "landing_pad_fraction": 0.30000000000000004,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.021388888888888846,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": null,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_High_theta_018p0_rotor.msh",
+            "sha256": "b4862f2c9a88451453e940926d16a28d2aedb55fc63e471da0c22fa30e30eba5",
+            "triangle_count": 1584,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_High_theta_018p0_stator.msh",
+            "sha256": "5533f3a2e008e205916ec3f18c97b460c4d20f2dcb6828e7dffb4a6c39342052",
+            "triangle_count": 4656,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_High_theta_018p0.scuffgeo",
+        "scuffgeo_sha256": "e35997dbabea98ce5f399b296fa413d2bc0b5816bd0a95a7930466be610318b4",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T09:38:29.056697+00:00",
+      "task_id": "Rot_C8_Compact_N2_High_theta_048p0",
+      "design": "Rot_C8_Compact_N2",
+      "theta_deg": 48.0,
+      "state": "Landing Pad",
+      "tier": "High",
+      "tier_index": 1,
+      "resolution": {
+        "tier": "High",
+        "n_r": 3,
+        "n_phi_tooth": 4,
+        "n_phi_bridge": 4,
+        "n_z": 3,
+        "n_xi": 32
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -290.3273859826987,
+        "vector_dyadic": -9.628943432272376,
+        "scalar_yukawa": -34.0588135774964
+      },
+      "panel_count": 3120,
+      "vector_dofs": 6240,
+      "scalar_dofs": 3120,
+      "runtime_s": {
+        "lifshitz_pfa": 4.7600013203918934e-05,
+        "vector_dyadic": 427.25803050000104,
+        "scalar_yukawa": 165.3003659999813
+      },
+      "mesh_runtime_s": 0.10826939999242313,
+      "polar_overlap_um2": 0.10079276430267249,
+      "landing_pad_fraction": 1.0,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.021388888888888846,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": -1,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_High_theta_048p0_rotor.msh",
+            "sha256": "c5409e0abafe3b9abe420a456b240aa9fa1e825ddef6e254481c87d7237842c9",
+            "triangle_count": 1584,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_High_theta_048p0_stator.msh",
+            "sha256": "5533f3a2e008e205916ec3f18c97b460c4d20f2dcb6828e7dffb4a6c39342052",
+            "triangle_count": 4656,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_High_theta_048p0.scuffgeo",
+        "scuffgeo_sha256": "c77216e7d0d7cafa7b3a03c5c72e7f95b1bebdba4ba0eefca14bf58764bde201",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T10:18:28.941876+00:00",
+      "task_id": "Rot_C8_Compact_N2_Ultra_High_theta_006p0",
+      "design": "Rot_C8_Compact_N2",
+      "theta_deg": 6.0,
+      "state": "Aperture",
+      "tier": "Ultra_High",
+      "tier_index": 2,
+      "resolution": {
+        "tier": "Ultra_High",
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_bridge": 6,
+        "n_z": 4,
+        "n_xi": 40
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -0.0,
+        "vector_dyadic": 4.1227113617781335,
+        "scalar_yukawa": 6.088858075326114
+      },
+      "panel_count": 6016,
+      "vector_dofs": 12032,
+      "scalar_dofs": 6016,
+      "runtime_s": {
+        "lifshitz_pfa": 4.9299997044727206e-05,
+        "vector_dyadic": 1777.277969799994,
+        "scalar_yukawa": 599.2763732000021
+      },
+      "mesh_runtime_s": 0.1927465999906417,
+      "polar_overlap_um2": 0.0,
+      "landing_pad_fraction": 0.0,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.021388888888888846,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": false,
+      "expected_bem_sign": 1,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Ultra_High_theta_006p0_rotor.msh",
+            "sha256": "b9356e416a43b3f52d4955ff2a2aae115584caa053714ba9977d7b20c7f6b2bd",
+            "triangle_count": 3072,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Ultra_High_theta_006p0_stator.msh",
+            "sha256": "f57c0ca09702973e49acedffef25ac93b1dd399cc8ab603671a1f9406b21c249",
+            "triangle_count": 8960,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Ultra_High_theta_006p0.scuffgeo",
+        "scuffgeo_sha256": "c68602c41771a0098a334ccfe0327d13665d62ef35865ee94d551d09d5afec83",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T10:58:30.185333+00:00",
+      "task_id": "Rot_C8_Compact_N2_Ultra_High_theta_018p0",
+      "design": "Rot_C8_Compact_N2",
+      "theta_deg": 18.0,
+      "state": "Straddling",
+      "tier": "Ultra_High",
+      "tier_index": 2,
+      "resolution": {
+        "tier": "Ultra_High",
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_bridge": 6,
+        "n_z": 4,
+        "n_xi": 40
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -87.09821579480962,
+        "vector_dyadic": -7.14840271211526,
+        "scalar_yukawa": -22.306255715686305
+      },
+      "panel_count": 6016,
+      "vector_dofs": 12032,
+      "scalar_dofs": 6016,
+      "runtime_s": {
+        "lifshitz_pfa": 4.2100000428035855e-05,
+        "vector_dyadic": 1771.9246327000146,
+        "scalar_yukawa": 605.4647898999974
+      },
+      "mesh_runtime_s": 0.20320730001549236,
+      "polar_overlap_um2": 0.03023782929080175,
+      "landing_pad_fraction": 0.30000000000000004,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.021388888888888846,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": null,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Ultra_High_theta_018p0_rotor.msh",
+            "sha256": "5f38f252fb0d8f3030bd816b06341356b26fea81ab4f6aef2bb2bb179430bf38",
+            "triangle_count": 3072,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Ultra_High_theta_018p0_stator.msh",
+            "sha256": "f57c0ca09702973e49acedffef25ac93b1dd399cc8ab603671a1f9406b21c249",
+            "triangle_count": 8960,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Ultra_High_theta_018p0.scuffgeo",
+        "scuffgeo_sha256": "c0a378b1c677a4690321fc3104b2f82c566c4a054e73ab406c2751beec192dfa",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T11:39:19.125311+00:00",
+      "task_id": "Rot_C8_Compact_N2_Ultra_High_theta_048p0",
+      "design": "Rot_C8_Compact_N2",
+      "theta_deg": 48.0,
+      "state": "Landing Pad",
+      "tier": "Ultra_High",
+      "tier_index": 2,
+      "resolution": {
+        "tier": "Ultra_High",
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_bridge": 6,
+        "n_z": 4,
+        "n_xi": 40
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -290.3273859826987,
+        "vector_dyadic": -22.316304175336622,
+        "scalar_yukawa": -67.35520706388212
+      },
+      "panel_count": 6016,
+      "vector_dofs": 12032,
+      "scalar_dofs": 6016,
+      "runtime_s": {
+        "lifshitz_pfa": 4.710000939667225e-05,
+        "vector_dyadic": 1802.1541444999748,
+        "scalar_yukawa": 622.281982000015
+      },
+      "mesh_runtime_s": 0.20351339998887852,
+      "polar_overlap_um2": 0.10079276430267249,
+      "landing_pad_fraction": 1.0,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.021388888888888846,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": -1,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Ultra_High_theta_048p0_rotor.msh",
+            "sha256": "4aaaf3d67ca4ed6bbd48fa8f3da92ce6780206e2aab652dc35304544b7632e62",
+            "triangle_count": 3072,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Ultra_High_theta_048p0_stator.msh",
+            "sha256": "f57c0ca09702973e49acedffef25ac93b1dd399cc8ab603671a1f9406b21c249",
+            "triangle_count": 8960,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C8_Compact_N2_Ultra_High_theta_048p0.scuffgeo",
+        "scuffgeo_sha256": "65c643bd933b2a9adf011de3828976d8ae691ba8b9b37b4e0375f53bb2feb486",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T11:47:51.895226+00:00",
+      "task_id": "Rot_C10_Fractal_N3_Standard_theta_003p0",
+      "design": "Rot_C10_Fractal_N3",
+      "theta_deg": 3.0,
+      "state": "Aperture",
+      "tier": "Standard",
+      "tier_index": 0,
+      "resolution": {
+        "tier": "Standard",
+        "n_r": 2,
+        "n_phi_tooth": 3,
+        "n_phi_bridge": 3,
+        "n_z": 2,
+        "n_xi": 24
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -0.0,
+        "vector_dyadic": 3.1774325864524564,
+        "scalar_yukawa": 7.322234787134889
+      },
+      "panel_count": 3168,
+      "vector_dofs": 6336,
+      "scalar_dofs": 3168,
+      "runtime_s": {
+        "lifshitz_pfa": 5.639999289996922e-05,
+        "vector_dyadic": 348.39626099998713,
+        "scalar_yukawa": 140.05025329999626
+      },
+      "mesh_runtime_s": 0.10294179999618791,
+      "polar_overlap_um2": 0.0,
+      "landing_pad_fraction": 0.0,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.014999999999999902,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": false,
+      "expected_bem_sign": 1,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_Standard_theta_003p0_rotor.msh",
+            "sha256": "7559a02cb47566712e7679b6d2f75da03d844f9b33a26c2383cfbe0644fb6962",
+            "triangle_count": 1792,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_Standard_theta_003p0_stator.msh",
+            "sha256": "2285f23fa89e34c97d43c2b76c54d22ced3bba6abb9343e7dd7135bd4da9538e",
+            "triangle_count": 4544,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_Standard_theta_003p0.scuffgeo",
+        "scuffgeo_sha256": "5bbf0779917d7f17ee4bc0dc93af12a49f55f175fe6f2eabb3015a098bb549c9",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T11:56:25.402410+00:00",
+      "task_id": "Rot_C10_Fractal_N3_Standard_theta_021p0",
+      "design": "Rot_C10_Fractal_N3",
+      "theta_deg": 21.0,
+      "state": "Straddling",
+      "tier": "Standard",
+      "tier_index": 0,
+      "resolution": {
+        "tier": "Standard",
+        "n_r": 2,
+        "n_phi_tooth": 3,
+        "n_phi_bridge": 3,
+        "n_z": 2,
+        "n_xi": 24
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -447.0287647027114,
+        "vector_dyadic": -4.4912158400230275,
+        "scalar_yukawa": -18.541341376521626
+      },
+      "panel_count": 3168,
+      "vector_dofs": 6336,
+      "scalar_dofs": 3168,
+      "runtime_s": {
+        "lifshitz_pfa": 5.190001684240997e-05,
+        "vector_dyadic": 352.0526530999923,
+        "scalar_yukawa": 136.9094714000239
+      },
+      "mesh_runtime_s": 0.11011770000914112,
+      "polar_overlap_um2": 0.1551946770873358,
+      "landing_pad_fraction": 0.5,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.014999999999999902,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": null,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_Standard_theta_021p0_rotor.msh",
+            "sha256": "a0826351e9f2664f0925799461838764a6ffedefce38f61b386fab5700efd8c6",
+            "triangle_count": 1792,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_Standard_theta_021p0_stator.msh",
+            "sha256": "2285f23fa89e34c97d43c2b76c54d22ced3bba6abb9343e7dd7135bd4da9538e",
+            "triangle_count": 4544,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_Standard_theta_021p0.scuffgeo",
+        "scuffgeo_sha256": "bd50d6d0ee38c93a3b8ea32df39e2bdf2896886e2045cac3b093d1d92a1ddee1",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T12:04:49.731274+00:00",
+      "task_id": "Rot_C10_Fractal_N3_Standard_theta_048p0",
+      "design": "Rot_C10_Fractal_N3",
+      "theta_deg": 48.0,
+      "state": "Landing Pad",
+      "tier": "Standard",
+      "tier_index": 0,
+      "resolution": {
+        "tier": "Standard",
+        "n_r": 2,
+        "n_phi_tooth": 3,
+        "n_phi_bridge": 3,
+        "n_z": 2,
+        "n_xi": 24
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -894.0575294054228,
+        "vector_dyadic": -14.038831813728814,
+        "scalar_yukawa": -44.48792372054013
+      },
+      "panel_count": 3168,
+      "vector_dofs": 6336,
+      "scalar_dofs": 3168,
+      "runtime_s": {
+        "lifshitz_pfa": 4.600000102072954e-05,
+        "vector_dyadic": 342.6925699999847,
+        "scalar_yukawa": 136.87264180000057
+      },
+      "mesh_runtime_s": 0.10998549999203533,
+      "polar_overlap_um2": 0.3103893541746716,
+      "landing_pad_fraction": 1.0,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.014999999999999902,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": -1,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_Standard_theta_048p0_rotor.msh",
+            "sha256": "10f8d0884aec1a255872e76815271394108dd7f5a6bd01fbdd483fd53ee034a9",
+            "triangle_count": 1792,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_Standard_theta_048p0_stator.msh",
+            "sha256": "2285f23fa89e34c97d43c2b76c54d22ced3bba6abb9343e7dd7135bd4da9538e",
+            "triangle_count": 4544,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_Standard_theta_048p0.scuffgeo",
+        "scuffgeo_sha256": "305951d218dd3ed3798e1dc0cbd336150311f04f1fc5008731174bd1548eb3dc",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T12:45:16.444167+00:00",
+      "task_id": "Rot_C10_Fractal_N3_High_theta_003p0",
+      "design": "Rot_C10_Fractal_N3",
+      "theta_deg": 3.0,
+      "state": "Aperture",
+      "tier": "High",
+      "tier_index": 1,
+      "resolution": {
+        "tier": "High",
+        "n_r": 3,
+        "n_phi_tooth": 4,
+        "n_phi_bridge": 4,
+        "n_z": 3,
+        "n_xi": 32
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -0.0,
+        "vector_dyadic": 6.1589338092163,
+        "scalar_yukawa": 11.414592576714819
+      },
+      "panel_count": 6576,
+      "vector_dofs": 13152,
+      "scalar_dofs": 6576,
+      "runtime_s": {
+        "lifshitz_pfa": 5.2700022934004664e-05,
+        "vector_dyadic": 1772.4260098999948,
+        "scalar_yukawa": 628.8848014000105
+      },
+      "mesh_runtime_s": 0.21237269998528063,
+      "polar_overlap_um2": 0.0,
+      "landing_pad_fraction": 0.0,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.014999999999999902,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": false,
+      "expected_bem_sign": 1,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_High_theta_003p0_rotor.msh",
+            "sha256": "c66add1508a00091d6e77ca3411ce27fff5bbeeed0c7b370cce5790438a260b5",
+            "triangle_count": 3696,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_High_theta_003p0_stator.msh",
+            "sha256": "1562a1b402ed401ef9b30f4f40504cc2a023271a651246597f7b07531cbc937b",
+            "triangle_count": 9456,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_High_theta_003p0.scuffgeo",
+        "scuffgeo_sha256": "234da499e224ff09dcc9e210d3424c71597e87d3fcaeae0c5d89d809d6e12eb7",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T13:25:52.713786+00:00",
+      "task_id": "Rot_C10_Fractal_N3_High_theta_021p0",
+      "design": "Rot_C10_Fractal_N3",
+      "theta_deg": 21.0,
+      "state": "Straddling",
+      "tier": "High",
+      "tier_index": 1,
+      "resolution": {
+        "tier": "High",
+        "n_r": 3,
+        "n_phi_tooth": 4,
+        "n_phi_bridge": 4,
+        "n_z": 3,
+        "n_xi": 32
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -447.0287647027114,
+        "vector_dyadic": -9.939744746379018,
+        "scalar_yukawa": -27.203882629704992
+      },
+      "panel_count": 6576,
+      "vector_dofs": 13152,
+      "scalar_dofs": 6576,
+      "runtime_s": {
+        "lifshitz_pfa": 5.4599979193881154e-05,
+        "vector_dyadic": 1821.7872283000033,
+        "scalar_yukawa": 587.6547532000113
+      },
+      "mesh_runtime_s": 0.23534189999918453,
+      "polar_overlap_um2": 0.1551946770873358,
+      "landing_pad_fraction": 0.5,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.014999999999999902,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": null,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_High_theta_021p0_rotor.msh",
+            "sha256": "a275fb82d9452f66106cfa86846b56a3a3f8f6a194ab074634a7d15a3f64da5b",
+            "triangle_count": 3696,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_High_theta_021p0_stator.msh",
+            "sha256": "1562a1b402ed401ef9b30f4f40504cc2a023271a651246597f7b07531cbc937b",
+            "triangle_count": 9456,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_High_theta_021p0.scuffgeo",
+        "scuffgeo_sha256": "87e767e081b0a17a0c12229ffbbf4789954b6934924af59509e40fa36eaa4d62",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T14:05:40.798975+00:00",
+      "task_id": "Rot_C10_Fractal_N3_High_theta_048p0",
+      "design": "Rot_C10_Fractal_N3",
+      "theta_deg": 48.0,
+      "state": "Landing Pad",
+      "tier": "High",
+      "tier_index": 1,
+      "resolution": {
+        "tier": "High",
+        "n_r": 3,
+        "n_phi_tooth": 4,
+        "n_phi_bridge": 4,
+        "n_z": 3,
+        "n_xi": 32
+      },
+      "forces_pN": {
+        "lifshitz_pfa": -894.0575294054228,
+        "vector_dyadic": -19.17974293017216,
+        "scalar_yukawa": -49.12184609614429
+      },
+      "panel_count": 6576,
+      "vector_dofs": 13152,
+      "scalar_dofs": 6576,
+      "runtime_s": {
+        "lifshitz_pfa": 6.489999941550195e-05,
+        "vector_dyadic": 1784.8886041000078,
+        "scalar_yukawa": 577.1437445000047
+      },
+      "mesh_runtime_s": 0.21340360000613146,
+      "polar_overlap_um2": 0.3103893541746716,
+      "landing_pad_fraction": 1.0,
+      "collision_certificate": {
+        "collision_free_for_all_angles": true,
+        "minimum_elevated_rib_radial_clearance_um": 0.014999999999999902,
+        "landing_pad_vertical_clearance_um": 0.015,
+        "z_tip_fixed_um": -0.1,
+        "z_rotor_top_um": 0.0,
+        "z_pad_top_um": -0.115,
+        "z_pad_bottom_um": -0.265,
+        "qualification": "Analytical curved-geometry clearance, not mesh convergence."
+      },
+      "bem_sign_agreement": true,
+      "all_three_sign_agreement": true,
+      "expected_bem_sign": -1,
+      "scuff": {
+        "meshes": [
+          {
+            "body": "rotor",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_High_theta_048p0_rotor.msh",
+            "sha256": "2d9d4cb17c18f8abcfdf20c9407ed6e44f444e6330d382e42b598c011218ecd5",
+            "triangle_count": 3696,
+            "coordinate_unit": "um"
+          },
+          {
+            "body": "stator",
+            "path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_High_theta_048p0_stator.msh",
+            "sha256": "1562a1b402ed401ef9b30f4f40504cc2a023271a651246597f7b07531cbc937b",
+            "triangle_count": 9456,
+            "coordinate_unit": "um"
+          }
+        ],
+        "scuffgeo_path": "results\\rotational_clutch_3solver_verification\\scuff_meshes\\Rot_C10_Fractal_N3_High_theta_048p0.scuffgeo",
+        "scuffgeo_sha256": "7e4d01b1a81c2a867ae3f49c749132b168fb8cad935a5ae7b8272970491068cc",
+        "externally_executed": false,
+        "material_equivalence_verified": false
+      }
     }
   ],
   "convergence": [
@@ -117,18 +1750,200 @@
       "model": "rotational_clutch_3solver_verification",
       "dataset": "rotational_clutch_3solver_verification",
       "status": "completed",
-      "executed_at": "2026-10-17T03:16:27.797899+00:00",
+      "executed_at": "2026-10-17T07:36:53.930628+00:00",
       "design": "Rot_C4_TightSlot_N2",
       "theta_deg": 6.0,
-      "highest_tier": "Standard",
+      "highest_tier": "Ultra_High",
       "comparisons": {
         "vector_dyadic": {
+          "Standard_to_High": 0.42784789992557065,
+          "High_to_Ultra_High": 0.40779831637548614,
           "signed_nonadditive_edge_fraction": 1.0,
           "absolute_nonadditive_edge_fraction": 1.0
         },
         "scalar_yukawa": {
+          "Standard_to_High": 0.26990491898910657,
+          "High_to_Ultra_High": 0.3115542368419128,
           "signed_nonadditive_edge_fraction": 1.0,
           "absolute_nonadditive_edge_fraction": 1.0
+        }
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T08:18:00.813923+00:00",
+      "design": "Rot_C4_TightSlot_N2",
+      "theta_deg": 18.0,
+      "highest_tier": "Ultra_High",
+      "comparisons": {
+        "vector_dyadic": {
+          "Standard_to_High": 0.32746433935061525,
+          "High_to_Ultra_High": 0.5593201666658877,
+          "signed_nonadditive_edge_fraction": 34.785381526585034,
+          "absolute_nonadditive_edge_fraction": 34.785381526585034
+        },
+        "scalar_yukawa": {
+          "Standard_to_High": 0.4045268117396226,
+          "High_to_Ultra_High": 0.3600471957627416,
+          "signed_nonadditive_edge_fraction": 8.368953447570076,
+          "absolute_nonadditive_edge_fraction": 8.368953447570076
+        }
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T08:58:27.340270+00:00",
+      "design": "Rot_C4_TightSlot_N2",
+      "theta_deg": 48.0,
+      "highest_tier": "Ultra_High",
+      "comparisons": {
+        "vector_dyadic": {
+          "Standard_to_High": 0.6783498004781161,
+          "High_to_Ultra_High": 0.617513682804976,
+          "signed_nonadditive_edge_fraction": 36.39255792322144,
+          "absolute_nonadditive_edge_fraction": 36.39255792322144
+        },
+        "scalar_yukawa": {
+          "Standard_to_High": 0.49183703575610804,
+          "High_to_Ultra_High": 0.5818557116098027,
+          "signed_nonadditive_edge_fraction": 8.93127063106349,
+          "absolute_nonadditive_edge_fraction": 8.93127063106349
+        }
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T10:18:28.941876+00:00",
+      "design": "Rot_C8_Compact_N2",
+      "theta_deg": 6.0,
+      "highest_tier": "Ultra_High",
+      "comparisons": {
+        "vector_dyadic": {
+          "Standard_to_High": 0.4315005688040723,
+          "High_to_Ultra_High": 0.3636906104976705,
+          "signed_nonadditive_edge_fraction": 1.0,
+          "absolute_nonadditive_edge_fraction": 1.0
+        },
+        "scalar_yukawa": {
+          "Standard_to_High": 0.25423974935645394,
+          "High_to_Ultra_High": 0.2682268166453589,
+          "signed_nonadditive_edge_fraction": 1.0,
+          "absolute_nonadditive_edge_fraction": 1.0
+        }
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T10:58:30.185333+00:00",
+      "design": "Rot_C8_Compact_N2",
+      "theta_deg": 18.0,
+      "highest_tier": "Ultra_High",
+      "comparisons": {
+        "vector_dyadic": {
+          "Standard_to_High": 0.375756409539585,
+          "High_to_Ultra_High": 0.4767976733391403,
+          "signed_nonadditive_edge_fraction": 11.184290575458736,
+          "absolute_nonadditive_edge_fraction": 11.184290575458736
+        },
+        "scalar_yukawa": {
+          "Standard_to_High": 0.3835841872132718,
+          "High_to_Ultra_High": 0.30780067718128695,
+          "signed_nonadditive_edge_fraction": 2.9046542326491855,
+          "absolute_nonadditive_edge_fraction": 2.9046542326491855
+        }
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T11:39:19.125311+00:00",
+      "design": "Rot_C8_Compact_N2",
+      "theta_deg": 48.0,
+      "highest_tier": "Ultra_High",
+      "comparisons": {
+        "vector_dyadic": {
+          "Standard_to_High": 0.5542732290182452,
+          "High_to_Ultra_High": 0.5685242790822853,
+          "signed_nonadditive_edge_fraction": 12.009653556504249,
+          "absolute_nonadditive_edge_fraction": 12.009653556504249
+        },
+        "scalar_yukawa": {
+          "Standard_to_High": 0.3871754090524867,
+          "High_to_Ultra_High": 0.49434030326424816,
+          "signed_nonadditive_edge_fraction": 3.310392598264031,
+          "absolute_nonadditive_edge_fraction": 3.310392598264031
+        }
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T12:45:16.444167+00:00",
+      "design": "Rot_C10_Fractal_N3",
+      "theta_deg": 3.0,
+      "highest_tier": "High",
+      "comparisons": {
+        "vector_dyadic": {
+          "Standard_to_High": 0.4840937271159321,
+          "signed_nonadditive_edge_fraction": 1.0,
+          "absolute_nonadditive_edge_fraction": 1.0
+        },
+        "scalar_yukawa": {
+          "Standard_to_High": 0.35851982995241805,
+          "signed_nonadditive_edge_fraction": 1.0,
+          "absolute_nonadditive_edge_fraction": 1.0
+        }
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T13:25:52.713786+00:00",
+      "design": "Rot_C10_Fractal_N3",
+      "theta_deg": 21.0,
+      "highest_tier": "High",
+      "comparisons": {
+        "vector_dyadic": {
+          "Standard_to_High": 0.5481558174158198,
+          "signed_nonadditive_edge_fraction": 43.973867650430456,
+          "absolute_nonadditive_edge_fraction": 43.973867650430456
+        },
+        "scalar_yukawa": {
+          "Standard_to_High": 0.3184303274314379,
+          "signed_nonadditive_edge_fraction": 15.432535413698009,
+          "absolute_nonadditive_edge_fraction": 15.432535413698009
+        }
+      }
+    },
+    {
+      "model": "rotational_clutch_3solver_verification",
+      "dataset": "rotational_clutch_3solver_verification",
+      "status": "completed",
+      "executed_at": "2026-10-17T14:05:40.798975+00:00",
+      "design": "Rot_C10_Fractal_N3",
+      "theta_deg": 48.0,
+      "highest_tier": "High",
+      "comparisons": {
+        "vector_dyadic": {
+          "Standard_to_High": 0.26803858295493854,
+          "signed_nonadditive_edge_fraction": 45.614677405240776,
+          "absolute_nonadditive_edge_fraction": 45.614677405240776
+        },
+        "scalar_yukawa": {
+          "Standard_to_High": 0.09433526513914726,
+          "signed_nonadditive_edge_fraction": 17.200812885890294,
+          "absolute_nonadditive_edge_fraction": 17.200812885890294
         }
       }
     }
@@ -738,5 +2553,5 @@
   "pfa_scope": "polar tooth/landing-pad overlap only; no aperture or bridge force",
   "panel_count_scope": "full four-sector geometry",
   "scuff_scope": "export only, not executed; external Gold equivalence unverified",
-  "runtime_s": 63.7168714000145
+  "runtime_s": 30147.7268951
 }

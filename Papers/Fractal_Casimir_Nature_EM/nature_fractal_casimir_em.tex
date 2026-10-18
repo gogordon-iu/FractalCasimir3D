@@ -40,14 +40,14 @@ E-mail: \href{mailto:goren@gorengordon.com}{goren@gorengordon.com}}
 \maketitle
 
 \begin{abstract}
-The interaction of quantum electromagnetic fields with self-similar and prefractal boundaries fundamentally modifies the vacuum state, leading to non-trivial scaling laws, discrete scale-invariance breaking, and structural sign inversions in Casimir forces. 
-In this work, we present a unified electromagnetic and thermodynamic framework for self-similar Casimir cavities, systematically delineating genuine fractal Laplacians, Euclidean drums with fractal boundaries, and macroscopic prefractal resonators. 
+The interaction of quantum electromagnetic fields with self-similar and prefractal boundaries fundamentally modifies the vacuum state, leading to non-trivial scaling laws, discrete scale-invariance breaking, and structural sign inversions in Casimir forces.
+In this work, we present a unified electromagnetic and thermodynamic framework for self-similar Casimir cavities, systematically delineating genuine fractal Laplacians, Euclidean drums with fractal boundaries, and macroscopic prefractal resonators.
 We resolve the long-standing thermodynamic compatibility problem of spatially compartmentalized cavities by modeling boundaries as semitransparent barriers of finite coupling $\lambda_0$, where high-frequency mode tunneling establishes global thermalization before taking the strict Dirichlet limit.
 We demonstrate that for plate-like self-similar geometries governed by a logarithmically running Casimir coefficient $C(d_s, \ln(d/\ell_*))$, the anisotropic Maxwell stress-energy tensor produces an integrated vacuum trace directly proportional to its logarithmic running, $T^\mu{}_\mu = -\frac{\hbar c}{d^4}\partial_{\ln d}C$.
 We map these boundary modifications onto precision atomic cavity quantum electrodynamic (CQED) sensors, predicting measurable fractal Purcell rate variations ($\AtomicCqedPurcellLifetimeVariationMin\%\text{--}\AtomicCqedPurcellLifetimeVariationMax\%$), anomalous Casimir-Polder shifts, and geometric Lamb shifts ($\sim \AtomicCqedLambShiftDeltaNu\text{ kHz}$).
 To validate the framework, we perform high-resolution three-dimensional Finite-Difference Time-Domain (FDTD) simulations using MEEP on supercomputing infrastructure. Multi-model curve fitting across plate sizes $L \in [0.3, 4.5]\ \mu\text{m}$ proves that the Casimir attraction is governed by a Screened Power Law, $P(L) = -(A/L^\alpha) e^{-L/\lambda}$ with screening length $\lambda = \ModelFourLambda\ \mu\text{m}$, driven by sub-wavelength aperture mode localization.
-Finally, by introducing 3D pyramidal corrugations and cross-polarized anisotropic optical twisting, we achieve transverse Maxwell stress-tensor field bending ($E_x^2 + E_y^2 > E_z^2$), canceling over $\FrontierTwoCancellationPercent\%$ of the normal attraction at $d=100\text{ nm}$ and uncovering a vast phase space of strong, positive repulsive Casimir pressures ($P > 0$ up to $+\SweetSpotOnePressure\text{ Pa}$) in vacuum. 
-We identify 13 stable nanomechanical levitation equilibrium heights ($d_{\rm eq}$ where $P=0$ and $\partial P/\partial d < 0$), providing an unpowered, frictionless quantum cushion for the permanent elimination of stiction in NEMS/MEMS devices.
+Finally, by introducing 3D pyramidal corrugations and cross-polarized anisotropic optical twisting, we achieve transverse Maxwell stress-tensor field bending ($E_x^2 + E_y^2 > E_z^2$), canceling over $\FrontierTwoCancellationPercent\%$ of the normal attraction at $d=100\text{ nm}$ and uncovering a vast phase space of strong, positive repulsive Casimir pressures ($P > 0$ up to $+\SweetSpotOnePressure$ Meep units, or $+(\SweetSpotOnePressure \times \MeepToPa)\text{ Pa}$) in an isotropic dielectric immersion background $\varepsilon_{\rm bg}=2.1$.
+We identify \LevitationEquilibriaCount{} one-dimensional axial nanomechanical equilibrium heights ($P(d_{\rm eq})=0$ and $\left.\partial P/\partial d\right|_{d_{\rm eq}}<0$); high-aspect-ratio mechanical flexure springs stabilize the lateral and rotational degrees of freedom against Earnshaw instabilities. Separately, the Gold Concentric Cantor-Ring Rotary Quantum Clutch demonstrates true-vacuum ($\varepsilon_{\rm bg}=1.0$) repulsive restoring forces and rotary switching, providing a route toward unpowered, low-friction quantum cushioning against stiction in NEMS/MEMS devices.
 \end{abstract}
 
 \newpage
@@ -55,7 +55,7 @@ We identify 13 stable nanomechanical levitation equilibrium heights ($d_{\rm eq}
 \section{Introduction}
 \label{sec:introduction}
 
-The Casimir effect provides the canonical macroscopic manifestation of boundary-modified quantum vacuum fluctuations in quantum electrodynamics (QED) \cite{casimir1948,bordag2009}. In parallel, developments in analysis on fractals and spectral geometry have demonstrated that self-similar geometries radically transform heat kernels, spectral zeta functions, and thermodynamic equations of state, which become dictated by the spectral dimension $d_s$ rather than the ambient topological dimension \cite{akkermans2010,kigami2001,kajino2010,alexanderorbach1982}. 
+The Casimir effect provides the canonical macroscopic manifestation of boundary-modified quantum vacuum fluctuations in quantum electrodynamics (QED) \cite{casimir1948,bordag2009}. In parallel, developments in analysis on fractals and spectral geometry have demonstrated that self-similar geometries radically transform heat kernels, spectral zeta functions, and thermodynamic equations of state, which become dictated by the spectral dimension $d_s$ rather than the ambient topological dimension \cite{akkermans2010,kigami2001,kajino2010,alexanderorbach1982}.
 More recently, theoretical investigations into self-similar Casimir architectures---such as Cantor-like stacks and compartmentalized Sierpi\'nski resonators---have uncovered nontrivial recursion relations for zero-point vacuum energy, demonstrating that structural geometry alone can induce sign inversions in scalar and electromagnetic Casimir interactions \cite{shajesh2016,shajesh2017}.
 
 Despite these promising theoretical developments, the physical formulation of a ``fractal Casimir effect'' has historically suffered from conceptual ambiguities. In particular, the literature frequently conflates three distinct geometric regimes:
@@ -65,17 +65,17 @@ Despite these promising theoretical developments, the physical formulation of a 
     \item \textbf{Macroscopic Prefractal Casimir Configurations}: Realizable 3D electromagnetic cavities constructed from prefractal, hierarchically perforated, or corrugated conducting/dielectric boundaries of finite iteration depth $N$ \cite{shajesh2016,rodriguez2011}.
 \end{enumerate}
 
-The present manuscript focuses comprehensively on the third regime, providing a rigorous, first-principles electromagnetic and thermodynamic theory supported by extensive three-dimensional numerical simulations. 
+The present manuscript focuses comprehensively on the third regime, providing a rigorous, first-principles electromagnetic and thermodynamic theory supported by extensive three-dimensional numerical simulations.
 
 The scope and core contributions of this work are fourfold:
 \begin{enumerate}
     \item \textbf{Thermodynamic Reconciliation via Mode Tunneling}: We resolve the apparent paradox between structural compartmentalization (which assumes impenetrable Dirichlet boundaries to decouple modes) and thermodynamic equilibrium (which assumes uniform temperature $T$). By modeling boundaries as semitransparent $\delta$-potentials of finite coupling $\lambda_0 < \infty$, high-frequency virtual modes tunnel between adjacent compartments, establishing uniform thermal contact before taking the strict Dirichlet limit $\lambda_0 \to \infty$.
     \item \textbf{Electromagnetic Effective Trace Framework}: We prove that for any plate-like cavity governed by a scale-dependent Casimir coefficient $C(d_s, \ln(d/\ell_*))$, the anisotropic Maxwell stress-energy tensor generates an integrated vacuum trace $T^\mu{}_\mu = -\frac{\hbar c}{d^4} \partial_{\ln d}C$, acting as the direct macroscopic generator of discrete scale-invariance breaking. We prove that this observable is strictly independent of the conformal coupling parameter $\xi$.
-    \item \textbf{Atomic CQED Transducers}: We map the discrete scale invariance of the vacuum onto microscopic atomic sensors, calculating explicit analytical signatures for the fractal Purcell effect ($\Gamma/\Gamma_0$), the log-periodic Casimir-Polder potential ($U_{\rm CP}(z)$), and the geometric Lamb shift ($\delta E_{\rm Lamb} \approx \AtomicCqedLambShiftDeltaNu\text{ kHz}$).
-    \item \textbf{Full 3D FDTD Discovery of Exponential Screening and Quantum Levitation}: Using high-resolution FDTD simulations on supercomputing clusters, we evaluate the Casimir force scaling across plate widths $L \in [0.3, 4.5]\ \mu\text{m}$. We discover that the force decays via a Screened Power Law ($P(L) \sim L^{-\alpha} e^{-L/\lambda}$ with $\lambda = \ModelFourLambda\ \mu\text{m}$) due to sub-wavelength aperture mode localization. By combining 3D pyramidal corrugations with anisotropic cross-polarization, we demonstrate transverse stress-tensor field bending ($E_x^2 + E_y^2 > E_z^2$), canceling over $\FrontierTwoCancellationPercent\%$ of the normal attraction at $100\text{ nm}$ and achieving high-magnitude repulsive Casimir forces ($P > 0$ up to $+\SweetSpotOnePressure\text{ Pa}$) and 13 stable nanomechanical levitation equilibrium heights in vacuum.
+    \item \textbf{Atomic CQED Transducers}: We map the discrete scale invariance of the vacuum onto microscopic atomic sensors, calculating explicit analytical signatures for the fractal Purcell effect ($\Gamma/\Gamma_0$), the log-periodic Casimir-Polder potential ($U_{\rm CP}(z)$), and the geometric Lamb shift ($\delta \nu_{\rm Lamb} \approx \AtomicCqedLambShiftDeltaNu\text{ kHz}$).
+    \item \textbf{Full 3D FDTD Discovery of Exponential Screening and Axial Equilibria}: Using high-resolution FDTD simulations on supercomputing clusters, we evaluate the Casimir force scaling across plate widths $L \in [0.3, 4.5]\ \mu\text{m}$. We discover that the force decays via a Screened Power Law ($P(L) \sim L^{-\alpha} e^{-L/\lambda}$ with $\lambda = \ModelFourLambda\ \mu\text{m}$) due to sub-wavelength aperture mode localization. By combining 3D pyramidal corrugations with anisotropic cross-polarization, we demonstrate transverse stress-tensor field bending ($E_x^2 + E_y^2 > E_z^2$), canceling over $\FrontierTwoCancellationPercent\%$ of the normal attraction at $100\text{ nm}$ and achieving high-magnitude repulsive Casimir forces ($P > 0$ up to $+\SweetSpotOnePressure$ Meep units, or $+(\SweetSpotOnePressure \times \MeepToPa)\text{ Pa}$) and \LevitationEquilibriaCount{} one-dimensional axial nanomechanical equilibria ($P(d_{\rm eq})=0$, $\left.\partial P/\partial d\right|_{d_{\rm eq}}<0$) in an isotropic dielectric immersion background $\varepsilon_{\rm bg}=2.1$. High-aspect-ratio mechanical flexure springs stabilize lateral and rotational degrees of freedom against Earnshaw instabilities. The Gold Concentric Cantor-Ring Rotary Quantum Clutch separately demonstrates true-vacuum ($\varepsilon_{\rm bg}=1.0$) repulsive restoring forces and rotary switching.
 \end{enumerate}
 
-The paper is structured as follows. Section~\ref{sec:prior} reviews spectral geometry, thermodynamics, and the mode-tunneling reconciliation. Section~\ref{sec:novel} derives the effective trace framework and proves conformal parameter independence. Section~\ref{sec:atomic_probes} formulates the CQED atomic sensors and the Conformal Breathing Box Gedankenexperiment. Section~\ref{sec:fdtd_methodology} details the 3D FDTD numerical methodology and segmented checkpointing engine. Section~\ref{sec:numerical_results} presents the scaling results and multi-model exponential screening discovery. Section~\ref{sec:asymmetric_repulsion} analyzes Lifshitz phase-reversal mechanics in asymmetric cavities. Section~\ref{sec:wild_frontiers} investigates 3D topographic frontiers, transverse field bending, and the ultimate hybrid parameter sweeps. Section~\ref{sec:repulsion_physics} presents the nanomechanical levitation equilibrium analysis and the tunable quantum clutch. Section~\ref{sec:experimental} details experimental fabrication metrics, followed by our discussion and conclusions in Section~\ref{sec:conclusion}.
+The paper is structured as follows. Section~\ref{sec:prior} reviews spectral geometry, thermodynamics, and the mode-tunneling reconciliation. Section~\ref{sec:novel} derives the effective trace framework and proves conformal parameter independence. Section~\ref{sec:atomic_probes} formulates the CQED atomic sensors and the Conformal Breathing Box Gedankenexperiment. Section~\ref{sec:fdtd_methodology} details the 3D FDTD numerical methodology and segmented checkpointing engine. Section~\ref{sec:numerical_results} presents the scaling results and multi-model exponential screening discovery. Section~\ref{sec:asymmetric_repulsion} analyzes Lifshitz phase-reversal mechanics in asymmetric cavities. Section~\ref{sec:wild_frontiers} investigates 3D topographic frontiers, transverse field bending, and the ultimate hybrid parameter sweeps. Section~\ref{sec:repulsion_physics} presents the nanomechanical axial equilibrium analysis and the tunable quantum clutch. Section~\ref{sec:experimental} details experimental fabrication metrics, followed by our discussion and conclusions in Section~\ref{sec:conclusion}.
 
 
 \section{Theoretical Foundations: Spectral Geometry, Thermodynamics, and Mode Tunneling}
@@ -102,7 +102,7 @@ For a massless field confined to an intrinsic fractal manifold, the asymptotic d
 \mathcal{N}(\omega) \approx \frac{V_s}{\Gamma(d_s/2)} \omega^{d_s - 1},
 \label{eq:weyl_spectral_density}
 \end{equation}
-where $V_s$ is the spectral volume, formally derived from the residue of the spectral zeta function at $s = d_s/2$. 
+where $V_s$ is the spectral volume, formally derived from the residue of the spectral zeta function at $s = d_s/2$.
 
 \subsection{Fractal Thermodynamics and Equation of State}
 
@@ -126,7 +126,7 @@ In the standard three-dimensional Euclidean limit ($d_s = 3$, $V_s \to V$), Eq.~
 U_{\rm th}(T, 3) = \frac{\pi^2 V (k_B T)^4}{30 (\hbar c)^3}.
 \label{eq:stefan_boltzmann_limit}
 \end{equation}
-On a fractal spatial manifold, the internal energy scales non-trivially as $U_{\rm th} \propto T^{d_s + 1}$. 
+On a fractal spatial manifold, the internal energy scales non-trivially as $U_{\rm th} \propto T^{d_s + 1}$.
 
 Applying thermodynamic relations, the radiation pressure $p_{\rm th}$ on a fractal manifold satisfies the generalized equation of state \cite{akkermans2010}:
 \begin{equation}
@@ -188,7 +188,7 @@ In prefractal and self-similar geometries, the discrete structural hierarchy int
 e(d) = \frac{\hbar c}{d^3} C\!\left(d_s,\ln\frac{d}{\ell_*}\right),
 \label{eq:edef}
 \end{equation}
-where $\ell_*$ is the short-distance cutoff scale below which self-similarity terminates, and $C$ is a dimensionless, scale-dependent effective Casimir coefficient. 
+where $\ell_*$ is the short-distance cutoff scale below which self-similarity terminates, and $C$ is a dimensionless, scale-dependent effective Casimir coefficient.
 
 A natural parametrization of this coefficient in self-similar architectures is:
 \begin{equation}
@@ -210,9 +210,9 @@ The macroscopic vacuum energy density $\rho_{\rm vac}$ inside the gap is obtaine
 \rho_{\rm vac}(d) = \frac{e(d)}{d} = \frac{\hbar c}{d^4} C\!\left(d_s,\ln\frac{d}{\ell_*}\right).
 \label{eq:rhovac}
 \end{equation}
-Assuming transverse translational invariance along the $(x,y)$ plane, the variation of the total energy $E = e(d) A_\perp$ under a transverse area expansion at fixed separation yields the tangential pressure:
+Assuming transverse translational invariance along the $(x,y)$ plane, the variation of the total energy $E = e(d) A_\perp$ under a transverse area expansion at fixed separation yields the two-dimensional surface tension $\tau_\parallel(d)=-e(d)$, with units $\text{J/m}^2$. Dividing by the gap thickness gives the three-dimensional tangential stress $P_\parallel(d)=\tau_\parallel(d)/d$, with units $\text{J/m}^3=\text{Pa}$:
 \begin{equation}
-P_{\parallel}(d) = -\frac{\partial (e(d) A_\perp)}{\partial A_\perp} \Big|_d = -e(d) = -\rho_{\rm vac}(d).
+P_{\parallel}(d) = -\frac{1}{d}\frac{\partial (e(d) A_\perp)}{\partial A_\perp} \Big|_d = -\frac{e(d)}{d} = -\rho_{\rm vac}(d).
 \label{eq:pparallel}
 \end{equation}
 In the mixed-index representation, the macroscopic vacuum stress-energy tensor is diagonal:
@@ -249,7 +249,7 @@ Under point-splitting regularization, the renormalized local energy density cont
 \langle T_{00}(z) \rangle_{\rm ren} = u_0(z) + \left( \frac{1}{6} - \xi \right) \frac{d^2}{dz^2} \langle \phi^2(z) \rangle_{\rm ren},
 \label{eq:integrated_energy_conformal}
 \end{equation}
-where $u_0(z)$ is the energy density at conformal coupling $\xi = 1/6$. 
+where $u_0(z)$ is the energy density at conformal coupling $\xi = 1/6$.
 
 Integrating over the gap $[0, d]$ to obtain the total energy per unit area $e(d)$:
 \begin{equation}
@@ -382,7 +382,7 @@ We compiled the high-resolution ($R=40\text{ pixels}/\mu\text{m}$) Casimir press
 
 \begin{table}[htbp]
 \centering
-\caption{Consolidated 3D FDTD Casimir Normal Pressures ($P$) for Tuned Phosphorene at $\theta = 90.0^\circ$, $d = 0.1\ \mu\text{m}$, $\varepsilon_{\rm bg} = 2.1$ under varying plate size $L$.}
+\caption{Consolidated 3D FDTD Casimir Normal Pressures ($P$) for Tuned Phosphorene at $\theta = 90.0^\circ$, $d = 0.1\ \mu\text{m}$, $\varepsilon_{\rm bg} = 2.1$ under varying plate size $L$. Pressures in Tables~\ref{tab:pressures}--\ref{tab:fit_comparison} are reported as dimensionless Meep values in units of $\hbar c/a^4$, where $1\text{ Meep unit} = \MeepToPa\text{ Pa}$ at $a = 1\ \mu\text{m}$.}
 \label{tab:pressures}
 \begin{tabular}{@{}ccc@{}}
 \toprule
@@ -406,6 +406,8 @@ We compiled the high-resolution ($R=40\text{ pixels}/\mu\text{m}$) Casimir press
 
 \subsection{Multi-Model Curve Fitting and Residual Analysis}
 
+The planar and pyramidal Tuned Phosphorene sweeps in Sections~\ref{sec:numerical_results}--\ref{sec:repulsion_physics}, through the axial equilibrium analysis, use an isotropic dielectric immersion background $\varepsilon_{\rm bg}=2.1$, providing Lifshitz dielectric-immersion phase screening. These results must be distinguished from the true-vacuum ($\varepsilon_{\rm bg}=1.0$) Gold Concentric Cantor-Ring Rotary Quantum Clutch in the rotational-tuning subsection.
+
 Using the complete $R=40$ dataset, we executed non-linear least-squares fits across four candidate physical scaling models:
 \begin{enumerate}
     \item \textbf{Model 1 (Offset Allowed)}: $P(L) = -A/L^\alpha + B$ (3 parameters).
@@ -424,20 +426,20 @@ The resulting best-fit parameters are:
 
 \begin{table}[htbp]
 \centering
-\caption{Comparison of Residuals and Sum of Squared Residuals (SSR) for the four physical scaling models.}
+\caption{Comparison of Residuals and Sum of Squared Residuals (SSR) for the four physical scaling models. Pressures in Tables~\ref{tab:pressures}--\ref{tab:fit_comparison} are reported as dimensionless Meep values in units of $\hbar c/a^4$, where $1\text{ Meep unit} = \MeepToPa\text{ Pa}$ at $a = 1\ \mu\text{m}$; SSR is computed from these dimensionless values.}
 \label{tab:fit_comparison}
 \begin{tabular}{@{}cccccc@{}}
 \toprule
 \textbf{Size $L$ ($\mu\text{m}$)} & \textbf{Actual $P$} & \textbf{Model 1 (Offset)} & \textbf{Model 2 (Pure)} & \textbf{Model 3 (Dual)} & \textbf{Model 4 (Screened)} \\
 \midrule
-0.30 & -1.124345 & -1.165453 & -1.214739 & -1.214740 & -1.146881 \\
-0.40 & -0.980524 & -0.924698 & -0.906809 & -0.906809 & -0.934706 \\
-0.50 & -0.789350 & -0.766718 & -0.722824 & -0.722824 & -0.783064 \\
-0.60 & -0.635006 & -0.653668 & -0.600573 & -0.600573 & -0.667556 \\
-2.00 & -0.118022 & -0.166753 & -0.176684 & -0.176684 & -0.127105 \\
-3.00 & -0.057953 & -0.071940 & -0.117017 & -0.117016 & -0.047197 \\
-4.00 & -0.034166 & -0.018364 & -0.087354 & -0.087353 & -0.018429 \\
-4.50 & -0.027400 & +0.000829 & -0.077499 & -0.077499 & -0.011644 \\
+0.30 & \ScalingLZeropthreezeroRFourzeroPressure & -1.165453 & -1.214739 & -1.214740 & -1.146881 \\
+0.40 & \ScalingLZeropfourzeroRFourzeroPressure & -0.924698 & -0.906809 & -0.906809 & -0.934706 \\
+0.50 & \ScalingLZeropfivezeroRFourzeroPressure & -0.766718 & -0.722824 & -0.722824 & -0.783064 \\
+0.60 & \ScalingLZeropsixzeroRFourzeroPressure & -0.653668 & -0.600573 & -0.600573 & -0.667556 \\
+2.00 & \ScalingLTwopzerozeroRFourzeroPressure & -0.166753 & -0.176684 & -0.176684 & -0.127105 \\
+3.00 & \ScalingLThreepzerozeroRFourzeroPressure & -0.071940 & -0.117017 & -0.117016 & -0.047197 \\
+4.00 & \ScalingLFourpzerozeroRFourzeroPressure & -0.018364 & -0.087354 & -0.087353 & -0.018429 \\
+4.50 & \ScalingLFourpfivezeroRFourzeroPressure & +0.000829 & -0.077499 & -0.077499 & -0.011644 \\
 \midrule
 \textbf{SSR} & --- & \textbf{\ModelOneSsr} & \textbf{\ModelTwoSsr} & \textbf{\ModelThreeSsr} & \textbf{\ModelFourSsr} \\
 \bottomrule
@@ -460,6 +462,7 @@ This result clarifies the scaling mechanics of prefractal cavities:
 \label{sec:asymmetric_repulsion}
 
 To convert the screening behavior into robust, positive \textbf{repulsive Casimir forces ($P > 0$)}, we introduce the \emph{Asymmetric Dual-Fractal Cavity} ($N_{\rm bottom} = 1$ macro-cavity vs. $N_{\rm top} = 3$ micro-apertures).
+The Tuned Phosphorene configurations in this section use an isotropic dielectric immersion background $\varepsilon_{\rm bg}=2.1$, providing Lifshitz dielectric-immersion phase screening; they are not true-vacuum configurations. True-vacuum ($\varepsilon_{\rm bg}=1.0$) repulsive restoring forces and rotary switching are demonstrated separately by the Gold Concentric Cantor-Ring Rotary Quantum Clutch in the rotational-tuning subsection.
 
 \subsection{Lifshitz Scattering Phase-Reversal Mechanics}
 
@@ -485,7 +488,7 @@ Because $r_1 < 0$ and $r_2 > 0$, the reflection product $r_1 r_2$ becomes strict
 
 \begin{table}[htbp]
 \centering
-\caption{Semi-Analytical Lifshitz Casimir Pressures for the Asymmetric Dual-Fractal Setup ($N_{\rm bottom}=1$, $N_{\rm top}=3$, $L=2.0\ \mu\text{m}$).}
+\caption{Semi-Analytical Lifshitz Casimir Pressures for the Asymmetric Dual-Fractal Setup ($N_{\rm bottom}=1$, $N_{\rm top}=3$, $L=2.0\ \mu\text{m}$) in the isotropic dielectric immersion background $\varepsilon_{\rm bg}=2.1$.}
 \label{tab:asymmetric_theoretical_pressures}
 \begin{tabular}{@{}ccc@{}}
 \toprule
@@ -504,7 +507,7 @@ Because $r_1 < 0$ and $r_2 > 0$, the reflection product $r_1 r_2$ becomes strict
 
 \subsection{Full 3D FDTD Benchmark for the Asymmetric Cavity}
 
-To test the Lifshitz phase-reversal model against full 3D vector Maxwell dynamics, we performed FDTD simulations on BigRed 200 for the asymmetric configuration ($L = 2.0\ \mu\text{m}$, $d = 0.25\ \mu\text{m}$, $N_{\rm top} = 3$, $N_{\rm bottom} = 2$, $\theta = 90.0^\circ$, $\varepsilon_{\rm bg} = 2.1$, $R = 40$).
+To test the Lifshitz phase-reversal model against full 3D vector Maxwell dynamics, we performed FDTD simulations on BigRed 200 for the asymmetric configuration ($L = 2.0\ \mu\text{m}$, $d = 0.25\ \mu\text{m}$, $N_{\rm top} = 3$, $N_{\rm bottom} = 1$, $\theta = 90.0^\circ$, $\varepsilon_{\rm bg} = 2.1$, $R = 40$).
 
 The compiled 3D FDTD results are:
 \begin{itemize}
@@ -512,13 +515,13 @@ The compiled 3D FDTD results are:
     \item \textbf{Force (Self Plate Only)}: $F_{\rm self} = \AsymmetricCavityFSelf$
     \item \textbf{Subtracted Net Force}: $F_{\rm net} = \AsymmetricCavityFNet$
     \item \textbf{Effective Plate Area}: $A_{\rm eff} = \AsymmetricCavityAEff\ \mu\text{m}^2$
-    \item \textbf{Consolidated Normal Pressure}: $P = \mathbf{\AsymmetricCavityPressure\text{ Pa}}$
+    \item \textbf{Consolidated Normal Pressure}: $P = \AsymmetricCavityPressure$ Meep units ($\mathbf{\AsymmetricCavityPressurePa\text{ Pa}}$)
 \end{itemize}
 
 \textbf{Key Physical Findings}:
 \begin{enumerate}
-    \item \textbf{$\AsymmetricCavitySuppressionFactor\times$ Suppression of Attraction}: Compared to the symmetric $d = 100\text{ nm}$ baseline ($P = -0.118022\text{ Pa}$), increasing the gap to $d = 250\text{ nm}$ with the macro-cavity suppresses attractive Casimir pressure by an extraordinary \textbf{$\AsymmetricCavitySuppressionFactor\times$}.
-    \item \textbf{Finite Thickness Effects}: The residual attraction ($\AsymmetricCavityPressure\text{ Pa}$) compared to the idealized Lifshitz calculation ($+\LifshitzDTwofivezeroPressure\text{ Pa}$) arises from finite plate thickness ($t = 100\text{ nm}$) and 3D perimeter diffraction fields.
+    \item \textbf{$\AsymmetricCavitySuppressionFactor\times$ Suppression of Attraction}: Compared to the symmetric $d = 100\text{ nm}$ baseline ($P = \ScalingLTwopzerozeroRFourzeroPressure$ Meep units, or $\ScalingLTwopzerozeroRFourzeroPressurePa\text{ Pa}$), increasing the gap to $d = 250\text{ nm}$ with the macro-cavity suppresses attractive Casimir pressure by an extraordinary \textbf{$\AsymmetricCavitySuppressionFactor\times$}.
+    \item \textbf{Finite Thickness Effects}: The residual attraction ($P = \AsymmetricCavityPressure$ Meep units, or $\AsymmetricCavityPressurePa\text{ Pa}$) compared to the idealized Lifshitz calculation ($+\LifshitzDTwofivezeroPressure\text{ Pa}$) arises from finite plate thickness ($t = 100\text{ nm}$) and 3D perimeter diffraction fields.
 \end{enumerate}
 
 
@@ -526,6 +529,7 @@ The compiled 3D FDTD results are:
 \label{sec:wild_frontiers}
 
 To unlock strong repulsive forces ($P \gg 0$) at close proximity ($d = 50\text{ to }150\text{ nm}$), where the zero-point energy density is highest, we introduce 3D topographic field-bending architectures.
+The planar and pyramidal Tuned Phosphorene sweeps here retain the isotropic dielectric immersion background $\varepsilon_{\rm bg}=2.1$, providing Lifshitz dielectric-immersion phase screening. The true-vacuum ($\varepsilon_{\rm bg}=1.0$) Gold Concentric Cantor-Ring Rotary Quantum Clutch is treated separately in the rotational-tuning subsection.
 
 \subsection{Maxwell Stress-Tensor Field-Bending Formulation}
 
@@ -534,7 +538,7 @@ The normal Casimir pressure exerted on a boundary in the $(x,y)$ plane is determ
 T_{zz} = \frac{1}{2} \left[ \varepsilon (E_z^2 - E_x^2 - E_y^2) + \mu (H_z^2 - H_x^2 - H_y^2) \right].
 \label{eq:stress_tensor_tzz}
 \end{equation}
-Conventional Casimir attraction between parallel conductors is dictated by the dominance of normal electric field fluctuations ($E_z^2 > E_x^2 + E_y^2$). Therefore, to achieve a net repulsive normal force ($T_{zz} > 0$), the surface geometry must force the virtual electric field lines into \textbf{transverse in-plane orientations ($E_x^2 + E_y^2 > E_z^2$)}.
+Transverse field bending changes the electric contribution to $T_{zz}$, but the inequality $E_x^2+E_y^2>E_z^2$ alone does not establish a repulsive force: it makes the electric term in Eq.~\eqref{eq:stress_tensor_tzz} negative. The signed force must instead be determined from the full renormalized electric and magnetic stress integrated over the oriented closed surface in Eq.~\eqref{eq:fdtd_force_integral}.
 
 \subsection{Frontier 1: The 3D Multi-Depth Stepped Fractal Sieve}
 
@@ -545,21 +549,21 @@ In Frontier 1, the bottom plate is etched into a \textbf{3D Stepped Fractal Siev
     \item \textbf{Level 4 (64 Micro-Holes, $W_3 = 74.1\text{ nm}$)}: Depth $h_3 = 50\text{ nm}$.
 \end{itemize}
 
-Full 3D FDTD simulation of the stepped sieve ($L = 2.0\ \mu\text{m}$, $d = 120\text{ nm}$, $R = 40$) yielded $P = \FrontierOnePressure\text{ Pa}$. While multi-scale phase sifting occurs, flat solid regions between holes maintain short-range dielectric attraction at $d=120\text{ nm}$, demonstrating the necessity of eliminating flat parallel faces entirely via 3D corrugations.
+Full 3D FDTD simulation of the stepped sieve ($L = 2.0\ \mu\text{m}$, $d = 120\text{ nm}$, $\varepsilon_{\rm bg}=2.1$, $R = 40$) yielded $P = \FrontierOnePressure$ Meep units ($\FrontierOnePressurePa\text{ Pa}$). While multi-scale phase sifting occurs, flat solid regions between holes maintain short-range dielectric attraction at $d=120\text{ nm}$, demonstrating the necessity of eliminating flat parallel faces entirely via 3D corrugations.
 
 \subsection{Frontier 2: Interlocking 3D Fractal Corrugations \texorpdfstring{(\FrontierTwoCancellationPercent\% Force Cancellation)}{(\FrontierTwoCancellationPercent\% Force Cancellation)}}
 
-In Frontier 2, flat parallel plates are replaced with complementary $45^\circ$ pyramidal fractal ridges that interlock across a narrow gap $d = 100\text{ nm}$. The tilted boundary walls force virtual electric field lines to align at $45^\circ$ to the normal, ensuring $E_x^2 + E_y^2 > E_z^2$.
+In Frontier 2, flat parallel plates are replaced with complementary $45^\circ$ pyramidal fractal ridges that interlock across a narrow gap $d = 100\text{ nm}$. The tilted boundary walls redirect field correlations toward transverse orientations; a $45^\circ$ orientation alone does not ensure the strict inequality $E_x^2 + E_y^2 > E_z^2$ or establish the sign of the integrated force.
 
-Full 3D FDTD simulation on BigRed 200 ($L = 2.0\ \mu\text{m}$, $d = 100\text{ nm}$, $45^\circ$ slope, $R = 40$) yielded:
+Full 3D FDTD simulation on BigRed 200 ($L = 2.0\ \mu\text{m}$, $d = 100\text{ nm}$, $45^\circ$ slope, $\varepsilon_{\rm bg}=2.1$, $R = 40$) yielded:
 \begin{itemize}
     \item \textbf{Force (Both Plates)}: $F_{\rm both} = +\FrontierTwoFBoth$
     \item \textbf{Force (Self Plate Only)}: $F_{\rm self} = +\FrontierTwoFSelf$
     \item \textbf{Net Force}: $F_{\rm net} = \FrontierTwoFNet$
-    \item \textbf{Consolidated Normal Pressure}: $P = \mathbf{\FrontierTwoPressure\text{ Pa}}$
+    \item \textbf{Consolidated Normal Pressure}: $P = \FrontierTwoPressure$ Meep units ($\mathbf{\FrontierTwoPressurePa\text{ Pa}}$)
 \end{itemize}
 
-\textbf{Major Physical Finding}: Compared to flat prefractal plates ($P = -0.118022\text{ Pa}$), the $45^\circ$ interlocking corrugations suppressed the attractive Casimir pressure down to $\FrontierTwoPressure\text{ Pa}$---an extraordinary \textbf{$\FrontierTwoReductionRatio\times$ reduction ($\FrontierTwoCancellationPercent\%$ force cancellation)} directly at $100\text{ nm}$ separation!
+\textbf{Major Physical Finding}: Compared to flat prefractal plates ($P = \ScalingLTwopzerozeroRFourzeroPressure$ Meep units, or $\ScalingLTwopzerozeroRFourzeroPressurePa\text{ Pa}$), the $45^\circ$ interlocking corrugations suppressed the attractive Casimir pressure down to $P = \FrontierTwoPressure$ Meep units ($\mathbf{\FrontierTwoPressurePa\text{ Pa}}$)---an extraordinary \textbf{$\FrontierTwoReductionRatio\times$ reduction ($\FrontierTwoCancellationPercent\%$ force cancellation)} directly at $100\text{ nm}$ separation!
 
 \subsection{Frontier 3: Twisted Moir\'e Pre-Fractal Superlattices}
 
@@ -569,14 +573,14 @@ Stacking two prefractal anisotropic plates at a small Moir\'e twist angle ($\the
 \section{The Ultimate Hybrid Frontier, Sweet-Spot Sweeps, and Nanomechanical Levitation}
 \label{sec:repulsion_physics}
 
-By combining \textbf{steep 3D pyramidal corrugations ($\alpha = 60^\circ\text{--}75^\circ$)} with anisotropic cross-polarization ($\theta \approx 80^\circ\text{--}94^\circ$) and Moir\'e twisting, we unlock strong, positive repulsive Casimir forces in vacuum.
+By combining \textbf{steep 3D pyramidal corrugations ($\alpha = 60^\circ\text{--}75^\circ$)} with anisotropic cross-polarization ($\theta \approx 80^\circ\text{--}94^\circ$) and Moir\'e twisting, we unlock strong, positive repulsive Casimir forces in an isotropic dielectric immersion background $\varepsilon_{\rm bg}=2.1$. This background provides Lifshitz dielectric-immersion phase screening throughout the Tuned Phosphorene parameter sweeps and axial equilibrium analysis below; true-vacuum ($\varepsilon_{\rm bg}=1.0$) restoring forces and switching are demonstrated separately in the Gold Concentric Cantor-Ring Rotary Quantum Clutch.
 
 \subsection{Full Pairwise Parameter Sweep Analysis across \texorpdfstring{$(\theta, \alpha, d)$}{(theta, alpha, d)}}
 
-We executed comprehensive parameter sweeps on BigRed 200 across all three 2D projections of the parameter space.
+We executed comprehensive parameter sweeps on BigRed 200 across all three 2D projections of the parameter space. All planar and pyramidal Tuned Phosphorene results in this subsection use $\varepsilon_{\rm bg}=2.1$, not vacuum. Dimensionless Meep pressures convert to SI via $1\text{ Meep unit}=\MeepToPa\text{ Pa}$ at $a=1\ \mu\text{m}$.
 
 \subsubsection{Pair 1: Twist Angle \texorpdfstring{$\theta$}{theta} versus Wall Slope \texorpdfstring{$\alpha$}{alpha} (\texorpdfstring{$d = 100\text{ nm}$}{d = 100 nm})}
-Figure~\ref{fig:pair1_plots} presents the 1D pressure curves $P(\theta)$ and the 2D contour heatmap $P(\theta, \alpha)$ at fixed separation $d = 100\text{ nm}$. As the optical twist angle enters the cross-polarized regime ($\theta \ge 80^\circ$), the Casimir pressure undergoes an abrupt sign inversion from negative attraction to strong positive levitation ($P > 0$). Steeper wall slopes ($\alpha \ge 70^\circ$) enhance transverse field bending, expanding the repulsive domain.
+Figure~\ref{fig:pair1_plots} presents the 1D pressure curves $P(\theta)$ and the 2D contour heatmap $P(\theta, \alpha)$ at fixed separation $d = 100\text{ nm}$. As the optical twist angle enters the cross-polarized regime ($\theta \ge 80^\circ$), the Casimir pressure undergoes an abrupt sign inversion from negative attraction to strong positive axial repulsion ($P > 0$). Steeper wall slopes ($\alpha \ge 70^\circ$) enhance transverse field bending, expanding the repulsive domain.
 
 \begin{figure}[htbp]
 \centering
@@ -591,18 +595,18 @@ Figure~\ref{fig:pair1_plots} presents the 1D pressure curves $P(\theta)$ and the
     \includegraphics[width=\textwidth]{figures/pair1_theta_alpha_2d.png}
     \centerline{(b) 2D Contour Heatmap Phase Diagram $P(\theta, \alpha)$.}
 \end{minipage}
-\caption{Pair 1 Pairwise Analysis: Twist Angle $\theta$ vs. Corrugation Wall Slope $\alpha$ at $d = 100\text{ nm}$ ($L=2.0\ \mu\text{m}$, $N=3$). Black dashed lines demarcate the zero-pressure phase boundary ($P = 0$).}
+\caption{Pair 1 Pairwise Analysis: Twist Angle $\theta$ vs. Corrugation Wall Slope $\alpha$ at $d = 100\text{ nm}$ ($L=2.0\ \mu\text{m}$, $N=3$, $\varepsilon_{\rm bg}=2.1$). Black dashed lines demarcate the zero-pressure phase boundary ($P = 0$).}
 \label{fig:pair1_plots}
 \end{figure}
 
 \subsubsection{Pair 2: Twist Angle \texorpdfstring{$\theta$}{theta} versus Separation Distance \texorpdfstring{$d$}{d} (\texorpdfstring{$\alpha = 70^\circ\text{--}75^\circ$}{alpha = 70--75 deg})}
-Figure~\ref{fig:pair2_plots} illustrates the distance scaling $P(d)$ across fine-grained twist angles. At close range ($d = 50\text{ nm}$), steep corrugation slopes ($\alpha = 75^\circ$) generate massive repulsive pressures:
+Figure~\ref{fig:pair2_plots} illustrates the distance scaling $P(d)$ across fine-grained twist angles. At close range ($d = 50\text{ nm}$), steep corrugation slopes ($\alpha = 75^\circ$) generate strong repulsive pressures in the $\varepsilon_{\rm bg}=2.1$ immersion background. The macro-grounded Meep values and their SI conversions are:
 \begin{itemize}
-    \item $\alpha = \SweetSpotOneAlpha.0^\circ, \theta = \SweetSpotOneTheta.0^\circ, d = \SweetSpotOneD.0\text{ nm} \implies P = \mathbf{+\SweetSpotOnePressure\text{ Pa}}$ (\textbf{REPULSIVE})
-    \item $\alpha = \SweetSpotThreeAlpha.0^\circ, \theta = \SweetSpotThreeTheta.0^\circ, d = \SweetSpotThreeD.0\text{ nm} \implies P = \mathbf{+\SweetSpotThreePressure\text{ Pa}}$ (\textbf{REPULSIVE})
-    \item $\alpha = \SweetSpotFourAlpha.0^\circ, \theta = \SweetSpotFourTheta^\circ, d = \SweetSpotFourD.0\text{ nm} \implies P = \mathbf{+\SweetSpotFourPressure\text{ Pa}}$ (\textbf{REPULSIVE})
-    \item $\alpha = 75.0^\circ, \theta = 92.0^\circ, d = 100\text{ nm} \implies P = \mathbf{+0.024319\text{ Pa}}$ (\textbf{REPULSIVE})
-    \item $\alpha = 75.0^\circ, \theta = 80.0^\circ, d = 100\text{ nm} \implies P = \mathbf{+0.019608\text{ Pa}}$ (\textbf{REPULSIVE})
+    \item $\alpha = \SweetSpotOneAlpha.0^\circ, \theta = \SweetSpotOneTheta.0^\circ, d = \SweetSpotOneD.0\text{ nm} \implies P = +\SweetSpotOnePressure$ Meep units ($\mathbf{+(\SweetSpotOnePressure \times \MeepToPa)\text{ Pa}}$) (\textbf{REPULSIVE})
+    \item $\alpha = \SweetSpotThreeAlpha.0^\circ, \theta = \SweetSpotThreeTheta.0^\circ, d = \SweetSpotThreeD.0\text{ nm} \implies P = +\SweetSpotThreePressure$ Meep units ($\mathbf{+(\SweetSpotThreePressure \times \MeepToPa)\text{ Pa}}$) (\textbf{REPULSIVE})
+    \item $\alpha = \SweetSpotFourAlpha.0^\circ, \theta = \SweetSpotFourTheta^\circ, d = \SweetSpotFourD.0\text{ nm} \implies P = +\SweetSpotFourPressure$ Meep units ($\mathbf{+(\SweetSpotFourPressure \times \MeepToPa)\text{ Pa}}$) (\textbf{REPULSIVE})
+    \item $\alpha = 75.0^\circ, \theta = 92.0^\circ, d = 100\text{ nm} \implies P > 0$ (\textbf{REPULSIVE}; pressure reported in Table~\ref{tab:sweet_spot_repulsion})
+    \item $\alpha = 75.0^\circ, \theta = 80.0^\circ, d = 100\text{ nm} \implies P > 0$ (\textbf{REPULSIVE}; pressure reported in Table~\ref{tab:sweet_spot_repulsion})
 \end{itemize}
 
 \begin{figure}[htbp]
@@ -618,7 +622,7 @@ Figure~\ref{fig:pair2_plots} illustrates the distance scaling $P(d)$ across fine
     \includegraphics[width=\textwidth]{figures/pair2_theta_d_2d.png}
     \centerline{(b) 2D Contour Heatmap Phase Diagram $P(\theta, d)$.}
 \end{minipage}
-\caption{Pair 2 Pairwise Analysis: Twist Angle $\theta$ vs. Separation Gap $d$ at $\alpha = 70^\circ$ and $\alpha = 75^\circ$ ($L=2.0\ \mu\text{m}$, $N=3$).}
+\caption{Pair 2 Pairwise Analysis: Twist Angle $\theta$ vs. Separation Gap $d$ at $\alpha = 70^\circ$ and $\alpha = 75^\circ$ ($L=2.0\ \mu\text{m}$, $N=3$, $\varepsilon_{\rm bg}=2.1$).}
 \label{fig:pair2_plots}
 \end{figure}
 
@@ -628,22 +632,22 @@ The complete compilation of verified repulsive points from the latest sweet-spot
 
 \subsection{Stable Nanomechanical Levitation Equilibrium Heights}
 
-A critical requirement for physical quantum levitation is stability in accordance with Earnshaw's theorem. A mechanical equilibrium height $d_{\rm eq}$ is stable if and only if the restoring pressure gradient is negative:
+A critical requirement for physical quantum levitation is stability in accordance with Earnshaw's theorem. For an unloaded axial degree of freedom, a mechanical equilibrium height $d_{\rm eq}$ is locally stable along that axis if and only if the restoring pressure gradient is negative:
 \begin{equation}
 P(d_{\rm eq}) = 0 \quad \text{and} \quad \left.\frac{\partial P}{\partial d}\right|_{d_{\rm eq}} < 0.
 \label{eq:stability_criterion}
 \end{equation}
-If the plates are perturbed closer ($d < d_{\rm eq}$), the pressure becomes positive (repulsive), pushing them apart; if displaced further ($d > d_{\rm eq}$), the pressure becomes negative (attractive), pulling them back.
+If the plates are perturbed closer ($d < d_{\rm eq}$), the pressure becomes positive (repulsive), pushing them apart; if displaced further ($d > d_{\rm eq}$), the pressure becomes negative (attractive), pulling them back. This is a one-dimensional axial criterion, not a demonstration of unconstrained three-dimensional levitation. High-aspect-ratio mechanical flexure springs stabilize the lateral and rotational degrees of freedom against Earnshaw instabilities while allowing axial motion. Any axial preload, including gravity or flexure loading, must be included in the total-force equilibrium condition.
 
-From our 3D FDTD sweet-spot dataset, we performed zero-crossing interpolation across all $( \alpha, \theta )$ curves and identified \textbf{13 stable nanomechanical levitation equilibrium points} in vacuum, compiled in Table~\ref{tab:levitation_equilibria}.
+From our 3D FDTD sweet-spot dataset in the isotropic dielectric immersion background $\varepsilon_{\rm bg}=2.1$, which provides Lifshitz dielectric-immersion phase screening, we performed zero-crossing interpolation across all $( \alpha, \theta )$ curves and identified \textbf{\LevitationEquilibriaCount{} one-dimensional axially stable nanomechanical equilibrium points}, compiled in Table~\ref{tab:levitation_equilibria}. These immersion-background equilibria are distinct from the true-vacuum ($\varepsilon_{\rm bg}=1.0$) Gold Concentric Cantor-Ring Rotary Quantum Clutch described below.
 
 \input{tables/table_levitation_equilibria.tex}
 
-As shown in Table~\ref{tab:levitation_equilibria}, stable levitation gaps range from $d_{\rm eq} = \LevitationEquilibriumTwotwoDEq.00\text{ nm}$ up to $d_{\rm eq} = \LevitationEquilibriumZerofiveDEq\text{ nm}$, providing a passive, unpowered quantum levitation cushion that permanently prevents mechanical contact and stiction.
+As shown in Table~\ref{tab:levitation_equilibria}, axially stable gaps range from $d_{\rm eq} = \LevitationEquilibriaMinDEq\text{ nm}$ up to $d_{\rm eq} = \LevitationEquilibriaMaxDEq\text{ nm}$. With high-aspect-ratio mechanical flexure springs stabilizing lateral and rotational degrees of freedom against Earnshaw instabilities, these one-dimensional restoring equilibria provide a route toward passive quantum cushioning against mechanical contact and stiction.
 
 \subsection{Rotational Tuning: The Quantum Clutch}
 
-Unlike chemical fluids (DLP effect) or static lithographic metamaterials whose forces are fixed once fabricated, our system can be tuned dynamically. Because the Casimir pressure depends strongly on the optical twist angle $\theta$, rotating the top plate by a few degrees shifts the force from attractive to repulsive. This architecture functions as a \emph{Quantum Clutch}, allowing nanomechanical devices to switch dynamically between locked (attractive) and frictionless (repulsive levitation) operating modes on the fly.
+Unlike chemical fluids (DLP effect) or static lithographic metamaterials whose forces are fixed once fabricated, our system can be tuned dynamically. The \emph{Gold Concentric Cantor-Ring Rotary Quantum Clutch} demonstrates repulsive restoring forces and rotary switching in true vacuum ($\varepsilon_{\rm bg}=1.0$), unlike the planar and pyramidal Tuned Phosphorene sweeps in Sections~\ref{sec:numerical_results}--\ref{sec:repulsion_physics} through the axial equilibrium analysis, which use isotropic dielectric immersion ($\varepsilon_{\rm bg}=2.1$) and Lifshitz dielectric-immersion phase screening. Rotating the Cantor-ring structure changes the relative geometric alignment and switches the interaction between attractive and repulsive restoring regimes. High-aspect-ratio mechanical flexure springs constrain lateral and unwanted rotational instabilities; controlled rotary actuation provides the switching degree of freedom. This architecture functions as a \emph{Quantum Clutch}, allowing nanomechanical devices to switch dynamically between locked (attractive) and low-friction, axially restoring operating modes on the fly.
 
 
 \section{Experimental Implementation and Nanofabrication Metrics}
@@ -662,7 +666,7 @@ n \gtrsim \frac{\ln(L/d)}{\ln b}.
 For $L = 2.0\ \mu\text{m}$, $d = 100\text{ nm}$, and $b = 3$, an iteration depth $n = 3$ yields a minimum feature size $w_{\rm min} = 74.1\text{ nm}$, which is routinely achievable using modern high-resolution electron-beam lithography (EBL) and focused ion-beam (FIB) etching on anisotropic van der Waals materials (such as black phosphorus or rhenium disulfide).
 
 \paragraph{AFM Force Metrology and Alignment Tolerances.}
-At $d = 100\text{ to }250\text{ nm}$, the maximum allowable tilt angle before edge contact is $\phi_{\rm max} \approx 2d/L \approx 5.7^\circ\text{ to }14.3^\circ$, which is well within the precision of modern dynamic Atomic Force Microscope (AFM) cantilever positioners. Dynamic frequency-shift AFM cantilevers routinely measure sub-pico-Newton forces, allowing unambiguous verification of both the $94.3\%$ attraction cancellation and positive repulsive pressures ($P > 0$).
+At $d = 100\text{ to }250\text{ nm}$, the maximum allowable tilt angle before edge contact is $\phi_{\rm max} \approx 2d/L \approx 5.7^\circ\text{ to }14.3^\circ$, which is well within the precision of modern dynamic Atomic Force Microscope (AFM) cantilever positioners. Dynamic frequency-shift AFM cantilevers routinely measure sub-pico-Newton forces, allowing verification of both the $\FrontierTwoCancellationPercent\%$ attraction cancellation and positive repulsive pressures ($P > 0$), subject to the corresponding SI force magnitudes and instrumental sensitivity.
 
 
 \section{Conclusion}
@@ -676,8 +680,8 @@ The core findings of this study are:
     \item \textbf{Electromagnetic Trace Framework}: Discrete scale invariance generates an integrated vacuum trace $T^\mu{}_\mu = -\frac{\hbar c}{d^4} \partial_{\ln d}C$, strictly independent of the conformal coupling parameter $\xi$.
     \item \textbf{Atomic CQED Sensitivities}: The framework yields concrete, measurable signatures for the fractal Purcell effect ($\AtomicCqedPurcellLifetimeVariationMin\%\text{--}\AtomicCqedPurcellLifetimeVariationMax\%$ lifetime shifts), Casimir-Polder potentials, and geometric Lamb shifts ($\sim \AtomicCqedLambShiftDeltaNu\text{ kHz}$).
     \item \textbf{Screened Power Law Decay}: 3D FDTD simulations demonstrate that symmetric scaling follows an exponential screening law $P(L) \sim L^{-\alpha} e^{-L/\lambda}$ with $\lambda = \ModelFourLambda\ \mu\text{m}$, driven by sub-wavelength mode localization.
-    \item \textbf{Transverse Field Bending and Quantum Levitation}: Pyramidal corrugations force $E_x^2 + E_y^2 > E_z^2$, canceling $\FrontierTwoCancellationPercent\%$ of normal attraction at $100\text{ nm}$ and enabling high-magnitude repulsive Casimir pressures ($P > 0$ up to $+\SweetSpotOnePressure\text{ Pa}$) across 32 FDTD configurations.
-    \item \textbf{Stable Nanomechanical Equilibria}: We have identified 13 stable passive quantum levitation points ($d_{\rm eq} = \LevitationEquilibriumTwotwoDEq\text{ to }\LevitationEquilibriumZerofiveDEq\text{ nm}$ where $P=0$ and $\partial P/\partial d < 0$), establishing the foundation for frictionless, stiction-free NEMS/MEMS devices and dynamically tunable quantum clutches.
+    \item \textbf{Transverse Field Bending and Repulsion}: Pyramidal corrugations redirect field correlations, canceling $\FrontierTwoCancellationPercent\%$ of normal attraction at $100\text{ nm}$ and enabling high-magnitude repulsive Casimir pressures ($P > 0$ up to $+\SweetSpotOnePressure$ Meep units, or $+(\SweetSpotOnePressure \times \MeepToPa)\text{ Pa}$) across 32 FDTD configurations in an isotropic dielectric immersion background $\varepsilon_{\rm bg}=2.1$, providing Lifshitz dielectric-immersion phase screening. Separately, the Gold Concentric Cantor-Ring Rotary Quantum Clutch demonstrates true-vacuum ($\varepsilon_{\rm bg}=1.0$) repulsive restoring forces and rotary switching.
+    \item \textbf{Stable Axial Nanomechanical Equilibria}: We have identified \LevitationEquilibriaCount{} one-dimensional axially stable equilibrium points in the $\varepsilon_{\rm bg}=2.1$ immersion background ($d_{\rm eq} = \LevitationEquilibriaMinDEq\text{ to }\LevitationEquilibriaMaxDEq\text{ nm}$ where $P(d_{\rm eq})=0$ and $\left.\partial P/\partial d\right|_{d_{\rm eq}}<0$). High-aspect-ratio mechanical flexure springs stabilize lateral and rotational degrees of freedom against Earnshaw instabilities, establishing a route toward low-friction, stiction-resistant NEMS/MEMS devices and dynamically tunable quantum clutches rather than unconstrained three-dimensional levitation.
 \end{enumerate}
 
 \section*{Acknowledgments}

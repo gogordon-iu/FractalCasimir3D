@@ -132,39 +132,114 @@
       }
     },
     "repulsive_sweet_spots": {
-      "basis": "explicit experiment specification",
+      "basis": "explicit experiment specification; Table 4 repulsive sweet spots",
       "columns": [
         "alpha_deg",
         "theta_deg",
         "d_nm",
-        "pressure"
+        "pressure",
+        "pressure_meep"
       ],
       "rows": [
         [
           75.0,
           82.0,
           50.0,
+          0.114158,
           3.610842
         ],
         [
           75.0,
           90.0,
           150.0,
+          0.11304,
           3.57548
         ],
         [
           75.0,
           94.0,
           50.0,
+          0.028505,
           0.90161
         ],
         [
           60.0,
           91.1,
           100.0,
+          0.001562,
           0.049422
+        ],
+        [
+          60.0,
+          89.2,
+          200.0,
+          0.000769,
+          0.024319
+        ],
+        [
+          60.0,
+          86.7,
+          200.0,
+          0.00062,
+          0.019608
         ]
+      ],
+      "units": [
+        "deg",
+        "deg",
+        "nm",
+        "Pa",
+        "dimensionless"
       ]
+    },
+    "rotary_clutch_campaigns": {
+      "basis": "exact values read from campaign JSON exports; no reference-value fallback",
+      "metrics": {
+        "Rot_C8_Compact_N2_theta_0_step_9_f_net_pN": 1.4913558992535627,
+        "Rot_C8_Compact_N2_theta_18_step_12_f_net_pN": -2.3347090640379373,
+        "Rot_C8_Compact_N2_theta_6_step_10_f_net_pN": 1.4913558992535647,
+        "cantor_n2_flatz_bem_theta3_f_z_pn": 0.7538080781886414,
+        "cantor_n2_flatz_bem_theta48_f_z_pn": -2.000652661839609,
+        "cantor_n2_flatz_meep_theta3_f_z_pn": 1.2534376091880237,
+        "cantor_n2_flatz_meep_theta48_f_z_pn": -55.482185687422266,
+        "cantor_n2_hybridrz_bem_high_f_z_pn": 1.4513399088703316,
+        "cantor_n2_hybridrz_bem_std_f_z_pn": 0.7588848323708715,
+        "cantor_n2_hybridrz_bem_theta48_f_z_pn": -1.795106608692549,
+        "cantor_n2_hybridrz_bem_ultra_f_z_pn": 1.6570327044575526,
+        "cantor_n2_hybridrz_meep_r40_f_z_pn": 3.420059966490944,
+        "cantor_n2_hybridrz_meep_r50_f_z_pn": 1.4244827858826676,
+        "cantor_n2_hybridrz_meep_r60_f_z_pn": 0.8400540792028202,
+        "cantor_n2_hybridrz_meep_richardson_f_z_pn": 0.1534865088604671,
+        "cantor_n2_hybridrz_meep_theta48_f_z_pn": -69.8448197674583,
+        "ctrl_uniformperiodic_bem_theta3_f_z_pn": 0.6283052975809262,
+        "ctrl_uniformperiodic_bem_theta48_f_z_pn": -1.9229324106584629,
+        "ctrl_uniformperiodic_meep_theta3_f_z_pn": 0.043983752617513104,
+        "ctrl_uniformperiodic_meep_theta48_f_z_pn": -56.761583412241116,
+        "fractal_n3_cantor7track_bem_theta21_f_z_pn": -1.8255730182729908,
+        "fractal_n3_cantor7track_bem_theta3_f_z_pn": 2.085184520405863,
+        "fractal_n3_cantor7track_bem_theta48_f_z_pn": -4.466262635883978,
+        "rot_c8_compact_n2_bem_theta3_f_z_pn": 2.1133754302401786,
+        "rot_c8_compact_n2_bem_theta48_f_z_pn": -3.9652732889945934,
+        "rot_c8_compact_n2_meep_theta0_f_z_pn": 0.3099311718415863,
+        "rot_c8_compact_n2_meep_theta18_f_z_pn": -13.67420708429072,
+        "rot_c8_compact_n2_meep_theta3_f_z_pn": -0.088333193570023,
+        "rot_c8_compact_n2_meep_theta48_f_z_pn": -36.303176887335994,
+        "rot_c8_compact_n2_meep_theta6_f_z_pn": 0.30993117184975244,
+        "singletooth_track0_bem_theta3_f_z_pn": 0.4327280866953214,
+        "singletooth_track0_bem_theta48_f_z_pn": -1.0007407550947227,
+        "singletooth_track0_meep_theta3_f_z_pn": -0.08183828913225791,
+        "singletooth_track0_meep_theta48_f_z_pn": -18.095118874832472
+      },
+      "name": "Gold Concentric Cantor-Ring Rotary Quantum Clutch",
+      "sources": [
+        "results/nature_6step_narrative_report.json",
+        "results/rotational_z_eff_clutch_report.json",
+        "results_rotational_z_eff_meep/task_1_meep.json",
+        "results_rotational_z_eff_meep/task_2_meep.json",
+        "results_rotational_z_eff_meep/task_3_meep.json",
+        "results_rotational_z_eff_meep/task_4_meep.json"
+      ],
+      "unit": "pN"
     },
     "scaling": {
       "L_values": [
@@ -287,11 +362,11 @@
   "documents": [
     {
       "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-      "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+      "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
     },
     {
       "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-      "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+      "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
     },
     {
       "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_sweet_spot_repulsion.tex",
@@ -303,7 +378,7 @@
     }
   ],
   "errors": [],
-  "executed_at": "2026-10-17T04:59:25.377625+00:00",
+  "executed_at": "2026-10-18T04:40:01.517077+00:00",
   "manuscript": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
   "metadata": {
     "pressure_unit_provenance": {
@@ -546,7 +621,7 @@
           "pressure_pa": -0.00086625825826,
           "si_unit": "Pa"
         },
-        "sweet_spot_1_pressure": {
+        "sweet_spot_1_pressure_meep": {
           "basis": "specified Meep-to-SI pressure conversion; original value retained",
           "conversion": "pressure_pa = pressure_meep * meep_to_pa",
           "meep_to_pa": 0.0316152649,
@@ -555,7 +630,7 @@
           "pressure_pa": 0.11415772634204581,
           "si_unit": "Pa"
         },
-        "sweet_spot_2_pressure": {
+        "sweet_spot_2_pressure_meep": {
           "basis": "specified Meep-to-SI pressure conversion; original value retained",
           "conversion": "pressure_pa = pressure_meep * meep_to_pa",
           "meep_to_pa": 0.0316152649,
@@ -564,7 +639,7 @@
           "pressure_pa": 0.11303974734465201,
           "si_unit": "Pa"
         },
-        "sweet_spot_3_pressure": {
+        "sweet_spot_3_pressure_meep": {
           "basis": "specified Meep-to-SI pressure conversion; original value retained",
           "conversion": "pressure_pa = pressure_meep * meep_to_pa",
           "meep_to_pa": 0.0316152649,
@@ -573,13 +648,31 @@
           "pressure_pa": 0.028504638986489004,
           "si_unit": "Pa"
         },
-        "sweet_spot_4_pressure": {
+        "sweet_spot_4_pressure_meep": {
           "basis": "specified Meep-to-SI pressure conversion; original value retained",
           "conversion": "pressure_pa = pressure_meep * meep_to_pa",
           "meep_to_pa": 0.0316152649,
           "meep_unit": "dimensionless",
           "pressure_meep": 0.049422,
           "pressure_pa": 0.0015624896218878002,
+          "si_unit": "Pa"
+        },
+        "sweet_spot_5_pressure_meep": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.024319,
+          "pressure_pa": 0.0007688516271031001,
+          "si_unit": "Pa"
+        },
+        "sweet_spot_6_pressure_meep": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.019608,
+          "pressure_pa": 0.0006199121141592,
           "si_unit": "Pa"
         }
       }
@@ -593,9 +686,9 @@
       "name": "model_1_ssr",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1264,
+        "line": 1613,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported units",
       "value": 0.00928379
@@ -607,9 +700,9 @@
       "name": "model_2_ssr",
       "source": {
         "basis": "experiment specification; matching metric macro \\ModelTwoSsr used in manuscript (occurrence alone is not semantic verification)",
-        "line": 442,
+        "line": 444,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported units",
       "value": 0.03148498
@@ -621,9 +714,9 @@
       "name": "model_3_ssr",
       "source": {
         "basis": "experiment specification; matching metric macro \\ModelTwoSsr used in manuscript (occurrence alone is not semantic verification)",
-        "line": 442,
+        "line": 444,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported units",
       "value": 0.03148498
@@ -637,7 +730,7 @@
         "basis": "experiment specification; matching metric macro \\ModelFourLambda used in manuscript (occurrence alone is not semantic verification)",
         "line": 48,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "um",
       "value": 1.223087
@@ -649,9 +742,9 @@
       "name": "model_4_ssr",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1276,
+        "line": 1625,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported units",
       "value": 0.00440022
@@ -673,9 +766,9 @@
       "name": "lifshitz_d_100_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1238,
+        "line": 1587,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported pressure units",
       "value": -0.00395
@@ -697,9 +790,9 @@
       "name": "lifshitz_d_150_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1239,
+        "line": 1588,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported pressure units",
       "value": 0.0034
@@ -721,9 +814,9 @@
       "name": "lifshitz_d_200_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1240,
+        "line": 1589,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported pressure units",
       "value": 0.00376
@@ -745,9 +838,9 @@
       "name": "lifshitz_d_250_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1241,
+        "line": 1590,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported pressure units",
       "value": 0.00305
@@ -769,9 +862,9 @@
       "name": "lifshitz_d_300_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1242,
+        "line": 1591,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported pressure units",
       "value": 0.00231
@@ -793,9 +886,9 @@
       "name": "lifshitz_d_400_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1243,
+        "line": 1592,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported pressure units",
       "value": 0.00129
@@ -817,9 +910,9 @@
       "name": "lifshitz_d_500_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1244,
+        "line": 1593,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported pressure units",
       "value": 0.000748
@@ -831,9 +924,9 @@
       "name": "asymmetric_cavity_F_both",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 393,
+        "line": 491,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported force units",
       "value": -0.583529
@@ -845,9 +938,9 @@
       "name": "asymmetric_cavity_F_self",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 395,
+        "line": 493,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported force units",
       "value": -0.538354
@@ -859,9 +952,9 @@
       "name": "asymmetric_cavity_F_net",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 394,
+        "line": 492,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported force units",
       "value": -0.045175
@@ -873,9 +966,9 @@
       "name": "asymmetric_cavity_A_eff",
       "source": {
         "basis": "experiment specification; matching metric macro \\AsymmetricCavityAEff used in manuscript (occurrence alone is not semantic verification)",
-        "line": 514,
+        "line": 517,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported area units",
       "value": 3.160494
@@ -897,12 +990,26 @@
       "name": "asymmetric_cavity_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 396,
+        "line": 494,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported pressure units",
       "value": -0.014294
+    },
+    {
+      "description": "Net pressure converted from Meep to SI, rounded to six decimals",
+      "group": "asymmetric_cavity",
+      "metadata": {},
+      "name": "asymmetric_cavity_pressure_pa",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 495,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
+      },
+      "unit": "Pa",
+      "value": -0.000452
     },
     {
       "description": "Suppression factor",
@@ -911,9 +1018,9 @@
       "name": "asymmetric_cavity_suppression_factor",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 397,
+        "line": 496,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "dimensionless",
       "value": 8.25
@@ -935,12 +1042,26 @@
       "name": "frontier_1_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1206,
+        "line": 1550,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported pressure units",
       "value": -0.218758
+    },
+    {
+      "description": "Stepped-sieve pressure converted from Meep to SI, rounded to six decimals",
+      "group": "frontier_1",
+      "metadata": {},
+      "name": "frontier_1_pressure_pa",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 1551,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
+      },
+      "unit": "Pa",
+      "value": -0.006916
     },
     {
       "description": "Combined force",
@@ -949,9 +1070,9 @@
       "name": "frontier_2_F_both",
       "source": {
         "basis": "experiment specification; matching metric macro \\FrontierTwoFBoth used in manuscript (occurrence alone is not semantic verification)",
-        "line": 556,
+        "line": 560,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported force units",
       "value": 4838.044314
@@ -963,9 +1084,9 @@
       "name": "frontier_2_F_self",
       "source": {
         "basis": "experiment specification; matching metric macro \\FrontierTwoFBoth used in manuscript (occurrence alone is not semantic verification)",
-        "line": 556,
+        "line": 560,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported force units",
       "value": 4838.065605
@@ -977,9 +1098,9 @@
       "name": "frontier_2_F_net",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1208,
+        "line": 1553,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported force units",
       "value": -0.02129
@@ -1001,12 +1122,26 @@
       "name": "frontier_2_pressure",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1211,
+        "line": 1556,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported pressure units",
       "value": -0.006736
+    },
+    {
+      "description": "Net pressure converted from Meep to SI, rounded to six decimals",
+      "group": "frontier_2",
+      "metadata": {},
+      "name": "frontier_2_pressure_pa",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 1557,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
+      },
+      "unit": "Pa",
+      "value": -0.000213
     },
     {
       "description": "Reported cancellation percentage",
@@ -1015,9 +1150,9 @@
       "name": "frontier_2_cancellation_percent",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 665,
-        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "line": 1555,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "%",
       "value": 94.3
@@ -1029,12 +1164,26 @@
       "name": "frontier_2_reduction_ratio",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1212,
+        "line": 1558,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "dimensionless",
       "value": 17.52
+    },
+    {
+      "description": "Scaling pressure at L=2.00, R=40 converted from Meep to SI, rounded to six decimals",
+      "group": "scaling",
+      "metadata": {},
+      "name": "scaling_L_2p00_R_40_pressure_pa",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 2186,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
+      },
+      "unit": "Pa",
+      "value": -0.003731
     },
     {
       "description": "Lamb frequency shift",
@@ -1043,9 +1192,9 @@
       "name": "atomic_cqed_lamb_shift_delta_nu",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 400,
+        "line": 499,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "kHz",
       "value": 2.4
@@ -1057,9 +1206,9 @@
       "name": "atomic_cqed_lamb_shift_delta_E",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 399,
+        "line": 498,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "eV",
       "value": 1e-11
@@ -1073,7 +1222,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 320,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "%",
       "value": 10.0
@@ -1087,7 +1236,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 320,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "%",
       "value": 50.0
@@ -1099,9 +1248,9 @@
       "name": "atomic_cqed_cp_shift",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 398,
+        "line": 497,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "eV",
       "value": 1e-06
@@ -1115,7 +1264,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 45,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported units",
       "value": 3e-19
@@ -1127,9 +1276,9 @@
       "name": "sweet_spot_1_alpha",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 572,
+        "line": 576,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "deg",
       "value": 75.0
@@ -1141,9 +1290,9 @@
       "name": "sweet_spot_1_theta",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1736,
+        "line": 2474,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "deg",
       "value": 82.0
@@ -1157,13 +1306,27 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 320,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "nm",
       "value": 50.0
     },
     {
       "description": "Repulsive sweet spot 1: pressure",
+      "group": "repulsive_sweet_spots",
+      "metadata": {},
+      "name": "sweet_spot_1_pressure",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 2472,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
+      },
+      "unit": "Pa",
+      "value": 0.114158
+    },
+    {
+      "description": "Repulsive sweet spot 1: pressure_meep",
       "group": "repulsive_sweet_spots",
       "metadata": {
         "pressure_unit_provenance": {
@@ -1176,12 +1339,12 @@
           "si_unit": "Pa"
         }
       },
-      "name": "sweet_spot_1_pressure",
+      "name": "sweet_spot_1_pressure_meep",
       "source": {
-        "basis": "experiment specification; matching metric macro \\SweetSpotOnePressure used in manuscript (occurrence alone is not semantic verification)",
-        "line": 49,
-        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "basis": "explicit experiment specification; no matching manuscript numeric token or macro found",
+        "line": null,
+        "path": "grounded-experiment-pipeline/user-specification",
+        "sha256": null
       },
       "unit": "reported pressure units",
       "value": 3.610842
@@ -1193,9 +1356,9 @@
       "name": "sweet_spot_2_alpha",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 572,
+        "line": 576,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "deg",
       "value": 75.0
@@ -1209,7 +1372,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 381,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "deg",
       "value": 90.0
@@ -1221,15 +1384,29 @@
       "name": "sweet_spot_2_d",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 495,
+        "line": 498,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "nm",
       "value": 150.0
     },
     {
       "description": "Repulsive sweet spot 2: pressure",
+      "group": "repulsive_sweet_spots",
+      "metadata": {},
+      "name": "sweet_spot_2_pressure",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 2477,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
+      },
+      "unit": "Pa",
+      "value": 0.11304
+    },
+    {
+      "description": "Repulsive sweet spot 2: pressure_meep",
       "group": "repulsive_sweet_spots",
       "metadata": {
         "pressure_unit_provenance": {
@@ -1242,12 +1419,12 @@
           "si_unit": "Pa"
         }
       },
-      "name": "sweet_spot_2_pressure",
+      "name": "sweet_spot_2_pressure_meep",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1739,
+        "line": 2478,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported pressure units",
       "value": 3.57548
@@ -1259,9 +1436,9 @@
       "name": "sweet_spot_3_alpha",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 572,
+        "line": 576,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "deg",
       "value": 75.0
@@ -1273,9 +1450,9 @@
       "name": "sweet_spot_3_theta",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 572,
+        "line": 576,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "deg",
       "value": 94.0
@@ -1289,13 +1466,27 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 320,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "nm",
       "value": 50.0
     },
     {
       "description": "Repulsive sweet spot 3: pressure",
+      "group": "repulsive_sweet_spots",
+      "metadata": {},
+      "name": "sweet_spot_3_pressure",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 2482,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
+      },
+      "unit": "Pa",
+      "value": 0.028505
+    },
+    {
+      "description": "Repulsive sweet spot 3: pressure_meep",
       "group": "repulsive_sweet_spots",
       "metadata": {
         "pressure_unit_provenance": {
@@ -1308,12 +1499,12 @@
           "si_unit": "Pa"
         }
       },
-      "name": "sweet_spot_3_pressure",
+      "name": "sweet_spot_3_pressure_meep",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1743,
+        "line": 2483,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported pressure units",
       "value": 0.90161
@@ -1325,9 +1516,9 @@
       "name": "sweet_spot_4_alpha",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 572,
+        "line": 576,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "deg",
       "value": 60.0
@@ -1339,9 +1530,9 @@
       "name": "sweet_spot_4_theta",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1748,
+        "line": 2489,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "deg",
       "value": 91.1
@@ -1355,13 +1546,27 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 49,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "nm",
       "value": 100.0
     },
     {
       "description": "Repulsive sweet spot 4: pressure",
+      "group": "repulsive_sweet_spots",
+      "metadata": {},
+      "name": "sweet_spot_4_pressure",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 2487,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
+      },
+      "unit": "Pa",
+      "value": 0.001562
+    },
+    {
+      "description": "Repulsive sweet spot 4: pressure_meep",
       "group": "repulsive_sweet_spots",
       "metadata": {
         "pressure_unit_provenance": {
@@ -1374,15 +1579,175 @@
           "si_unit": "Pa"
         }
       },
-      "name": "sweet_spot_4_pressure",
+      "name": "sweet_spot_4_pressure_meep",
       "source": {
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1747,
+        "line": 2488,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "a092326be5bb011c878e879d803ac9cc95f8b540cf0622976ef4299ebde93654"
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
       },
       "unit": "reported pressure units",
       "value": 0.049422
+    },
+    {
+      "description": "Repulsive sweet spot 5: alpha",
+      "group": "repulsive_sweet_spots",
+      "metadata": {},
+      "name": "sweet_spot_5_alpha",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 576,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
+      },
+      "unit": "deg",
+      "value": 60.0
+    },
+    {
+      "description": "Repulsive sweet spot 5: theta",
+      "group": "repulsive_sweet_spots",
+      "metadata": {},
+      "name": "sweet_spot_5_theta",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 2494,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
+      },
+      "unit": "deg",
+      "value": 89.2
+    },
+    {
+      "description": "Repulsive sweet spot 5: d",
+      "group": "repulsive_sweet_spots",
+      "metadata": {},
+      "name": "sweet_spot_5_d",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 373,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
+      },
+      "unit": "nm",
+      "value": 200.0
+    },
+    {
+      "description": "Repulsive sweet spot 5: pressure",
+      "group": "repulsive_sweet_spots",
+      "metadata": {},
+      "name": "sweet_spot_5_pressure",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 2492,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
+      },
+      "unit": "Pa",
+      "value": 0.000769
+    },
+    {
+      "description": "Repulsive sweet spot 5: pressure_meep",
+      "group": "repulsive_sweet_spots",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.024319,
+          "pressure_pa": 0.0007688516271031001,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "sweet_spot_5_pressure_meep",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 2493,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
+      },
+      "unit": "reported pressure units",
+      "value": 0.024319
+    },
+    {
+      "description": "Repulsive sweet spot 6: alpha",
+      "group": "repulsive_sweet_spots",
+      "metadata": {},
+      "name": "sweet_spot_6_alpha",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 576,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
+      },
+      "unit": "deg",
+      "value": 60.0
+    },
+    {
+      "description": "Repulsive sweet spot 6: theta",
+      "group": "repulsive_sweet_spots",
+      "metadata": {},
+      "name": "sweet_spot_6_theta",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 2499,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
+      },
+      "unit": "deg",
+      "value": 86.7
+    },
+    {
+      "description": "Repulsive sweet spot 6: d",
+      "group": "repulsive_sweet_spots",
+      "metadata": {},
+      "name": "sweet_spot_6_d",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 373,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
+      },
+      "unit": "nm",
+      "value": 200.0
+    },
+    {
+      "description": "Repulsive sweet spot 6: pressure",
+      "group": "repulsive_sweet_spots",
+      "metadata": {},
+      "name": "sweet_spot_6_pressure",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 2497,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
+      },
+      "unit": "Pa",
+      "value": 0.00062
+    },
+    {
+      "description": "Repulsive sweet spot 6: pressure_meep",
+      "group": "repulsive_sweet_spots",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.019608,
+          "pressure_pa": 0.0006199121141592,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "sweet_spot_6_pressure_meep",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 2498,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "7d0116d83641d649108bf16e8fcd4849d90c4439333150eb2fc8c6686fd63051"
+      },
+      "unit": "reported pressure units",
+      "value": 0.019608
     },
     {
       "description": "Scaling pressure at L=0.30, R=30",
@@ -1403,7 +1768,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -1.12464
@@ -1427,7 +1792,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -1.12434
@@ -1451,7 +1816,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -0.910253
@@ -1475,7 +1840,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -0.980524
@@ -1499,7 +1864,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -0.73338
@@ -1523,7 +1888,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -0.78935
@@ -1547,7 +1912,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -0.614698
@@ -1571,7 +1936,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -0.635006
@@ -1595,7 +1960,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -0.73929
@@ -1619,7 +1984,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -0.555834
@@ -1643,7 +2008,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -0.427396
@@ -1667,7 +2032,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -0.336049
@@ -1691,7 +2056,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -0.118022
@@ -1715,7 +2080,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -0.057953
@@ -1739,7 +2104,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -0.034166
@@ -1763,7 +2128,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported pressure units",
       "value": -0.0274
@@ -1775,9 +2140,9 @@
       "name": "model_1_a",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
-        "line": 419,
+        "line": 421,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported fit units",
       "value": 0.641077
@@ -1789,9 +2154,9 @@
       "name": "model_1_alpha",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
-        "line": 419,
+        "line": 421,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported fit units",
       "value": 0.652603
@@ -1803,9 +2168,9 @@
       "name": "model_1_b",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
-        "line": 419,
+        "line": 421,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported fit units",
       "value": 0.241057
@@ -1817,9 +2182,9 @@
       "name": "model_2_a",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
-        "line": 420,
+        "line": 422,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported fit units",
       "value": 0.357367
@@ -1831,9 +2196,9 @@
       "name": "model_2_alpha",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
-        "line": 420,
+        "line": 422,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported fit units",
       "value": 1.01624
@@ -1845,9 +2210,9 @@
       "name": "model_3_a1",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
-        "line": 421,
+        "line": 423,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported fit units",
       "value": 0.310783
@@ -1859,9 +2224,9 @@
       "name": "model_3_alpha1",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
-        "line": 421,
+        "line": 423,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported fit units",
       "value": 1.01625
@@ -1873,9 +2238,9 @@
       "name": "model_3_a2",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
-        "line": 421,
+        "line": 423,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported fit units",
       "value": 0.046584
@@ -1887,9 +2252,9 @@
       "name": "model_3_alpha2",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
-        "line": 421,
+        "line": 423,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported fit units",
       "value": 1.01619
@@ -1901,9 +2266,9 @@
       "name": "model_4_a",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
-        "line": 422,
+        "line": 424,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported fit units",
       "value": 0.87666
@@ -1915,9 +2280,9 @@
       "name": "model_4_alpha",
       "source": {
         "basis": "explicit parameter assignment in model paragraph or item",
-        "line": 422,
+        "line": 424,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "f8322ea04509142b05eb9d9d9419bb093827004fbe278666adfd30034526593d"
+        "sha256": "f42ae6e4c6526afb80b300de8a593fe2793278af50b7a9a28f6b708873b7cd07"
       },
       "unit": "reported fit units",
       "value": 0.426889
@@ -2229,12 +2594,530 @@
       },
       "unit": "nm",
       "value": 100.0
+    },
+    {
+      "description": "Number of verified levitation equilibria",
+      "group": "levitation_equilibria",
+      "metadata": {},
+      "name": "levitation_equilibria_count",
+      "source": {
+        "basis": "manuscript table",
+        "line": 7,
+        "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+      },
+      "unit": "count",
+      "value": 22.0
+    },
+    {
+      "description": "Minimum verified levitation equilibrium height",
+      "group": "levitation_equilibria",
+      "metadata": {},
+      "name": "levitation_equilibria_min_d_eq",
+      "source": {
+        "basis": "manuscript table",
+        "line": 7,
+        "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+      },
+      "unit": "nm",
+      "value": 100.0
+    },
+    {
+      "description": "Maximum verified levitation equilibrium height",
+      "group": "levitation_equilibria",
+      "metadata": {},
+      "name": "levitation_equilibria_max_d_eq",
+      "source": {
+        "basis": "manuscript table",
+        "line": 7,
+        "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
+        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+      },
+      "unit": "nm",
+      "value": 323.36
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: cantor_n2_hybridrz_bem_std axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "cantor_n2_hybridrz_bem_std_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /tasks/35/F_z_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": 0.7588848323708715
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: cantor_n2_hybridrz_bem_high axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "cantor_n2_hybridrz_bem_high_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /tasks/71/F_z_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": 1.4513399088703316
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: cantor_n2_hybridrz_bem_ultra axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "cantor_n2_hybridrz_bem_ultra_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /tasks/73/F_z_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": 1.6570327044575526
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: cantor_n2_hybridrz_bem_theta48 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "cantor_n2_hybridrz_bem_theta48_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /tasks/36/F_z_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": -1.795106608692549
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: cantor_n2_flatz_bem_theta3 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "cantor_n2_flatz_bem_theta3_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /tasks/33/F_z_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": 0.7538080781886414
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: cantor_n2_flatz_bem_theta48 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "cantor_n2_flatz_bem_theta48_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /tasks/34/F_z_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": -2.000652661839609
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: ctrl_uniformperiodic_bem_theta3 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "ctrl_uniformperiodic_bem_theta3_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /tasks/39/F_z_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": 0.6283052975809262
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: ctrl_uniformperiodic_bem_theta48 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "ctrl_uniformperiodic_bem_theta48_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /tasks/40/F_z_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": -1.9229324106584629
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: singletooth_track0_bem_theta3 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "singletooth_track0_bem_theta3_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /tasks/4/F_z_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": 0.4327280866953214
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: singletooth_track0_bem_theta48 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "singletooth_track0_bem_theta48_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /tasks/5/F_z_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": -1.0007407550947227
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: rot_c8_compact_n2_bem_theta3 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "rot_c8_compact_n2_bem_theta3_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /tasks/45/F_z_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": 2.1133754302401786
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: rot_c8_compact_n2_bem_theta48 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "rot_c8_compact_n2_bem_theta48_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /tasks/46/F_z_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": -3.9652732889945934
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: fractal_n3_cantor7track_bem_theta3 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "fractal_n3_cantor7track_bem_theta3_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /tasks/30/F_z_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": 2.085184520405863
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: fractal_n3_cantor7track_bem_theta21 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "fractal_n3_cantor7track_bem_theta21_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /tasks/31/F_z_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": -1.8255730182729908
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: fractal_n3_cantor7track_bem_theta48 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "fractal_n3_cantor7track_bem_theta48_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /tasks/32/F_z_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": -4.466262635883978
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: cantor_n2_hybridrz_meep_r40 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "cantor_n2_hybridrz_meep_r40_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /analysis/meep_verification/tasks/10/f_net_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": 3.420059966490944
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: cantor_n2_hybridrz_meep_r50 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "cantor_n2_hybridrz_meep_r50_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /analysis/meep_verification/tasks/7/f_net_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": 1.4244827858826676
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: cantor_n2_hybridrz_meep_r60 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "cantor_n2_hybridrz_meep_r60_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /analysis/meep_verification/tasks/11/f_net_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": 0.8400540792028202
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: cantor_n2_hybridrz_meep_theta48 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "cantor_n2_hybridrz_meep_theta48_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /analysis/meep_verification/tasks/8/f_net_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": -69.8448197674583
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: cantor_n2_flatz_meep_theta3 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "cantor_n2_flatz_meep_theta3_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /analysis/meep_verification/tasks/5/f_net_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": 1.2534376091880237
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: cantor_n2_flatz_meep_theta48 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "cantor_n2_flatz_meep_theta48_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /analysis/meep_verification/tasks/6/f_net_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": -55.482185687422266
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: ctrl_uniformperiodic_meep_theta3 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "ctrl_uniformperiodic_meep_theta3_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /analysis/meep_verification/tasks/3/f_net_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": 0.043983752617513104
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: ctrl_uniformperiodic_meep_theta48 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "ctrl_uniformperiodic_meep_theta48_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /analysis/meep_verification/tasks/4/f_net_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": -56.761583412241116
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: singletooth_track0_meep_theta3 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "singletooth_track0_meep_theta3_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /analysis/meep_verification/tasks/0/f_net_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": -0.08183828913225791
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: singletooth_track0_meep_theta48 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "singletooth_track0_meep_theta48_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /analysis/meep_verification/tasks/1/f_net_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": -18.095118874832472
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: rot_c8_compact_n2_meep_theta3 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "rot_c8_compact_n2_meep_theta3_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /analysis/meep_verification/tasks/9/f_net_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": -0.088333193570023
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: cantor_n2_hybridrz_meep_richardson axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "cantor_n2_hybridrz_meep_richardson_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /analysis/meep_verification/richardson/F_inf_4pass_pN",
+        "line": null,
+        "path": "results/nature_6step_narrative_report.json",
+        "sha256": "47fb7fd8e6ec540641ade58a9459f38ffbc8d25faa70863c6bfda86c9af41107"
+      },
+      "unit": "pN",
+      "value": 0.1534865088604671
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: Rot_C8_Compact_N2_theta_0_step_9_f_net_pN axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "Rot_C8_Compact_N2_theta_0_step_9_f_net_pN",
+      "source": {
+        "basis": "campaign JSON measurement at /evaluations/9/f_net_pN",
+        "line": null,
+        "path": "results/rotational_z_eff_clutch_report.json",
+        "sha256": "1fc8b331c7a0c4fb10c0e51c908c345ca2d9edb79bcd48b1d62a1604cd9d9b29"
+      },
+      "unit": "pN",
+      "value": 1.4913558992535627
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: Rot_C8_Compact_N2_theta_6_step_10_f_net_pN axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "Rot_C8_Compact_N2_theta_6_step_10_f_net_pN",
+      "source": {
+        "basis": "campaign JSON measurement at /evaluations/10/f_net_pN",
+        "line": null,
+        "path": "results/rotational_z_eff_clutch_report.json",
+        "sha256": "1fc8b331c7a0c4fb10c0e51c908c345ca2d9edb79bcd48b1d62a1604cd9d9b29"
+      },
+      "unit": "pN",
+      "value": 1.4913558992535647
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: Rot_C8_Compact_N2_theta_18_step_12_f_net_pN axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "Rot_C8_Compact_N2_theta_18_step_12_f_net_pN",
+      "source": {
+        "basis": "campaign JSON measurement at /evaluations/12/f_net_pN",
+        "line": null,
+        "path": "results/rotational_z_eff_clutch_report.json",
+        "sha256": "1fc8b331c7a0c4fb10c0e51c908c345ca2d9edb79bcd48b1d62a1604cd9d9b29"
+      },
+      "unit": "pN",
+      "value": -2.3347090640379373
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: rot_c8_compact_n2_meep_theta6 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "rot_c8_compact_n2_meep_theta6_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /f_net_pN",
+        "line": null,
+        "path": "results_rotational_z_eff_meep/task_1_meep.json",
+        "sha256": "7ae6d98a9fb4478badb42bc61789a0ebb3e7e7d68574b708de1c943649e6cc2c"
+      },
+      "unit": "pN",
+      "value": 0.30993117184975244
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: rot_c8_compact_n2_meep_theta18 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "rot_c8_compact_n2_meep_theta18_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /f_net_pN",
+        "line": null,
+        "path": "results_rotational_z_eff_meep/task_2_meep.json",
+        "sha256": "bc68bb2aaa9e5595afaaa2846b8519effc84f65f744997930919bcb556bf5334"
+      },
+      "unit": "pN",
+      "value": -13.67420708429072
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: rot_c8_compact_n2_meep_theta48 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "rot_c8_compact_n2_meep_theta48_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /f_net_pN",
+        "line": null,
+        "path": "results_rotational_z_eff_meep/task_3_meep.json",
+        "sha256": "4d80ff4ff3e3335d1119965ac2c1cb0f7e0f52b3fea43e2783a75b7b31f70437"
+      },
+      "unit": "pN",
+      "value": -36.303176887335994
+    },
+    {
+      "description": "Gold Concentric Cantor-Ring Rotary Quantum Clutch: rot_c8_compact_n2_meep_theta0 axial force",
+      "group": "rotary_clutch_campaigns",
+      "metadata": {},
+      "name": "rot_c8_compact_n2_meep_theta0_f_z_pn",
+      "source": {
+        "basis": "campaign JSON measurement at /f_net_pN",
+        "line": null,
+        "path": "results_rotational_z_eff_meep/task_4_meep.json",
+        "sha256": "e3d3b4b08aa8711077a5c6f3afb91e1e22d9eda966a6e3689010b5ab80e9393f"
+      },
+      "unit": "pN",
+      "value": 0.3099311718415863
     }
   ],
   "model": "FractalCasimirProvenance",
   "schema_version": 1,
   "script": "execution/export_provenance_pipeline.py",
-  "script_sha256": "718c2a4ea1aedfa1a1c2d85d86a8cb834bbbb22b9fe9f316e6601a42ffd4fe9f",
+  "script_sha256": "ccf68a623498981ebaf8923061f39176b12e8e45448a05775bbaa59d54ae1b68",
   "selected_metric_names": [
     "model_1_ssr",
     "model_2_ssr",
@@ -2253,14 +3136,18 @@
     "asymmetric_cavity_F_net",
     "asymmetric_cavity_A_eff",
     "asymmetric_cavity_pressure",
+    "asymmetric_cavity_pressure_pa",
     "asymmetric_cavity_suppression_factor",
     "frontier_1_pressure",
+    "frontier_1_pressure_pa",
     "frontier_2_F_both",
     "frontier_2_F_self",
     "frontier_2_F_net",
     "frontier_2_pressure",
+    "frontier_2_pressure_pa",
     "frontier_2_cancellation_percent",
     "frontier_2_reduction_ratio",
+    "scaling_L_2p00_R_40_pressure_pa",
     "atomic_cqed_lamb_shift_delta_nu",
     "atomic_cqed_lamb_shift_delta_E",
     "atomic_cqed_purcell_lifetime_variation_min",
@@ -2271,18 +3158,32 @@
     "sweet_spot_1_theta",
     "sweet_spot_1_d",
     "sweet_spot_1_pressure",
+    "sweet_spot_1_pressure_meep",
     "sweet_spot_2_alpha",
     "sweet_spot_2_theta",
     "sweet_spot_2_d",
     "sweet_spot_2_pressure",
+    "sweet_spot_2_pressure_meep",
     "sweet_spot_3_alpha",
     "sweet_spot_3_theta",
     "sweet_spot_3_d",
     "sweet_spot_3_pressure",
+    "sweet_spot_3_pressure_meep",
     "sweet_spot_4_alpha",
     "sweet_spot_4_theta",
     "sweet_spot_4_d",
     "sweet_spot_4_pressure",
+    "sweet_spot_4_pressure_meep",
+    "sweet_spot_5_alpha",
+    "sweet_spot_5_theta",
+    "sweet_spot_5_d",
+    "sweet_spot_5_pressure",
+    "sweet_spot_5_pressure_meep",
+    "sweet_spot_6_alpha",
+    "sweet_spot_6_theta",
+    "sweet_spot_6_d",
+    "sweet_spot_6_pressure",
+    "sweet_spot_6_pressure_meep",
     "scaling_L_0p30_R_30_pressure",
     "scaling_L_0p30_R_40_pressure",
     "scaling_L_0p40_R_30_pressure",
@@ -2331,7 +3232,44 @@
     "levitation_equilibrium_19_d_eq",
     "levitation_equilibrium_20_d_eq",
     "levitation_equilibrium_21_d_eq",
-    "levitation_equilibrium_22_d_eq"
+    "levitation_equilibrium_22_d_eq",
+    "levitation_equilibria_count",
+    "levitation_equilibria_min_d_eq",
+    "levitation_equilibria_max_d_eq",
+    "cantor_n2_hybridrz_bem_std_f_z_pn",
+    "cantor_n2_hybridrz_bem_high_f_z_pn",
+    "cantor_n2_hybridrz_bem_ultra_f_z_pn",
+    "cantor_n2_hybridrz_bem_theta48_f_z_pn",
+    "cantor_n2_flatz_bem_theta3_f_z_pn",
+    "cantor_n2_flatz_bem_theta48_f_z_pn",
+    "ctrl_uniformperiodic_bem_theta3_f_z_pn",
+    "ctrl_uniformperiodic_bem_theta48_f_z_pn",
+    "singletooth_track0_bem_theta3_f_z_pn",
+    "singletooth_track0_bem_theta48_f_z_pn",
+    "rot_c8_compact_n2_bem_theta3_f_z_pn",
+    "rot_c8_compact_n2_bem_theta48_f_z_pn",
+    "fractal_n3_cantor7track_bem_theta3_f_z_pn",
+    "fractal_n3_cantor7track_bem_theta21_f_z_pn",
+    "fractal_n3_cantor7track_bem_theta48_f_z_pn",
+    "cantor_n2_hybridrz_meep_r40_f_z_pn",
+    "cantor_n2_hybridrz_meep_r50_f_z_pn",
+    "cantor_n2_hybridrz_meep_r60_f_z_pn",
+    "cantor_n2_hybridrz_meep_theta48_f_z_pn",
+    "cantor_n2_flatz_meep_theta3_f_z_pn",
+    "cantor_n2_flatz_meep_theta48_f_z_pn",
+    "ctrl_uniformperiodic_meep_theta3_f_z_pn",
+    "ctrl_uniformperiodic_meep_theta48_f_z_pn",
+    "singletooth_track0_meep_theta3_f_z_pn",
+    "singletooth_track0_meep_theta48_f_z_pn",
+    "rot_c8_compact_n2_meep_theta3_f_z_pn",
+    "cantor_n2_hybridrz_meep_richardson_f_z_pn",
+    "Rot_C8_Compact_N2_theta_0_step_9_f_net_pN",
+    "Rot_C8_Compact_N2_theta_6_step_10_f_net_pN",
+    "Rot_C8_Compact_N2_theta_18_step_12_f_net_pN",
+    "rot_c8_compact_n2_meep_theta6_f_z_pn",
+    "rot_c8_compact_n2_meep_theta18_f_z_pn",
+    "rot_c8_compact_n2_meep_theta48_f_z_pn",
+    "rot_c8_compact_n2_meep_theta0_f_z_pn"
   ],
   "status": "completed",
   "warnings": [

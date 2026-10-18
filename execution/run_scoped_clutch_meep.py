@@ -1012,71 +1012,85 @@ def log_metrics(result: Mapping[str, Any], master: bool) -> None:
     set_solver_provenance(solver_name, solver_parameters)
     task_prefix = f"clutch_pilot_task_{result['task_id']}"
     step_id = f"{task_prefix}_{result['status']}"
-    log_step(
-        step_id,
-        {
-            name: result.get(name)
-            for name in (
-                "task_id",
-                "theta_deg",
-                "N_fractal",
-                "Sigma",
-                "completed_moments",
-                "completed_by_config",
-                "F_sector0_both",
-                "F_sector0_rotor",
-                "F_sector0_self",
-                "F_sector0_stator",
-                "F_sector0_vac",
-                "solver",
-                "solver_parameters",
-            )
-        },
-        solver_name=solver_name,
-        solver_parameters=solver_parameters,
-    )
-    for name in (
-        "F_both",
-        "F_rotor",
-        "F_self",
-        "F_stator",
-        "F_vac",
-        "F_2pass",
-        "F_stator_only",
-        "F_net",
-        "f_net_fN",
-        "f_net_pN",
-        "elapsed_seconds",
-        "completed_moments",
-        "micro_probe_steps",
-        "micro_probe_step_seconds",
-        "micro_probe_dct_checksum",
-    ):
-        value = result.get(name)
-        if isinstance(value, (int, float)) and math.isfinite(float(value)):
-            log_metric(
-                f"{task_prefix}_{name}",
-                value,
-                step_id=step_id,
-                solver_name=solver_name,
-                solver_parameters=solver_parameters,
-            )
-            log_metric(
-                name,
-                value,
-                step_id=step_id,
-                solver_name=solver_name,
-                solver_parameters=solver_parameters,
-            )
-    export_macros()
-    for path in (
-        Path("results/provenance_metrics.json"),
-        Path("results/macros_results.tex"),
-    ):
-        if not path.is_file() or path.stat().st_size == 0:
-            raise RuntimeError(
-                "[ERROR: RUN_DATA_MISSING] Provenance artifacts were not generated"
-            )
+    out_dir = Path(result.get("output_file", "results/result.json")).parent
+    default_dir = Path("results")
+    in_array_job = os.environ.get("SLURM_ARRAY_TASK_ID") is not None
+    output_is_default = out_dir.resolve() == default_dir.resolve()
+    log_directories = []
+    if not output_is_default or not in_array_job:
+        log_directories.append(out_dir)
+    if not output_is_default and not in_array_job:
+        log_directories.append(default_dir)
+
+    for directory in log_directories:
+        directory.mkdir(parents=True, exist_ok=True)
+        metrics_path = directory / "provenance_metrics.json"
+        macros_path = directory / "macros_results.tex"
+        log_step(
+            step_id,
+            {
+                name: result.get(name)
+                for name in (
+                    "task_id",
+                    "theta_deg",
+                    "N_fractal",
+                    "Sigma",
+                    "completed_moments",
+                    "completed_by_config",
+                    "F_sector0_both",
+                    "F_sector0_rotor",
+                    "F_sector0_self",
+                    "F_sector0_stator",
+                    "F_sector0_vac",
+                    "solver",
+                    "solver_parameters",
+                )
+            },
+            solver_name=solver_name,
+            solver_parameters=solver_parameters,
+            metrics_path=str(metrics_path),
+        )
+        for name in (
+            "F_both",
+            "F_rotor",
+            "F_self",
+            "F_stator",
+            "F_vac",
+            "F_2pass",
+            "F_stator_only",
+            "F_net",
+            "f_net_fN",
+            "f_net_pN",
+            "elapsed_seconds",
+            "completed_moments",
+            "micro_probe_steps",
+            "micro_probe_step_seconds",
+            "micro_probe_dct_checksum",
+        ):
+            value = result.get(name)
+            if isinstance(value, (int, float)) and math.isfinite(float(value)):
+                log_metric(
+                    f"{task_prefix}_{name}",
+                    value,
+                    step_id=step_id,
+                    solver_name=solver_name,
+                    solver_parameters=solver_parameters,
+                    metrics_path=str(metrics_path),
+                )
+                log_metric(
+                    name,
+                    value,
+                    step_id=step_id,
+                    solver_name=solver_name,
+                    solver_parameters=solver_parameters,
+                    metrics_path=str(metrics_path),
+                )
+        export_macros(metrics_path=str(metrics_path), output_path=str(macros_path))
+        for path in (metrics_path, macros_path):
+            if not path.is_file() or path.stat().st_size == 0:
+                raise RuntimeError(
+                    "[ERROR: RUN_DATA_MISSING] Provenance artifacts were not generated"
+                )
 
 
 def run_numpy_micro_probe(
@@ -1191,11 +1205,21 @@ def run_numpy_micro_probe(
     if not bool(np.isfinite(electric).all() and np.isfinite(magnetic).all()):
         raise FloatingPointError("The NumPy micro-probe fields are non-finite")
 
+    out_path = (
+        args.output_file
+        if args.output_file is not None
+        else Path("results_clutch_pilot")
+        / (
+            f"task_{args.task_id:03d}_N{parameters.n_fractal}"
+            f"_th_{int(parameters.theta_deg)}deg_numpy_micro_probe.json"
+        )
+    )
     result = {
         "status": "micro_probe_complete",
         "cache_version": CACHE_VERSION,
         "model": f"Meep_3D_FDTD_{parameters.material}_v{CACHE_VERSION}",
-        "dataset": "scoped_clutch_meep",
+        "dataset": f"{out_path.parent.name}_task_{args.task_id}",
+        "output_file": str(out_path),
         "executed_at": datetime.now(timezone.utc).isoformat(),
         "solver": "numpy",
         "solver_parameters": {
@@ -1243,15 +1267,6 @@ def run_numpy_micro_probe(
         "micro_probe_step_seconds": probe_seconds / args.max_steps,
         "micro_probe_dct_checksum": checksum,
     }
-    out_path = (
-        args.output_file
-        if args.output_file is not None
-        else Path("results_clutch_pilot")
-        / (
-            f"task_{args.task_id:03d}_N{parameters.n_fractal}"
-            f"_th_{int(parameters.theta_deg)}deg_numpy_micro_probe.json"
-        )
-    )
     atomic_json(out_path, result)
     log_metrics(result, True)
     print(
@@ -1625,7 +1640,12 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
             "status": status,
             "cache_version": CACHE_VERSION,
             "model": f"Meep_3D_FDTD_{parameters.material}_v{CACHE_VERSION}",
-            "dataset": "scoped_clutch_meep",
+            "dataset": (
+                f"{final_path.parent.name}_task_{args.task_id}"
+                if status == "complete"
+                else f"{final_path.parent.name}_progress_task_{args.task_id}"
+            ),
+            "output_file": str(final_path),
             "executed_at": datetime.now(timezone.utc).isoformat(),
             "solver": "meep",
             "solver_parameters": meep_solver_parameters(
@@ -1671,7 +1691,11 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
 
     def save_progress(status: str) -> dict[str, Any]:
         result = summary(status)
-        parallel.root_call(lambda: atomic_json(progress_path, result))
+        progress_result = dict(result)
+        progress_result["dataset"] = (
+            f"{final_path.parent.name}_progress_task_{args.task_id}"
+        )
+        parallel.root_call(lambda: atomic_json(progress_path, progress_result))
         return result
 
     def write_shard_status(status: str) -> None:
