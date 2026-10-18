@@ -782,66 +782,105 @@ def geometry_table(facts: Sequence[Fact], macros: Macros) -> str:
 def clutch_force_reference(
     macros: Macros, geometry: str, theta: Decimal, solver: str
 ) -> str:
-    """Resolve only explicitly angle- and solver-bound force macro names."""
-    if solver not in {"bem", "meep"}:
+    """Resolve explicitly bound Vector-Dyadic, Scalar-Yukawa, or Meep forces."""
+    if solver not in {"bem", "bem_scalar", "meep"}:
         raise ValueError(f"Unsupported clutch solver: {solver}")
     if (geometry, theta) not in CLUTCH_CASES:
         raise ValueError(f"Unsupported clutch case: {geometry}, theta={theta}")
 
+    if solver == "bem":
+        # Reviewed highest-resolution Vector-Dyadic results; never fall back
+        # to a lower mesh tier if a required grounded macro is missing.
+        vector_names = {
+            ("Cantor_N2_HybridRZ", Decimal(3)):
+                "CantorNtwoHybridrzBemHighFZPn",
+            ("Cantor_N2_HybridRZ", Decimal(48)):
+                "NatureCantorNtwoHybridrzSteponeForceZPn",
+            ("Cantor_N2_FlatZ", Decimal(3)):
+                "CantorNtwoFlatzBemThetathreeFZPn",
+            ("Cantor_N2_FlatZ", Decimal(48)):
+                "CantorNtwoFlatzBemThetafoureightFZPn",
+            ("Ctrl_UniformPeriodic", Decimal(3)):
+                "CtrlUniformperiodicBemThetathreeFZPn",
+            ("Ctrl_UniformPeriodic", Decimal(48)):
+                "CtrlUniformperiodicBemThetafoureightFZPn",
+            ("Rot_C8_Compact_N2", Decimal(0)):
+                "RotCeightCompactNtwoThetaZeroStepNineFNetPn",
+            ("Rot_C8_Compact_N2", Decimal(6)):
+                "RotCeightCompactNtwoHighThetaZerozerosixpzeroVectorDyadicFZPn",
+            ("Rot_C8_Compact_N2", Decimal(18)):
+                "RotCeightCompactNtwoUltraHighThetaZerooneeightpzeroVectorDyadicFZPn",
+            ("Rot_C8_Compact_N2", Decimal(48)):
+                "RotCeightCompactNtwoUltraHighThetaZerofoureightpzeroVectorDyadicFZPn",
+            ("Rot_C4_TightSlot_N2", Decimal(0)):
+                "RotCfourTightslotNtwoThetaZeroStepZeroFNetPn",
+            ("Rot_C4_TightSlot_N2", Decimal(6)):
+                "RotCfourTightslotNtwoHighThetaZerozerosixpzeroVectorDyadicFZPn",
+            ("Rot_C4_TightSlot_N2", Decimal(12)):
+                "RotCfourTightslotNtwoThetaOnetwoStepTwoFNetPn",
+            ("Rot_C4_TightSlot_N2", Decimal(18)):
+                "RotCfourTightslotNtwoUltraHighThetaZerooneeightpzeroVectorDyadicFZPn",
+            ("Rot_C4_TightSlot_N2", Decimal(48)):
+                "RotCfourTightslotNtwoUltraHighThetaZerofoureightpzeroVectorDyadicFZPn",
+            ("Rot_C10_Fractal_N3", Decimal(3)):
+                "RotConezeroFractalNthreeHighThetaZerozerothreepzeroVectorDyadicFZPn",
+            ("Rot_C10_Fractal_N3", Decimal(21)):
+                "RotConezeroFractalNthreeHighThetaZerotwoonepzeroVectorDyadicFZPn",
+            ("Rot_C10_Fractal_N3", Decimal(48)):
+                "RotConezeroFractalNthreeHighThetaZerofoureightpzeroVectorDyadicFZPn",
+        }
+        return macros.named_reference(vector_names[(geometry, theta)])
+
+    if solver == "bem_scalar":
+        scalar_names = {
+            ("Rot_C8_Compact_N2", Decimal(6)):
+                "RotCeightCompactNtwoHighThetaZerozerosixpzeroScalarYukawaFZPn",
+            ("Rot_C8_Compact_N2", Decimal(18)):
+                "RotCeightCompactNtwoHighThetaZerooneeightpzeroScalarYukawaFZPn",
+            ("Rot_C8_Compact_N2", Decimal(48)):
+                "RotCeightCompactNtwoHighThetaZerofoureightpzeroScalarYukawaFZPn",
+            ("Rot_C4_TightSlot_N2", Decimal(6)):
+                "RotCfourTightslotNtwoHighThetaZerozerosixpzeroScalarYukawaFZPn",
+            ("Rot_C4_TightSlot_N2", Decimal(18)):
+                "RotCfourTightslotNtwoHighThetaZerooneeightpzeroScalarYukawaFZPn",
+            ("Rot_C4_TightSlot_N2", Decimal(48)):
+                "RotCfourTightslotNtwoHighThetaZerofoureightpzeroScalarYukawaFZPn",
+            ("Rot_C10_Fractal_N3", Decimal(3)):
+                "RotConezeroFractalNthreeHighThetaZerozerothreepzeroScalarYukawaFZPn",
+            ("Rot_C10_Fractal_N3", Decimal(21)):
+                "RotConezeroFractalNthreeHighThetaZerotwoonepzeroScalarYukawaFZPn",
+            ("Rot_C10_Fractal_N3", Decimal(48)):
+                "RotConezeroFractalNthreeHighThetaZerofoureightpzeroScalarYukawaFZPn",
+        }
+        name = scalar_names.get((geometry, theta))
+        return macros.named_reference(name) if name is not None else "---"
+
+    # Preserve the reviewed Meep bindings, including the hybrid R=50 result.
     explicit_names = {
         "Rot_C4_TightSlot_N2": {
-            Decimal(0): (
-                "RotCfourTightslotNtwoThetaZeroStepZeroFNetPn",
-                "RotCfourTightslotNtwoMeepThetazeroFZPn",
-            ),
-            Decimal(6): (
-                "RotCfourTightslotNtwoThetaSixStepOneFNetPn",
-                "RotCfourTightslotNtwoMeepThetasixFZPn",
-            ),
-            Decimal(12): (
-                "RotCfourTightslotNtwoThetaOnetwoStepTwoFNetPn",
-                "RotCfourTightslotNtwoMeepThetaonetwoFZPn",
-            ),
-            Decimal(18): (
-                "RotCfourTightslotNtwoThetaOneeightStepThreeFNetPn",
-                "RotCfourTightslotNtwoMeepThetaoneeightFZPn",
-            ),
-            Decimal(48): (
-                "RotCfourTightslotNtwoThetaFoureightStepEightFNetPn",
-                "RotCfourTightslotNtwoMeepThetafoureightFZPn",
-            ),
+            Decimal(0): "RotCfourTightslotNtwoMeepThetazeroFZPn",
+            Decimal(6): "RotCfourTightslotNtwoMeepThetasixFZPn",
+            Decimal(12): "RotCfourTightslotNtwoMeepThetaonetwoFZPn",
+            Decimal(18): "RotCfourTightslotNtwoMeepThetaoneeightFZPn",
+            Decimal(48): "RotCfourTightslotNtwoMeepThetafoureightFZPn",
         },
         "Rot_C10_Fractal_N3": {
-            Decimal(3): (
-                "RotConezeroFractalNthreeThetaThreeStepOneeightFNetPn",
-                "RotConezeroFractalNthreeMeepThetathreeFZPn",
-            ),
-            Decimal(21): (
-                "RotConezeroFractalNthreeThetaTwooneStepOnenineFNetPn",
-                "RotConezeroFractalNthreeMeepThetatwooneFZPn",
-            ),
-            Decimal(48): (
-                "RotConezeroFractalNthreeThetaFoureightStepTwozeroFNetPn",
-                "RotConezeroFractalNthreeMeepThetafoureightFZPn",
-            ),
+            Decimal(3): "RotConezeroFractalNthreeMeepThetathreeFZPn",
+            Decimal(21): "RotConezeroFractalNthreeMeepThetatwooneFZPn",
+            Decimal(48): "RotConezeroFractalNthreeMeepThetafoureightFZPn",
         },
     }
     if geometry in explicit_names:
-        names = explicit_names[geometry][theta]
-        return macros.named_reference(names[0 if solver == "bem" else 1])
+        return macros.named_reference(explicit_names[geometry][theta])
 
     # Reuse the exact reviewed names where they were explicitly supplied.
     if theta == Decimal(3):
-        for row_geometry, _, _, bem_name, meep_name in GEOMETRY_ROWS:
+        for row_geometry, _, _, _, meep_name in GEOMETRY_ROWS:
             if geometry == row_geometry:
-                return macros.named_reference(
-                    bem_name if solver == "bem" else meep_name
-                )
+                return macros.named_reference(meep_name)
     if geometry == "Rot_C8_Compact_N2" and theta == Decimal(6):
         return macros.named_reference(
-            "RotCeightCompactNtwoThetaSixStepOnezeroFNetPn"
-            if solver == "bem"
-            else "RotCeightCompactNtwoMeepThetasixFZPn"
+            "RotCeightCompactNtwoMeepThetasixFZPn"
         )
 
     prefixes = {
@@ -856,17 +895,9 @@ def clutch_force_reference(
         Decimal(48): ("foureight", "fortyeight"),
     }
     prefix = prefixes[geometry]
-    solver_word = "Bem" if solver == "bem" else "Meep"
-    candidates: list[str] = []
-    for word in angle_words[theta]:
-        candidates.append(f"{prefix}{solver_word}Theta{word}FZPn")
-    if geometry == "Rot_C8_Compact_N2" and solver == "bem":
-        step_macros = {
-            Decimal(0): "RotCeightCompactNtwoThetaZeroStepNineFNetPn",
-            Decimal(18): "RotCeightCompactNtwoThetaOneeightStepOnetwoFNetPn",
-        }
-        if theta in step_macros:
-            candidates.append(step_macros[theta])
+    candidates = [
+        f"{prefix}MeepTheta{word}FZPn" for word in angle_words[theta]
+    ]
 
     # Accept only names actually defined in macros_results.tex. Never substitute
     # an unrelated macro because its number happens to equal the desired force.
@@ -890,14 +921,18 @@ def clutch_force_reference(
 def clutch_table(facts: Sequence[Fact], macros: Macros) -> str:
     lines = table_preamble(
         r"Gold Concentric Cantor-Ring Rotary Quantum Clutch: "
-        r"engaged/disengaged angular switching controls. Forces are reported "
-        r"in pN using the grounded three-dimensional BEM and FDTD Meep results.",
+        r"engaged/disengaged angular switching controls. "
+        r"3D BEM Vector-Dyadic reports the highest-resolution mesh tier "
+        r"(High/Ultra-High where available), alongside 3D BEM Scalar-Yukawa "
+        r"(High) where available and 4-pass 3D FDTD Meep forces in pN. "
+        r"Dashes indicate cases without a High Scalar-Yukawa result.",
         "tab:quantum_clutch",
-        "lcrr",
+        "lcrrr",
     )
     lines += [
         r"Geometry & $\theta$ (deg) & "
-        r"3D BEM force (pN) & 3D FDTD Meep force (pN) \\",
+        r"3D BEM Vector-Dyadic (pN) & 3D BEM Scalar-Yukawa (pN) & "
+        r"3D FDTD Meep (pN) \\",
         r"\hline",
     ]
     for geometry, theta in CLUTCH_CASES:
@@ -905,6 +940,7 @@ def clutch_table(facts: Sequence[Fact], macros: Macros) -> str:
             latex_escape(geometry),
             str(int(theta)),
             clutch_force_reference(macros, geometry, theta, "bem"),
+            clutch_force_reference(macros, geometry, theta, "bem_scalar"),
             clutch_force_reference(macros, geometry, theta, "meep"),
         ]
         lines.append(" & ".join(cells) + r" \\")
