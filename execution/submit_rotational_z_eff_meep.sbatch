@@ -961,6 +961,11 @@ def publish_locked(selected, message, git_directory):
                 diagnostic("Removed stale Git lock: " + str(lock))
         except FileNotFoundError:
             pass
+
+    # Recover a rebase interrupted by a previous job before inspecting HEAD.
+    if (git_directory / "rebase-merge").exists() or (git_directory / "rebase-apply").exists():
+        git(["rebase", "--abort"], check=False)
+
     initial_head = git(["rev-parse", "HEAD"]).stdout.strip()
 
     git(["config", "user.name"], check=False)
@@ -971,8 +976,9 @@ def publish_locked(selected, message, git_directory):
 
     branch = git(["symbolic-ref", "--quiet", "--short", "HEAD"], check=False)
     if branch.returncode != 0 or not branch.stdout.strip():
-        raise RuntimeError("Detached HEAD: refusing to guess a push branch")
-    current_branch = branch.stdout.strip()
+        current_branch = os.environ.get("CURRENT_BRANCH", "main") or "main"
+    else:
+        current_branch = branch.stdout.strip()
     git(["check-ref-format", "--branch", current_branch])
     git(["remote", "get-url", "--", CONFIG["git_remote"]])
 
@@ -1056,6 +1062,10 @@ def publish_locked(selected, message, git_directory):
                 "git pull --rebase failed: "
                 + (pulled.stderr or pulled.stdout).strip()[-3000:]
             )
+    finally:
+        # Also recover if pull or its retry cleanup raised an exception.
+        if (git_directory / "rebase-merge").exists() or (git_directory / "rebase-apply").exists():
+            git(["rebase", "--abort"], check=False)
 
     pushed = remote_git(["push", CONFIG["git_remote"], current_branch])
     if pushed.returncode != 0:
@@ -1197,10 +1207,6 @@ def main():
             paths.extend(collect(CONFIG["results_dir"]))
             paths.extend(collect(CONFIG["figures_dir"]))
             paths.extend(collect(CONFIG["logs_dir"]))
-            if safe_path("results").exists():
-                paths.extend(collect("results"))
-            if safe_path("results_clutch_pilot").exists():
-                paths.extend(collect("results_clutch_pilot"))
             message = "[BigRed200] SUCCESS: Job {} ({}) on {}".format(
                 JOB_ID, name, report["hostname"]
             )
