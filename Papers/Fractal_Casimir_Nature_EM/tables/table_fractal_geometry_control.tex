@@ -3,7 +3,7 @@
 \begin{table*}[t]
 \centering
 \small
-\caption{Post-bugfix three-dimensional geometry control. Forces are reported in pN. The hybrid row uses BEM High and Meep $R=50$; the compact rotational row lists the BEM/Meep angles as $0/6$ degrees. The $N=3$ row has $d_{\min}=13.0$ nm $< \Delta x=20$ nm at $R=50$, so Meep is omitted (---).}
+\caption{Post-bugfix three-dimensional geometry control. Forces are reported in pN. The hybrid row uses BEM High and Meep $R=50$; the compact rotational and tight-slot rows list the BEM/Meep angles as $0/6$ degrees. The $N=3$ Meep result uses the completed $\theta=3$ degree run with 1008 FDTD moments.}
 \label{tab:fractal_geometry_control}
 \begin{tabular}{lccrr}
 \hline
@@ -14,7 +14,8 @@ Ctrl\_UniformPeriodic & 2 & 3 & \CtrlUniformperiodicBemThetathreeFZPn{} & \CtrlU
 Cantor\_N2\_FlatZ & 2 & 3 & \CantorNtwoFlatzBemThetathreeFZPn{} & \CantorNtwoFlatzMeepThetathreeFZPn{} \\
 Cantor\_N2\_HybridRZ & 2 & 3 & \CantorNtwoHybridrzBemHighFZPn{} & \CantorNtwoHybridrzMeepRfivezeroFZPn{} \\
 Rot\_C8\_Compact\_N2 & 2 & 0/6 & \RotCeightCompactNtwoThetaSixStepOnezeroFNetPn{} & \RotCeightCompactNtwoMeepThetasixFZPn{} \\
-Fractal\_N3\_Cantor7Track & 3 & 3 & \FractalNthreeCantorseventrackBemThetathreeFZPn{} & --- \\
+Fractal\_N3\_Cantor7Track & 3 & 3 & \FractalNthreeCantorseventrackBemThetathreeFZPn{} & \RotConezeroFractalNthreeMeepThetathreeFZPn{} \\
+Rot\_C4\_TightSlot\_N2 & 2 & 0/6 & \RotCfourTightslotNtwoThetaSixStepOneFNetPn{} & \RotCfourTightslotNtwoMeepThetasixFZPn{} \\
 \hline
 \end{tabular}
 \end{table*}

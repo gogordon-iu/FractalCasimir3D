@@ -1183,19 +1183,23 @@ def register_rotary_clutch_campaigns(registry: Registry) -> None:
             for index, item in enumerate(evaluations)
             if isinstance(item, Mapping)
         ]
-        for name in (
-            "Rot_C8_Compact_N2_theta_0_step_9_f_net_pN",
-            "Rot_C8_Compact_N2_theta_6_step_10_f_net_pN",
-            "Rot_C8_Compact_N2_theta_18_step_12_f_net_pN",
-        ):
+        for index, item in enumerate(evaluations):
+            if not isinstance(item, Mapping):
+                registry.fail(
+                    f"{relative_path(rotational_path)}: evaluation {index} "
+                    "must be a JSON object."
+                )
+                continue
+            name = item.get("metric_key")
+            if not isinstance(name, str) or not name.strip():
+                registry.fail(
+                    f"{relative_path(rotational_path)}: evaluation {index} "
+                    "must have a nonempty string metric_key."
+                )
+                continue
             register_candidates(
                 name,
-                [
-                    (item.get("f_net_pN"), (*pointer, "f_net_pN"))
-                    for item, pointer in entries
-                    if item.get("design") == "Rot_C8_Compact_N2"
-                    and item.get("metric_key") == name
-                ],
+                [(item.get("f_net_pN"), ("evaluations", str(index), "f_net_pN"))],
                 rotational_path, checksum,
             )
         # This report contains the compact clutch's BEM rotation campaign.
@@ -1209,21 +1213,31 @@ def register_rotary_clutch_campaigns(registry: Registry) -> None:
             )
 
     # Task numbering is not angular ordering; use the recorded angle itself.
-    for task in range(1, 5):
+    for task in range(1, 22):
         path = REPO_ROOT / f"results_rotational_z_eff_meep/task_{task}_meep.json"
         loaded = read_payload(path)
         if loaded is None:
             continue
         payload, checksum = loaded
+        if task <= 9:
+            design = "rot_c8_compact_n2"
+            allowed_angles = {0, 6, 12, 18, 24, 30, 36, 42, 48}
+        elif task <= 18:
+            design = "rot_c4_tightslot_n2"
+            allowed_angles = {0, 6, 12, 18, 24, 30, 36, 42, 48}
+        else:
+            design = "rot_c10_fractal_n3"
+            allowed_angles = {3, 21, 48}
         try:
-            theta = int(round(finite_float(payload.get("theta_deg"), "theta_deg")))
-            if theta not in {0, 6, 18, 48}:
-                raise ValueError(f"unsupported compact clutch angle {theta}")
+            angle = finite_float(payload.get("theta_deg"), "theta_deg")
+            if angle not in allowed_angles:
+                raise ValueError(f"unsupported {design} angle {angle}")
+            theta = int(angle)
         except (TypeError, ValueError) as exc:
             registry.fail(f"{relative_path(path)}: {exc}")
             continue
         register_candidates(
-            f"rot_c8_compact_n2_meep_theta{theta}_f_z_pn",
+            f"{design}_meep_theta{theta}_f_z_pn",
             [(payload.get("f_net_pN"), ("f_net_pN",))],
             path, checksum,
         )

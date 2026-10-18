@@ -42,6 +42,8 @@ GEOMETRIES = (
     "Cantor_N2_HybridRZ",
     "Rot_C8_Compact_N2",
     "Fractal_N3_Cantor7Track",
+    "Rot_C4_TightSlot_N2",
+    "Rot_C10_Fractal_N3",
 )
 CLUTCH_CASES = (
     ("Cantor_N2_HybridRZ", Decimal(3)),
@@ -54,6 +56,14 @@ CLUTCH_CASES = (
     ("Rot_C8_Compact_N2", Decimal(6)),
     ("Rot_C8_Compact_N2", Decimal(18)),
     ("Rot_C8_Compact_N2", Decimal(48)),
+    ("Rot_C4_TightSlot_N2", Decimal(0)),
+    ("Rot_C4_TightSlot_N2", Decimal(6)),
+    ("Rot_C4_TightSlot_N2", Decimal(12)),
+    ("Rot_C4_TightSlot_N2", Decimal(18)),
+    ("Rot_C4_TightSlot_N2", Decimal(48)),
+    ("Rot_C10_Fractal_N3", Decimal(3)),
+    ("Rot_C10_Fractal_N3", Decimal(21)),
+    ("Rot_C10_Fractal_N3", Decimal(48)),
 )
 
 # These bindings are explicit manuscript result identities, not numeric matches.
@@ -86,7 +96,12 @@ GEOMETRY_ROWS = (
     (
         "Fractal_N3_Cantor7Track", 3, "3",
         "FractalNthreeCantorseventrackBemThetathreeFZPn",
-        None,
+        "RotConezeroFractalNthreeMeepThetathreeFZPn",
+    ),
+    (
+        "Rot_C4_TightSlot_N2", 2, "0/6",
+        "RotCfourTightslotNtwoThetaSixStepOneFNetPn",
+        "RotCfourTightslotNtwoMeepThetasixFZPn",
     ),
 )
 
@@ -113,11 +128,49 @@ def reject_json_constant(value: str) -> None:
     raise ValueError(f"Non-finite JSON numeric constant: {value}")
 
 
-def unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
-    result: dict[str, Any] = {}
+class EditableJSONObject(dict[str, Any]):
+    """A normal JSON object with an out-of-band duplicate-repair flag."""
+
+    had_duplicate_keys: bool = False
+
+
+class JSONPairs(list[tuple[str, Any]]):
+    """Retain object pairs until their top-level or nested scope is known."""
+
+
+def timestamp_preference(value: object) -> int:
+    if not isinstance(value, str):
+        return 0
+    try:
+        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return 0
+    fallback = datetime.fromisoformat(FALLBACK_TIMESTAMP)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return 1 if parsed == fallback else 2
+
+
+def unique_json_object(
+    pairs: list[tuple[str, Any]], *, allow_metadata_duplicates: bool = False
+) -> dict[str, Any]:
+    result: dict[str, Any] = (
+        EditableJSONObject() if allow_metadata_duplicates else {}
+    )
+    repairable_keys = {"dataset", "model", "status", "executed_at", "cache_version"}
     for key, value in pairs:
         if key in result:
-            raise ValueError(f"Duplicate JSON key: {key!r}")
+            if not allow_metadata_duplicates or (
+                key not in repairable_keys and result[key] != value
+            ):
+                raise ValueError(f"Duplicate JSON key: {key!r}")
+            assert isinstance(result, EditableJSONObject)
+            result.had_duplicate_keys = True
+            if (
+                key == "executed_at"
+                and timestamp_preference(result[key]) > timestamp_preference(value)
+            ):
+                continue
         result[key] = value
     return result
 
@@ -137,13 +190,29 @@ def read_json(path: Path) -> Any:
 
 def read_editable_json(path: Path) -> dict[str, Any]:
     # Standard floats preserve ordinary JSON serialization for metadata edits.
+    repair_metadata = path.parent.name in {
+        "results_nature_meep_verification",
+        "results_rotational_z_eff_meep",
+    }
+
+    def convert(value: Any, *, top_level: bool = False) -> Any:
+        if isinstance(value, JSONPairs):
+            return unique_json_object(
+                [(key, convert(item)) for key, item in value],
+                allow_metadata_duplicates=repair_metadata and top_level,
+            )
+        if isinstance(value, list):
+            return [convert(item) for item in value]
+        return value
+
     try:
         with path.open("r", encoding="utf-8-sig") as handle:
             value = json.load(
                 handle,
                 parse_constant=reject_json_constant,
-                object_pairs_hook=unique_json_object,
+                object_pairs_hook=JSONPairs,
             )
+        value = convert(value, top_level=True)
     except (OSError, ValueError) as exc:
         raise RuntimeError(f"Cannot read valid JSON from {path}: {exc}") from exc
     if not isinstance(value, dict):
@@ -685,9 +754,9 @@ def geometry_table(facts: Sequence[Fact], macros: Macros) -> str:
     lines = table_preamble(
         r"Post-bugfix three-dimensional geometry control. Forces are reported "
         r"in pN. The hybrid row uses BEM High and Meep $R=50$; "
-        r"the compact rotational row lists the BEM/Meep angles as $0/6$ degrees. "
-        r"The $N=3$ row has $d_{\min}=13.0$ nm $< \Delta x=20$ nm "
-        r"at $R=50$, so Meep is omitted (---).",
+        r"the compact rotational and tight-slot rows list the BEM/Meep angles "
+        r"as $0/6$ degrees. The $N=3$ Meep result uses the completed "
+        r"$\theta=3$ degree run with 1008 FDTD moments.",
         "tab:fractal_geometry_control",
         "lccrr",
     )
@@ -718,6 +787,48 @@ def clutch_force_reference(
         raise ValueError(f"Unsupported clutch solver: {solver}")
     if (geometry, theta) not in CLUTCH_CASES:
         raise ValueError(f"Unsupported clutch case: {geometry}, theta={theta}")
+
+    explicit_names = {
+        "Rot_C4_TightSlot_N2": {
+            Decimal(0): (
+                "RotCfourTightslotNtwoThetaZeroStepZeroFNetPn",
+                "RotCfourTightslotNtwoMeepThetazeroFZPn",
+            ),
+            Decimal(6): (
+                "RotCfourTightslotNtwoThetaSixStepOneFNetPn",
+                "RotCfourTightslotNtwoMeepThetasixFZPn",
+            ),
+            Decimal(12): (
+                "RotCfourTightslotNtwoThetaOnetwoStepTwoFNetPn",
+                "RotCfourTightslotNtwoMeepThetaonetwoFZPn",
+            ),
+            Decimal(18): (
+                "RotCfourTightslotNtwoThetaOneeightStepThreeFNetPn",
+                "RotCfourTightslotNtwoMeepThetaoneeightFZPn",
+            ),
+            Decimal(48): (
+                "RotCfourTightslotNtwoThetaFoureightStepEightFNetPn",
+                "RotCfourTightslotNtwoMeepThetafoureightFZPn",
+            ),
+        },
+        "Rot_C10_Fractal_N3": {
+            Decimal(3): (
+                "RotConezeroFractalNthreeThetaThreeStepOneeightFNetPn",
+                "RotConezeroFractalNthreeMeepThetathreeFZPn",
+            ),
+            Decimal(21): (
+                "RotConezeroFractalNthreeThetaTwooneStepOnenineFNetPn",
+                "RotConezeroFractalNthreeMeepThetatwooneFZPn",
+            ),
+            Decimal(48): (
+                "RotConezeroFractalNthreeThetaFoureightStepTwozeroFNetPn",
+                "RotConezeroFractalNthreeMeepThetafoureightFZPn",
+            ),
+        },
+    }
+    if geometry in explicit_names:
+        names = explicit_names[geometry][theta]
+        return macros.named_reference(names[0 if solver == "bem" else 1])
 
     # Reuse the exact reviewed names where they were explicitly supplied.
     if theta == Decimal(3):
@@ -834,7 +945,7 @@ def synchronize(root: Path, budget: Budget, provenance: Provenance) -> dict[str,
               "files_deleted": 0, "tables_written": 0}
     directories = (
         (root / "results_nature_meep_verification", 12),
-        (root / "results_rotational_z_eff_meep", 4),
+        (root / "results_rotational_z_eff_meep", 21),
     )
     task_pattern = re.compile(r"task_(\d+)_meep\.json")
     progress_pattern = re.compile(r"progress_task_(\d+)\.json")
@@ -883,7 +994,10 @@ def synchronize(root: Path, budget: Budget, provenance: Provenance) -> dict[str,
                 }
             if not fresh_timestamp(document.get("executed_at")):
                 updates["executed_at"] = FALLBACK_TIMESTAMP
-            changed = any(document.get(key) != value for key, value in updates.items())
+            changed = (
+                getattr(document, "had_duplicate_keys", False)
+                or any(document.get(key) != value for key, value in updates.items())
+            )
             if changed:
                 document.update(updates)
                 atomic_write(
@@ -957,7 +1071,7 @@ def main() -> int:
                 root / "results" / "nature_6step_narrative_report.json",
                 *(
                     root / "results_rotational_z_eff_meep" / f"task_{task_id}_meep.json"
-                    for task_id in range(1, 5)
+                    for task_id in range(1, 22)
                 ),
             )
             for source in source_paths:
