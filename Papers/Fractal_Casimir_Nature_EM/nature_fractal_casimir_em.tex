@@ -652,6 +652,26 @@ Unlike chemical fluids (DLP effect) or static lithographic metamaterials whose f
 \input{tables/table_fractal_geometry_control.tex}
 \input{tables/table_quantum_clutch.tex}
 
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig_rotational_z_eff_clutch_blender.png}
+\par\medskip
+\includegraphics[width=0.95\textwidth]{figures/fig_nature_6step_narrative.png}
+\caption{Rotational quantum-clutch architecture and operational narrative. The rendered architecture illustrates the effective separation and rotational configuration, while the narrative summarizes the proposed operating sequence.}
+\label{fig:quantum_clutch_architecture_and_narrative}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/fig_rotational_clutch_3solver_verification.png}
+\caption{Independent solver verification of the rotational quantum clutch. The comparison presents the force benchmarks and boundary-element continuum extrapolations used to assess quantitative convergence across rotational configurations.}
+\label{fig:quantum_clutch_3solver_verification}
+\end{figure*}
+
+
+
+
+
 Table~\ref{tab:fractal_geometry_control} reports the true-vacuum ($\varepsilon_{\rm bg}=1.0$) 3D boundary-element method (BEM) and 4-pass 3D FDTD Meep geometry controls, progressing through \texttt{SingleTooth\_Track0}, \texttt{Ctrl\_UniformPeriodic}, \texttt{Cantor\_N2\_FlatZ}, and \texttt{Cantor\_N2\_HybridRZ}. Table~\ref{tab:quantum_clutch} reports rotational sweeps in the same background. These comparisons establish quantitative agreement in force magnitude, not merely agreement in the sign of the axial force, with distinct mesh-resolution requirements in the repulsive aperture and attractive bridge/landing-pad states.
 
 \paragraph{Repulsive Aperture-State Benchmark Agreement.}
@@ -670,7 +690,7 @@ where $A_t$ and $A_s$ are the target and source panel areas. On coarse bridge pa
 
 For \texttt{Rot\_C8\_Compact\_N2} at $\theta=48^\circ$, the 3D Vector-Dyadic BEM force progresses from $\RotCeightCompactNtwoThetaFoureightStepOnesevenFNetPn{}\text{ pN}$ (\texttt{Standard}) to $\RotCeightCompactNtwoHighThetaZerofoureightpzeroVectorDyadicFZPn{}\text{ pN}$ (\texttt{High}) and $\RotCeightCompactNtwoUltraHighThetaZerofoureightpzeroVectorDyadicFZPn{}\text{ pN}$ (\texttt{Ultra\_High}), approaching the Meep force $\RotCeightCompactNtwoMeepThetafoureightFZPn{}\text{ pN}$. The 3D Scalar-Yukawa BEM \texttt{High} result, $\RotCeightCompactNtwoHighThetaZerofoureightpzeroScalarYukawaFZPn{}\text{ pN}$, also matches this Meep benchmark numerically. At $\theta=18^\circ$, the corresponding Vector-Dyadic \texttt{Ultra\_High}, Scalar-Yukawa \texttt{High}, and Meep forces are $\RotCeightCompactNtwoUltraHighThetaZerooneeightpzeroVectorDyadicFZPn{}\text{ pN}$, $\RotCeightCompactNtwoHighThetaZerooneeightpzeroScalarYukawaFZPn{}\text{ pN}$, and $\RotCeightCompactNtwoMeepThetaoneeightFZPn{}\text{ pN}$, respectively, demonstrating attractive-state agreement at another rotary alignment.
 
-For \texttt{Rot\_C4\_TightSlot\_N2} at $\theta=18^\circ$, 3D Vector-Dyadic BEM on the \texttt{Ultra\_High} mesh gives $\RotCfourTightslotNtwoUltraHighThetaZerooneeightpzeroVectorDyadicFZPn{}\text{ pN}$ and 3D Scalar-Yukawa BEM on the \texttt{High} mesh gives $\RotCfourTightslotNtwoHighThetaZerooneeightpzeroScalarYukawaFZPn{}\text{ pN}$, compared with $\RotCfourTightslotNtwoMeepThetaoneeightFZPn{}\text{ pN}$ in 4-pass 3D FDTD Meep. At $\theta=48^\circ$, the Vector-Dyadic BEM sequence is $\RotCfourTightslotNtwoThetaFoureightStepEightFNetPn{}\text{ pN}$ (\texttt{Standard}), $\RotCfourTightslotNtwoHighThetaZerofoureightpzeroVectorDyadicFZPn{}\text{ pN}$ (\texttt{High}), and $\RotCfourTightslotNtwoUltraHighThetaZerofoureightpzeroVectorDyadicFZPn{}\text{ pN}$ (\texttt{Ultra\_High}), again converging toward the Meep force $\RotCfourTightslotNtwoMeepThetafoureightFZPn{}\text{ pN}$. The Scalar-Yukawa BEM results $\RotCfourTightslotNtwoHighThetaZerofoureightpzeroScalarYukawaFZPn{}\text{ pN}$ (\texttt{High}) and $\RotCfourTightslotNtwoUltraHighThetaZerofoureightpzeroScalarYukawaFZPn{}\text{ pN}$ (\texttt{Ultra\_High}) bracket that Meep benchmark. Together, the force sequences and brackets demonstrate convergence in attractive-force magnitude as the sub-panel regularization scale is reduced.
+For \texttt{Rot\_C4\_TightSlot\_N2} at $\theta=18^\circ$, 3D Vector-Dyadic BEM on the \texttt{Ultra\_High} mesh gives $\RotCfourTightslotNtwoUltraHighThetaZerooneeightpzeroVectorDyadicFZPn{}\text{ pN}$ and 3D Scalar-Yukawa BEM on the \texttt{High} mesh gives $\RotCfourTightslotNtwoHighThetaZerooneeightpzeroScalarYukawaFZPn{}\text{ pN}$, compared with $\RotCfourTightslotNtwoMeepThetaoneeightFZPn{}\text{ pN}$ in 4-pass 3D FDTD Meep. At $\theta=48^\circ$, the Vector-Dyadic BEM sequence is $\RotCfourTightslotNtwoThetaFoureightStepEightFNetPn{}\text{ pN}$ (\texttt{Standard}), $\RotCfourTightslotNtwoHighThetaZerofoureightpzeroVectorDyadicFZPn{}\text{ pN}$ (\texttt{High}), and $\RotCfourTightslotNtwoUltraHighThetaZerofoureightpzeroVectorDyadicFZPn{}\text{ pN}$ (\texttt{Ultra\_High}), again converging toward the Meep force $\RotCfourTightslotNtwoMeepThetafoureightFZPn{}\text{ pN}$. The Scalar-Yukawa BEM results $\RotCfourTightslotNtwoHighThetaZerofoureightpzeroScalarYukawaFZPn{}\text{ pN}$ (\texttt{High}) and $\RotCfourTightslotNtwoUltraHighThetaZerofoureightpzeroScalarYukawaFZPn{}\text{ pN}$ (\texttt{Ultra\_High}) bracket that Meep benchmark. Together, the force sequences and brackets demonstrate convergence in attractive-force magnitude as the sub-panel regularization scale is reduced. Extrapolating the 3D Vector-Dyadic BEM sequence to the continuum limit ($h = N_{\rm panels}^{-1/2} \to 0$) further confirms quantitative convergence: for \texttt{Rot\_C8\_Compact\_N2}, the three-tier linear continuum intercept at $\theta=48^\circ$ is $\RotCeightCompactNtwoBemThetafoureightContinuumFZPn{}\text{ pN}$ (matching the 4-pass 3D FDTD Meep force $\RotCeightCompactNtwoMeepThetafoureightFZPn{}\text{ pN}$) and the \texttt{High}-to-\texttt{Ultra\_High} Richardson extrapolation at $\theta=18^\circ$ is $\RotCeightCompactNtwoBemThetaoneeightRichardsonFZPn{}\text{ pN}$ (matching Meep $\RotCeightCompactNtwoMeepThetaoneeightFZPn{}\text{ pN}$); for \texttt{Rot\_C4\_TightSlot\_N2}, the \texttt{High}-to-\texttt{Ultra\_High} Richardson extrapolation at $\theta=18^\circ$ yields $\RotCfourTightslotNtwoBemThetaoneeightRichardsonFZPn{}\text{ pN}$ (matching Meep $\RotCfourTightslotNtwoMeepThetaoneeightFZPn{}\text{ pN}$) and the three-tier linear continuum intercept at $\theta=48^\circ$ yields $\RotCfourTightslotNtwoBemThetafoureightContinuumFZPn{}\text{ pN}$ (with Richardson extrapolation $\RotCfourTightslotNtwoBemThetafoureightRichardsonFZPn{}\text{ pN}$) alongside the Meep benchmark $\RotCfourTightslotNtwoMeepThetafoureightFZPn{}\text{ pN}$ (Fig.~\ref{fig:quantum_clutch_3solver_verification}, Fig.~\ref{fig:quantum_clutch_architecture_and_narrative}).
 
 \paragraph{Higher-Order Cantor-Hierarchy Cross-Solver Benchmarks.}
 For the $N=3$ 7-track Cantor hierarchy (\texttt{Fractal\_N3\_Cantor7Track} / \texttt{Rot\_C10\_Fractal\_N3}), the triples below are ordered as 3D Vector-Dyadic BEM (\texttt{High}), 3D Scalar-Yukawa BEM (\texttt{High}), and 4-pass 3D FDTD Meep:
@@ -709,6 +729,15 @@ For $L = 2.0\ \mu\text{m}$, $d = 100\text{ nm}$, and $b = 3$, an iteration depth
 \paragraph{AFM Force Metrology and Alignment Tolerances.}
 At $d = 100\text{ to }250\text{ nm}$, the maximum allowable tilt angle before edge contact is $\phi_{\rm max} \approx 2d/L \approx 5.7^\circ\text{ to }14.3^\circ$, which is well within the precision of modern dynamic Atomic Force Microscope (AFM) cantilever positioners. Dynamic frequency-shift AFM cantilevers routinely measure sub-pico-Newton forces, allowing verification of both the $\FrontierTwoCancellationPercent\%$ attraction cancellation and positive repulsive pressures ($P > 0$), subject to the corresponding SI force magnitudes and instrumental sensitivity.
 
+
+\input{tables/section_nems_feasibility.tex}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/fig_nature_feasibility_stability.png}
+\caption{NEMS feasibility and stability assessment for the rotational quantum clutch at $T=\NatureRotCeightCompactNtwoCdToleranceTemperatureK{}\text{ K}$. The comparison summarizes the fabrication-tolerance and stability considerations relevant to operation.}
+\label{fig:nature_feasibility_stability}
+\end{figure*}
 
 \section{Conclusion}
 \label{sec:conclusion}

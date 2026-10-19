@@ -676,6 +676,38 @@ def generate_manuscript_map(
     with open(ms_path, "r", encoding="utf-8") as f:
         text = f.read()
 
+    # Follow local TeX inputs recursively, avoiding duplicate reads and cycles.
+    visited_tex_paths = {ms_path.resolve()}
+
+    def included_tex_text(tex_path: Path, tex_text: str) -> List[str]:
+        included_texts = []
+        for reference in re.findall(r"\\(?:input|include)\s*\{([^{}]+)\}", tex_text):
+            reference = reference.strip()
+            if not reference:
+                continue
+            relative_path = Path(reference)
+            if not relative_path.suffix:
+                relative_path = relative_path.with_suffix(".tex")
+            for base_dir in (tex_path.parent, ms_path.parent, Path.cwd()):
+                candidate = base_dir / relative_path
+                try:
+                    if not candidate.is_file():
+                        continue
+                    resolved_path = candidate.resolve()
+                    if resolved_path in visited_tex_paths:
+                        break
+                    with open(candidate, "r", encoding="utf-8") as f:
+                        included_text = f.read()
+                except (OSError, ValueError, UnicodeError):
+                    continue
+                visited_tex_paths.add(resolved_path)
+                included_texts.append(included_text)
+                included_texts.extend(included_tex_text(candidate, included_text))
+                break
+        return included_texts
+
+    text = "\n".join([text, *included_tex_text(ms_path, text)])
+
     metrics_manifest_path, _ = _resolve_manifest_paths(metrics_path)
     metrics_data = {}
     if metrics_manifest_path.exists():
@@ -728,12 +760,29 @@ def generate_manuscript_map(
                 try:
                     with open(sidecar, "r", encoding="utf-8") as sf:
                         s_data = json.load(sf)
+                    input_source = s_data.get("input_source")
+                    generating_code = s_data.get("generating_code")
+                    source_data = (
+                        input_source.get("path")
+                        if isinstance(input_source, Mapping)
+                        else input_source if isinstance(input_source, str) else None
+                    )
+                    source_sha256 = (
+                        input_source.get("sha256")
+                        if isinstance(input_source, Mapping)
+                        else None
+                    )
+                    generating_function = (
+                        generating_code.get("source_function")
+                        if isinstance(generating_code, Mapping)
+                        else generating_code if isinstance(generating_code, str) else None
+                    )
                     ledger["figures"][base_fig_name] = {
                         "figure_file": s_data.get("figure_file"),
                         "sidecar_artifact": str(sidecar).replace("\\", "/"),
-                        "source_data": s_data.get("input_source", {}).get("path"),
-                        "source_sha256": s_data.get("input_source", {}).get("sha256"),
-                        "generating_function": s_data.get("generating_code", {}).get("source_function"),
+                        "source_data": source_data,
+                        "source_sha256": source_sha256,
+                        "generating_function": generating_function,
                     }
                 except Exception:
                     ledger["figures"][base_fig_name] = {"status": "INVALID_SIDECAR"}

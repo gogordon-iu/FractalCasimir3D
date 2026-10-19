@@ -1242,6 +1242,159 @@ def register_rotary_clutch_campaigns(registry: Registry) -> None:
             path, checksum,
         )
 
+    continuum_path = (
+        REPO_ROOT / "results/rotational_clutch_3solver_verification_report.json"
+    )
+    continuum = read_payload(continuum_path)
+    if continuum is not None:
+        payload, checksum = continuum
+        source_path = relative_path(continuum_path)
+        tasks = payload.get("tasks", [])
+        if not isinstance(tasks, list):
+            registry.fail(f"{source_path}: expected tasks to be a JSON list.")
+            tasks = []
+        for index, item in enumerate(tasks):
+            if not isinstance(item, Mapping):
+                registry.fail(f"{source_path}: task {index} must be a JSON object.")
+
+        tier_index = {"Standard": 0, "High": 1, "Ultra_High": 2}
+        for design_slug, design_name in (
+            ("rot_c8_compact_n2", "Rot_C8_Compact_N2"),
+            ("rot_c4_tightslot_n2", "Rot_C4_TightSlot_N2"),
+        ):
+            for theta in (48.0, 18.0):
+                samples: list[tuple[float, float, int]] = []
+                try:
+                    for tier in sorted(tier_index, key=tier_index.get):
+                        matches = [
+                            (index, item)
+                            for index, item in enumerate(tasks)
+                            if isinstance(item, Mapping)
+                            and normalized(item.get("design")) == normalized(design_name)
+                            and number_matches(item.get("theta_deg"), theta)
+                            and normalized(item.get("mesh_tier", item.get("tier")))
+                            == normalized(tier)
+                        ]
+                        if len(matches) != 1:
+                            raise ValueError(
+                                f"{design_name}, theta={theta:g}: expected exactly one "
+                                f"{tier} task, found {len(matches)}"
+                            )
+                        index, item = matches[0]
+                        panels = finite_float(item.get("panel_count"), "panel_count")
+                        if panels <= 0.0:
+                            raise ValueError("panel_count must be positive")
+                        forces = item.get("forces_pN")
+                        if not isinstance(forces, Mapping):
+                            raise ValueError(
+                                f"task {index}: forces_pN must be a JSON object"
+                            )
+                        force = finite_float(
+                            forces.get("vector_dyadic"),
+                            f"task {index}: forces_pN/vector_dyadic",
+                        )
+                        h = finite_float(panels ** -0.5, "mesh spacing")
+                        samples.append((h, force, index))
+                except (TypeError, ValueError, OverflowError) as exc:
+                    registry.fail(f"{source_path}: {exc}")
+                    continue
+
+                h_vals = [sample[0] for sample in samples]
+                f_vals = [sample[1] for sample in samples]
+
+                def add_extrapolation(
+                    name: str,
+                    value: float,
+                    method: str,
+                    used_samples: Sequence[tuple[float, float, int]],
+                ) -> None:
+                    source = Source(
+                        source_path,
+                        None,
+                        checksum,
+                        f"{method} at h = panel_count^-0.5 -> 0; "
+                        "rounded to four decimals; derived from "
+                        + ", ".join(
+                            f"/tasks/{index}/panel_count and "
+                            f"/tasks/{index}/forces_pN/vector_dyadic"
+                            for _, _, index in used_samples
+                        ),
+                    )
+                    try:
+                        registry.add(
+                            name,
+                            value,
+                            "pN",
+                            f"{design_name}: continuum-extrapolated 3D Vector-Dyadic "
+                            f"BEM axial force at theta={theta:g} degrees ({method})",
+                            group,
+                            source,
+                        )
+                        exported[name] = value
+                    except (TypeError, ValueError) as exc:
+                        registry.fail(f"{source_path}: {exc}")
+
+                if theta == 48.0:
+                    try:
+                        h_mean = sum(h_vals) / 3.0
+                        f_mean = sum(f_vals) / 3.0
+                        denominator = finite_float(
+                            sum((h - h_mean) ** 2 for h in h_vals),
+                            "continuum regression denominator",
+                        )
+                        if denominator <= 0.0:
+                            raise ValueError(
+                                "continuum regression requires distinct mesh spacings"
+                            )
+                        slope = finite_float(
+                            sum(
+                                (h - h_mean) * (f - f_mean)
+                                for h, f in zip(h_vals, f_vals)
+                            ) / denominator,
+                            "continuum regression slope",
+                        )
+                        f_inf_continuum = round(
+                            finite_float(
+                                f_mean - slope * h_mean, "continuum intercept"
+                            ),
+                            4,
+                        )
+                        add_extrapolation(
+                            f"{design_slug}_bem_theta48_continuum_f_z_pn",
+                            f_inf_continuum,
+                            "three-point ordinary least-squares linear intercept",
+                            samples,
+                        )
+                    except (TypeError, ValueError, OverflowError) as exc:
+                        registry.fail(f"{source_path}: {design_name}: {exc}")
+
+                try:
+                    h_high, h_ultra = h_vals[1:]
+                    f_high, f_ultra = f_vals[1:]
+                    denominator = h_high - h_ultra
+                    if denominator == 0.0:
+                        raise ValueError(
+                            "Richardson extrapolation requires distinct High and "
+                            "Ultra_High mesh spacings"
+                        )
+                    f_inf_richardson = round(
+                        finite_float(
+                            (h_high * f_ultra - h_ultra * f_high) / denominator,
+                            "Richardson intercept",
+                        ),
+                        4,
+                    )
+                    add_extrapolation(
+                        f"{design_slug}_bem_theta{int(theta)}_richardson_f_z_pn",
+                        f_inf_richardson,
+                        "two-point High-to-Ultra_High linear Richardson extrapolation",
+                        samples[1:],
+                    )
+                except (TypeError, ValueError, OverflowError) as exc:
+                    registry.fail(
+                        f"{source_path}: {design_name}, theta={theta:g}: {exc}"
+                    )
+
     if sources:
         registry.datasets[group] = {
             "name": "Gold Concentric Cantor-Ring Rotary Quantum Clutch",
