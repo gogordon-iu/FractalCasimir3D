@@ -513,7 +513,7 @@ def register_supplied_metrics(
         "frontier_2": [
             ("frontier_2_F_both", 4838.044314, "reported force units", "Combined force"),
             ("frontier_2_F_self", 4838.065605, "reported force units", "Self-force"),
-            ("frontier_2_F_net", -0.021290, "reported force units", "Reported net force"),
+            ("frontier_2_F_net", -0.021291, "reported force units", "Reported net force"),
             ("frontier_2_pressure", -0.006736, "reported pressure units", "Net pressure"),
             (
                 "frontier_2_pressure_pa",
@@ -549,6 +549,38 @@ def register_supplied_metrics(
                 specification_source(value, documents, registry, name),
             )
 
+    for name, value, unit, group in (
+        ("model_1_to_model_4_ssr_ratio", 2.1, "dimensionless", "model_4"),
+        ("model_2_to_model_4_ssr_ratio", 7.1, "dimensionless", "model_4"),
+        ("sweet_spot_repulsive_count", 41.0, "count", "repulsive_sweet_spots"),
+    ):
+        registry.add(name, value, unit, name, group,
+                     specification_source(value, documents, registry, name))
+    tags = ("0p30", "0p40", "0p50", "0p60", "2p00", "3p00", "4p00", "4p50")
+    predictions = (
+        (-1.165453, -0.924698, -0.766718, -0.653668, -0.166753, -0.071940, -0.018364, 0.000829),
+        (-1.214739, -0.906809, -0.722824, -0.600573, -0.176684, -0.117017, -0.087354, -0.077499),
+        (-1.214740, -0.906809, -0.722824, -0.600573, -0.176684, -0.117016, -0.087353, -0.077499),
+        (-1.146881, -0.934706, -0.783064, -0.667556, -0.127105, -0.047197, -0.018429, -0.011644),
+    )
+    for m, values in enumerate(predictions, 1):
+        for tag, value in zip(tags, values):
+            name = f"model_{m}_pred_L_{tag}"
+            registry.add(name, value, "reported pressure units", name, f"model_{m}",
+                         specification_source(value, documents, registry, name))
+    sweet_metrics_path = REPO_ROOT / "results" / "sweet_spot_table_metrics.json"
+    if sweet_metrics_path.is_file():
+        import json
+        import math
+        payload = json.loads(sweet_metrics_path.read_text(encoding="utf-8"))
+        for k, v in payload.get("macros", {}).items():
+            value = float(v)
+            if not isinstance(k, str) or not math.isfinite(value):
+                raise ValueError("Invalid sweet-spot table metric")
+            registry.add(k, value, "Pa" if k.endswith("_pa") else
+                         ("nm" if k.endswith("_nm") else "deg"), k, "sweet_spot_tables",
+                         Source("results/sweet_spot_table_metrics.json", None,
+                                digest(sweet_metrics_path), "sweet_spot_table_metric"))
     registry.datasets["lifshitz"] = {
         "columns": ["d_nm", "pressure"],
         "rows": [
@@ -1679,6 +1711,15 @@ def export_pipeline(args: argparse.Namespace) -> int:
         },
     )
 
+    if metrics_path.is_file():
+        import json
+        loaded_metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+        metric_values = loaded_metrics.get("metrics", {})
+        if not isinstance(metric_values, dict):
+            raise ValueError("Expected a metrics dictionary")
+        for key in ("accuracy_top1", "f1_score", "embedding_reduction"):
+            metric_values.pop(key, None)
+        write_json(metrics_path, loaded_metrics)
     with working_directory(REPO_ROOT):
         logger_call(
             log_step,
@@ -1818,10 +1859,11 @@ def export_pipeline(args: argparse.Namespace) -> int:
                     loaded = json.loads(conventional.read_text(encoding="utf-8"))
                     if isinstance(loaded, dict):
                         existing = loaded
-            existing["input_source"] = str(metrics_path)
+            existing["input_source"] = dict(path=str(metrics_path).replace(chr(92), chr(47)), sha256=digest(metrics_path))
             existing["data_source"] = str(metrics_path)
             existing["grounded_experiment_export"] = metadata
             write_json(sidecar, existing)
+            write_json(figure.with_suffix(".provenance.json"), existing)
             sidecars.append(relative_path(sidecar))
 
         map_result = logger_call(

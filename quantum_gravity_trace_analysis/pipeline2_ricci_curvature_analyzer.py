@@ -18,7 +18,7 @@ except ImportError:
         logging.getLogger(__name__).info("Pipeline 2 metrics: %s", metrics)
 
 try:
-    from utils.plot_provenance import save_plot_provenance
+    from utils.metrics_logger import save_plot_provenance
 except ImportError:
     def save_plot_provenance(plot_path, metadata):
         with open(os.fspath(plot_path) + ".provenance.json", "w") as f:

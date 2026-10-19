@@ -261,7 +261,7 @@ def get_dispersive_casimir_pressure(
         raise ValueError("T_K must be nonnegative.")
 
     geom_factor = float(np.cos(np.radians(alpha_deg)) ** 2)
-    MEEP_TO_PA = 0.03161
+    MEEP_TO_PA = 0.0316152649
 
     if T_K != 0.0:
         from execution.run_thermal_matsubara_dsi import compute_matsubara_casimir_pressure

@@ -25,7 +25,7 @@ from execution.fractal_rotary_clutch_geometry import (
     compute_plate_area_fraction
 )
 
-MEEP_TO_PA = 0.031615
+MEEP_TO_PA = 0.0316152649
 MEEP_FORCE_TO_SI = 3.1615e-14
 
 

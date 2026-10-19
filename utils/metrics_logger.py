@@ -688,6 +688,9 @@ def generate_manuscript_map(
             relative_path = Path(reference)
             if not relative_path.suffix:
                 relative_path = relative_path.with_suffix(".tex")
+            # Generated definitions are not manuscript citations.
+            if relative_path.name == "macros_results.tex":
+                continue
             for base_dir in (tex_path.parent, ms_path.parent, Path.cwd()):
                 candidate = base_dir / relative_path
                 try:
@@ -767,10 +770,18 @@ def generate_manuscript_map(
                         if isinstance(input_source, Mapping)
                         else input_source if isinstance(input_source, str) else None
                     )
+                    grounded_export = s_data.get("grounded_experiment_export", {})
                     source_sha256 = (
                         input_source.get("sha256")
                         if isinstance(input_source, Mapping)
-                        else None
+                        else (
+                            s_data.get("input_source_sha256")
+                            or (
+                                grounded_export.get("metrics_sha256")
+                                if isinstance(grounded_export, Mapping)
+                                else None
+                            )
+                        ) if isinstance(input_source, str) else None
                     )
                     generating_function = (
                         generating_code.get("source_function")
@@ -810,9 +821,35 @@ if __name__ == "__main__":
         init_workspace(target)
     else:
         print("Testing metrics_logger provenance harness...")
-        log_step("test_reduction", {"dim": 128, "norm": 1.042})
-        log_metric("accuracy_top1", 94.25, step_id="eval_test_split")
-        log_metric("f1_score", 0.912, step_id="eval_test_split")
-        export_macros()
-        save_plot_provenance("figures/demo_loss.png", "results/provenance_metrics.json", ["accuracy_top1"])
-        print("Verification complete. LaTeX macros and provenance sidecar generated successfully.")
+        with tempfile.TemporaryDirectory() as temp_dir:
+            test_dir = Path(temp_dir)
+            test_metrics_path = str(test_dir / "results" / "provenance_metrics.json")
+            test_macros_path = str(test_dir / "results" / "macros_results.tex")
+            test_figure_path = str(test_dir / "figures" / "demo_loss.png")
+            log_step(
+                "test_reduction",
+                {"dim": 128, "norm": 1.042},
+                metrics_path=test_metrics_path,
+            )
+            log_metric(
+                "accuracy_top1",
+                94.25,
+                step_id="eval_test_split",
+                metrics_path=test_metrics_path,
+            )
+            log_metric(
+                "f1_score",
+                0.912,
+                step_id="eval_test_split",
+                metrics_path=test_metrics_path,
+            )
+            export_macros(
+                metrics_path=test_metrics_path,
+                output_path=test_macros_path,
+            )
+            save_plot_provenance(
+                test_figure_path,
+                test_metrics_path,
+                ["accuracy_top1"],
+            )
+        print("Verification complete. Temporary LaTeX macros and provenance sidecar generated successfully.")

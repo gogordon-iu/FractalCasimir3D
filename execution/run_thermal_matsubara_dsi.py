@@ -21,7 +21,7 @@ from execution.materials_database_dispersive import get_dielectric_tensor_imag
 
 
 KB_MEEP = 0.00043676
-MEEP_TO_PA = 0.03161
+MEEP_TO_PA = 0.0316152649
 PASSIVE_LIMIT = np.nextafter(1.0, 0.0)
 
 

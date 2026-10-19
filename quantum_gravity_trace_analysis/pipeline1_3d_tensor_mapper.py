@@ -30,7 +30,7 @@ except ImportError:
                     handle.write(f"\\newcommand{{\\{macro}}}{{{value}}}\n")
 
 try:
-    from utils.plot_provenance import save_plot_provenance
+    from utils.metrics_logger import save_plot_provenance
 except ImportError:
     def save_plot_provenance(path, metadata):
         with open(str(path) + ".provenance.json", "w", encoding="utf-8") as handle:

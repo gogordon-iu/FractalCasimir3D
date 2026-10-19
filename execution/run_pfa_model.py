@@ -9,6 +9,9 @@ import time
 import numpy as np
 import scipy.integrate as integrate
 
+MEEP_TO_PA = 0.0316152649
+
+
 # Constants in Meep units (hbar = c = 1), with lengths in microns.
 L = 0.3
 T_77 = 77
@@ -261,7 +264,7 @@ def main():
                     records.append({
                         "d_nm": float(d * 1000.0),
                         "force_val": force,
-                    })
+                     'pressure_Pa': float(f_dens * MEEP_TO_PA), 'force_pN': float(force * MEEP_TO_PA), })
                     steps += 1
 
     results["status"] = "completed"

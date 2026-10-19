@@ -94,7 +94,7 @@ class Design:
         if self.t_membrane <= 0.0 or self.t_landing_pad <= 0.0:
             raise ValueError("Membrane and landing-pad thicknesses must be positive.")
         if not (
-            self.rotor_top_um > 0.0 > -self.t_membrane
+            self.rotor_top_um >= 0.0 > -self.t_membrane
             > self.rotor_tip_um > self.pad_top_um > self.pad_bottom_um
         ):
             raise ValueError("Report violates the required axial topological ordering.")
@@ -695,7 +695,7 @@ def compose_figure(
                 f"{title}\n"
                 f"θ = {evaluation['theta_deg']:g}° | {evaluation['state']} | "
                 f"Δz_eff = {delta_z_nm(evaluation, design)}\n"
-                f"BEM F_z = {force:.17g} pN",
+                f"BEM F_z = {force:+.4f} pN",
                 fontsize=11, loc="left",
             )
         ax = axes.flat[3]
@@ -751,18 +751,17 @@ def compose_figure(
             force, _ = force_pn(evaluation)
             rows.append((
                 f"{evaluation['state']} F_z (pN), θ={evaluation['theta_deg']:g}°",
-                f"{force:.17g}",
+                f"{force:+.4f}",
             ))
         ax = axes.flat[5]
         ax.set_axis_off()
         ax.set_title("F  Exact geometry & force audit", loc="left")
         table = ax.table(
             cellText=rows, colLabels=("Report quantity", "Report value"),
-            colWidths=(0.52, 0.48), cellLoc="left", loc="center",
+            colWidths=(0.52, 0.48), cellLoc="left", bbox=(0.0, 0.0, 1.0, 0.90),
         )
         table.auto_set_font_size(False)
         table.set_fontsize(8.5)
-        table.scale(1, 1.55)
         fig.suptitle(TITLE, fontsize=18)
         fig.text(
             0.5, 0.012,
@@ -790,6 +789,20 @@ def compose_figure(
             solver_name="bem",
             solver_parameters={"formulation": "vector_dyadic"},
         )
+
+    paper_figures = (
+        args.project_root / "Papers" / "Fractal_Casimir_Nature_EM" / "figures"
+    )
+    if paper_figures.is_dir():
+        # Include sidecars that append to the PNG name or replace its suffix.
+        sources = {
+            paths.figure_png,
+            *paths.figure_png.parent.glob(f"{paths.figure_png.name}.*"),
+            *paths.figure_png.parent.glob(f"{paths.figure_png.stem}.provenance.*"),
+        }
+        for source in sorted(sources):
+            if source.is_file():
+                shutil.copyfile(source, paper_figures / source.name)
 
 
 def main(argv: Sequence[str] | None = None) -> int:

@@ -133,17 +133,31 @@ def main():
                     raise ValueError("Effective area must be finite and positive.")
                 pressure_meep = finite_float(f_net / area, "pressure_meep")
                 p = finite_float(pressure_meep * MEEP_TO_PA, "pressure_Pa")
+            elif (
+                rec.get("pressure_meep") is not None
+                or rec.get("pressure_meep_raw") is not None
+            ):
+                raw_pressure = rec.get("pressure_meep")
+                if raw_pressure is None:
+                    raw_pressure = rec.get("pressure_meep_raw")
+                val = finite_float(raw_pressure, "pressure_meep")
+                if abs(val) > 1e-12:
+                    pressure_meep = val
+                    p = finite_float(val * MEEP_TO_PA, "pressure_Pa")
             elif p_direct is not None:
                 val = finite_float(p_direct, "pressure_Pa")
                 if abs(val) > 1e-12:  # Ignore dummy zero placeholders.
-                    p = val
-                    pressure_meep = finite_float(p / MEEP_TO_PA, "pressure_meep")
-            elif rec.get("pressure_meep") is not None:
-                val = finite_float(rec["pressure_meep"], "pressure_meep")
-                converted = finite_float(val * MEEP_TO_PA, "pressure_Pa")
-                if abs(converted) > 1e-12:
-                    pressure_meep = val
-                    p = converted
+                    is_scaled = (
+                        rec.get("pressure_scaled") is True
+                        or str(rec.get("pressure_units", "")).strip().lower()
+                        in ("pa", "pascal", "pascals")
+                    )
+                    if is_scaled:
+                        p = val
+                        pressure_meep = finite_float(p / MEEP_TO_PA, "pressure_meep")
+                    else:
+                        pressure_meep = val
+                        p = finite_float(val * MEEP_TO_PA, "pressure_Pa")
 
             if p is not None:
                 key = (round(alpha, 1), round(theta, 1), round(d, 4))
@@ -155,6 +169,8 @@ def main():
                     "pressure_meep": pressure_meep,
                     "pressure_Pa_SI": p,
                     "pressure_meep_raw": pressure_meep,
+                    "pressure_scaled": True,
+                    "pressure_units": "Pa",
                     "is_repulsive": bool(p > 0.0),
                     "model": rec.get("model") or "sweet_spot_sweep",
                     "dataset": rec.get("dataset") or "sweet_spot_parameter_sweep",
@@ -179,8 +195,15 @@ def main():
         # Keep partial probe output out of the historical sweep directories.
         out_dir = os.path.join(".tmp", "sweet_spot_probe")
     else:
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        out_dir = f"results_sweet_spot_sweep_{timestamp}"
+        existing_dirs = sorted(
+            path for path in glob.glob("results_sweet_spot_sweep_*")
+            if os.path.isdir(path)
+        )
+        if existing_dirs:
+            out_dir = existing_dirs[-1]
+        else:
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            out_dir = f"results_sweet_spot_sweep_{timestamp}"
     os.makedirs(out_dir, exist_ok=True)
 
     summary_file = os.path.join(out_dir, "sweet_spot_sweep_summary.json")
@@ -242,7 +265,7 @@ def main():
                 })
                 print(
                     f"FOUND STABLE EQUILIBRIUM: Alpha={a} deg, Theta={th} deg "
-                    f"=> d_eq = {d_eq_nm:.2f} nm (P_max = {p_max:+.4f} Pa)"
+                    f"=> d_eq = {d_eq_nm:.2f} nm (P_max = {p_max:+.6f} Pa)"
                 )
 
     # Permit direct execution from the execution/ directory.

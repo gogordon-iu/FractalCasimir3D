@@ -1702,7 +1702,7 @@ def run_bem_casimir_solver(
             raise FloatingPointError("Invalid Matsubara frequency spacing.")
         # Cap M for n_xi=1, preserving the requested total node count.
         matsubara_count = min(n_xi, min(8, max(2, n_xi // 3)))
-        tail_count = n_xi - matsubara_count
+        tail_count = max(1, int(n_xi))
         kappas = np.arange(matsubara_count, dtype=np.float64) * delta_kappa
         kappas[0] = 1.0e-4 * delta_kappa
         weights = np.full(matsubara_count, delta_kappa, dtype=np.float64)
@@ -1726,7 +1726,7 @@ def run_bem_casimir_solver(
     else:
         kappas, weights, nodes = _quadrature(n_xi, kappa_0)
 
-    evaluated = min(n_xi, max_steps) if max_steps > 0 else n_xi
+    evaluated = min(len(kappas), max_steps) if max_steps > 0 else len(kappas)
     settings: dict[str, Any] = {
         "method": (
             "dense area-symmetrized tangential-vector dyadic T-operator"

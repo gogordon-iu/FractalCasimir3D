@@ -4,14 +4,49 @@ import json
 import math
 import os
 import sys
+from datetime import datetime, timezone
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, REPO_ROOT)
 
-from utils.metrics_logger import log_metrics
+from utils.metrics_logger import _sanitize_macro_name, log_metrics
 
 
 MEEP_TO_PA = 0.0316152649
+
+
+def _num_to_words(n):
+    """Return a positive integer as a digit-free LaTeX macro name component."""
+    if isinstance(n, bool) or not isinstance(n, int) or n <= 0:
+        raise ValueError("Row number must be a positive integer.")
+
+    words = (
+        "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight",
+        "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen",
+        "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen", "Twenty",
+    )
+    if n <= 20:
+        return words[n - 1]
+    if n < 100:
+        tens = (
+            "", "", "Twenty", "Thirty", "Forty", "Fifty",
+            "Sixty", "Seventy", "Eighty", "Ninety",
+        )
+        quotient, remainder = divmod(n, 10)
+        return tens[quotient] + (_num_to_words(remainder) if remainder else "")
+    if n < 1000:
+        quotient, remainder = divmod(n, 100)
+        return (
+            _num_to_words(quotient)
+            + "Hundred"
+            + (_num_to_words(remainder) if remainder else "")
+        )
+    quotient, remainder = divmod(n, 1000)
+    return (
+        _num_to_words(quotient)
+        + "Thousand"
+        + (_num_to_words(remainder) if remainder else "")
+    )
 
 
 def _pressure_is_scaled(metadata, default=False):
@@ -146,6 +181,7 @@ def generate_latex_tables(max_steps=None):
 
     tables_dir = os.path.join("Papers", "Fractal_Casimir_Nature_EM", "tables")
     os.makedirs(tables_dir, exist_ok=True)
+    table_macros = {}
 
     # Write sweet spot table
     out_tex_path = os.path.join(tables_dir, "table_sweet_spot_repulsion.tex")
@@ -154,14 +190,30 @@ def generate_latex_tables(max_steps=None):
         f.write("% Pressures normalized to SI Pascals.\n")
         f.write("\\begin{table}[htbp]\n")
         f.write("\\centering\n")
-        f.write("\\caption{Representative Verified 3D FDTD Repulsive Casimir Pressures ($P > 0$) in Vacuum across the $(\\alpha, \\theta, d)$ Parameter Space ($L=2.0\\ \\mu\\text{m}$, $N=3$).}\n")
+        f.write("\\caption{Representative Verified 3D FDTD Repulsive Casimir Pressures ($P > 0$) in an Isotropic Dielectric Immersion Background ($\\varepsilon_{\\rm bg}=2.1$) across the $(\\alpha, \\theta, d)$ Parameter Space ($L=2.0\\ \\mu\\text{m}$, $N=3$).}\n")
         f.write("\\label{tab:sweet_spot_repulsion}\n")
         f.write("\\begin{tabular}{ccccc}\n")
         f.write("\\toprule\n")
         f.write("\\textbf{Corrugation $\\alpha$} & \\textbf{Twist $\\theta$} & \\textbf{Separation $d$ (nm)} & \\textbf{Pressure $P$ (Pa)} & \\textbf{Regime} \\\\\n")
         f.write("\\midrule\n")
-        for r in repulsive_sorted[:20]:
-            f.write(f"${r['alpha_deg']:.1f}^\\circ$ & ${r['theta_deg']:.1f}^\\circ$ & ${r['d_um'] * 1000.0:.1f}$ nm & $\\mathbf{{{r['pressure_Pa']:+.6f}}}$ & \\textbf{{REPULSIVE}} \\\\\n")
+        for idx, r in enumerate(repulsive_sorted[:20], start=1):
+            w = _num_to_words(idx)
+            prefix = f"sweet_spot_rep_row_{w.lower()}"
+            alpha_key = f"{prefix}_alpha_deg"
+            theta_key = f"{prefix}_theta_deg"
+            d_key = f"{prefix}_d_nm"
+            p_key = f"{prefix}_p_pa"
+            table_macros[alpha_key] = round(r["alpha_deg"], 1)
+            table_macros[theta_key] = round(r["theta_deg"], 1)
+            table_macros[d_key] = round(r["d_um"] * 1000.0, 1)
+            table_macros[p_key] = round(r["pressure_Pa"], 6)
+            f.write(
+                f"$\\{_sanitize_macro_name(alpha_key)}{{}}^\\circ$ & "
+                f"$\\{_sanitize_macro_name(theta_key)}{{}}^\\circ$ & "
+                f"$\\{_sanitize_macro_name(d_key)}{{}}$ nm & "
+                f"$+\\{_sanitize_macro_name(p_key)}{{}}$ & "
+                "\\textbf{REPULSIVE} \\\\\n"
+            )
         f.write("\\bottomrule\n")
         f.write("\\end{tabular}\n")
         f.write("\\end{table}\n")
@@ -173,17 +225,51 @@ def generate_latex_tables(max_steps=None):
         f.write("% Pressures normalized to SI Pascals.\n")
         f.write("\\begin{table}[htbp]\n")
         f.write("\\centering\n")
-        f.write("\\caption{Stable Passive Nanomechanical Levitation Equilibrium Heights ($d_{\\rm eq}$ where $P=0$ and $\\partial P/\\partial d < 0$) in Vacuum.}\n")
+        f.write("\\caption{1D Axial Casimir-Lifshitz Equilibrium Heights ($d_{\\rm eq}$ where $P=0$ and $\\partial P/\\partial d < 0$) in an Isotropic Dielectric Immersion Background ($\\varepsilon_{\\rm bg}=2.1$).}\n")
         f.write("\\label{tab:levitation_equilibria}\n")
         f.write("\\begin{tabular}{ccccc}\n")
         f.write("\\toprule\n")
         f.write("\\textbf{Corrugation $\\alpha$} & \\textbf{Twist $\\theta$} & \\textbf{Peak Pressure $P_{\\max}$ (Pa)} & \\textbf{Equilibrium Gap $d_{\\rm eq}$ (nm)} & \\textbf{Stability} \\\\\n")
         f.write("\\midrule\n")
-        for eq in eq_points:
-            f.write(f"${eq['alpha_deg']:.1f}^\\circ$ & ${eq['theta_deg']:.1f}^\\circ$ & $+{eq['p_max_Pa']:.4f}$ Pa & $\\mathbf{{{eq['d_eq_nm']:.2f}\\text{{ nm}}}}$ & \\textbf{{Stable Levitation}} \\\\\n")
+        for idx, eq in enumerate(eq_points, start=1):
+            w = _num_to_words(idx)
+            prefix = f"sweet_spot_eq_row_{w.lower()}"
+            alpha_key = f"{prefix}_alpha_deg"
+            theta_key = f"{prefix}_theta_deg"
+            pmax_key = f"{prefix}_p_max_pa"
+            d_eq_key = f"{prefix}_d_eq_nm"
+            table_macros[alpha_key] = round(eq["alpha_deg"], 1)
+            table_macros[theta_key] = round(eq["theta_deg"], 1)
+            table_macros[pmax_key] = round(eq["p_max_Pa"], 6)
+            table_macros[d_eq_key] = round(eq["d_eq_nm"], 2)
+            f.write(
+                f"$\\{_sanitize_macro_name(alpha_key)}{{}}^\\circ$ & "
+                f"$\\{_sanitize_macro_name(theta_key)}{{}}^\\circ$ & "
+                f"$+\\{_sanitize_macro_name(pmax_key)}{{}}$ Pa & "
+                f"$\\mathbf{{\\{_sanitize_macro_name(d_eq_key)}{{}}\\text{{ nm}}}}$ & "
+                "\\textbf{1D Axial Equilibrium} \\\\\n"
+            )
         f.write("\\bottomrule\n")
         f.write("\\end{tabular}\n")
         f.write("\\end{table}\n")
+
+    os.makedirs("results", exist_ok=True)
+    with open(
+        os.path.join("results", "sweet_spot_table_metrics.json"),
+        "w",
+        encoding="utf-8",
+    ) as f:
+        json.dump(
+            {
+                "executed_at": datetime.now(timezone.utc).isoformat(),
+                "summary_path": summary_path,
+                "macros": table_macros,
+            },
+            f,
+            indent=2,
+            allow_nan=False,
+        )
+        f.write("\n")
 
     log_metrics({
         "summary_path": summary_path,

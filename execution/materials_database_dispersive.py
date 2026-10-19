@@ -24,9 +24,12 @@ try:
 except ImportError:
     mp = None
 
-# Conversion factor: 1 eV in 2*pi*c / a units (with a = 1 micron)
-# f = E / (h*c) = E [eV] / (1.23984193 eV * um)
+# Convert photon energy in eV to Meep real cyclic frequency (a = 1 micron):
+# f = E / (h*c) = E [eV] / (1.23984193 eV * um).
 EV_TO_MEEP_FREQ = 1.0 / 1.23984193
+
+# Convert imaginary wavenumber xi/c in rad/um to photon energy in eV.
+HBAR_C_EV_UM = 0.1973269804
 
 
 # ==============================================================================
@@ -98,7 +101,7 @@ def evaluate_lorentz_eps_imag(xi_meep, eps_inf, oscillators):
     Parameters:
     -----------
     xi_meep : float or np.ndarray
-        Imaginary frequency in MEEP units (2*pi*c / a, a = 1 um).
+        Imaginary wavenumber xi/c in rad/um (a = 1 um).
     eps_inf : float
         High-frequency permittivity limit.
     oscillators : list of dict
@@ -109,8 +112,8 @@ def evaluate_lorentz_eps_imag(xi_meep, eps_inf, oscillators):
     float or np.ndarray
         Real, positive permittivity epsilon(i*xi).
     """
-    # Convert xi from MEEP units to eV: xi_eV = xi_meep / EV_TO_MEEP_FREQ
-    xi_eV = xi_meep / EV_TO_MEEP_FREQ
+    # Convert imaginary wavenumber to energy: hbar * xi = (xi/c) * hbar*c.
+    xi_eV = xi_meep * HBAR_C_EV_UM
 
     eps_val = np.full_like(xi_eV, float(eps_inf), dtype=float) if isinstance(xi_eV, np.ndarray) else float(eps_inf)
 

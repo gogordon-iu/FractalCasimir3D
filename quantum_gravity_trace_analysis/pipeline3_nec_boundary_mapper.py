@@ -20,7 +20,7 @@ except ImportError:
             f.write(json.dumps(metrics, allow_nan=False) + "\n")
 
 try:
-    from utils.plot_provenance import save_plot_provenance
+    from utils.metrics_logger import save_plot_provenance
 except ImportError:
     def save_plot_provenance(plot_path, metadata):
         """Persist provenance when the shared plotting utility is unavailable."""
@@ -141,7 +141,7 @@ def analyze_nec_boundaries(
 
         d_m = d_um * 1e-6
         rho_vac_pa = vacuum_energy_density(d_m)
-        p_pa = raw_pressure * MEEP_TO_PA
+        p_pa = raw_pressure if r.get("pressure_scaled") is True and "pressure_meep" not in r else raw_pressure * MEEP_TO_PA
         if rho_vac_pa is None or not np.isfinite(d_um * 1000.0):
             skipped_records += 1
             continue

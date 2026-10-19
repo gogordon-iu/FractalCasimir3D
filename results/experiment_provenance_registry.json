@@ -34,7 +34,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "verification_basis": "reported manuscript equilibria; stability not recomputed"
     },
@@ -86,6 +86,14 @@
         "a": 0.641077,
         "alpha": 0.652603,
         "b": 0.241057,
+        "pred_L_0p30": -1.165453,
+        "pred_L_0p40": -0.924698,
+        "pred_L_0p50": -0.766718,
+        "pred_L_0p60": -0.653668,
+        "pred_L_2p00": -0.166753,
+        "pred_L_3p00": -0.07194,
+        "pred_L_4p00": -0.018364,
+        "pred_L_4p50": 0.000829,
         "ssr": 0.00928379
       }
     },
@@ -98,6 +106,14 @@
       "parameters": {
         "a": 0.357367,
         "alpha": 1.01624,
+        "pred_L_0p30": -1.214739,
+        "pred_L_0p40": -0.906809,
+        "pred_L_0p50": -0.722824,
+        "pred_L_0p60": -0.600573,
+        "pred_L_2p00": -0.176684,
+        "pred_L_3p00": -0.117017,
+        "pred_L_4p00": -0.087354,
+        "pred_L_4p50": -0.077499,
         "ssr": 0.03148498
       }
     },
@@ -114,6 +130,14 @@
         "a2": 0.046584,
         "alpha1": 1.01625,
         "alpha2": 1.01619,
+        "pred_L_0p30": -1.21474,
+        "pred_L_0p40": -0.906809,
+        "pred_L_0p50": -0.722824,
+        "pred_L_0p60": -0.600573,
+        "pred_L_2p00": -0.176684,
+        "pred_L_3p00": -0.117016,
+        "pred_L_4p00": -0.087353,
+        "pred_L_4p50": -0.077499,
         "ssr": 0.03148498
       }
     },
@@ -128,6 +152,16 @@
         "a": 0.87666,
         "alpha": 0.426889,
         "lambda": 1.223087,
+        "model_1_to_model_4_ssr_ratio": 2.1,
+        "model_2_to_model_4_ssr_ratio": 7.1,
+        "pred_L_0p30": -1.146881,
+        "pred_L_0p40": -0.934706,
+        "pred_L_0p50": -0.783064,
+        "pred_L_0p60": -0.667556,
+        "pred_L_2p00": -0.127105,
+        "pred_L_3p00": -0.047197,
+        "pred_L_4p00": -0.018429,
+        "pred_L_4p50": -0.011644,
         "ssr": 0.00440022
       }
     },
@@ -421,19 +455,19 @@
   "documents": [
     {
       "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-      "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+      "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
     },
     {
       "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-      "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+      "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
     },
     {
       "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_sweet_spot_repulsion.tex",
-      "sha256": "7994810b03c8361f9539634fdfb32e56a63a40811a3fc304dd86ddbdbc8c0982"
+      "sha256": "607023f2d65eaa2e6830451525b7d9cefddc4d631a2ea8d8ebb0afd0899858ac"
     },
     {
       "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-      "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+      "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
     },
     {
       "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_fractal_geometry_control.tex",
@@ -449,7 +483,7 @@
     }
   ],
   "errors": [],
-  "executed_at": "2026-10-19T00:39:16.901515+00:00",
+  "executed_at": "2026-10-19T01:45:53.795027+00:00",
   "manuscript": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
   "metadata": {
     "pressure_unit_provenance": {
@@ -546,6 +580,294 @@
           "meep_unit": "dimensionless",
           "pressure_meep": 0.000748,
           "pressure_pa": 2.36482181452e-05,
+          "si_unit": "Pa"
+        },
+        "model_1_pred_L_0p30": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -1.165453,
+          "pressure_pa": -0.0368461053234997,
+          "si_unit": "Pa"
+        },
+        "model_1_pred_L_0p40": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.924698,
+          "pressure_pa": -0.029234572222500203,
+          "si_unit": "Pa"
+        },
+        "model_1_pred_L_0p50": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.766718,
+          "pressure_pa": -0.024239992673598203,
+          "si_unit": "Pa"
+        },
+        "model_1_pred_L_0p60": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.653668,
+          "pressure_pa": -0.0206658869766532,
+          "si_unit": "Pa"
+        },
+        "model_1_pred_L_2p00": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.166753,
+          "pressure_pa": -0.0052719402678697005,
+          "si_unit": "Pa"
+        },
+        "model_1_pred_L_3p00": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.07194,
+          "pressure_pa": -0.0022744021569060004,
+          "si_unit": "Pa"
+        },
+        "model_1_pred_L_4p00": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.018364,
+          "pressure_pa": -0.0005805827246236,
+          "si_unit": "Pa"
+        },
+        "model_1_pred_L_4p50": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.000829,
+          "pressure_pa": 2.62090546021e-05,
+          "si_unit": "Pa"
+        },
+        "model_2_pred_L_0p30": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -1.214739,
+          "pressure_pa": -0.0384042952693611,
+          "si_unit": "Pa"
+        },
+        "model_2_pred_L_0p40": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.906809,
+          "pressure_pa": -0.028669006748704103,
+          "si_unit": "Pa"
+        },
+        "model_2_pred_L_0p50": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.722824,
+          "pressure_pa": -0.022852272236077602,
+          "si_unit": "Pa"
+        },
+        "model_2_pred_L_0p60": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.600573,
+          "pressure_pa": -0.018987274486787702,
+          "si_unit": "Pa"
+        },
+        "model_2_pred_L_2p00": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.176684,
+          "pressure_pa": -0.005585911463591601,
+          "si_unit": "Pa"
+        },
+        "model_2_pred_L_3p00": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.117017,
+          "pressure_pa": -0.0036995234528033,
+          "si_unit": "Pa"
+        },
+        "model_2_pred_L_4p00": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.087354,
+          "pressure_pa": -0.0027617198500746003,
+          "si_unit": "Pa"
+        },
+        "model_2_pred_L_4p50": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.077499,
+          "pressure_pa": -0.0024501514144851,
+          "si_unit": "Pa"
+        },
+        "model_3_pred_L_0p30": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -1.21474,
+          "pressure_pa": -0.038404326884626,
+          "si_unit": "Pa"
+        },
+        "model_3_pred_L_0p40": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.906809,
+          "pressure_pa": -0.028669006748704103,
+          "si_unit": "Pa"
+        },
+        "model_3_pred_L_0p50": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.722824,
+          "pressure_pa": -0.022852272236077602,
+          "si_unit": "Pa"
+        },
+        "model_3_pred_L_0p60": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.600573,
+          "pressure_pa": -0.018987274486787702,
+          "si_unit": "Pa"
+        },
+        "model_3_pred_L_2p00": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.176684,
+          "pressure_pa": -0.005585911463591601,
+          "si_unit": "Pa"
+        },
+        "model_3_pred_L_3p00": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.117016,
+          "pressure_pa": -0.0036994918375384002,
+          "si_unit": "Pa"
+        },
+        "model_3_pred_L_4p00": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.087353,
+          "pressure_pa": -0.0027616882348097003,
+          "si_unit": "Pa"
+        },
+        "model_3_pred_L_4p50": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.077499,
+          "pressure_pa": -0.0024501514144851,
+          "si_unit": "Pa"
+        },
+        "model_4_pred_L_0p30": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -1.146881,
+          "pressure_pa": -0.036258946623776905,
+          "si_unit": "Pa"
+        },
+        "model_4_pred_L_0p40": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.934706,
+          "pressure_pa": -0.029550977793619402,
+          "si_unit": "Pa"
+        },
+        "model_4_pred_L_0p50": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.783064,
+          "pressure_pa": -0.024756775793653603,
+          "si_unit": "Pa"
+        },
+        "model_4_pred_L_0p60": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.667556,
+          "pressure_pa": -0.021104959775584402,
+          "si_unit": "Pa"
+        },
+        "model_4_pred_L_2p00": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.127105,
+          "pressure_pa": -0.0040184582451145,
+          "si_unit": "Pa"
+        },
+        "model_4_pred_L_3p00": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.047197,
+          "pressure_pa": -0.0014921456574853002,
+          "si_unit": "Pa"
+        },
+        "model_4_pred_L_4p00": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.018429,
+          "pressure_pa": -0.0005826377168421001,
+          "si_unit": "Pa"
+        },
+        "model_4_pred_L_4p50": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.011644,
+          "pressure_pa": -0.0003681281444956,
           "si_unit": "Pa"
         },
         "scaling_L_0p30_R_30_pressure": {
@@ -759,7 +1081,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1507,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported units",
       "value": 0.00928379
@@ -773,7 +1095,7 @@
         "basis": "experiment specification; matching metric macro \\ModelTwoSsr used in manuscript (occurrence alone is not semantic verification)",
         "line": 444,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported units",
       "value": 0.03148498
@@ -787,7 +1109,7 @@
         "basis": "experiment specification; matching metric macro \\ModelTwoSsr used in manuscript (occurrence alone is not semantic verification)",
         "line": 444,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported units",
       "value": 0.03148498
@@ -801,7 +1123,7 @@
         "basis": "experiment specification; matching metric macro \\ModelFourLambda used in manuscript (occurrence alone is not semantic verification)",
         "line": 48,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "um",
       "value": 1.223087
@@ -815,7 +1137,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1519,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported units",
       "value": 0.00440022
@@ -839,7 +1161,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1481,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported pressure units",
       "value": -0.00395
@@ -863,7 +1185,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1482,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported pressure units",
       "value": 0.0034
@@ -887,7 +1209,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1483,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported pressure units",
       "value": 0.00376
@@ -911,7 +1233,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1484,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported pressure units",
       "value": 0.00305
@@ -935,7 +1257,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1485,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported pressure units",
       "value": 0.00231
@@ -959,7 +1281,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1486,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported pressure units",
       "value": 0.00129
@@ -983,7 +1305,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1487,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported pressure units",
       "value": 0.000748
@@ -997,7 +1319,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 413,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported force units",
       "value": -0.583529
@@ -1011,7 +1333,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 415,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported force units",
       "value": -0.538354
@@ -1025,7 +1347,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 414,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported force units",
       "value": -0.045175
@@ -1039,7 +1361,7 @@
         "basis": "experiment specification; matching metric macro \\AsymmetricCavityAEff used in manuscript (occurrence alone is not semantic verification)",
         "line": 517,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported area units",
       "value": 3.160494
@@ -1063,7 +1385,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 416,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported pressure units",
       "value": -0.014294
@@ -1077,7 +1399,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 417,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "Pa",
       "value": -0.000452
@@ -1091,7 +1413,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 418,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "dimensionless",
       "value": 8.25
@@ -1115,7 +1437,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1444,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported pressure units",
       "value": -0.218758
@@ -1129,7 +1451,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1445,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "Pa",
       "value": -0.006916
@@ -1143,7 +1465,7 @@
         "basis": "experiment specification; matching metric macro \\FrontierTwoFBoth used in manuscript (occurrence alone is not semantic verification)",
         "line": 560,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported force units",
       "value": 4838.044314
@@ -1157,7 +1479,7 @@
         "basis": "experiment specification; matching metric macro \\FrontierTwoFBoth used in manuscript (occurrence alone is not semantic verification)",
         "line": 560,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported force units",
       "value": 4838.065605
@@ -1168,13 +1490,13 @@
       "metadata": {},
       "name": "frontier_2_F_net",
       "source": {
-        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
-        "line": 1447,
-        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "basis": "experiment specification; matching metric macro \\FrontierTwoFNet used in manuscript (occurrence alone is not semantic verification)",
+        "line": 562,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported force units",
-      "value": -0.02129
+      "value": -0.021291
     },
     {
       "description": "Net pressure",
@@ -1195,7 +1517,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1450,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported pressure units",
       "value": -0.006736
@@ -1209,7 +1531,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1451,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "Pa",
       "value": -0.000213
@@ -1223,7 +1545,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1449,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "%",
       "value": 94.3
@@ -1237,7 +1559,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1452,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "dimensionless",
       "value": 17.52
@@ -1251,7 +1573,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 1795,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "Pa",
       "value": -0.003731
@@ -1265,7 +1587,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 421,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "kHz",
       "value": 2.4
@@ -1279,7 +1601,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 420,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "eV",
       "value": 1e-11
@@ -1293,7 +1615,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 320,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "%",
       "value": 10.0
@@ -1307,7 +1629,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 320,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "%",
       "value": 50.0
@@ -1321,7 +1643,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 419,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "eV",
       "value": 1e-06
@@ -1335,10 +1657,3172 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 45,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported units",
       "value": 3e-19
+    },
+    {
+      "description": "model_1_to_model_4_ssr_ratio",
+      "group": "model_4",
+      "metadata": {},
+      "name": "model_1_to_model_4_ssr_ratio",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 49,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "dimensionless",
+      "value": 2.1
+    },
+    {
+      "description": "model_2_to_model_4_ssr_ratio",
+      "group": "model_4",
+      "metadata": {},
+      "name": "model_2_to_model_4_ssr_ratio",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoToModelFourSsrRatio used in manuscript (occurrence alone is not semantic verification)",
+        "line": 451,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "dimensionless",
+      "value": 7.1
+    },
+    {
+      "description": "sweet_spot_repulsive_count",
+      "group": "repulsive_sweet_spots",
+      "metadata": {},
+      "name": "sweet_spot_repulsive_count",
+      "source": {
+        "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
+        "line": 1742,
+        "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
+      },
+      "unit": "count",
+      "value": 41.0
+    },
+    {
+      "description": "model_1_pred_L_0p30",
+      "group": "model_1",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -1.165453,
+          "pressure_pa": -0.0368461053234997,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_1_pred_L_0p30",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelOnePredLZeropthreezero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 435,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -1.165453
+    },
+    {
+      "description": "model_1_pred_L_0p40",
+      "group": "model_1",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.924698,
+          "pressure_pa": -0.029234572222500203,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_1_pred_L_0p40",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelOnePredLZeropfourzero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 436,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.924698
+    },
+    {
+      "description": "model_1_pred_L_0p50",
+      "group": "model_1",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.766718,
+          "pressure_pa": -0.024239992673598203,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_1_pred_L_0p50",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelOnePredLZeropfivezero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 437,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.766718
+    },
+    {
+      "description": "model_1_pred_L_0p60",
+      "group": "model_1",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.653668,
+          "pressure_pa": -0.0206658869766532,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_1_pred_L_0p60",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelOnePredLZeropsixzero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 438,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.653668
+    },
+    {
+      "description": "model_1_pred_L_2p00",
+      "group": "model_1",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.166753,
+          "pressure_pa": -0.0052719402678697005,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_1_pred_L_2p00",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelOnePredLTwopzerozero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 439,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.166753
+    },
+    {
+      "description": "model_1_pred_L_3p00",
+      "group": "model_1",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.07194,
+          "pressure_pa": -0.0022744021569060004,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_1_pred_L_3p00",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelOnePredLThreepzerozero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 440,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.07194
+    },
+    {
+      "description": "model_1_pred_L_4p00",
+      "group": "model_1",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.018364,
+          "pressure_pa": -0.0005805827246236,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_1_pred_L_4p00",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelOnePredLFourpzerozero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 441,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.018364
+    },
+    {
+      "description": "model_1_pred_L_4p50",
+      "group": "model_1",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": 0.000829,
+          "pressure_pa": 2.62090546021e-05,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_1_pred_L_4p50",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelOnePredLFourpfivezero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 442,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": 0.000829
+    },
+    {
+      "description": "model_2_pred_L_0p30",
+      "group": "model_2",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -1.214739,
+          "pressure_pa": -0.0384042952693611,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_2_pred_L_0p30",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLZeropthreezero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 435,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -1.214739
+    },
+    {
+      "description": "model_2_pred_L_0p40",
+      "group": "model_2",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.906809,
+          "pressure_pa": -0.028669006748704103,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_2_pred_L_0p40",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLZeropfourzero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 436,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.906809
+    },
+    {
+      "description": "model_2_pred_L_0p50",
+      "group": "model_2",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.722824,
+          "pressure_pa": -0.022852272236077602,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_2_pred_L_0p50",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLZeropfivezero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 437,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.722824
+    },
+    {
+      "description": "model_2_pred_L_0p60",
+      "group": "model_2",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.600573,
+          "pressure_pa": -0.018987274486787702,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_2_pred_L_0p60",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLZeropsixzero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 438,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.600573
+    },
+    {
+      "description": "model_2_pred_L_2p00",
+      "group": "model_2",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.176684,
+          "pressure_pa": -0.005585911463591601,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_2_pred_L_2p00",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLTwopzerozero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 439,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.176684
+    },
+    {
+      "description": "model_2_pred_L_3p00",
+      "group": "model_2",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.117017,
+          "pressure_pa": -0.0036995234528033,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_2_pred_L_3p00",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLThreepzerozero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 440,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.117017
+    },
+    {
+      "description": "model_2_pred_L_4p00",
+      "group": "model_2",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.087354,
+          "pressure_pa": -0.0027617198500746003,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_2_pred_L_4p00",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLFourpzerozero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 441,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.087354
+    },
+    {
+      "description": "model_2_pred_L_4p50",
+      "group": "model_2",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.077499,
+          "pressure_pa": -0.0024501514144851,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_2_pred_L_4p50",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLFourpfivezero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 442,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.077499
+    },
+    {
+      "description": "model_3_pred_L_0p30",
+      "group": "model_3",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -1.21474,
+          "pressure_pa": -0.038404326884626,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_3_pred_L_0p30",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLZeropthreezero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 435,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -1.21474
+    },
+    {
+      "description": "model_3_pred_L_0p40",
+      "group": "model_3",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.906809,
+          "pressure_pa": -0.028669006748704103,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_3_pred_L_0p40",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLZeropfourzero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 436,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.906809
+    },
+    {
+      "description": "model_3_pred_L_0p50",
+      "group": "model_3",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.722824,
+          "pressure_pa": -0.022852272236077602,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_3_pred_L_0p50",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLZeropfivezero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 437,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.722824
+    },
+    {
+      "description": "model_3_pred_L_0p60",
+      "group": "model_3",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.600573,
+          "pressure_pa": -0.018987274486787702,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_3_pred_L_0p60",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLZeropsixzero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 438,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.600573
+    },
+    {
+      "description": "model_3_pred_L_2p00",
+      "group": "model_3",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.176684,
+          "pressure_pa": -0.005585911463591601,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_3_pred_L_2p00",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLTwopzerozero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 439,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.176684
+    },
+    {
+      "description": "model_3_pred_L_3p00",
+      "group": "model_3",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.117016,
+          "pressure_pa": -0.0036994918375384002,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_3_pred_L_3p00",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLThreepzerozero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 440,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.117016
+    },
+    {
+      "description": "model_3_pred_L_4p00",
+      "group": "model_3",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.087353,
+          "pressure_pa": -0.0027616882348097003,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_3_pred_L_4p00",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLFourpzerozero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 441,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.087353
+    },
+    {
+      "description": "model_3_pred_L_4p50",
+      "group": "model_3",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.077499,
+          "pressure_pa": -0.0024501514144851,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_3_pred_L_4p50",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelTwoPredLFourpfivezero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 442,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.077499
+    },
+    {
+      "description": "model_4_pred_L_0p30",
+      "group": "model_4",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -1.146881,
+          "pressure_pa": -0.036258946623776905,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_4_pred_L_0p30",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelFourPredLZeropthreezero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 435,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -1.146881
+    },
+    {
+      "description": "model_4_pred_L_0p40",
+      "group": "model_4",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.934706,
+          "pressure_pa": -0.029550977793619402,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_4_pred_L_0p40",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelFourPredLZeropfourzero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 436,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.934706
+    },
+    {
+      "description": "model_4_pred_L_0p50",
+      "group": "model_4",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.783064,
+          "pressure_pa": -0.024756775793653603,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_4_pred_L_0p50",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelFourPredLZeropfivezero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 437,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.783064
+    },
+    {
+      "description": "model_4_pred_L_0p60",
+      "group": "model_4",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.667556,
+          "pressure_pa": -0.021104959775584402,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_4_pred_L_0p60",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelFourPredLZeropsixzero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 438,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.667556
+    },
+    {
+      "description": "model_4_pred_L_2p00",
+      "group": "model_4",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.127105,
+          "pressure_pa": -0.0040184582451145,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_4_pred_L_2p00",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelFourPredLTwopzerozero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 439,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.127105
+    },
+    {
+      "description": "model_4_pred_L_3p00",
+      "group": "model_4",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.047197,
+          "pressure_pa": -0.0014921456574853002,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_4_pred_L_3p00",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelFourPredLThreepzerozero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 440,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.047197
+    },
+    {
+      "description": "model_4_pred_L_4p00",
+      "group": "model_4",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.018429,
+          "pressure_pa": -0.0005826377168421001,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_4_pred_L_4p00",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelOnePredLFourpzerozero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 441,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.018429
+    },
+    {
+      "description": "model_4_pred_L_4p50",
+      "group": "model_4",
+      "metadata": {
+        "pressure_unit_provenance": {
+          "basis": "specified Meep-to-SI pressure conversion; original value retained",
+          "conversion": "pressure_pa = pressure_meep * meep_to_pa",
+          "meep_to_pa": 0.0316152649,
+          "meep_unit": "dimensionless",
+          "pressure_meep": -0.011644,
+          "pressure_pa": -0.0003681281444956,
+          "si_unit": "Pa"
+        }
+      },
+      "name": "model_4_pred_L_4p50",
+      "source": {
+        "basis": "experiment specification; matching metric macro \\ModelFourPredLFourpfivezero used in manuscript (occurrence alone is not semantic verification)",
+        "line": 442,
+        "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
+      },
+      "unit": "reported pressure units",
+      "value": -0.011644
+    },
+    {
+      "description": "sweet_spot_rep_row_one_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_one_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_rep_row_one_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_one_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 82.0
+    },
+    {
+      "description": "sweet_spot_rep_row_one_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_one_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 50.0
+    },
+    {
+      "description": "sweet_spot_rep_row_one_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_one_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.114158
+    },
+    {
+      "description": "sweet_spot_rep_row_two_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_two_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_rep_row_two_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_two_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 94.0
+    },
+    {
+      "description": "sweet_spot_rep_row_two_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_two_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 50.0
+    },
+    {
+      "description": "sweet_spot_rep_row_two_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_two_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.028505
+    },
+    {
+      "description": "sweet_spot_rep_row_three_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_three_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_rep_row_three_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_three_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 80.0
+    },
+    {
+      "description": "sweet_spot_rep_row_three_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_three_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 100.0
+    },
+    {
+      "description": "sweet_spot_rep_row_three_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_three_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.007185
+    },
+    {
+      "description": "sweet_spot_rep_row_four_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_four_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_rep_row_four_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_four_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 82.0
+    },
+    {
+      "description": "sweet_spot_rep_row_four_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_four_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 100.0
+    },
+    {
+      "description": "sweet_spot_rep_row_four_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_four_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.006701
+    },
+    {
+      "description": "sweet_spot_rep_row_five_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_five_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_rep_row_five_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_five_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 94.0
+    },
+    {
+      "description": "sweet_spot_rep_row_five_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_five_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 100.0
+    },
+    {
+      "description": "sweet_spot_rep_row_five_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_five_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.005537
+    },
+    {
+      "description": "sweet_spot_rep_row_six_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_six_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_rep_row_six_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_six_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 88.0
+    },
+    {
+      "description": "sweet_spot_rep_row_six_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_six_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 100.0
+    },
+    {
+      "description": "sweet_spot_rep_row_six_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_six_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.005074
+    },
+    {
+      "description": "sweet_spot_rep_row_seven_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_seven_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_rep_row_seven_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_seven_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 92.0
+    },
+    {
+      "description": "sweet_spot_rep_row_seven_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_seven_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 100.0
+    },
+    {
+      "description": "sweet_spot_rep_row_seven_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_seven_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.005074
+    },
+    {
+      "description": "sweet_spot_rep_row_eight_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_eight_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_rep_row_eight_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_eight_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 90.0
+    },
+    {
+      "description": "sweet_spot_rep_row_eight_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_eight_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 100.0
+    },
+    {
+      "description": "sweet_spot_rep_row_eight_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_eight_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.00499
+    },
+    {
+      "description": "sweet_spot_rep_row_nine_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_nine_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 60.0
+    },
+    {
+      "description": "sweet_spot_rep_row_nine_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_nine_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 91.1
+    },
+    {
+      "description": "sweet_spot_rep_row_nine_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_nine_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 100.0
+    },
+    {
+      "description": "sweet_spot_rep_row_nine_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_nine_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.001562
+    },
+    {
+      "description": "sweet_spot_rep_row_ten_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_ten_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_rep_row_ten_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_ten_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 84.0
+    },
+    {
+      "description": "sweet_spot_rep_row_ten_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_ten_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 100.0
+    },
+    {
+      "description": "sweet_spot_rep_row_ten_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_ten_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.000881
+    },
+    {
+      "description": "sweet_spot_rep_row_eleven_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_eleven_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_rep_row_eleven_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_eleven_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 92.0
+    },
+    {
+      "description": "sweet_spot_rep_row_eleven_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_eleven_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 100.0
+    },
+    {
+      "description": "sweet_spot_rep_row_eleven_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_eleven_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.000769
+    },
+    {
+      "description": "sweet_spot_rep_row_twelve_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_twelve_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_rep_row_twelve_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_twelve_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 80.0
+    },
+    {
+      "description": "sweet_spot_rep_row_twelve_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_twelve_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 100.0
+    },
+    {
+      "description": "sweet_spot_rep_row_twelve_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_twelve_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.00062
+    },
+    {
+      "description": "sweet_spot_rep_row_thirteen_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_thirteen_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_rep_row_thirteen_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_thirteen_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 86.0
+    },
+    {
+      "description": "sweet_spot_rep_row_thirteen_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_thirteen_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 100.0
+    },
+    {
+      "description": "sweet_spot_rep_row_thirteen_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_thirteen_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.000524
+    },
+    {
+      "description": "sweet_spot_rep_row_fourteen_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_fourteen_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_rep_row_fourteen_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_fourteen_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 82.0
+    },
+    {
+      "description": "sweet_spot_rep_row_fourteen_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_fourteen_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 150.0
+    },
+    {
+      "description": "sweet_spot_rep_row_fourteen_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_fourteen_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.000372
+    },
+    {
+      "description": "sweet_spot_rep_row_fifteen_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_fifteen_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_rep_row_fifteen_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_fifteen_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 90.0
+    },
+    {
+      "description": "sweet_spot_rep_row_fifteen_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_fifteen_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 150.0
+    },
+    {
+      "description": "sweet_spot_rep_row_fifteen_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_fifteen_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.000359
+    },
+    {
+      "description": "sweet_spot_rep_row_sixteen_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_sixteen_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_rep_row_sixteen_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_sixteen_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 90.0
+    },
+    {
+      "description": "sweet_spot_rep_row_sixteen_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_sixteen_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 100.0
+    },
+    {
+      "description": "sweet_spot_rep_row_sixteen_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_sixteen_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.000224
+    },
+    {
+      "description": "sweet_spot_rep_row_seventeen_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_seventeen_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_rep_row_seventeen_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_seventeen_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 80.0
+    },
+    {
+      "description": "sweet_spot_rep_row_seventeen_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_seventeen_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 200.0
+    },
+    {
+      "description": "sweet_spot_rep_row_seventeen_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_seventeen_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.000191
+    },
+    {
+      "description": "sweet_spot_rep_row_eighteen_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_eighteen_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_rep_row_eighteen_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_eighteen_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 94.0
+    },
+    {
+      "description": "sweet_spot_rep_row_eighteen_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_eighteen_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 150.0
+    },
+    {
+      "description": "sweet_spot_rep_row_eighteen_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_eighteen_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 6.9e-05
+    },
+    {
+      "description": "sweet_spot_rep_row_nineteen_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_nineteen_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_rep_row_nineteen_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_nineteen_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 84.0
+    },
+    {
+      "description": "sweet_spot_rep_row_nineteen_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_nineteen_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 100.0
+    },
+    {
+      "description": "sweet_spot_rep_row_nineteen_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_nineteen_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 4.8e-05
+    },
+    {
+      "description": "sweet_spot_rep_row_twenty_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_twenty_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_rep_row_twenty_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_twenty_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 88.0
+    },
+    {
+      "description": "sweet_spot_rep_row_twenty_d_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_twenty_d_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 100.0
+    },
+    {
+      "description": "sweet_spot_rep_row_twenty_p_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_rep_row_twenty_p_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 4.7e-05
+    },
+    {
+      "description": "sweet_spot_eq_row_one_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_one_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_eq_row_one_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_one_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 80.0
+    },
+    {
+      "description": "sweet_spot_eq_row_one_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_one_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.007185
+    },
+    {
+      "description": "sweet_spot_eq_row_one_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_one_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 135.16
+    },
+    {
+      "description": "sweet_spot_eq_row_two_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_two_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_eq_row_two_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_two_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 80.0
+    },
+    {
+      "description": "sweet_spot_eq_row_two_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_two_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.007185
+    },
+    {
+      "description": "sweet_spot_eq_row_two_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_two_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 248.82
+    },
+    {
+      "description": "sweet_spot_eq_row_three_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_three_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_eq_row_three_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_three_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 82.0
+    },
+    {
+      "description": "sweet_spot_eq_row_three_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_three_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.006701
+    },
+    {
+      "description": "sweet_spot_eq_row_three_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_three_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 199.84
+    },
+    {
+      "description": "sweet_spot_eq_row_four_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_four_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_eq_row_four_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_four_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 84.0
+    },
+    {
+      "description": "sweet_spot_eq_row_four_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_four_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 4.8e-05
+    },
+    {
+      "description": "sweet_spot_eq_row_four_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_four_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 149.22
+    },
+    {
+      "description": "sweet_spot_eq_row_five_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_five_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_eq_row_five_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_five_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 86.0
+    },
+    {
+      "description": "sweet_spot_eq_row_five_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_five_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 2e-06
+    },
+    {
+      "description": "sweet_spot_eq_row_five_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_five_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 323.36
+    },
+    {
+      "description": "sweet_spot_eq_row_six_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_six_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_eq_row_six_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_six_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 88.0
+    },
+    {
+      "description": "sweet_spot_eq_row_six_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_six_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.005074
+    },
+    {
+      "description": "sweet_spot_eq_row_six_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_six_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 130.57
+    },
+    {
+      "description": "sweet_spot_eq_row_seven_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_seven_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_eq_row_seven_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_seven_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 90.0
+    },
+    {
+      "description": "sweet_spot_eq_row_seven_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_seven_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.00499
+    },
+    {
+      "description": "sweet_spot_eq_row_seven_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_seven_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 130.32
+    },
+    {
+      "description": "sweet_spot_eq_row_eight_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_eight_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_eq_row_eight_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_eight_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 90.0
+    },
+    {
+      "description": "sweet_spot_eq_row_eight_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_eight_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.00499
+    },
+    {
+      "description": "sweet_spot_eq_row_eight_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_eight_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 300.04
+    },
+    {
+      "description": "sweet_spot_eq_row_nine_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_nine_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_eq_row_nine_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_nine_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 92.0
+    },
+    {
+      "description": "sweet_spot_eq_row_nine_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_nine_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.005074
+    },
+    {
+      "description": "sweet_spot_eq_row_nine_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_nine_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 130.57
+    },
+    {
+      "description": "sweet_spot_eq_row_ten_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_ten_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_eq_row_ten_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_ten_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 92.0
+    },
+    {
+      "description": "sweet_spot_eq_row_ten_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_ten_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.005074
+    },
+    {
+      "description": "sweet_spot_eq_row_ten_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_ten_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 250.14
+    },
+    {
+      "description": "sweet_spot_eq_row_eleven_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_eleven_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 70.0
+    },
+    {
+      "description": "sweet_spot_eq_row_eleven_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_eleven_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 94.0
+    },
+    {
+      "description": "sweet_spot_eq_row_eleven_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_eleven_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.005537
+    },
+    {
+      "description": "sweet_spot_eq_row_eleven_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_eleven_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 294.23
+    },
+    {
+      "description": "sweet_spot_eq_row_twelve_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twelve_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_eq_row_twelve_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twelve_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 80.0
+    },
+    {
+      "description": "sweet_spot_eq_row_twelve_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twelve_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.00062
+    },
+    {
+      "description": "sweet_spot_eq_row_twelve_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twelve_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 189.92
+    },
+    {
+      "description": "sweet_spot_eq_row_thirteen_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_thirteen_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_eq_row_thirteen_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_thirteen_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 82.0
+    },
+    {
+      "description": "sweet_spot_eq_row_thirteen_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_thirteen_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.114158
+    },
+    {
+      "description": "sweet_spot_eq_row_thirteen_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_thirteen_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 200.13
+    },
+    {
+      "description": "sweet_spot_eq_row_fourteen_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_fourteen_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_eq_row_fourteen_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_fourteen_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 84.0
+    },
+    {
+      "description": "sweet_spot_eq_row_fourteen_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_fourteen_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.000881
+    },
+    {
+      "description": "sweet_spot_eq_row_fourteen_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_fourteen_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 110.74
+    },
+    {
+      "description": "sweet_spot_eq_row_fifteen_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_fifteen_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_eq_row_fifteen_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_fifteen_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 84.0
+    },
+    {
+      "description": "sweet_spot_eq_row_fifteen_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_fifteen_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.000881
+    },
+    {
+      "description": "sweet_spot_eq_row_fifteen_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_fifteen_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 252.06
+    },
+    {
+      "description": "sweet_spot_eq_row_sixteen_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_sixteen_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_eq_row_sixteen_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_sixteen_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 86.0
+    },
+    {
+      "description": "sweet_spot_eq_row_sixteen_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_sixteen_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.000524
+    },
+    {
+      "description": "sweet_spot_eq_row_sixteen_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_sixteen_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 201.49
+    },
+    {
+      "description": "sweet_spot_eq_row_seventeen_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_seventeen_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_eq_row_seventeen_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_seventeen_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 86.0
+    },
+    {
+      "description": "sweet_spot_eq_row_seventeen_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_seventeen_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.000524
+    },
+    {
+      "description": "sweet_spot_eq_row_seventeen_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_seventeen_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 300.12
+    },
+    {
+      "description": "sweet_spot_eq_row_eighteen_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_eighteen_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_eq_row_eighteen_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_eighteen_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 88.0
+    },
+    {
+      "description": "sweet_spot_eq_row_eighteen_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_eighteen_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 4.7e-05
+    },
+    {
+      "description": "sweet_spot_eq_row_eighteen_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_eighteen_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 152.18
+    },
+    {
+      "description": "sweet_spot_eq_row_nineteen_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_nineteen_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_eq_row_nineteen_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_nineteen_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 88.0
+    },
+    {
+      "description": "sweet_spot_eq_row_nineteen_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_nineteen_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 4.7e-05
+    },
+    {
+      "description": "sweet_spot_eq_row_nineteen_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_nineteen_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 250.11
+    },
+    {
+      "description": "sweet_spot_eq_row_twenty_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twenty_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_eq_row_twenty_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twenty_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 90.0
+    },
+    {
+      "description": "sweet_spot_eq_row_twenty_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twenty_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.000359
+    },
+    {
+      "description": "sweet_spot_eq_row_twenty_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twenty_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 199.9
+    },
+    {
+      "description": "sweet_spot_eq_row_twentyone_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twentyone_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_eq_row_twentyone_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twentyone_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 92.0
+    },
+    {
+      "description": "sweet_spot_eq_row_twentyone_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twentyone_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.000769
+    },
+    {
+      "description": "sweet_spot_eq_row_twentyone_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twentyone_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 149.93
+    },
+    {
+      "description": "sweet_spot_eq_row_twentytwo_alpha_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twentytwo_alpha_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 75.0
+    },
+    {
+      "description": "sweet_spot_eq_row_twentytwo_theta_deg",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twentytwo_theta_deg",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "deg",
+      "value": 94.0
+    },
+    {
+      "description": "sweet_spot_eq_row_twentytwo_p_max_pa",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twentytwo_p_max_pa",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "Pa",
+      "value": 0.028505
+    },
+    {
+      "description": "sweet_spot_eq_row_twentytwo_d_eq_nm",
+      "group": "sweet_spot_tables",
+      "metadata": {},
+      "name": "sweet_spot_eq_row_twentytwo_d_eq_nm",
+      "source": {
+        "basis": "sweet_spot_table_metric",
+        "line": null,
+        "path": "results/sweet_spot_table_metrics.json",
+        "sha256": "e951dc755c3ef82b3085cc12018b439f19a40d1f3ec898f46f606db374a54773"
+      },
+      "unit": "nm",
+      "value": 100.0
     },
     {
       "description": "Repulsive sweet spot 1: alpha",
@@ -1349,7 +4833,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 576,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "deg",
       "value": 75.0
@@ -1363,7 +4847,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 2017,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "deg",
       "value": 82.0
@@ -1377,7 +4861,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 320,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "nm",
       "value": 50.0
@@ -1391,7 +4875,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 2015,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "Pa",
       "value": 0.114158
@@ -1415,7 +4899,7 @@
         "basis": "experiment specification; matching metric macro \\SweetSpotOnePressureMeep used in manuscript (occurrence alone is not semantic verification)",
         "line": 49,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": 3.610842
@@ -1429,7 +4913,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 576,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "deg",
       "value": 75.0
@@ -1443,7 +4927,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 381,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "deg",
       "value": 90.0
@@ -1457,7 +4941,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 498,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "nm",
       "value": 150.0
@@ -1471,7 +4955,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 2020,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "Pa",
       "value": 0.11304
@@ -1495,7 +4979,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 2021,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported pressure units",
       "value": 3.57548
@@ -1509,7 +4993,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 576,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "deg",
       "value": 75.0
@@ -1523,7 +5007,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 576,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "deg",
       "value": 94.0
@@ -1537,7 +5021,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 320,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "nm",
       "value": 50.0
@@ -1551,7 +5035,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 2025,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "Pa",
       "value": 0.028505
@@ -1575,7 +5059,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 2026,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported pressure units",
       "value": 0.90161
@@ -1589,7 +5073,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 576,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "deg",
       "value": 60.0
@@ -1603,7 +5087,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 2032,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "deg",
       "value": 91.1
@@ -1617,7 +5101,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 49,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "nm",
       "value": 100.0
@@ -1631,7 +5115,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 2030,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "Pa",
       "value": 0.001562
@@ -1655,7 +5139,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 2031,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported pressure units",
       "value": 0.049422
@@ -1669,7 +5153,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 576,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "deg",
       "value": 60.0
@@ -1683,7 +5167,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 2037,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "deg",
       "value": 89.2
@@ -1697,7 +5181,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 373,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "nm",
       "value": 200.0
@@ -1711,7 +5195,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 2035,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "Pa",
       "value": 0.000769
@@ -1735,7 +5219,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 2036,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported pressure units",
       "value": 0.024319
@@ -1749,7 +5233,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 576,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "deg",
       "value": 60.0
@@ -1763,7 +5247,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 2042,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "deg",
       "value": 86.7
@@ -1777,7 +5261,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 373,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "nm",
       "value": 200.0
@@ -1791,7 +5275,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 2040,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "Pa",
       "value": 0.00062
@@ -1815,7 +5299,7 @@
         "basis": "experiment specification; numeric occurrence in manuscript (occurrence alone is not semantic verification)",
         "line": 2041,
         "path": "Papers/Fractal_Casimir_Nature_EM/macros_results.tex",
-        "sha256": "01334c4bb2872c14d13e22693f7382760871458e0a1832eeaca970c0879a1317"
+        "sha256": "3b3f65caf1cda374bae0e6a16add0f1f9d1fa0ec4b4b8d4c50062610974c7568"
       },
       "unit": "reported pressure units",
       "value": 0.019608
@@ -1839,7 +5323,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -1.12464
@@ -1863,7 +5347,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -1.12434
@@ -1887,7 +5371,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -0.910253
@@ -1911,7 +5395,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -0.980524
@@ -1935,7 +5419,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -0.73338
@@ -1959,7 +5443,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -0.78935
@@ -1983,7 +5467,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -0.614698
@@ -2007,7 +5491,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -0.635006
@@ -2031,7 +5515,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -0.73929
@@ -2055,7 +5539,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -0.555834
@@ -2079,7 +5563,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -0.427396
@@ -2103,7 +5587,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -0.336049
@@ -2127,7 +5611,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -0.118022
@@ -2151,7 +5635,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -0.057953
@@ -2175,7 +5659,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -0.034166
@@ -2199,7 +5683,7 @@
         "basis": "manuscript table",
         "line": 387,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported pressure units",
       "value": -0.0274
@@ -2213,7 +5697,7 @@
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 421,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported fit units",
       "value": 0.641077
@@ -2227,7 +5711,7 @@
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 421,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported fit units",
       "value": 0.652603
@@ -2241,7 +5725,7 @@
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 421,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported fit units",
       "value": 0.241057
@@ -2255,7 +5739,7 @@
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 422,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported fit units",
       "value": 0.357367
@@ -2269,7 +5753,7 @@
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 422,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported fit units",
       "value": 1.01624
@@ -2283,7 +5767,7 @@
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 423,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported fit units",
       "value": 0.310783
@@ -2297,7 +5781,7 @@
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 423,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported fit units",
       "value": 1.01625
@@ -2311,7 +5795,7 @@
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 423,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported fit units",
       "value": 0.046584
@@ -2325,7 +5809,7 @@
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 423,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported fit units",
       "value": 1.01619
@@ -2339,7 +5823,7 @@
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 424,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported fit units",
       "value": 0.87666
@@ -2353,7 +5837,7 @@
         "basis": "explicit parameter assignment in model paragraph or item",
         "line": 424,
         "path": "Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex",
-        "sha256": "e40edd58523b2c94e43250df686619b24d3cbf96e5b56b9af695cbc90bb6c05c"
+        "sha256": "1bcce9b4d63f34b4535c6de53498ed7cae6fc8184a07f4b841b63afe735b4d13"
       },
       "unit": "reported fit units",
       "value": 0.426889
@@ -2367,7 +5851,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 135.16
@@ -2381,7 +5865,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 248.82
@@ -2395,7 +5879,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 199.84
@@ -2409,7 +5893,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 149.22
@@ -2423,7 +5907,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 323.36
@@ -2437,7 +5921,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 130.57
@@ -2451,7 +5935,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 130.32
@@ -2465,7 +5949,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 300.04
@@ -2479,7 +5963,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 130.57
@@ -2493,7 +5977,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 250.14
@@ -2507,7 +5991,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 294.23
@@ -2521,7 +6005,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 189.92
@@ -2535,7 +6019,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 200.13
@@ -2549,7 +6033,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 110.74
@@ -2563,7 +6047,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 252.06
@@ -2577,7 +6061,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 201.49
@@ -2591,7 +6075,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 300.12
@@ -2605,7 +6089,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 152.18
@@ -2619,7 +6103,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 250.11
@@ -2633,7 +6117,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 199.9
@@ -2647,7 +6131,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 149.93
@@ -2661,7 +6145,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 100.0
@@ -2675,7 +6159,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "count",
       "value": 22.0
@@ -2689,7 +6173,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 100.0
@@ -2703,7 +6187,7 @@
         "basis": "manuscript table",
         "line": 7,
         "path": "Papers/Fractal_Casimir_Nature_EM/tables/table_levitation_equilibria.tex",
-        "sha256": "e6153795068d5633affe0eaa43b5ea7813421ff8cecd7bb60cd8b67d911af768"
+        "sha256": "e849122f485db9f48d2656a0b04072b7bd542c26054c85bc3b411fb050bbb5fd"
       },
       "unit": "nm",
       "value": 323.36
@@ -3762,7 +7246,7 @@
   "model": "FractalCasimirProvenance",
   "schema_version": 1,
   "script": "execution/export_provenance_pipeline.py",
-  "script_sha256": "e01e48c866ebeca11944a75b46e6602336fc91b3786394977bee5963e8411740",
+  "script_sha256": "ddfb62297889559f4c4ce570166faca288debef08e46171fc32b3ed2844dced0",
   "selected_metric_names": [
     "model_1_ssr",
     "model_2_ssr",
@@ -3799,6 +7283,209 @@
     "atomic_cqed_purcell_lifetime_variation_max",
     "atomic_cqed_cp_shift",
     "atomic_cqed_scattering_deviation",
+    "model_1_to_model_4_ssr_ratio",
+    "model_2_to_model_4_ssr_ratio",
+    "sweet_spot_repulsive_count",
+    "model_1_pred_L_0p30",
+    "model_1_pred_L_0p40",
+    "model_1_pred_L_0p50",
+    "model_1_pred_L_0p60",
+    "model_1_pred_L_2p00",
+    "model_1_pred_L_3p00",
+    "model_1_pred_L_4p00",
+    "model_1_pred_L_4p50",
+    "model_2_pred_L_0p30",
+    "model_2_pred_L_0p40",
+    "model_2_pred_L_0p50",
+    "model_2_pred_L_0p60",
+    "model_2_pred_L_2p00",
+    "model_2_pred_L_3p00",
+    "model_2_pred_L_4p00",
+    "model_2_pred_L_4p50",
+    "model_3_pred_L_0p30",
+    "model_3_pred_L_0p40",
+    "model_3_pred_L_0p50",
+    "model_3_pred_L_0p60",
+    "model_3_pred_L_2p00",
+    "model_3_pred_L_3p00",
+    "model_3_pred_L_4p00",
+    "model_3_pred_L_4p50",
+    "model_4_pred_L_0p30",
+    "model_4_pred_L_0p40",
+    "model_4_pred_L_0p50",
+    "model_4_pred_L_0p60",
+    "model_4_pred_L_2p00",
+    "model_4_pred_L_3p00",
+    "model_4_pred_L_4p00",
+    "model_4_pred_L_4p50",
+    "sweet_spot_rep_row_one_alpha_deg",
+    "sweet_spot_rep_row_one_theta_deg",
+    "sweet_spot_rep_row_one_d_nm",
+    "sweet_spot_rep_row_one_p_pa",
+    "sweet_spot_rep_row_two_alpha_deg",
+    "sweet_spot_rep_row_two_theta_deg",
+    "sweet_spot_rep_row_two_d_nm",
+    "sweet_spot_rep_row_two_p_pa",
+    "sweet_spot_rep_row_three_alpha_deg",
+    "sweet_spot_rep_row_three_theta_deg",
+    "sweet_spot_rep_row_three_d_nm",
+    "sweet_spot_rep_row_three_p_pa",
+    "sweet_spot_rep_row_four_alpha_deg",
+    "sweet_spot_rep_row_four_theta_deg",
+    "sweet_spot_rep_row_four_d_nm",
+    "sweet_spot_rep_row_four_p_pa",
+    "sweet_spot_rep_row_five_alpha_deg",
+    "sweet_spot_rep_row_five_theta_deg",
+    "sweet_spot_rep_row_five_d_nm",
+    "sweet_spot_rep_row_five_p_pa",
+    "sweet_spot_rep_row_six_alpha_deg",
+    "sweet_spot_rep_row_six_theta_deg",
+    "sweet_spot_rep_row_six_d_nm",
+    "sweet_spot_rep_row_six_p_pa",
+    "sweet_spot_rep_row_seven_alpha_deg",
+    "sweet_spot_rep_row_seven_theta_deg",
+    "sweet_spot_rep_row_seven_d_nm",
+    "sweet_spot_rep_row_seven_p_pa",
+    "sweet_spot_rep_row_eight_alpha_deg",
+    "sweet_spot_rep_row_eight_theta_deg",
+    "sweet_spot_rep_row_eight_d_nm",
+    "sweet_spot_rep_row_eight_p_pa",
+    "sweet_spot_rep_row_nine_alpha_deg",
+    "sweet_spot_rep_row_nine_theta_deg",
+    "sweet_spot_rep_row_nine_d_nm",
+    "sweet_spot_rep_row_nine_p_pa",
+    "sweet_spot_rep_row_ten_alpha_deg",
+    "sweet_spot_rep_row_ten_theta_deg",
+    "sweet_spot_rep_row_ten_d_nm",
+    "sweet_spot_rep_row_ten_p_pa",
+    "sweet_spot_rep_row_eleven_alpha_deg",
+    "sweet_spot_rep_row_eleven_theta_deg",
+    "sweet_spot_rep_row_eleven_d_nm",
+    "sweet_spot_rep_row_eleven_p_pa",
+    "sweet_spot_rep_row_twelve_alpha_deg",
+    "sweet_spot_rep_row_twelve_theta_deg",
+    "sweet_spot_rep_row_twelve_d_nm",
+    "sweet_spot_rep_row_twelve_p_pa",
+    "sweet_spot_rep_row_thirteen_alpha_deg",
+    "sweet_spot_rep_row_thirteen_theta_deg",
+    "sweet_spot_rep_row_thirteen_d_nm",
+    "sweet_spot_rep_row_thirteen_p_pa",
+    "sweet_spot_rep_row_fourteen_alpha_deg",
+    "sweet_spot_rep_row_fourteen_theta_deg",
+    "sweet_spot_rep_row_fourteen_d_nm",
+    "sweet_spot_rep_row_fourteen_p_pa",
+    "sweet_spot_rep_row_fifteen_alpha_deg",
+    "sweet_spot_rep_row_fifteen_theta_deg",
+    "sweet_spot_rep_row_fifteen_d_nm",
+    "sweet_spot_rep_row_fifteen_p_pa",
+    "sweet_spot_rep_row_sixteen_alpha_deg",
+    "sweet_spot_rep_row_sixteen_theta_deg",
+    "sweet_spot_rep_row_sixteen_d_nm",
+    "sweet_spot_rep_row_sixteen_p_pa",
+    "sweet_spot_rep_row_seventeen_alpha_deg",
+    "sweet_spot_rep_row_seventeen_theta_deg",
+    "sweet_spot_rep_row_seventeen_d_nm",
+    "sweet_spot_rep_row_seventeen_p_pa",
+    "sweet_spot_rep_row_eighteen_alpha_deg",
+    "sweet_spot_rep_row_eighteen_theta_deg",
+    "sweet_spot_rep_row_eighteen_d_nm",
+    "sweet_spot_rep_row_eighteen_p_pa",
+    "sweet_spot_rep_row_nineteen_alpha_deg",
+    "sweet_spot_rep_row_nineteen_theta_deg",
+    "sweet_spot_rep_row_nineteen_d_nm",
+    "sweet_spot_rep_row_nineteen_p_pa",
+    "sweet_spot_rep_row_twenty_alpha_deg",
+    "sweet_spot_rep_row_twenty_theta_deg",
+    "sweet_spot_rep_row_twenty_d_nm",
+    "sweet_spot_rep_row_twenty_p_pa",
+    "sweet_spot_eq_row_one_alpha_deg",
+    "sweet_spot_eq_row_one_theta_deg",
+    "sweet_spot_eq_row_one_p_max_pa",
+    "sweet_spot_eq_row_one_d_eq_nm",
+    "sweet_spot_eq_row_two_alpha_deg",
+    "sweet_spot_eq_row_two_theta_deg",
+    "sweet_spot_eq_row_two_p_max_pa",
+    "sweet_spot_eq_row_two_d_eq_nm",
+    "sweet_spot_eq_row_three_alpha_deg",
+    "sweet_spot_eq_row_three_theta_deg",
+    "sweet_spot_eq_row_three_p_max_pa",
+    "sweet_spot_eq_row_three_d_eq_nm",
+    "sweet_spot_eq_row_four_alpha_deg",
+    "sweet_spot_eq_row_four_theta_deg",
+    "sweet_spot_eq_row_four_p_max_pa",
+    "sweet_spot_eq_row_four_d_eq_nm",
+    "sweet_spot_eq_row_five_alpha_deg",
+    "sweet_spot_eq_row_five_theta_deg",
+    "sweet_spot_eq_row_five_p_max_pa",
+    "sweet_spot_eq_row_five_d_eq_nm",
+    "sweet_spot_eq_row_six_alpha_deg",
+    "sweet_spot_eq_row_six_theta_deg",
+    "sweet_spot_eq_row_six_p_max_pa",
+    "sweet_spot_eq_row_six_d_eq_nm",
+    "sweet_spot_eq_row_seven_alpha_deg",
+    "sweet_spot_eq_row_seven_theta_deg",
+    "sweet_spot_eq_row_seven_p_max_pa",
+    "sweet_spot_eq_row_seven_d_eq_nm",
+    "sweet_spot_eq_row_eight_alpha_deg",
+    "sweet_spot_eq_row_eight_theta_deg",
+    "sweet_spot_eq_row_eight_p_max_pa",
+    "sweet_spot_eq_row_eight_d_eq_nm",
+    "sweet_spot_eq_row_nine_alpha_deg",
+    "sweet_spot_eq_row_nine_theta_deg",
+    "sweet_spot_eq_row_nine_p_max_pa",
+    "sweet_spot_eq_row_nine_d_eq_nm",
+    "sweet_spot_eq_row_ten_alpha_deg",
+    "sweet_spot_eq_row_ten_theta_deg",
+    "sweet_spot_eq_row_ten_p_max_pa",
+    "sweet_spot_eq_row_ten_d_eq_nm",
+    "sweet_spot_eq_row_eleven_alpha_deg",
+    "sweet_spot_eq_row_eleven_theta_deg",
+    "sweet_spot_eq_row_eleven_p_max_pa",
+    "sweet_spot_eq_row_eleven_d_eq_nm",
+    "sweet_spot_eq_row_twelve_alpha_deg",
+    "sweet_spot_eq_row_twelve_theta_deg",
+    "sweet_spot_eq_row_twelve_p_max_pa",
+    "sweet_spot_eq_row_twelve_d_eq_nm",
+    "sweet_spot_eq_row_thirteen_alpha_deg",
+    "sweet_spot_eq_row_thirteen_theta_deg",
+    "sweet_spot_eq_row_thirteen_p_max_pa",
+    "sweet_spot_eq_row_thirteen_d_eq_nm",
+    "sweet_spot_eq_row_fourteen_alpha_deg",
+    "sweet_spot_eq_row_fourteen_theta_deg",
+    "sweet_spot_eq_row_fourteen_p_max_pa",
+    "sweet_spot_eq_row_fourteen_d_eq_nm",
+    "sweet_spot_eq_row_fifteen_alpha_deg",
+    "sweet_spot_eq_row_fifteen_theta_deg",
+    "sweet_spot_eq_row_fifteen_p_max_pa",
+    "sweet_spot_eq_row_fifteen_d_eq_nm",
+    "sweet_spot_eq_row_sixteen_alpha_deg",
+    "sweet_spot_eq_row_sixteen_theta_deg",
+    "sweet_spot_eq_row_sixteen_p_max_pa",
+    "sweet_spot_eq_row_sixteen_d_eq_nm",
+    "sweet_spot_eq_row_seventeen_alpha_deg",
+    "sweet_spot_eq_row_seventeen_theta_deg",
+    "sweet_spot_eq_row_seventeen_p_max_pa",
+    "sweet_spot_eq_row_seventeen_d_eq_nm",
+    "sweet_spot_eq_row_eighteen_alpha_deg",
+    "sweet_spot_eq_row_eighteen_theta_deg",
+    "sweet_spot_eq_row_eighteen_p_max_pa",
+    "sweet_spot_eq_row_eighteen_d_eq_nm",
+    "sweet_spot_eq_row_nineteen_alpha_deg",
+    "sweet_spot_eq_row_nineteen_theta_deg",
+    "sweet_spot_eq_row_nineteen_p_max_pa",
+    "sweet_spot_eq_row_nineteen_d_eq_nm",
+    "sweet_spot_eq_row_twenty_alpha_deg",
+    "sweet_spot_eq_row_twenty_theta_deg",
+    "sweet_spot_eq_row_twenty_p_max_pa",
+    "sweet_spot_eq_row_twenty_d_eq_nm",
+    "sweet_spot_eq_row_twentyone_alpha_deg",
+    "sweet_spot_eq_row_twentyone_theta_deg",
+    "sweet_spot_eq_row_twentyone_p_max_pa",
+    "sweet_spot_eq_row_twentyone_d_eq_nm",
+    "sweet_spot_eq_row_twentytwo_alpha_deg",
+    "sweet_spot_eq_row_twentytwo_theta_deg",
+    "sweet_spot_eq_row_twentytwo_p_max_pa",
+    "sweet_spot_eq_row_twentytwo_d_eq_nm",
     "sweet_spot_1_alpha",
     "sweet_spot_1_theta",
     "sweet_spot_1_d",
@@ -3958,7 +7645,5 @@
     "rot_c4_tightslot_n2_bem_theta18_richardson_f_z_pn"
   ],
   "status": "completed",
-  "warnings": [
-    "frontier_2: force subtraction differs from reported F_net by 1e-06; retained the reported value (rounding-level difference)."
-  ]
+  "warnings": []
 }
