@@ -290,3 +290,7 @@
 ### [BUG-261102-02] 2026-11-02T06:30:00Z | execution/run_nature_feasibility_and_stability.py, execution/run_scoped_clutch_meep.py | scope=eval model=BEM_ElectroThermal_Feasibility dataset=nature_feasibility_stability
 - **Bug**: Stiff NEMS suspension gave 6-7 pm lift without compliant nm-stroke regimes, and Meep stress-box margin scaled as 1/R across resolutions.
 - **Solution**: Added 4-regime NEMS suspension mechanics with pull-in/basin lift, plus fixed stress-box margin, nmax, Gold, and rectilinear Meep controls.
+
+### [BUG-261102-03] 2026-11-02T16:05:00Z | execution/materials_database_dispersive.py | scope=infra
+- **Bug**: Job 8798621 failed with ImportError for GOLD_EPS_INF because execution/materials_database_dispersive.py was unstaged locally.
+- **Solution**: Staged and pushed execution/materials_database_dispersive.py and all execution/ modules so cluster nodes have centralized constants.
