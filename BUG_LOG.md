@@ -251,3 +251,42 @@
 ### [BUG-261018-03] 2026-10-18 model=export_provenance_pipeline | execution/export_provenance_pipeline.py
 - **Bug:** `Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex` contained dimensionally ambiguous shorthand in Eqs. (3), (5), (6), (7), (18), (24)–(25), (27), (29), and (32), hardcoded empirical fit cells in Table 2 (`tab:fit_comparison`), and duplicate/uncited preprint entries in `references.bib`, while `utils/metrics_logger.py` self-test polluted `provenance_metrics.json` with demo keys (`accuracy_top1`, `f1_score`) and `export_provenance_pipeline.py` overwrote figure sidecar `input_source` dictionaries with plain strings.
 - **Solution:** Updated `nature_fractal_casimir_em.tex`, `references.bib`, `casimir_bem_solver.py`, `export_provenance_pipeline.py`, `utils/metrics_logger.py`, and `build_rotational_z_eff_clutch_blender.py` via `gpt-6.1-sol` so all equations match exact physical implementations, all 395 empirical metrics and 28 figure sidecars pass `export_provenance_pipeline.py` (`Audit status: PASS`, 0 errors, 0 warnings), `fig_rotational_z_eff_clutch_blender.png` is freshly rendered in Blender 4.5 with post-bugfix forces, and `references.bib` contains only the 20 peer-reviewed cited entries.
+### [BUG-261020-01] 2026-10-20 | execution/materials_database_dispersive.py | scope=model model=materials_database_dispersive
+- **Bug**: Hardcoded ReS2 z-permittivity 4.5, unparameterized immersion gamma, silent 2.1 fallback, and misplaced xy sigma_offdiag in z slot.
+- **Solution**: Parameterized RES2_EPS_INF_Z=4.50 and RES2_OSCILLATORS_Z, moved xy sigma_offdiag to Vector3.x, validated finite inputs, and rejected unknown materials.
+
+### [BUG-261020-02] 2026-10-20 | execution/run_pfa_model.py | scope=model model=Lifshitz_PFA_3D
+- **Bug**: run_pfa_model.py used hardcoded Gold/Si fallback parameters, Lorentzian denominator for Drude poles, -1e20 PEC hack, and hardcoded 8/9 area ratio.
+- **Solution**: Unified Gold/Si dispersion with materials_database_dispersive.py, added exact n=0 static Matsubara limits and Drude branch, and parameterized area_ratio.
+
+### [BUG-261020-03] 2026-10-20 | execution/casimir_bem_solver.py | scope=model model=casimir_bem_solver
+- **Bug**: BEM resolution tiers (Standard, High, Ultra_High) and mesh defaults were inconsistently hardcoded across 10 scripts.
+- **Solution**: Defined canonical BemResolutionTier ladder Standard=(2,3,3,2,24), High=(3,4,4,3,32), Ultra_High=(4,6,6,4,40) in casimir_bem_solver.py and unified callers.
+
+### [BUG-261023-01] 2026-10-23 | `execution/run_scoped_clutch_meep.py`, `clutch_geometry_redesign.py`, `casimir_bem_solver.py` | scope=infra model=run_scoped_clutch_meep
+- **Bug**: Hardcoded 15.0 deg tooth center offset in run_scoped_clutch_meep.py (lines 617, 873) and magic-number defaults across clutch_geometry_redesign.py.
+- **Solution**: Defined canonical DEFAULT_TOOTH_CENTER_OFFSET_DEG = 15.0 and geometry/solver default constants in clutch_geometry_redesign.py, run_scoped_clutch_meep.py.
+
+### [BUG-261025-01] 2026-10-25T13:18:00Z | execution/run_nature_6step_narrative.py | scope=infra model=BEM_Meep_Nature6Step dataset=nature_6step_narrative
+- **Bug**: Operating angles (3.0, 21.0, 48.0), z_tip sweep grids, tooth_center_offset_deg (15.0).
+- **Solution**: Derived THETA_DISENGAGED_DEG, THETA_STRADDLING_DEG, and THETA_ENGAGED_DEG from STUDY_APERTURE_ARC_DEG and DEFAULT_TOOTH_CENTER_OFFSET_DEG.
+
+### [BUG-261025-02] 2026-10-25T14:55:00Z | execution/run_nature_feasibility_and_stability.py | scope=eval model=BEM_ElectroThermal_Feasibility dataset=nature_feasibility_stability
+- **Bug**: NEMS spoke stiffness used 1e3 instead of 1e6 pN/nm per GPa*um and Layer 2 scripts hardcoded CODATA constants, designs, and 15/3/48 deg angles.
+- **Solution**: Corrected GPA_UM_TO_PN_PER_NM to 1e6, validated stencil spans, and centralized CODATA constants, clutch designs, and angle helpers in Layer 0/2.
+
+### [BUG-261025-03] 2026-10-25T15:36:00Z | execution/run_nature_6step_narrative.py, execution/generate_nature_meep_verification_configs.py, execution/run_real_world_nems_clutch.py | scope=eval model=BEM_Meep_Nature6Step dataset=nature_6step_narrative
+- **Bug**: Layer 1/2 scripts redefined CODATA/Meep/NEMS dielectric constants locally, while `run_nature_6step_narrative.py` defined `Rot_C8_Compact_N2` with `R=[0.30, 0.65], w1=0.65` instead of `R=[0.20, 0.90], w1=0.45` and `generate_nature_meep_verification_configs.py` used `aperture_arc_deg=30.0` and level-1 `z_tip=-0.110` for `Cantor_N2_HybridRZ`.
+- **Solution**: Centralized all physical, dielectric, and geometric constants in `materials_database_dispersive.py` and `clutch_geometry_redesign.py`, unified `Rot_C8_Compact_N2` and `Cantor_N2_HybridRZ` across all scripts, and enforced strictly positive imaginary frequencies in `run_real_world_nems_clutch.py`.
+
+### [BUG-261026-01] 2026-10-26T21:20:00Z | Papers/Fractal_Casimir_Nature_EM/nature_fractal_casimir_em.tex, Papers/Fractal_Casimir_Nature_EM/tables/section_nems_feasibility.tex, execution/export_provenance_pipeline.py, execution/run_atomic_cqed_probes.py, quantum_gravity_trace_analysis/quantum_gravity_trace_repulsion_analysis.md | scope=eval model=FractalCasimirProvenance dataset=manuscript_provenance_registry
+- **Bug**: `nature_fractal_casimir_em.tex` retained legacy $\varepsilon_{\rm bg}=2.1$ liquid-immersion sections with unscaled Meep pressure labels in Table 3, ` pore ($\varepsilon=1.0$) ` prose, and an ungrounded $10^{-5}\text{ eV}$ Casimir-Polder estimate, while `section_nems_feasibility.tex` labeled the $E_Y=169\text{ GPa}$ $\text{Si}\langle 110\rangle$ suspension as $\text{Si}_3\text{N}_4$, `export_provenance_pipeline.py` hardcoded 56 specification tuples, and `quantum_gravity_trace_repulsion_analysis.md` cited unscaled $+3.61\text{ Pa}$.
+- **Solution**: Transitioned `nature_fractal_casimir_em.tex` to 100% pure true vacuum ($\varepsilon_{\rm bg}=1.0$) centered on the Gold Concentric Cantor-Ring Rotary Quantum Clutch, added first-principles `execution/run_atomic_cqed_probes.py` ($\Delta U_{\rm CP} = 2.51\times 10^{-10}\text{ eV}$), eliminated all hardcoded tuples in `export_provenance_pipeline.py`, corrected the $\text{Si}\langle 110\rangle$ label in `section_nems_feasibility.tex`, and updated `quantum_gravity_trace_repulsion_analysis.md` to $+0.1142\text{ Pa}$.
+
+### [BUG-261102-01] 2026-11-02 | Papers/FCE_Nature_ver01/fce_nature_ver01.tex | scope=docs
+- **Bug**: Table 1 mixed BEM mesh tiers, omitted 4 controls, conflated 108/432 vs 252/1008 FDTD moments, and had hardcoded geometric coordinate typos.
+- **Solution**: Separated BEM Std/High/Ultra-High table columns, added all 12 constellations, grounded 36/144, 108/432, and 252/1008 FDTD moment macros, and synced coordinates.
+
+### [BUG-261102-02] 2026-11-02T06:30:00Z | execution/run_nature_feasibility_and_stability.py, execution/run_scoped_clutch_meep.py | scope=eval model=BEM_ElectroThermal_Feasibility dataset=nature_feasibility_stability
+- **Bug**: Stiff NEMS suspension gave 6-7 pm lift without compliant nm-stroke regimes, and Meep stress-box margin scaled as 1/R across resolutions.
+- **Solution**: Added 4-regime NEMS suspension mechanics with pull-in/basin lift, plus fixed stress-box margin, nmax, Gold, and rectilinear Meep controls.

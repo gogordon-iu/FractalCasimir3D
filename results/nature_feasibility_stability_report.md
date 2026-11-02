@@ -14,16 +14,16 @@ Positive vertical force denotes repulsion. Full-study forces and energies use Go
   "formulation": "vector_dyadic",
   "max_steps": 0,
   "micro_resolution_override": false,
-  "n_phi_bridge": 2,
-  "n_phi_tooth": 2,
-  "n_r": 1,
-  "n_xi": 12,
+  "n_phi_bridge": 3,
+  "n_phi_tooth": 3,
+  "n_r": 2,
+  "n_xi": 24,
   "n_z": 2,
   "requested_resolution": {
-    "n_phi_bridge": 2,
-    "n_phi_tooth": 2,
-    "n_r": 1,
-    "n_xi": 12,
+    "n_phi_bridge": 3,
+    "n_phi_tooth": 3,
+    "n_r": 2,
+    "n_xi": 24,
     "n_z": 2
   },
   "resume_report_path": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\results\\nature_feasibility_stability_report.json"
@@ -51,26 +51,26 @@ Legacy 30 nm work is the single-point force × 0.030 um extrapolation. Basin wor
 
 | Rotor shift (um) | Mutual capacitance (F) | Relative solve residual |
 |---:|---:|---:|
-| -0.002 | 1.681883873e-16 | 6.08108e-16 |
-| 0 | 1.68621526e-16 | 6.99687e-16 |
-| 0.002 | 1.690245244e-16 | 6.21476e-16 |
+| -0.002 | 1.930647804e-16 | 1.06485e-15 |
+| 0 | 1.939067162e-16 | 8.28375e-16 |
+| 0.002 | 1.946927604e-16 | 8.65807e-16 |
 
-- dC/dz: 2.09034274e-10 F/m
-- Absolute gradient coefficient: 0.000209034274 pN/mV²
-- Critical voltage: 85.12961468 mV (`finite`)
+- dC/dz: 4.069950004e-10 F/m
+- Absolute gradient coefficient: 0.0004069950004 pN/mV²
+- Critical voltage: 61.00913685 mV (`finite`)
 - Repulsion survives 50 mV: yes
 
 | Voltage (mV) | Net force (pN) |
 |---:|---:|
 | 0 | 0.757441 |
-| 5 | 0.754828 |
-| 10 | 0.746989 |
-| 15 | 0.733925 |
-| 20 | 0.715634 |
-| 25 | 0.692118 |
-| 30 | 0.663376 |
-| 40 | 0.590214 |
-| 50 | 0.496148 |
+| 5 | 0.752354 |
+| 10 | 0.737091 |
+| 15 | 0.711654 |
+| 20 | 0.676042 |
+| 25 | 0.630255 |
+| 30 | 0.574293 |
+| 40 | 0.431845 |
+| 50 | 0.248697 |
 
 ### 3. Lateral stiffness and four-spoke suspension
 
@@ -83,11 +83,21 @@ Legacy 30 nm work is the single-point force × 0.030 um extrapolation. Basin wor
 - `k_r_Casimir_pN_per_nm`: 0.07441842804 pN/nm
 - `k_r_Casimir_N_per_m`: 7.441842804e-05 N/m
 - `origin_even_energy_estimate_pN_per_um`: -38.90916145 pN/um
-- `k_z_mech_pN_per_nm`: 0.1211392 pN/nm
-- `k_r_mech_pN_per_nm`: 1.030524444 pN/nm
-- `lateral_stability_safety_factor`: 13.84770509
-- `combined_radial_stiffness_pN_per_nm`: 1.104942872 pN/nm
-- `equilibrium_axial_repulsive_lift_nm`: 6.252650282 nm
+- `k_z_mech_pN_per_nm`: 121.1392 pN/nm
+- `k_r_mech_pN_per_nm`: 1030.524444 pN/nm
+- `lateral_stability_safety_factor`: 13847.70509
+- `combined_radial_stiffness_pN_per_nm`: 1030.598863 pN/nm
+- `equilibrium_axial_repulsive_lift_nm`: 0.006252650282 nm
+- `self_consistent_basin_repulsive_lift_nm`: 0.00625020776 nm
+- `k_z_crit_pull_in_pN_per_nm`: 1.295007771 pN/nm
+- `vertical_pull_in_safety_factor`: 93.54322244
+
+| Suspension regime | L_spoke (um) | w_spoke (um) | t_spoke (um) | k_z (pN/nm) | k_r (pN/nm) | Radial SF | Pull-in SF | Linear lift (nm) | Basin eq. lift (nm) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `isometric_transducer` | 15 | 0.35 | 0.12 | 121.139 | 1030.52 | 13847.7 | 93.5432 | 0.00625265 | 0.00625021 |
+| `noncontact_nm_actuator` | 65 | 0.4 | 0.075 | 0.415385 | 11.8154 | 158.77 | 0.320758 | 1.82347 | 1.63692 |
+| `high_stroke_clutch` | 150 | 0.35 | 0.12 | 0.121139 | 1.03052 | 13.8477 | 0.0935432 | 6.25265 | 4.49575 |
+| `compact_high_aspect_clutch` | 60 | 0.35 | 0.05 | 0.136921 | 6.70914 | 90.1543 | 0.10573 | 5.53194 | 4.11069 |
 
 ### 4. Tooth critical-dimension tolerance
 
@@ -123,26 +133,26 @@ Legacy 30 nm work is the single-point force × 0.030 um extrapolation. Basin wor
 
 | Rotor shift (um) | Mutual capacitance (F) | Relative solve residual |
 |---:|---:|---:|
-| -0.002 | 1.175665396e-16 | 6.37378e-16 |
-| 0 | 1.179935504e-16 | 7.31843e-16 |
-| 0.002 | 1.183941088e-16 | 6.17673e-16 |
+| -0.002 | 1.300576465e-16 | 8.09121e-16 |
+| 0 | 1.307461283e-16 | 8.06918e-16 |
+| 0.002 | 1.31392833e-16 | 8.79918e-16 |
 
-- dC/dz: 2.068922979e-10 F/m
-- Absolute gradient coefficient: 0.0002068922979 pN/mV²
-- Critical voltage: 93.46731955 mV (`finite`)
+- dC/dz: 3.337966361e-10 F/m
+- Absolute gradient coefficient: 0.0003337966361 pN/mV²
+- Critical voltage: 73.58528427 mV (`finite`)
 - Repulsion survives 50 mV: yes
 
 | Voltage (mV) | Net force (pN) |
 |---:|---:|
 | 0 | 0.90372 |
-| 5 | 0.901134 |
-| 10 | 0.893375 |
-| 15 | 0.880445 |
-| 20 | 0.862342 |
-| 25 | 0.839066 |
-| 30 | 0.810618 |
-| 40 | 0.738206 |
-| 50 | 0.645105 |
+| 5 | 0.899548 |
+| 10 | 0.88703 |
+| 15 | 0.866168 |
+| 20 | 0.836961 |
+| 25 | 0.799409 |
+| 30 | 0.753512 |
+| 40 | 0.636683 |
+| 50 | 0.486474 |
 
 ### 3. Lateral stiffness and four-spoke suspension
 
@@ -155,11 +165,21 @@ Legacy 30 nm work is the single-point force × 0.030 um extrapolation. Basin wor
 - `k_r_Casimir_pN_per_nm`: -0.0578770752 pN/nm
 - `k_r_Casimir_N_per_m`: -5.78770752e-05 N/m
 - `origin_even_energy_estimate_pN_per_um`: 121.2276808 pN/um
-- `k_z_mech_pN_per_nm`: 0.1211392 pN/nm
-- `k_r_mech_pN_per_nm`: 1.030524444 pN/nm
-- `lateral_stability_safety_factor`: 17.80539947
-- `combined_radial_stiffness_pN_per_nm`: 0.9726473692 pN/nm
-- `equilibrium_axial_repulsive_lift_nm`: 7.460178219 nm
+- `k_z_mech_pN_per_nm`: 121.1392 pN/nm
+- `k_r_mech_pN_per_nm`: 1030.524444 pN/nm
+- `lateral_stability_safety_factor`: 17805.39947
+- `combined_radial_stiffness_pN_per_nm`: 1030.466567 pN/nm
+- `equilibrium_axial_repulsive_lift_nm`: 0.007460178219 nm
+- `self_consistent_basin_repulsive_lift_nm`: 0.007456701449 nm
+- `k_z_crit_pull_in_pN_per_nm`: 1.443925427 pN/nm
+- `vertical_pull_in_safety_factor`: 83.89574539
+
+| Suspension regime | L_spoke (um) | w_spoke (um) | t_spoke (um) | k_z (pN/nm) | k_r (pN/nm) | Radial SF | Pull-in SF | Linear lift (nm) | Basin eq. lift (nm) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `isometric_transducer` | 15 | 0.35 | 0.12 | 121.139 | 1030.52 | 17805.4 | 83.8957 | 0.00746018 | 0.0074567 |
+| `noncontact_nm_actuator` | 65 | 0.4 | 0.075 | 0.415385 | 11.8154 | 204.146 | 0.287677 | 2.17562 | 1.9152 |
+| `high_stroke_clutch` | 150 | 0.35 | 0.12 | 0.121139 | 1.03052 | 17.8054 | 0.0838957 | 7.46018 | 5.08789 |
+| `compact_high_aspect_clutch` | 60 | 0.35 | 0.05 | 0.136921 | 6.70914 | 115.921 | 0.0948257 | 6.60029 | 4.67271 |
 
 ### 4. Tooth critical-dimension tolerance
 

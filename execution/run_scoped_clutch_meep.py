@@ -35,9 +35,41 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
-MEEP_FORCE_TO_SI = 3.16152649e-14
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
+
+from execution.clutch_geometry_redesign import (
+    DEFAULT_APERTURE_ARC_DEG,
+    DEFAULT_BRIDGE_ARC_DEG,
+    DEFAULT_H_TEETH_UM,
+    DEFAULT_NUM_SECTORS,
+    DEFAULT_T_LANDING_PAD_UM,
+    DEFAULT_T_MEMBRANE_UM,
+    DEFAULT_TOOTH_ARC_DEG,
+    DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+    DEFAULT_Z_PAD_TOP_UM,
+    DEFAULT_Z_TIP_UM,
+)
+from execution.materials_database_dispersive import (
+    EV_TO_MEEP_FREQ as EV_TO_MEEP_CYCLICAL_UM,
+    GOLD_EPS_INF as DEFAULT_GOLD_EPS_INF,
+    GOLD_GAMMA_EV as DEFAULT_GOLD_GAMMA_EV,
+    GOLD_WP_EV as DEFAULT_GOLD_WP_EV,
+    MEEP_FORCE_TO_SI,
+)
+
 CACHE_VERSION = 6
 ALL_CONFIGURATIONS = ("both", "rotor", "stator", "vac")
+DEFAULT_RESOLUTION = 60
+DEFAULT_L_DOMAIN_UM = 3.0
+DEFAULT_PML_THICKNESS_UM = 0.25
+DEFAULT_CELL_BUFFER_UM = 0.15
+DEFAULT_COURANT = 0.5
+MIN_D_EFF_UM = 0.010
+STRESS_BOX_GRID_MARGIN_CELLS = 2.0
+STRESS_BOX_MAX_CLEARANCE_FRACTION = 0.35
+MICRO_PROBE_MAX_GRID_POINTS = 96
 ELEMENT_KEYS = (
     "r_inner",
     "r_outer",
@@ -78,12 +110,16 @@ class Parameters:
     epsilon_inf: float
     force_complex_fields: bool = True
     z_pad_top: float | None = None
-    d_eff: float = 0.015
+    d_eff: float = DEFAULT_Z_TIP_UM
     stress_box_mode: str = "legacy"
+    tooth_center_offset_deg: float = DEFAULT_TOOTH_CENTER_OFFSET_DEG
+    fixed_stress_box_margin_um: float | None = None
+    eps_averaging: bool = False
+    geometry_mode: str = "cylindrical"
 
     @property
     def sigma(self) -> float:
-        return 0.5 / max(0.010, self.d_eff)
+        return 0.5 / max(MIN_D_EFF_UM, self.d_eff)
 
 
 @dataclass(frozen=True)
@@ -204,10 +240,23 @@ def build_parser() -> argparse.ArgumentParser:
         "--checkpoint-prefix", type=str, default="chk_moments_clutch_pilot_task"
     )
     parser.add_argument("--resolution", type=positive_integer)
+    parser.add_argument("--nmax", type=positive_integer, default=None)
+    parser.add_argument(
+        "--material", choices=("PEC", "Gold", "pec", "gold"), default=None
+    )
+    parser.add_argument(
+        "--fixed-stress-box-margin-um", type=positive_float, default=None
+    )
+    parser.add_argument("--eps-averaging", action="store_true", default=None)
+    parser.add_argument(
+        "--geometry-mode",
+        choices=("cylindrical", "rectilinear_xz"),
+        default=None,
+    )
     parser.add_argument("--bem-n-xi", type=positive_integer, default=24)
-    parser.add_argument("--bem-n-r", type=positive_integer, default=3)
-    parser.add_argument("--bem-n-phi-tooth", type=positive_integer, default=4)
-    parser.add_argument("--bem-n-phi-bridge", type=positive_integer, default=4)
+    parser.add_argument("--bem-n-r", type=positive_integer, default=2)
+    parser.add_argument("--bem-n-phi-tooth", type=positive_integer, default=3)
+    parser.add_argument("--bem-n-phi-bridge", type=positive_integer, default=3)
     parser.add_argument("--bem-n-z", type=positive_integer, default=2)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     parser.add_argument("--output-file", type=Path, default=None)
@@ -341,19 +390,23 @@ def parse_parameters(
         return default
 
     resolution = integer_value(
-        resolution_override if resolution_override is not None else get("resolution", 60),
+        resolution_override if resolution_override is not None else get("resolution", DEFAULT_RESOLUTION),
         "resolution",
     )
     theta = finite_number(get("theta_deg", 0.0), "theta_deg")
+    tooth_center_offset_deg = finite_number(
+        get("tooth_center_offset_deg", DEFAULT_TOOTH_CENTER_OFFSET_DEG),
+        "tooth_center_offset_deg",
+    )
     values = {
-        "aperture_arc_deg": finite_number(get("aperture_arc_deg", 30.0), "aperture_arc_deg", positive=True),
-        "bridge_arc_deg": finite_number(get("bridge_arc_deg", 60.0), "bridge_arc_deg", positive=True),
-        "tooth_arc_deg": finite_number(get("tooth_arc_deg", 15.0), "tooth_arc_deg", positive=True),
-        "t_membrane": finite_number(get("t_membrane_um", 0.025), "t_membrane_um", positive=True),
-        "t_landing_pad": finite_number(get("t_landing_pad_um", 0.150), "t_landing_pad_um", positive=True),
-        "H_teeth": finite_number(get("H_teeth_um", 0.250), "H_teeth_um", positive=True),
-        "z_tip": finite_number(get("z_tip_um", 0.015), "z_tip_um"),
-        "L_domain": finite_number(get("L_domain_um", 3.0), "L_domain_um", positive=True),
+        "aperture_arc_deg": finite_number(get("aperture_arc_deg", DEFAULT_APERTURE_ARC_DEG), "aperture_arc_deg", positive=True),
+        "bridge_arc_deg": finite_number(get("bridge_arc_deg", DEFAULT_BRIDGE_ARC_DEG), "bridge_arc_deg", positive=True),
+        "tooth_arc_deg": finite_number(get("tooth_arc_deg", DEFAULT_TOOTH_ARC_DEG), "tooth_arc_deg", positive=True),
+        "t_membrane": finite_number(get("t_membrane_um", DEFAULT_T_MEMBRANE_UM), "t_membrane_um", positive=True),
+        "t_landing_pad": finite_number(get("t_landing_pad_um", DEFAULT_T_LANDING_PAD_UM), "t_landing_pad_um", positive=True),
+        "H_teeth": finite_number(get("H_teeth_um", DEFAULT_H_TEETH_UM), "H_teeth_um", positive=True),
+        "z_tip": finite_number(get("z_tip_um", DEFAULT_Z_TIP_UM), "z_tip_um"),
+        "L_domain": finite_number(get("L_domain_um", DEFAULT_L_DOMAIN_UM), "L_domain_um", positive=True),
     }
     if values["z_tip"] == 0:
         raise ValueError("z_tip_um must be nonzero")
@@ -361,7 +414,7 @@ def parse_parameters(
     z_pad_top = (
         finite_number(z_pad_value, "z_pad_top_um")
         if z_pad_value is not None
-        else (-0.115 if values["z_tip"] < 0 else None)
+        else (DEFAULT_Z_PAD_TOP_UM if values["z_tip"] < 0 else None)
     )
     if values["z_tip"] < 0:
         if z_pad_top is None or not (
@@ -386,7 +439,7 @@ def parse_parameters(
         )
         d_eff = finite_number(d_eff, "d_eff", positive=True)
     else:
-        d_eff = max(0.010, values["z_tip"])
+        d_eff = max(MIN_D_EFF_UM, values["z_tip"])
     stress_box_mode = get(
         "stress_box_mode",
         "per_tooth_rotor_frame" if values["z_tip"] < 0 else "legacy",
@@ -397,13 +450,13 @@ def parse_parameters(
         raise ValueError("stress_box_mode must be 'legacy' or 'per_tooth_rotor_frame'")
     if any(values[name] > 360 for name in ("aperture_arc_deg", "bridge_arc_deg", "tooth_arc_deg")):
         raise ValueError("Angular spans must not exceed 360 degrees")
-    num_sectors = integer_value(get("num_sectors", 4), "num_sectors")
-    if num_sectors != 4:
+    num_sectors = integer_value(get("num_sectors", DEFAULT_NUM_SECTORS), "num_sectors")
+    if num_sectors != DEFAULT_NUM_SECTORS:
         raise ValueError("The required F_total = 4 * F_sector0 scaling requires num_sectors=4")
     nmax = integer_value(get("nmax", 1), "nmax")
-    pml = finite_number(get("pml_thickness_um", 0.25), "pml_thickness_um", positive=True)
-    courant = finite_number(get("courant", 0.5), "courant", positive=True)
-    if courant > 0.5:
+    pml = finite_number(get("pml_thickness_um", DEFAULT_PML_THICKNESS_UM), "pml_thickness_um", positive=True)
+    courant = finite_number(get("courant", DEFAULT_COURANT), "courant", positive=True)
+    if courant > DEFAULT_COURANT:
         raise ValueError("courant must not exceed 0.5 for this 3-D calculation")
     context: dict[str, Any] = dict(raw)
     context.update(values)
@@ -412,11 +465,12 @@ def parse_parameters(
         raw_config=raw,
         resolution=resolution,
         theta_deg=theta,
+        tooth_center_offset_deg=tooth_center_offset_deg,
         num_sectors=num_sectors,
         nmax=nmax,
         z_pad_top=z_pad_top,
         stress_box_mode=stress_box_mode,
-        sigma=0.5 / max(0.010, d_eff),
+        sigma=0.5 / max(MIN_D_EFF_UM, d_eff),
         d_eff=d_eff,
         dt=courant / resolution,
     )
@@ -429,12 +483,29 @@ def parse_parameters(
     material = get("material", "Gold")
     if not isinstance(material, str) or material.lower() not in ("gold", "pec"):
         raise ValueError("material must be 'Gold' or 'PEC'")
-    gamma = finite_number(get("gamma", 0.053 / 1.239841984), "gamma")
+    gamma = finite_number(
+        get("gamma", DEFAULT_GOLD_GAMMA_EV * EV_TO_MEEP_CYCLICAL_UM), "gamma"
+    )
     if gamma < 0:
         raise ValueError("gamma must be nonnegative")
     force_complex_fields = get("force_complex_fields", True)
     if not isinstance(force_complex_fields, bool):
         raise ValueError("force_complex_fields must be a JSON boolean")
+    fixed_margin_raw = get("fixed_stress_box_margin_um", None)
+    fixed_stress_box_margin_um = (
+        finite_number(fixed_margin_raw, "fixed_stress_box_margin_um", positive=True)
+        if fixed_margin_raw is not None
+        else None
+    )
+    eps_averaging = get("eps_averaging", False)
+    if not isinstance(eps_averaging, bool):
+        raise ValueError("eps_averaging must be a JSON boolean")
+    geometry_mode = get("geometry_mode", "cylindrical")
+    if not isinstance(geometry_mode, str) or geometry_mode not in (
+        "cylindrical",
+        "rectilinear_xz",
+    ):
+        raise ValueError("geometry_mode must be 'cylindrical' or 'rectilinear_xz'")
     return Parameters(
         elements=elements,
         theta_deg=theta,
@@ -456,13 +527,21 @@ def parse_parameters(
         n_fractal=integer_value(get("N_fractal", len(elements)), "N_fractal"),
         gamma=gamma,
         plasma_frequency=finite_number(
-            get("plasma_frequency", 9.03 / 1.239841984), "plasma_frequency", positive=True
+            get("plasma_frequency", DEFAULT_GOLD_WP_EV * EV_TO_MEEP_CYCLICAL_UM),
+            "plasma_frequency",
+            positive=True,
         ),
-        epsilon_inf=finite_number(get("epsilon_inf", 1.0), "epsilon_inf", positive=True),
+        epsilon_inf=finite_number(
+            get("epsilon_inf", DEFAULT_GOLD_EPS_INF), "epsilon_inf", positive=True
+        ),
         force_complex_fields=force_complex_fields,
         z_pad_top=z_pad_top,
         d_eff=d_eff,
         stress_box_mode=stress_box_mode,
+        tooth_center_offset_deg=tooth_center_offset_deg,
+        fixed_stress_box_margin_um=fixed_stress_box_margin_um,
+        eps_averaging=eps_averaging,
+        geometry_mode=geometry_mode,
     )
 
 
@@ -486,6 +565,9 @@ def meep_solver_parameters(
         "inclusion_exclusion_passes": 4,
         "pml_thickness": parameters.pml_thickness,
         "force_complex_fields": parameters.force_complex_fields,
+        "fixed_stress_box_margin_um": parameters.fixed_stress_box_margin_um,
+        "eps_averaging": parameters.eps_averaging,
+        "geometry_mode": parameters.geometry_mode,
         "max_steps": args.max_steps,
         "timesteps_per_last_moment": latest_steps,
         "dt": latest_dt,
@@ -493,8 +575,12 @@ def meep_solver_parameters(
 
 
 def cell_dimensions(parameters: Parameters) -> tuple[float, float, float]:
-    buffer = 0.15
-    margin = 2.0 / parameters.resolution
+    buffer = DEFAULT_CELL_BUFFER_UM
+    margin = (
+        parameters.fixed_stress_box_margin_um
+        if parameters.fixed_stress_box_margin_um is not None
+        else STRESS_BOX_GRID_MARGIN_CELLS / parameters.resolution
+    )
     z_top = max(
         element.get("z_tip", parameters.z_tip)
         + element.get("h_teeth", parameters.h_teeth)
@@ -575,6 +661,11 @@ def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
         if pad_top >= parameters.z_tip:
             raise ValueError("The landing pad must lie below the rotor tip")
         faces: list[Face] = []
+        raw_grid_margin = (
+            parameters.fixed_stress_box_margin_um
+            if parameters.fixed_stress_box_margin_um is not None
+            else STRESS_BOX_GRID_MARGIN_CELLS / parameters.resolution
+        )
         for idx, element in enumerate(parameters.elements):
             el_z_tip = float(element.get("z_tip", parameters.z_tip))
             el_h_teeth = float(element.get("h_teeth", parameters.h_teeth))
@@ -583,14 +674,26 @@ def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
             clearance = (element["W_slot"] - element["w_tooth"]) / 2.0
             if clearance <= 0:
                 raise ValueError(f"Tooth {idx} requires W_slot > w_tooth")
-            margin = min(2.0 / parameters.resolution, 0.35 * clearance)
-            x_tooth_min = element["r_tooth_in"] * math.cos(alpha)
-            x_tooth_max = element["r_tooth_out"]
-            y_tooth_max = element["r_tooth_out"] * math.sin(alpha)
-            x_min = 0.5 * (element["r_inner"] + x_tooth_min)
-            y_max = y_tooth_max + margin
-            r_out_limit = math.sqrt(max(0.0, element["r_outer"]**2 - y_max**2))
-            x_max = 0.5 * (x_tooth_max + r_out_limit)
+            margin = min(
+                raw_grid_margin,
+                STRESS_BOX_MAX_CLEARANCE_FRACTION * clearance,
+            )
+            if parameters.geometry_mode == "rectilinear_xz":
+                x_tooth_min = element["r_tooth_in"]
+                x_tooth_max = element["r_tooth_out"]
+                y_tooth_max = element["r_tooth_out"] * math.sin(alpha)
+                x_min = 0.5 * (element["r_inner"] + x_tooth_min)
+                y_max = y_tooth_max + margin
+                r_out_limit = element["r_outer"]
+                x_max = 0.5 * (x_tooth_max + r_out_limit)
+            else:
+                x_tooth_min = element["r_tooth_in"] * math.cos(alpha)
+                x_tooth_max = element["r_tooth_out"]
+                y_tooth_max = element["r_tooth_out"] * math.sin(alpha)
+                x_min = 0.5 * (element["r_inner"] + x_tooth_min)
+                y_max = y_tooth_max + margin
+                r_out_limit = math.sqrt(max(0.0, element["r_outer"]**2 - y_max**2))
+                x_max = 0.5 * (x_tooth_max + r_out_limit)
             if not (
                 element["r_inner"] < x_min < x_tooth_min
                 and x_tooth_max < x_max < r_out_limit
@@ -604,7 +707,7 @@ def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
                     [
                         x_max,
                         y_max,
-                        el_z_tip + el_h_teeth + 2.0 / parameters.resolution,
+                        el_z_tip + el_h_teeth + raw_grid_margin,
                     ],
                     prefix=f"t{idx}_",
                 )
@@ -614,7 +717,7 @@ def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
     if parameters.stress_box_mode != "legacy" or parameters.z_tip <= 0:
         raise ValueError("Invalid stress_box_mode or z_tip for a legacy stress box")
 
-    center = math.radians(15.0 + parameters.theta_deg)
+    center = math.radians(parameters.tooth_center_offset_deg + parameters.theta_deg)
     half_span = math.radians(parameters.tooth_arc_deg / 2.0)
     radii = (
         min(element["r_tooth_in"] for element in parameters.elements),
@@ -645,7 +748,7 @@ def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
     local_center_y = (min_y + max_y) / 2.0
     center_x = local_center_x * math.cos(center) - local_center_y * math.sin(center)
     center_y = local_center_x * math.sin(center) + local_center_y * math.cos(center)
-    margin = 2.0 / parameters.resolution
+    margin = STRESS_BOX_GRID_MARGIN_CELLS / parameters.resolution
     lateral_half_span = math.hypot(
         (max_x - min_x) / 2.0, (max_y - min_y) / 2.0
     ) + margin
@@ -870,11 +973,15 @@ def run_moment(
     stator_options = (
         {
             "z_pad_top": parameters.z_pad_top,
-            "theta_stator_deg": -(15.0 + parameters.theta_deg),
+            "theta_stator_deg": -(parameters.tooth_center_offset_deg + parameters.theta_deg),
         }
         if rotor_frame else {}
     )
-    rotor_options = {"tooth_center_offset_deg": 0.0} if rotor_frame else {}
+    rotor_options = {
+        "tooth_center_offset_deg": (
+            0.0 if rotor_frame else parameters.tooth_center_offset_deg
+        )
+    }
     geometry: list[Any] = []
     if configuration in ("both", "stator"):
         geometry.extend(
@@ -934,7 +1041,7 @@ def run_moment(
         boundary_layers=[mp.PML(parameters.pml_thickness)],
         default_material=background,
         geometry=geometry,
-        eps_averaging=False,
+        eps_averaging=parameters.eps_averaging,
         sources=[
             mp.Source(
                 src=mp.CustomSource(
@@ -1109,7 +1216,7 @@ def run_numpy_micro_probe(
     requested_shape = tuple(
         max(3, math.ceil(length * parameters.resolution)) for length in dimensions
     )
-    shape = tuple(min(96, count) for count in requested_shape)
+    shape = tuple(min(MICRO_PROBE_MAX_GRID_POINTS, count) for count in requested_shape)
     spacing = tuple(length / count for length, count in zip(dimensions, shape))
     dt = parameters.courant * min(spacing)
     coordinates = tuple(
@@ -1280,6 +1387,17 @@ def run_numpy_micro_probe(
 def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> int:
     if args.config == "self":
         args.config = "rotor"
+    raw = dict(raw)
+    if getattr(args, "nmax", None) is not None:
+        raw["nmax"] = int(args.nmax)
+    if getattr(args, "material", None) is not None:
+        raw["material"] = "PEC" if str(args.material).lower() == "pec" else "Gold"
+    if getattr(args, "fixed_stress_box_margin_um", None) is not None:
+        raw["fixed_stress_box_margin_um"] = float(args.fixed_stress_box_margin_um)
+    if getattr(args, "eps_averaging", None) is not None:
+        raw["eps_averaging"] = bool(args.eps_averaging)
+    if getattr(args, "geometry_mode", None) is not None:
+        raw["geometry_mode"] = str(args.geometry_mode)
     checkpoint_prefix = getattr(
         args, "checkpoint_prefix", "chk_moments_clutch_pilot_task"
     )
@@ -1357,6 +1475,8 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
     import numpy as np
     from execution.clutch_geometry_redesign import (
         compute_dynamic_Trun,
+        generate_rectilinear_rotor_geometry,
+        generate_rectilinear_stator_geometry,
         generate_redesigned_rotor_geometry,
         generate_redesigned_stator_geometry,
     )
@@ -1364,9 +1484,23 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
     parallel = ParallelContext(mp)
     parameters = parse_parameters(raw, args.resolution, compute_dynamic_Trun)
     faces = stress_faces(parameters)
+    canonical_parameters = dict(vars(parameters))
+    if (
+        canonical_parameters.get("tooth_center_offset_deg")
+        == DEFAULT_TOOTH_CENTER_OFFSET_DEG
+    ):
+        # Preserve CACHE_VERSION=6 SHA-256 fingerprint compatibility for the
+        # standard 15.0 deg tooth center offset while hashing custom offsets.
+        canonical_parameters.pop("tooth_center_offset_deg", None)
+    if canonical_parameters.get("fixed_stress_box_margin_um") is None:
+        canonical_parameters.pop("fixed_stress_box_margin_um", None)
+    if canonical_parameters.get("eps_averaging") is False:
+        canonical_parameters.pop("eps_averaging", None)
+    if canonical_parameters.get("geometry_mode") == "cylindrical":
+        canonical_parameters.pop("geometry_mode", None)
     canonical = {
         "version": CACHE_VERSION,
-        "parameters": vars(parameters),
+        "parameters": canonical_parameters,
         "stress_faces": [vars(face) for face in faces],
         "max_steps": args.max_steps,
         "force_direction": "z",
@@ -1775,8 +1909,16 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
                 face=face,
                 mode=mode,
                 max_steps=args.max_steps,
-                stator_generator=generate_redesigned_stator_geometry,
-                rotor_generator=generate_redesigned_rotor_geometry,
+                stator_generator=(
+                    generate_rectilinear_stator_geometry
+                    if parameters.geometry_mode == "rectilinear_xz"
+                    else generate_redesigned_stator_geometry
+                ),
+                rotor_generator=(
+                    generate_rectilinear_rotor_geometry
+                    if parameters.geometry_mode == "rectilinear_xz"
+                    else generate_redesigned_rotor_geometry
+                ),
                 guard=guard,
             )
             if sharded:

@@ -42,18 +42,93 @@ if str(ROOT) not in sys.path:
 
 import numpy as np
 
-HBAR_C_PN_UM2 = 0.031615267735
-KB_T_300_PN_UM = 4.141947e-3
-EPSILON_0_F_PER_M = 8.8541878128e-12
+from execution.casimir_bem_solver import BEM_TIER_STANDARD
+from execution.clutch_geometry_redesign import (
+    DEFAULT_H_TEETH_ROTATIONAL_UM,
+    DEFAULT_HYBRID_L2_H_TEETH_UM,
+    DEFAULT_HYBRID_L2_Z_TIP_UM,
+    DEFAULT_NUM_SECTORS,
+    DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+    DEFAULT_SECTOR_DEG,
+    DEFAULT_TOOTH_ARC_DEG,
+    DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+    DEFAULT_T_LANDING_PAD_UM,
+    DEFAULT_T_MEMBRANE_UM,
+    DEFAULT_Z_PAD_TOP_UM,
+    DEFAULT_Z_TIP_ROTATIONAL_UM,
+    ROTATIONAL_C8_COMPACT_N2_SPEC,
+    disengaged_angle_deg,
+    engaged_angle_deg,
+)
+from execution.materials_database_dispersive import (
+    EPSILON_0_F_PER_M,
+    HBAR_C_PN_UM2,
+    KB_T_300_PN_UM,
+    ROOM_TEMPERATURE_K,
+    SILICON_YOUNGS_MODULUS_GPA,
+    SILICON_YOUNGS_MODULUS_PA,
+)
+
 KAPPA_LAPLACE_PER_UM = 1e-6
 REPULSIVE_BASIN_WIDTH_UM = 0.016
 REPULSIVE_BASIN_PROFILE_FACTOR = 0.5
+LEGACY_WORK_STROKE_UM = 0.030
 OUTPUT_MODEL = "BEM_ElectroThermal_Feasibility"
 OUTPUT_DATASET = "nature_feasibility_stability"
+DEFAULT_STUDY_MATERIAL = "Gold"
+DEFAULT_STUDY_TEMPERATURE_K = ROOM_TEMPERATURE_K
+THETA_DISENGAGED_DEG = disengaged_angle_deg(
+    DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+    tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+)
+THETA_ENGAGED_DEG = engaged_angle_deg(
+    DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+    sector_deg=DEFAULT_SECTOR_DEG,
+    tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+)
+SWITCHING_ANGLES_DEG: tuple[float, float] = (
+    THETA_DISENGAGED_DEG,
+    THETA_ENGAGED_DEG,
+)
+HYBRID_CANTOR_Z_TIPS_UM: tuple[float, float, float] = (
+    DEFAULT_HYBRID_L2_Z_TIP_UM,
+    DEFAULT_Z_TIP_ROTATIONAL_UM,
+    DEFAULT_HYBRID_L2_Z_TIP_UM,
+)
+HYBRID_CANTOR_H_TEETH_UM: tuple[float, float, float] = (
+    DEFAULT_HYBRID_L2_H_TEETH_UM,
+    DEFAULT_H_TEETH_ROTATIONAL_UM,
+    DEFAULT_HYBRID_L2_H_TEETH_UM,
+)
+CANTOR_N2_TRACK_LEVELS: tuple[int, int, int] = (2, 1, 2)
+CAPACITANCE_DELTA_Z_STEP_UM = 0.002
+CAPACITANCE_DELTA_Z_STENCIL_UM: tuple[float, float, float] = (
+    -CAPACITANCE_DELTA_Z_STEP_UM,
+    0.0,
+    CAPACITANCE_DELTA_Z_STEP_UM,
+)
+CRITICAL_PATCH_VOLTAGE_THRESHOLD_MV = 50.0
+NEMS_SPOKE_COUNT = DEFAULT_NUM_SECTORS
+NEMS_SPOKE_LENGTH_UM = 15.0
+NEMS_SPOKE_THICKNESS_UM = 0.120
+NEMS_SPOKE_WIDTH_UM = 0.350
+NEMS_NM_ACTUATOR_LENGTH_UM = 65.0
+NEMS_NM_ACTUATOR_THICKNESS_UM = 0.075
+NEMS_NM_ACTUATOR_WIDTH_UM = 0.400
+NEMS_SOFT_CLUTCH_LENGTH_UM = 150.0
+NEMS_SOFT_CLUTCH_THICKNESS_UM = 0.120
+NEMS_SOFT_CLUTCH_WIDTH_UM = 0.350
+NEMS_COMPACT_CLUTCH_LENGTH_UM = 60.0
+NEMS_COMPACT_CLUTCH_THICKNESS_UM = 0.050
+NEMS_COMPACT_CLUTCH_WIDTH_UM = 0.350
+PULL_IN_POWER_LAW_ALPHA = 3.5
+ENGAGED_PAD_GAP_NM = 15.0
+# 1 GPa * um = 10^9 Pa * 10^-6 m = 10^3 N/m, and 1 N/m = 10^12 pN / 10^9 nm = 10^3 pN/nm.
+GPA_UM_TO_PN_PER_NM = 1e6
 REGIMES: tuple[tuple[str, str, float], ...] = (
     ("PEC_T0K", "PEC", 0.0),
-    ("Gold_T0K", "Gold", 0.0),
-    ("Gold_T300K", "Gold", 300.0),
+    ("Gold_T0K", DEFAULT_STUDY_MATERIAL, 0.0),
+    ("Gold_T300K", DEFAULT_STUDY_MATERIAL, DEFAULT_STUDY_TEMPERATURE_K),
 )
 PATCH_VOLTAGES_MV = (0, 5, 10, 15, 20, 25, 30, 40, 50)
 RADIAL_SHIFTS_UM = (0.0, 0.004, 0.008)
@@ -357,7 +432,10 @@ def prepare_designs() -> dict[str, Any]:
         )
     new_tracks: list[Any] = []
     for track, z_tip, h_teeth in zip(
-        tracks, (-0.090, -0.100, -0.090), (0.090, 0.100, 0.090), strict=True
+        tracks,
+        HYBRID_CANTOR_Z_TIPS_UM,
+        HYBRID_CANTOR_H_TEETH_UM,
+        strict=True,
     ):
         field_value(track, ("z_tip",), "TrackSpec3D")
         field_value(track, ("h_teeth",), "TrackSpec3D")
@@ -368,9 +446,14 @@ def prepare_designs() -> dict[str, Any]:
         {label_field: "Cantor_N2_HybridRZ", tracks_field: collection},
     )
 
+    c8_spec = ROTATIONAL_C8_COMPACT_N2_SPEC
     elements = list(
         get_scoped_clutch_elements(
-            N=2, R_min=0.20, R_max=0.90, w1_ratio=0.45, min_tooth_w=0.020
+            N=int(c8_spec["N"]),
+            R_min=float(c8_spec["R_min"]),
+            R_max=float(c8_spec["R_max"]),
+            w1_ratio=float(c8_spec["w1_ratio"]),
+            min_tooth_w=float(c8_spec["min_tooth_w"]),
         )
     )
     elements.sort(
@@ -378,7 +461,7 @@ def prepare_designs() -> dict[str, Any]:
             field_value(e, ("r_inner",), "compact track")[1], "r_inner"
         )
     )
-    if len(elements) != 3:
+    if len(elements) != len(CANTOR_N2_TRACK_LEVELS):
         raise BackendContractError(
             f"The compact N=2 clutch must have exactly three tracks, got {len(elements)}."
         )
@@ -396,24 +479,24 @@ def prepare_designs() -> dict[str, Any]:
             r_tooth_out=finite_float(
                 field_value(element, ("r_tooth_out",), "compact track")[1], "r_tooth_out"
             ),
-            z_tip=-0.100,
-            h_teeth=0.100,
+            z_tip=DEFAULT_Z_TIP_ROTATIONAL_UM,
+            h_teeth=float(c8_spec["h_teeth"]),
             level=level,
         )
-        for element, level in zip(elements, (2, 1, 2), strict=True)
+        for element, level in zip(elements, CANTOR_N2_TRACK_LEVELS, strict=True)
     )
     compact = StudyDesign(
-        "Rot_C8_Compact_N2",
-        "compact_n2",
-        "Compact N=2 clutch",
-        0.20,
-        0.90,
-        36.0,
-        15.0,
-        0.025,
-        0.150,
-        -0.115,
-        compact_tracks,
+        name=str(c8_spec["name"]),
+        category="compact_n2",
+        description="Compact N=2 clutch",
+        R_min=float(c8_spec["R_min"]),
+        R_max=float(c8_spec["R_max"]),
+        aperture_arc_deg=float(c8_spec["aperture_arc_deg"]),
+        tooth_arc_deg=float(c8_spec["tooth_arc_deg"]),
+        t_membrane=float(c8_spec["t_membrane"]),
+        t_landing_pad=float(c8_spec["t_landing_pad"]),
+        z_pad_top=DEFAULT_Z_PAD_TOP_UM,
+        tracks=compact_tracks,
     )
     return {
         "Cantor_N2_HybridRZ": cantor,
@@ -854,14 +937,98 @@ def sector_count(mesh: Any, design_name: str) -> int:
     return count
 
 
+def design_operating_angles(design: Any) -> tuple[float, float]:
+    """Return (theta_disengaged_deg, theta_engaged_deg) derived from design aperture."""
+    _, raw_aperture = field_value(
+        design, ("aperture_arc_deg",), "StudyDesign operating angles"
+    )
+    aperture_deg = finite_float(raw_aperture, "aperture_arc_deg")
+    return (
+        disengaged_angle_deg(
+            aperture_deg,
+            tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+        ),
+        engaged_angle_deg(
+            aperture_deg,
+            sector_deg=DEFAULT_SECTOR_DEG,
+            tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+        ),
+    )
+
+
+def evaluate_suspension_regime(
+    *,
+    spoke_count: int,
+    length_um: float,
+    width_um: float,
+    thickness_um: float,
+    force_rep_pN: float,
+    force_engaged_pN: float,
+    k_r_casimir_pN_per_nm: float,
+    basin_width_nm: float = REPULSIVE_BASIN_WIDTH_UM * 1e3,
+    pad_gap_nm: float = ENGAGED_PAD_GAP_NM,
+    alpha: float = PULL_IN_POWER_LAW_ALPHA,
+) -> dict[str, float | int | bool]:
+    """Compute mechanical stiffness, safety factors, and linear/basin-equilibrium strokes."""
+    kz = (
+        float(spoke_count)
+        * SILICON_YOUNGS_MODULUS_GPA
+        * width_um
+        * thickness_um**3
+        / length_um**3
+        * GPA_UM_TO_PN_PER_NM
+    )
+    kr = (
+        float(spoke_count)
+        * SILICON_YOUNGS_MODULUS_GPA
+        * thickness_um
+        * width_um**3
+        / length_um**3
+        * GPA_UM_TO_PN_PER_NM
+    )
+    if kz <= 0.0 or kr <= 0.0:
+        raise ValueError("Mechanical suspension stiffness must be positive.")
+    kz_casimir_rep = max(force_rep_pN, 0.0) / basin_width_nm
+    lift_linear_nm = force_rep_pN / kz
+    lift_basin_eq_nm = force_rep_pN / (kz + kz_casimir_rep)
+    engaged_linear_shift_nm = force_engaged_pN / kz
+    pull_in_factor = ((alpha + 1.0) ** (alpha + 1.0)) / (alpha**alpha)
+    kz_crit_pull_in = pull_in_factor * abs(force_engaged_pN) / pad_gap_nm
+    pull_in_safety_factor = kz / max(kz_crit_pull_in, 1e-12)
+    lateral_sf = kr / max(abs(k_r_casimir_pN_per_nm), 1e-9)
+    return {
+        "spoke_count": spoke_count,
+        "L_spoke_um": length_um,
+        "w_spoke_um": width_um,
+        "t_spoke_um": thickness_um,
+        "k_z_mech_pN_per_nm": kz,
+        "k_r_mech_pN_per_nm": kr,
+        "k_z_Casimir_rep_basin_pN_per_nm": kz_casimir_rep,
+        "k_z_crit_pull_in_pN_per_nm": kz_crit_pull_in,
+        "vertical_pull_in_safety_factor": pull_in_safety_factor,
+        "non_contact_in_engaged_state": pull_in_safety_factor > 1.0,
+        "lateral_stability_safety_factor": lateral_sf,
+        "combined_radial_stiffness_pN_per_nm": kr + k_r_casimir_pN_per_nm,
+        "locally_stable_in_sampled_coordinate": (kr + k_r_casimir_pN_per_nm) > 0.0,
+        "equilibrium_axial_repulsive_lift_nm": lift_linear_nm,
+        "equilibrium_axial_repulsive_lift_pm": lift_linear_nm * 1e3,
+        "self_consistent_basin_repulsive_lift_nm": lift_basin_eq_nm,
+        "engaged_linear_axial_deflection_nm": engaged_linear_shift_nm,
+        "engaged_linear_axial_deflection_abs_pm": abs(engaged_linear_shift_nm) * 1e3,
+        "peak_to_peak_linear_stroke_nm": lift_linear_nm - engaged_linear_shift_nm,
+        "peak_to_peak_linear_stroke_pm": (lift_linear_nm - engaged_linear_shift_nm) * 1e3,
+    }
+
+
 def run_full_study(
     name: str, design: Any, evaluator: Evaluator, study: dict[str, Any]
 ) -> None:
     metadata = freshness_metadata(evaluator.report["executed_at"])
+    theta_disengaged, theta_engaged = design_operating_angles(design)
     material_rows: list[dict[str, Any]] = []
     study["material_dispersion"] = {
         "rows": material_rows,
-        "legacy_work_stroke_um": 0.030,
+        "legacy_work_stroke_um": LEGACY_WORK_STROKE_UM,
         "legacy_work_model": "single-point force times 30 nm; not a basin integral",
         "repulsive_basin_width_um": REPULSIVE_BASIN_WIDTH_UM,
         "repulsive_basin_profile_factor": REPULSIVE_BASIN_PROFILE_FACTOR,
@@ -869,14 +1036,17 @@ def run_full_study(
         "basin_work_is_model_estimate_not_force_integral": True,
     }
     for label, material, temperature in REGIMES:
-        for theta in (3.0, 48.0):
+        for is_disengaged, theta in (
+            (True, theta_disengaged),
+            (False, theta_engaged),
+        ):
             row = evaluator.evaluate(name, design, theta, material, temperature)
             force = row["force_z_pN"]
             work_basin = (
                 max(force, 0.0)
                 * REPULSIVE_BASIN_PROFILE_FACTOR
                 * REPULSIVE_BASIN_WIDTH_UM
-                if theta == 3.0
+                if is_disengaged
                 else None
             )
             material_rows.append(
@@ -886,9 +1056,13 @@ def run_full_study(
                     "theta_deg": theta,
                     "force_z_pN": force,
                     "energy_pN_um": row["energy_pN_um"],
-                    "W_rep_30nm_pN_um": force * 0.030 if theta == 3.0 else None,
+                    "W_rep_30nm_pN_um": (
+                        force * LEGACY_WORK_STROKE_UM if is_disengaged else None
+                    ),
                     "W_rep_30nm_over_kBT300": (
-                        force * 0.030 / KB_T_300_PN_UM if theta == 3.0 else None
+                        force * LEGACY_WORK_STROKE_UM / KB_T_300_PN_UM
+                        if is_disengaged
+                        else None
                     ),
                     "work_basin_pN_um": work_basin,
                     "work_basin_over_kBT300": (
@@ -897,18 +1071,32 @@ def run_full_study(
                         else None
                     ),
                     "expected_force_sign_observed": (
-                        force > 0.0 if theta == 3.0 else force < 0.0
+                        force > 0.0 if is_disengaged else force < 0.0
                     ),
                 }
             )
-    gold = evaluator.evaluate(name, design, 3.0, "Gold", 300.0)
+    gold = evaluator.evaluate(
+        name,
+        design,
+        theta_disengaged,
+        DEFAULT_STUDY_MATERIAL,
+        DEFAULT_STUDY_TEMPERATURE_K,
+    )
     force_rep = float(gold["force_z_pN"])
+    gold_engaged = evaluator.evaluate(
+        name,
+        design,
+        theta_engaged,
+        DEFAULT_STUDY_MATERIAL,
+        DEFAULT_STUDY_TEMPERATURE_K,
+    )
+    force_engaged_300k = float(gold_engaged["force_z_pN"])
 
     # A single baseline discretization is copied and rigidly translated. This
     # keeps the exact same panels and areas at all three axial positions.
-    mesh = make_mesh(design, 3.0, evaluator.settings)
-    mesh.parameters["material"] = "Gold"
-    mesh.parameters["temperature_K"] = 300.0
+    mesh = make_mesh(design, theta_disengaged, evaluator.settings)
+    mesh.parameters["material"] = DEFAULT_STUDY_MATERIAL
+    mesh.parameters["temperature_K"] = DEFAULT_STUDY_TEMPERATURE_K
     sectors = sector_count(mesh, name)
     capacitance_rows: list[dict[str, Any]] = []
     patch: dict[str, Any] = {
@@ -919,14 +1107,19 @@ def run_full_study(
         "spatial_patch_spectrum_modelled": False,
     }
     study["patch_potential"] = patch
-    for delta_z in (-0.002, 0.0, 0.002):
+    for delta_z in CAPACITANCE_DELTA_Z_STENCIL_UM:
         displaced = copy.deepcopy(mesh) if delta_z == 0.0 else translated_mesh(mesh, delta_z)
         capacitance_rows.append(
             {"delta_z_rotor_um": delta_z, **capacitance(displaced, sectors)}
         )
+    span_z_m = (
+        CAPACITANCE_DELTA_Z_STENCIL_UM[-1] - CAPACITANCE_DELTA_Z_STENCIL_UM[0]
+    ) * 1e-6
+    if not math.isfinite(span_z_m) or span_z_m <= 0.0:
+        raise ValueError("CAPACITANCE_DELTA_Z_STENCIL_UM must have a positive span.")
     derivative = (
         capacitance_rows[2]["C_mutual_F"] - capacitance_rows[0]["C_mutual_F"]
-    ) / (0.004e-6)
+    ) / span_z_m
     coefficient = 1e6 * abs(derivative)
     if not math.isfinite(coefficient):
         raise ValueError("The capacitance-gradient voltage coefficient is non-finite.")
@@ -957,22 +1150,44 @@ def run_full_study(
                 }
                 for voltage in PATCH_VOLTAGES_MV
             ],
-            "passes_at_50mV": force_rep - 0.5 * coefficient * 50.0**2 > 0.0,
+            "passes_at_50mV": (
+                force_rep
+                - 0.5 * coefficient * CRITICAL_PATCH_VOLTAGE_THRESHOLD_MV**2
+                > 0.0
+            ),
             "critical_voltage_is_exact_only_within_model": True,
         }
     )
 
+    if len(RADIAL_SHIFTS_UM) != 3 or not all(
+        math.isfinite(shift) for shift in RADIAL_SHIFTS_UM
+    ):
+        raise ValueError("RADIAL_SHIFTS_UM must contain three finite radial shifts.")
+    h = RADIAL_SHIFTS_UM[1] - RADIAL_SHIFTS_UM[0]
+    if h <= 0.0 or not math.isclose(
+        h,
+        RADIAL_SHIFTS_UM[2] - RADIAL_SHIFTS_UM[1],
+        abs_tol=1e-12,
+    ):
+        raise ValueError(
+            "RADIAL_SHIFTS_UM must be a strictly increasing uniform 3-point stencil."
+        )
     lateral_rows: list[dict[str, Any]] = []
     lateral: dict[str, Any] = {
-        "material": "Gold",
-        "temperature_K": 300.0,
+        "material": DEFAULT_STUDY_MATERIAL,
+        "temperature_K": DEFAULT_STUDY_TEMPERATURE_K,
         "energy_rows": lateral_rows,
-        "finite_difference_center_um": 0.004,
+        "finite_difference_center_um": RADIAL_SHIFTS_UM[1],
     }
     study["lateral_stability"] = lateral
     for delta_r in RADIAL_SHIFTS_UM:
         row = evaluator.evaluate(
-            name, design, 3.0, "Gold", 300.0, delta_r_um=delta_r
+            name,
+            design,
+            theta_disengaged,
+            DEFAULT_STUDY_MATERIAL,
+            DEFAULT_STUDY_TEMPERATURE_K,
+            delta_r_um=delta_r,
         )
         lateral_rows.append(
             {
@@ -983,15 +1198,47 @@ def run_full_study(
             }
         )
     e0, e1, e2 = (row["energy_pN_um"] for row in lateral_rows)
-    h = 0.004
     stiffness = (e2 - 2.0 * e1 + e0) / h**2
     origin_estimate = 2.0 * (e1 - e0) / h**2
     stiffness_pn_nm = stiffness * 1e-3
-    length, thickness, width = 15.0, 0.120, 0.350
-    kz = 4.0 * 169.0 * width * thickness**3 / length**3 * 1e3
-    kr = 4.0 * 169.0 * thickness * width**3 / length**3 * 1e3
-    if kz <= 0.0 or kr <= 0.0:
-        raise ValueError("Mechanical suspension stiffness must be positive.")
+    baseline_reg = evaluate_suspension_regime(
+        spoke_count=NEMS_SPOKE_COUNT,
+        length_um=NEMS_SPOKE_LENGTH_UM,
+        width_um=NEMS_SPOKE_WIDTH_UM,
+        thickness_um=NEMS_SPOKE_THICKNESS_UM,
+        force_rep_pN=force_rep,
+        force_engaged_pN=force_engaged_300k,
+        k_r_casimir_pN_per_nm=stiffness_pn_nm,
+    )
+    nm_actuator_reg = evaluate_suspension_regime(
+        spoke_count=NEMS_SPOKE_COUNT,
+        length_um=NEMS_NM_ACTUATOR_LENGTH_UM,
+        width_um=NEMS_NM_ACTUATOR_WIDTH_UM,
+        thickness_um=NEMS_NM_ACTUATOR_THICKNESS_UM,
+        force_rep_pN=force_rep,
+        force_engaged_pN=force_engaged_300k,
+        k_r_casimir_pN_per_nm=stiffness_pn_nm,
+    )
+    soft_clutch_reg = evaluate_suspension_regime(
+        spoke_count=NEMS_SPOKE_COUNT,
+        length_um=NEMS_SOFT_CLUTCH_LENGTH_UM,
+        width_um=NEMS_SOFT_CLUTCH_WIDTH_UM,
+        thickness_um=NEMS_SOFT_CLUTCH_THICKNESS_UM,
+        force_rep_pN=force_rep,
+        force_engaged_pN=force_engaged_300k,
+        k_r_casimir_pN_per_nm=stiffness_pn_nm,
+    )
+    compact_clutch_reg = evaluate_suspension_regime(
+        spoke_count=NEMS_SPOKE_COUNT,
+        length_um=NEMS_COMPACT_CLUTCH_LENGTH_UM,
+        width_um=NEMS_COMPACT_CLUTCH_WIDTH_UM,
+        thickness_um=NEMS_COMPACT_CLUTCH_THICKNESS_UM,
+        force_rep_pN=force_rep,
+        force_engaged_pN=force_engaged_300k,
+        k_r_casimir_pN_per_nm=stiffness_pn_nm,
+    )
+    kz = float(baseline_reg["k_z_mech_pN_per_nm"])
+    kr = float(baseline_reg["k_r_mech_pN_per_nm"])
     lateral.update(
         {
             "k_r_Casimir_pN_per_um": stiffness,
@@ -1000,25 +1247,66 @@ def run_full_study(
             "origin_even_energy_estimate_pN_per_um": origin_estimate,
             "origin_even_energy_estimate_pN_per_nm": origin_estimate * 1e-3,
             "origin_estimate_assumes_zero_first_derivative": True,
-            "E_Y_Pa": 169e9,
-            "L_spoke_um": length,
-            "t_spoke_um": thickness,
-            "w_spoke_um": width,
-            "spoke_count": 4,
+            "E_Y_Pa": SILICON_YOUNGS_MODULUS_PA,
+            "L_spoke_um": NEMS_SPOKE_LENGTH_UM,
+            "t_spoke_um": NEMS_SPOKE_THICKNESS_UM,
+            "w_spoke_um": NEMS_SPOKE_WIDTH_UM,
+            "spoke_count": NEMS_SPOKE_COUNT,
             "k_z_mech_pN_per_nm": kz,
             "k_r_mech_pN_per_nm": kr,
-            "lateral_stability_safety_factor": kr / max(abs(stiffness_pn_nm), 1e-9),
-            "combined_radial_stiffness_pN_per_nm": kr + stiffness_pn_nm,
-            "locally_stable_in_sampled_coordinate": kr + stiffness_pn_nm > 0.0,
-            "equilibrium_axial_repulsive_lift_nm": force_rep / kz,
+            "lateral_stability_safety_factor": float(baseline_reg["lateral_stability_safety_factor"]),
+            "combined_radial_stiffness_pN_per_nm": float(baseline_reg["combined_radial_stiffness_pN_per_nm"]),
+            "locally_stable_in_sampled_coordinate": bool(baseline_reg["locally_stable_in_sampled_coordinate"]),
+            "equilibrium_axial_repulsive_lift_nm": float(baseline_reg["equilibrium_axial_repulsive_lift_nm"]),
+            "equilibrium_axial_repulsive_lift_pm": float(baseline_reg["equilibrium_axial_repulsive_lift_pm"]),
+            "self_consistent_basin_repulsive_lift_nm": float(baseline_reg["self_consistent_basin_repulsive_lift_nm"]),
+            "engaged_linear_axial_deflection_nm": float(baseline_reg["engaged_linear_axial_deflection_nm"]),
+            "engaged_linear_axial_deflection_abs_pm": float(baseline_reg["engaged_linear_axial_deflection_abs_pm"]),
+            "peak_to_peak_linear_stroke_pm": float(baseline_reg["peak_to_peak_linear_stroke_pm"]),
+            "k_z_Casimir_rep_basin_pN_per_nm": float(baseline_reg["k_z_Casimir_rep_basin_pN_per_nm"]),
+            "k_z_crit_pull_in_pN_per_nm": float(baseline_reg["k_z_crit_pull_in_pN_per_nm"]),
+            "vertical_pull_in_safety_factor": float(baseline_reg["vertical_pull_in_safety_factor"]),
+            "nm_actuator_L_spoke_um": NEMS_NM_ACTUATOR_LENGTH_UM,
+            "nm_actuator_w_spoke_um": NEMS_NM_ACTUATOR_WIDTH_UM,
+            "nm_actuator_t_spoke_um": NEMS_NM_ACTUATOR_THICKNESS_UM,
+            "nm_actuator_k_z_mech_pN_per_nm": float(nm_actuator_reg["k_z_mech_pN_per_nm"]),
+            "nm_actuator_k_r_mech_pN_per_nm": float(nm_actuator_reg["k_r_mech_pN_per_nm"]),
+            "nm_actuator_lateral_safety_factor": float(nm_actuator_reg["lateral_stability_safety_factor"]),
+            "nm_actuator_vertical_pull_in_safety_factor": float(nm_actuator_reg["vertical_pull_in_safety_factor"]),
+            "nm_actuator_linear_lift_nm": float(nm_actuator_reg["equilibrium_axial_repulsive_lift_nm"]),
+            "nm_actuator_basin_eq_lift_nm": float(nm_actuator_reg["self_consistent_basin_repulsive_lift_nm"]),
+            "nm_actuator_engaged_deflection_nm": float(nm_actuator_reg["engaged_linear_axial_deflection_nm"]),
+            "nm_actuator_peak_to_peak_stroke_nm": float(nm_actuator_reg["peak_to_peak_linear_stroke_nm"]),
+            "soft_clutch_L_spoke_um": NEMS_SOFT_CLUTCH_LENGTH_UM,
+            "soft_clutch_w_spoke_um": NEMS_SOFT_CLUTCH_WIDTH_UM,
+            "soft_clutch_t_spoke_um": NEMS_SOFT_CLUTCH_THICKNESS_UM,
+            "soft_clutch_k_z_mech_pN_per_nm": float(soft_clutch_reg["k_z_mech_pN_per_nm"]),
+            "soft_clutch_k_r_mech_pN_per_nm": float(soft_clutch_reg["k_r_mech_pN_per_nm"]),
+            "soft_clutch_lateral_safety_factor": float(soft_clutch_reg["lateral_stability_safety_factor"]),
+            "soft_clutch_linear_lift_nm": float(soft_clutch_reg["equilibrium_axial_repulsive_lift_nm"]),
+            "soft_clutch_basin_eq_lift_nm": float(soft_clutch_reg["self_consistent_basin_repulsive_lift_nm"]),
+            "compact_clutch_L_spoke_um": NEMS_COMPACT_CLUTCH_LENGTH_UM,
+            "compact_clutch_w_spoke_um": NEMS_COMPACT_CLUTCH_WIDTH_UM,
+            "compact_clutch_t_spoke_um": NEMS_COMPACT_CLUTCH_THICKNESS_UM,
+            "compact_clutch_k_z_mech_pN_per_nm": float(compact_clutch_reg["k_z_mech_pN_per_nm"]),
+            "compact_clutch_k_r_mech_pN_per_nm": float(compact_clutch_reg["k_r_mech_pN_per_nm"]),
+            "compact_clutch_lateral_safety_factor": float(compact_clutch_reg["lateral_stability_safety_factor"]),
+            "compact_clutch_linear_lift_nm": float(compact_clutch_reg["equilibrium_axial_repulsive_lift_nm"]),
+            "compact_clutch_basin_eq_lift_nm": float(compact_clutch_reg["self_consistent_basin_repulsive_lift_nm"]),
+            "suspension_regimes": {
+                "isometric_transducer": baseline_reg,
+                "noncontact_nm_actuator": nm_actuator_reg,
+                "high_stroke_clutch": soft_clutch_reg,
+                "compact_high_aspect_clutch": compact_clutch_reg,
+            },
             "lift_is_linearized_not_a_self_consistent_equilibrium": True,
         }
     )
 
     tolerance_rows: list[dict[str, Any]] = []
     tolerance: dict[str, Any] = {
-        "material": "Gold",
-        "temperature_K": 300.0,
+        "material": DEFAULT_STUDY_MATERIAL,
+        "temperature_K": DEFAULT_STUDY_TEMPERATURE_K,
         "slot_width_fixed": True,
         "tooth_center_fixed": True,
         "rows": tolerance_rows,
@@ -1026,10 +1314,20 @@ def run_full_study(
     study["cd_tolerance"] = tolerance
     for delta_w in WIDTH_SHIFTS_UM:
         rep = evaluator.evaluate(
-            name, design, 3.0, "Gold", 300.0, delta_w_um=delta_w
+            name,
+            design,
+            theta_disengaged,
+            DEFAULT_STUDY_MATERIAL,
+            DEFAULT_STUDY_TEMPERATURE_K,
+            delta_w_um=delta_w,
         )["force_z_pN"]
         engaged = evaluator.evaluate(
-            name, design, 48.0, "Gold", 300.0, delta_w_um=delta_w
+            name,
+            design,
+            theta_engaged,
+            DEFAULT_STUDY_MATERIAL,
+            DEFAULT_STUDY_TEMPERATURE_K,
+            delta_w_um=delta_w,
         )["force_z_pN"]
         swing = rep - engaged
         tolerance_rows.append(
@@ -1135,25 +1433,30 @@ def execute(settings: dict[str, Any]) -> dict[str, Any]:
             "Cantor_N2_HybridRZ": {
                 **freshness_metadata(report["executed_at"]),
                 "source": "Cantor_RZ_ScaleMatched",
-                "z_tip_um": [-0.090, -0.100, -0.090],
-                "h_teeth_um": [0.090, 0.100, 0.090],
+                "z_tip_um": list(HYBRID_CANTOR_Z_TIPS_UM),
+                "h_teeth_um": list(HYBRID_CANTOR_H_TEETH_UM),
             },
             "Rot_C8_Compact_N2": {
                 **freshness_metadata(report["executed_at"]),
                 "source": "execution.clutch_geometry_redesign.get_scoped_clutch_elements",
-                "N": 2,
-                "R_min": 0.20,
-                "R_max": 0.90,
-                "w1_ratio": 0.45,
-                "min_tooth_w": 0.020,
-                "z_tip_um": [-0.100, -0.100, -0.100],
-                "h_teeth_um": [0.100, 0.100, 0.100],
-                "levels": [2, 1, 2],
+                "N": int(ROTATIONAL_C8_COMPACT_N2_SPEC["N"]),
+                "R_min": float(ROTATIONAL_C8_COMPACT_N2_SPEC["R_min"]),
+                "R_max": float(ROTATIONAL_C8_COMPACT_N2_SPEC["R_max"]),
+                "w1_ratio": float(ROTATIONAL_C8_COMPACT_N2_SPEC["w1_ratio"]),
+                "min_tooth_w": float(ROTATIONAL_C8_COMPACT_N2_SPEC["min_tooth_w"]),
+                "z_tip_um": [DEFAULT_Z_TIP_ROTATIONAL_UM] * len(CANTOR_N2_TRACK_LEVELS),
+                "h_teeth_um": [
+                    float(ROTATIONAL_C8_COMPACT_N2_SPEC["h_teeth"])
+                ] * len(CANTOR_N2_TRACK_LEVELS),
+                "levels": list(CANTOR_N2_TRACK_LEVELS),
             },
         }
         if report["mode"] == "micro_probe":
             name = "Cantor_N2_HybridRZ"
-            row = evaluator.evaluate(name, designs[name], 3.0, "PEC", 0.0)
+            probe_theta_disengaged, _ = design_operating_angles(designs[name])
+            row = evaluator.evaluate(
+                name, designs[name], probe_theta_disengaged, "PEC", 0.0
+            )
             report["micro_probe"] = row
             report["execution_status"] = "micro_probe_complete"
             report["caveats"].append(
@@ -1370,9 +1673,34 @@ def markdown_report(report: Mapping[str, Any]) -> str:
                 ("lateral_stability_safety_factor", ""),
                 ("combined_radial_stiffness_pN_per_nm", "pN/nm"),
                 ("equilibrium_axial_repulsive_lift_nm", "nm"),
+                ("self_consistent_basin_repulsive_lift_nm", "nm"),
+                ("k_z_crit_pull_in_pN_per_nm", "pN/nm"),
+                ("vertical_pull_in_safety_factor", ""),
             ):
                 if key in lateral:
                     lines.append(f"- `{key}`: {fmt(lateral[key], 10)} {unit}".rstrip())
+            regimes_map = lateral.get("suspension_regimes", {})
+            if isinstance(regimes_map, Mapping) and regimes_map:
+                lines.extend(
+                    [
+                        "",
+                        "| Suspension regime | L_spoke (um) | w_spoke (um) | t_spoke (um) | "
+                        "k_z (pN/nm) | k_r (pN/nm) | Radial SF | Pull-in SF | "
+                        "Linear lift (nm) | Basin eq. lift (nm) |",
+                        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+                    ]
+                )
+                for reg_name, reg_row in regimes_map.items():
+                    lines.append(
+                        f"| `{reg_name}` | {fmt(reg_row['L_spoke_um'])} | "
+                        f"{fmt(reg_row['w_spoke_um'])} | {fmt(reg_row['t_spoke_um'])} | "
+                        f"{fmt(reg_row['k_z_mech_pN_per_nm'])} | "
+                        f"{fmt(reg_row['k_r_mech_pN_per_nm'])} | "
+                        f"{fmt(reg_row['lateral_stability_safety_factor'])} | "
+                        f"{fmt(reg_row['vertical_pull_in_safety_factor'])} | "
+                        f"{fmt(reg_row['equilibrium_axial_repulsive_lift_nm'])} | "
+                        f"{fmt(reg_row['self_consistent_basin_repulsive_lift_nm'])} |"
+                    )
             lines.append("")
         tolerance = study.get("cd_tolerance", {})
         if tolerance:
@@ -1439,7 +1767,10 @@ def make_figure(report: Mapping[str, Any], figures_dir: Path) -> tuple[Path, Pat
 
     for (name, study), color in zip(report["designs"].items(), colors):
         material_rows = study.get("material_dispersion", {}).get("rows", [])
-        for theta, style in ((3.0, "-o"), (48.0, "--s")):
+        for theta, style in (
+            (THETA_DISENGAGED_DEG, "-o"),
+            (THETA_ENGAGED_DEG, "--s"),
+        ):
             selected = [row for row in material_rows if row["theta_deg"] == theta]
             if selected:
                 a.plot(
@@ -1618,11 +1949,11 @@ def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="0: both complete studies; 1..10: one micro-probe; >10: cap BEM solves.",
     )
     parser.add_argument("--formulation", default="vector_dyadic")
-    parser.add_argument("--n-r", type=positive_integer, default=1)
-    parser.add_argument("--n-phi-tooth", type=positive_integer, default=2)
-    parser.add_argument("--n-phi-bridge", type=positive_integer, default=2)
-    parser.add_argument("--n-z", type=positive_integer, default=2)
-    parser.add_argument("--n-xi", type=positive_integer, default=12)
+    parser.add_argument("--n-r", type=positive_integer, default=BEM_TIER_STANDARD.n_r)
+    parser.add_argument("--n-phi-tooth", type=positive_integer, default=BEM_TIER_STANDARD.n_phi_tooth)
+    parser.add_argument("--n-phi-bridge", type=positive_integer, default=BEM_TIER_STANDARD.n_phi_bridge)
+    parser.add_argument("--n-z", type=positive_integer, default=BEM_TIER_STANDARD.n_z)
+    parser.add_argument("--n-xi", type=positive_integer, default=BEM_TIER_STANDARD.n_xi)
     parser.add_argument("--device", default="auto")
     parser.add_argument(
         "--output-root", type=Path, default=ROOT,

@@ -28,13 +28,202 @@ from typing import Any, TypedDict
 
 
 __all__ = [
+    "DEFAULT_APERTURE_ARC_DEG",
+    "DEFAULT_BRIDGE_ARC_DEG",
+    "DEFAULT_ENGAGED_GAP_UM",
+    "DEFAULT_H_TEETH_ROTATIONAL_UM",
+    "DEFAULT_H_TEETH_UM",
+    "DEFAULT_HYBRID_L2_H_TEETH_UM",
+    "DEFAULT_HYBRID_L2_Z_TIP_UM",
+    "DEFAULT_MAX_TRUN_CEIL",
+    "DEFAULT_MIN_TOOTH_W_UM",
+    "DEFAULT_MIN_TRUN_FLOOR",
+    "DEFAULT_N3_TOOTH_ARC_DEG",
+    "DEFAULT_NUM_SECTORS",
+    "DEFAULT_ROTATIONAL_APERTURE_ARC_DEG",
+    "DEFAULT_R_MAX_UM",
+    "DEFAULT_R_MIN_UM",
+    "DEFAULT_SAFETY_FACTOR",
+    "DEFAULT_SECTOR_DEG",
+    "DEFAULT_SLOT_OVERHANG_UM",
+    "DEFAULT_STAIRCASE_H_TEETH_UM",
+    "DEFAULT_STAIRCASE_Z_TIPS_UM",
+    "DEFAULT_TARGET_SUPPRESSION",
+    "DEFAULT_TOOTH_ARC_DEG",
+    "DEFAULT_TOOTH_CENTER_OFFSET_DEG",
+    "DEFAULT_T_LANDING_PAD_UM",
+    "DEFAULT_T_MEMBRANE_UM",
+    "DEFAULT_W1_RATIO",
+    "DEFAULT_Z_PAD_TOP_UM",
+    "DEFAULT_Z_ROTOR_TOP_UM",
+    "DEFAULT_Z_TIP_ROTATIONAL_UM",
+    "DEFAULT_Z_TIP_UM",
+    "MONOLITHIC_PAD_BOT_Z_UM",
+    "MONOLITHIC_SPOKE_Z_MAX_UM",
+    "MONOLITHIC_SPOKE_Z_MIN_UM",
+    "MONOLITHIC_TRENCH_Z_MAX_UM",
+    "MONOLITHIC_TRENCH_Z_MIN_UM",
+    "ROTATIONAL_3SOLVER_N2_ANGLES_DEG",
+    "ROTATIONAL_3STATE_ANGLES_DEG",
+    "ROTATIONAL_9ANGLE_SWEEP_DEG",
+    "ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC",
+    "ROTATIONAL_C8_COMPACT_N2_SPEC",
+    "ROTATIONAL_C10_FRACTAL_N3_SPEC",
+    "ROTATIONAL_Z_EFF_DEFAULT_DESIGNS",
     "compute_dynamic_Trun",
+    "disengaged_angle_deg",
+    "engaged_angle_deg",
     "get_cantor_radial_intervals",
     "get_scoped_clutch_elements",
     "generate_annular_sector_prism_vertices",
+    "generate_rectilinear_rotor_geometry",
+    "generate_rectilinear_stator_geometry",
     "generate_redesigned_stator_geometry",
     "generate_redesigned_rotor_geometry",
+    "straddling_angle_deg",
+    "tooth_center_angle_deg",
 ]
+
+DEFAULT_R_MIN_UM = 0.30
+DEFAULT_R_MAX_UM = 1.35
+DEFAULT_W1_RATIO = 0.23
+DEFAULT_MIN_TOOTH_W_UM = 0.020
+DEFAULT_T_MEMBRANE_UM = 0.025
+DEFAULT_T_LANDING_PAD_UM = 0.150
+DEFAULT_H_TEETH_UM = 0.250
+DEFAULT_Z_TIP_UM = 0.015
+DEFAULT_Z_PAD_TOP_UM = -0.115
+DEFAULT_NUM_SECTORS = 4
+DEFAULT_SECTOR_DEG = 360.0 / DEFAULT_NUM_SECTORS
+DEFAULT_APERTURE_ARC_DEG = 30.0
+DEFAULT_ROTATIONAL_APERTURE_ARC_DEG = 36.0
+DEFAULT_BRIDGE_ARC_DEG = 60.0
+DEFAULT_TOOTH_ARC_DEG = 15.0
+DEFAULT_N3_TOOTH_ARC_DEG = 12.0
+DEFAULT_TOOTH_CENTER_OFFSET_DEG = 15.0
+DEFAULT_SLOT_OVERHANG_UM = 0.002
+DEFAULT_TARGET_SUPPRESSION = 1e-50
+DEFAULT_SAFETY_FACTOR = 1.5
+DEFAULT_MIN_TRUN_FLOOR = 3.0
+DEFAULT_MAX_TRUN_CEIL = 12.0
+
+# Rotational stepped-clutch axial elevations and engaged clearance (um).
+DEFAULT_Z_TIP_ROTATIONAL_UM = -0.100
+DEFAULT_H_TEETH_ROTATIONAL_UM = 0.100
+DEFAULT_Z_ROTOR_TOP_UM = 0.025
+DEFAULT_ENGAGED_GAP_UM = DEFAULT_Z_TIP_ROTATIONAL_UM - DEFAULT_Z_PAD_TOP_UM
+DEFAULT_HYBRID_L2_Z_TIP_UM = -0.090
+DEFAULT_HYBRID_L2_H_TEETH_UM = 0.090
+DEFAULT_STAIRCASE_Z_TIPS_UM: tuple[float, float, float] = (-0.075, -0.112, -0.100)
+DEFAULT_STAIRCASE_H_TEETH_UM: tuple[float, float, float] = (0.075, 0.082, 0.085)
+
+# Monolithic NEMS structural support axial elevations (um).
+MONOLITHIC_SPOKE_Z_MIN_UM = 0.350
+MONOLITHIC_SPOKE_Z_MAX_UM = 0.470
+MONOLITHIC_TRENCH_Z_MIN_UM = -0.650
+MONOLITHIC_TRENCH_Z_MAX_UM = -0.550
+MONOLITHIC_PAD_BOT_Z_UM = DEFAULT_Z_PAD_TOP_UM - DEFAULT_T_LANDING_PAD_UM
+
+
+def tooth_center_angle_deg(
+    theta_deg: float,
+    *,
+    sector_deg: float = DEFAULT_SECTOR_DEG,
+    tooth_center_offset_deg: float = DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+) -> float:
+    """Return the azimuthal center of the rotor tooth within [0, sector_deg)."""
+    return (tooth_center_offset_deg + (theta_deg % sector_deg)) % sector_deg
+
+
+def disengaged_angle_deg(
+    aperture_arc_deg: float = DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+    *,
+    tooth_center_offset_deg: float = DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+) -> float:
+    """Return theta_deg that centers the rotor tooth in the open stator slot."""
+    return (aperture_arc_deg / 2.0) - tooth_center_offset_deg
+
+
+def straddling_angle_deg(
+    aperture_arc_deg: float = DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+    *,
+    tooth_center_offset_deg: float = DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+) -> float:
+    """Return theta_deg that places the rotor tooth center on the slot/pad edge."""
+    return aperture_arc_deg - tooth_center_offset_deg
+
+
+def engaged_angle_deg(
+    aperture_arc_deg: float = DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+    *,
+    sector_deg: float = DEFAULT_SECTOR_DEG,
+    tooth_center_offset_deg: float = DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+) -> float:
+    """Return theta_deg that centers the rotor tooth over the landing pad."""
+    return ((aperture_arc_deg + sector_deg) / 2.0) - tooth_center_offset_deg
+
+
+ROTATIONAL_3STATE_ANGLES_DEG: tuple[float, float, float] = (
+    disengaged_angle_deg(DEFAULT_ROTATIONAL_APERTURE_ARC_DEG),
+    straddling_angle_deg(DEFAULT_ROTATIONAL_APERTURE_ARC_DEG),
+    engaged_angle_deg(DEFAULT_ROTATIONAL_APERTURE_ARC_DEG),
+)
+ROTATIONAL_9ANGLE_SWEEP_DEG: tuple[float, ...] = tuple(
+    float(6 * k) for k in range(9)
+)
+ROTATIONAL_3SOLVER_N2_ANGLES_DEG: tuple[float, float, float] = (
+    ROTATIONAL_9ANGLE_SWEEP_DEG[1],
+    ROTATIONAL_9ANGLE_SWEEP_DEG[3],
+    engaged_angle_deg(DEFAULT_ROTATIONAL_APERTURE_ARC_DEG),
+)
+
+ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC: dict[str, Any] = {
+    "name": "Rot_C4_TightSlot_N2",
+    "N": 2,
+    "R_min": DEFAULT_R_MIN_UM,
+    "R_max": DEFAULT_R_MAX_UM,
+    "w1_ratio": 0.65,
+    "min_tooth_w": DEFAULT_MIN_TOOTH_W_UM,
+    "h_teeth": DEFAULT_H_TEETH_ROTATIONAL_UM,
+    "t_membrane": DEFAULT_T_MEMBRANE_UM,
+    "t_landing_pad": DEFAULT_T_LANDING_PAD_UM,
+    "tooth_arc_deg": DEFAULT_TOOTH_ARC_DEG,
+    "aperture_arc_deg": DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+    "angles": ROTATIONAL_9ANGLE_SWEEP_DEG,
+}
+ROTATIONAL_C8_COMPACT_N2_SPEC: dict[str, Any] = {
+    "name": "Rot_C8_Compact_N2",
+    "N": 2,
+    "R_min": 0.20,
+    "R_max": 0.90,
+    "w1_ratio": 0.45,
+    "min_tooth_w": DEFAULT_MIN_TOOTH_W_UM,
+    "h_teeth": DEFAULT_H_TEETH_ROTATIONAL_UM,
+    "t_membrane": DEFAULT_T_MEMBRANE_UM,
+    "t_landing_pad": DEFAULT_T_LANDING_PAD_UM,
+    "tooth_arc_deg": DEFAULT_TOOTH_ARC_DEG,
+    "aperture_arc_deg": DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+    "angles": ROTATIONAL_9ANGLE_SWEEP_DEG,
+}
+ROTATIONAL_C10_FRACTAL_N3_SPEC: dict[str, Any] = {
+    "name": "Rot_C10_Fractal_N3",
+    "N": 3,
+    "R_min": DEFAULT_R_MIN_UM,
+    "R_max": 1.65,
+    "w1_ratio": 0.40,
+    "min_tooth_w": 0.015,
+    "h_teeth": DEFAULT_H_TEETH_ROTATIONAL_UM,
+    "t_membrane": DEFAULT_T_MEMBRANE_UM,
+    "t_landing_pad": DEFAULT_T_LANDING_PAD_UM,
+    "tooth_arc_deg": DEFAULT_N3_TOOTH_ARC_DEG,
+    "aperture_arc_deg": DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+    "angles": ROTATIONAL_3STATE_ANGLES_DEG,
+}
+ROTATIONAL_Z_EFF_DEFAULT_DESIGNS: tuple[dict[str, Any], ...] = (
+    ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC,
+    ROTATIONAL_C8_COMPACT_N2_SPEC,
+    ROTATIONAL_C10_FRACTAL_N3_SPEC,
+)
 
 
 class RadialInterval(TypedDict):
@@ -115,10 +304,10 @@ def _meep() -> Any:
 
 def compute_dynamic_Trun(
     d_eff_um: float,
-    target_suppression: float = 1e-50,
-    safety_factor: float = 1.5,
-    min_floor: float = 3.0,
-    max_ceil: float = 12.0,
+    target_suppression: float = DEFAULT_TARGET_SUPPRESSION,
+    safety_factor: float = DEFAULT_SAFETY_FACTOR,
+    min_floor: float = DEFAULT_MIN_TRUN_FLOOR,
+    max_ceil: float = DEFAULT_MAX_TRUN_CEIL,
 ) -> tuple[float, TrunDiagnostics]:
     """Compute a bounded run time from exp(-2 * Sigma * T).
 
@@ -204,10 +393,10 @@ def get_cantor_radial_intervals(
 
 def get_scoped_clutch_elements(
     N: int = 2,
-    R_min: float = 0.30,
-    R_max: float = 1.35,
-    w1_ratio: float = 0.23,
-    min_tooth_w: float = 0.020,
+    R_min: float = DEFAULT_R_MIN_UM,
+    R_max: float = DEFAULT_R_MAX_UM,
+    w1_ratio: float = DEFAULT_W1_RATIO,
+    min_tooth_w: float = DEFAULT_MIN_TOOTH_W_UM,
 ) -> list[ClutchElement]:
     """Build radially ordered, centred teeth with positive slot clearances."""
     ratio = _positive("w1_ratio", w1_ratio)
@@ -363,15 +552,16 @@ def _square_sector_vertices(
 def generate_redesigned_stator_geometry(
     elements: Iterable[ClutchElement],
     L_plate: float,
-    t_membrane: float = 0.025,
-    t_landing_pad: float = 0.150,
+    t_membrane: float = DEFAULT_T_MEMBRANE_UM,
+    t_landing_pad: float = DEFAULT_T_LANDING_PAD_UM,
     plate_material: Any = None,
     void_material: Any = None,
-    num_sectors: int = 4,
-    aperture_arc_deg: float = 30.0,
-    bridge_arc_deg: float = 60.0,
+    num_sectors: int = DEFAULT_NUM_SECTORS,
+    aperture_arc_deg: float = DEFAULT_APERTURE_ARC_DEG,
+    bridge_arc_deg: float = DEFAULT_BRIDGE_ARC_DEG,
     z_pad_top: float | None = None,
     theta_stator_deg: float = 0.0,
+    slot_overhang_um: float = DEFAULT_SLOT_OVERHANG_UM,
 ) -> list[Any]:
     """Return Meep objects for a square membrane, bridge pads, and slots.
 
@@ -382,7 +572,7 @@ def generate_redesigned_stator_geometry(
     With z_pad_top specified below the membrane, t_landing_pad is the pad
     thickness below z_pad_top. Bridge material extends from the pad bottom
     to the membrane; bridge slots are open above z_pad_top. Aperture slots
-    overhang the membrane by 0.002 um at both faces in either mode.
+    overhang the membrane by slot_overhang_um at both faces in either mode.
 
     Positive theta_stator_deg rotates sectors counterclockwise around +z.
     Void objects are appended last so they override membrane material.
@@ -414,7 +604,7 @@ def generate_redesigned_stator_geometry(
     if max(item["r_outer"] for item in validated) > side / 2.0:
         raise ValueError("L_plate must enclose every complete radial slot.")
 
-    overhang = 0.002
+    overhang = _positive("slot_overhang_um", slot_overhang_um)
     bridge_void_height = (
         _positive("bridge void height", -pad_top + overhang)
         if pad_top is not None else None
@@ -472,13 +662,13 @@ def generate_redesigned_stator_geometry(
 
 def generate_redesigned_rotor_geometry(
     elements: Iterable[ClutchElement],
-    H_teeth: float = 0.250,
-    z_tip: float = 0.015,
+    H_teeth: float = DEFAULT_H_TEETH_UM,
+    z_tip: float = DEFAULT_Z_TIP_UM,
     rotor_material: Any = None,
-    num_sectors: int = 4,
-    tooth_arc_deg: float = 15.0,
+    num_sectors: int = DEFAULT_NUM_SECTORS,
+    tooth_arc_deg: float = DEFAULT_TOOTH_ARC_DEG,
     theta_rotor_deg: float = 0.0,
-    tooth_center_offset_deg: float = 15.0,
+    tooth_center_offset_deg: float = DEFAULT_TOOTH_CENTER_OFFSET_DEG,
 ) -> list[Any]:
     """Return teeth only; no unspecified rotor backing plate is added.
 
@@ -525,23 +715,193 @@ def generate_redesigned_rotor_geometry(
     return geometry
 
 
+def _rectilinear_sector_block(
+    mp: Any,
+    sector: int,
+    u_min: float,
+    u_max: float,
+    v_min: float,
+    v_max: float,
+    z_min: float,
+    z_max: float,
+    material: Any,
+) -> Any:
+    """Create an axis-aligned mp.Block rotated by sector * 90 deg around +z."""
+    u_center = 0.5 * (u_min + u_max)
+    v_center = 0.5 * (v_min + v_max)
+    u_size = u_max - u_min
+    v_size = v_max - v_min
+    z_center = 0.5 * (z_min + z_max)
+    z_size = z_max - z_min
+    s = sector % 4
+    if s == 0:
+        cx, cy, sx, sy = u_center, v_center, u_size, v_size
+    elif s == 1:
+        cx, cy, sx, sy = -v_center, u_center, v_size, u_size
+    elif s == 2:
+        cx, cy, sx, sy = -u_center, -v_center, u_size, v_size
+    else:
+        cx, cy, sx, sy = v_center, -u_center, v_size, u_size
+    return mp.Block(
+        size=mp.Vector3(sx, sy, z_size),
+        center=mp.Vector3(cx, cy, z_center),
+        material=material,
+    )
+
+
+def generate_rectilinear_stator_geometry(
+    elements: Iterable[ClutchElement],
+    L_plate: float,
+    t_membrane: float = DEFAULT_T_MEMBRANE_UM,
+    t_landing_pad: float = DEFAULT_T_LANDING_PAD_UM,
+    plate_material: Any = None,
+    void_material: Any = None,
+    num_sectors: int = DEFAULT_NUM_SECTORS,
+    aperture_arc_deg: float = DEFAULT_APERTURE_ARC_DEG,
+    bridge_arc_deg: float = DEFAULT_BRIDGE_ARC_DEG,
+    z_pad_top: float | None = None,
+    theta_stator_deg: float = 0.0,
+    slot_overhang_um: float = DEFAULT_SLOT_OVERHANG_UM,
+) -> list[Any]:
+    """Return axis-aligned Cartesian mp.Block objects for the rectilinear control stator.
+
+    Replaces curved annular arcs with strictly Cartesian (x, y, z) blocks sharing
+    the exact radial intervals [r_inner, r_outer] and chordal slot spans of the
+    cylindrical clutch so that all surfaces lie parallel to Yee grid planes.
+    """
+    validated = _validated_elements(elements)
+    side = _positive("L_plate", L_plate)
+    membrane = _positive("t_membrane", t_membrane)
+    pad = _positive("t_landing_pad", t_landing_pad)
+    if z_pad_top is None:
+        if pad <= membrane:
+            raise ValueError("t_landing_pad must exceed t_membrane.")
+        pad_bottom = -pad
+        pad_top = None
+    else:
+        pad_top = _finite("z_pad_top", z_pad_top)
+        if pad_top >= -membrane:
+            raise ValueError("z_pad_top must lie below -t_membrane.")
+        pad_bottom = _finite("z_pad_bot", pad_top - pad)
+    sectors = _integer("num_sectors", num_sectors)
+    if sectors != 4:
+        raise ValueError("Rectilinear C4 geometry requires num_sectors=4.")
+    aperture = _positive("aperture_arc_deg", aperture_arc_deg)
+    bridge = _positive("bridge_arc_deg", bridge_arc_deg)
+    if not math.isclose(aperture + bridge, 90.0, rel_tol=0.0, abs_tol=1e-9):
+        raise ValueError("aperture_arc_deg + bridge_arc_deg must equal 90 deg.")
+    overhang = _positive("slot_overhang_um", slot_overhang_um)
+    mp = _meep()
+    metal = mp.metal if plate_material is None else plate_material
+    void = mp.air if void_material is None else void_material
+    # Full square membrane + full pad slab, then carve axis-aligned rectangular slots.
+    geometry: list[Any] = [
+        mp.Block(
+            size=mp.Vector3(side, side, membrane),
+            center=mp.Vector3(0.0, 0.0, -membrane / 2.0),
+            material=metal,
+        ),
+        mp.Block(
+            size=mp.Vector3(side, side, -membrane - pad_bottom),
+            center=mp.Vector3(0.0, 0.0, 0.5 * (-membrane + pad_bottom)),
+            material=metal,
+        ),
+    ]
+    alpha_slot = math.radians(aperture / 2.0)
+    # Shift slot transverse center according to relative stator rotation.
+    center_angle_deg = (theta_stator_deg + aperture / 2.0) % 90.0
+    if center_angle_deg > 45.0:
+        center_angle_deg -= 90.0
+    shift_rad = math.radians(center_angle_deg)
+    z_void_min = (pad_top if pad_top is not None else -membrane) - overhang
+    z_void_max = overhang
+    for sector in range(4):
+        for element in validated:
+            half_span = element["r_center"] * math.sin(alpha_slot)
+            v_shift = element["r_center"] * math.sin(shift_rad)
+            geometry.append(
+                _rectilinear_sector_block(
+                    mp,
+                    sector,
+                    element["r_inner"],
+                    element["r_outer"],
+                    v_shift - half_span,
+                    v_shift + half_span,
+                    z_void_min,
+                    z_void_max,
+                    void,
+                )
+            )
+    return geometry
+
+
+def generate_rectilinear_rotor_geometry(
+    elements: Iterable[ClutchElement],
+    H_teeth: float = DEFAULT_H_TEETH_UM,
+    z_tip: float = DEFAULT_Z_TIP_UM,
+    rotor_material: Any = None,
+    num_sectors: int = DEFAULT_NUM_SECTORS,
+    tooth_arc_deg: float = DEFAULT_TOOTH_ARC_DEG,
+    theta_rotor_deg: float = 0.0,
+    tooth_center_offset_deg: float = DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+) -> list[Any]:
+    """Return axis-aligned Cartesian mp.Block rotor teeth for the rectilinear control."""
+    validated = _validated_elements(elements)
+    height = _positive("H_teeth", H_teeth)
+    tip = _finite("z_tip", z_tip)
+    sectors = _integer("num_sectors", num_sectors)
+    if sectors != 4:
+        raise ValueError("Rectilinear C4 geometry requires num_sectors=4.")
+    arc = _positive("tooth_arc_deg", tooth_arc_deg)
+    alpha_tooth = math.radians(arc / 2.0)
+    shift_deg = (tooth_center_offset_deg + theta_rotor_deg) % 90.0
+    if shift_deg > 45.0:
+        shift_deg -= 90.0
+    shift_rad = math.radians(shift_deg)
+    mp = _meep()
+    material = mp.metal if rotor_material is None else rotor_material
+    geometry: list[Any] = []
+    for sector in range(4):
+        for element in validated:
+            elem_tip = _finite("element z_tip", element.get("z_tip", tip))
+            elem_height = _positive("element h_teeth", element.get("h_teeth", height))
+            half_span = element["r_out_span"] if "r_out_span" in element else (
+                element["r_tooth_out"] * math.sin(alpha_tooth)
+            )
+            v_shift = element["r_center"] * math.sin(shift_rad)
+            geometry.append(
+                _rectilinear_sector_block(
+                    mp,
+                    sector,
+                    element["r_tooth_in"],
+                    element["r_tooth_out"],
+                    v_shift - half_span,
+                    v_shift + half_span,
+                    elem_tip,
+                    elem_tip + elem_height,
+                    material,
+                )
+            )
+    return geometry
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--N", type=int, choices=(1, 2, 3), default=2)
-    parser.add_argument("--r-min", type=float, default=0.30)
-    parser.add_argument("--r-max", type=float, default=1.35)
-    parser.add_argument("--w1-ratio", type=float, default=0.23)
-    parser.add_argument("--min-tooth-w", type=float, default=0.020)
-    parser.add_argument("--z-tip", type=float, default=0.015)
+    parser.add_argument("--r-min", type=float, default=DEFAULT_R_MIN_UM)
+    parser.add_argument("--r-max", type=float, default=DEFAULT_R_MAX_UM)
+    parser.add_argument("--w1-ratio", type=float, default=DEFAULT_W1_RATIO)
+    parser.add_argument("--min-tooth-w", type=float, default=DEFAULT_MIN_TOOTH_W_UM)
+    parser.add_argument("--z-tip", type=float, default=DEFAULT_Z_TIP_UM)
     parser.add_argument(
         "--z-pad-top", type=float, default=None,
         help="Recessed pad top; defaults to -0.115 um for a negative z_tip.",
     )
-    parser.add_argument("--h-teeth", type=float, default=0.250)
-    parser.add_argument("--target-suppression", type=float, default=1e-50)
-    parser.add_argument("--safety-factor", type=float, default=1.5)
-    parser.add_argument("--min-floor", type=float, default=3.0)
-    parser.add_argument("--max-ceil", type=float, default=12.0)
+    parser.add_argument("--h-teeth", type=float, default=DEFAULT_H_TEETH_UM)
+    parser.add_argument("--target-suppression", type=float, default=DEFAULT_TARGET_SUPPRESSION)
+    parser.add_argument("--safety-factor", type=float, default=DEFAULT_SAFETY_FACTOR)
+    parser.add_argument("--min-floor", type=float, default=DEFAULT_MIN_TRUN_FLOOR)
+    parser.add_argument("--max-ceil", type=float, default=DEFAULT_MAX_TRUN_CEIL)
     parser.add_argument(
         "--d-eff-um", type=float, nargs="+", default=None,
         help="Explicit effective gaps; default verifies axial and radial tooth gaps.",
@@ -560,11 +920,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         tip = _finite("z_tip for verification", args.z_tip)
         pad_top = args.z_pad_top
         if pad_top is None and tip < 0.0:
-            pad_top = -0.115
+            pad_top = DEFAULT_Z_PAD_TOP_UM
         if pad_top is not None:
             pad_top = _finite("z_pad_top", pad_top)
-            if pad_top >= -0.025:
-                raise ValueError("z_pad_top must lie below -t_membrane (-0.025 um).")
+            if pad_top >= -DEFAULT_T_MEMBRANE_UM:
+                raise ValueError(
+                    f"z_pad_top must lie below -t_membrane (-{DEFAULT_T_MEMBRANE_UM:.3f} um)."
+                )
         axial_gap = _positive(
             "effective axial gap",
             abs(tip - pad_top) if tip < 0.0 else tip,
@@ -573,11 +935,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         _finite("tooth top", tip + height)
         print(f"Cantor clutch verification: N={args.N}; distances in um")
         if pad_top is None:
-            print("Membrane z=[-0.025, 0]; bridge reinforcement z=[-0.150, -0.025]")
+            print(
+                f"Membrane z=[-{DEFAULT_T_MEMBRANE_UM:.3f}, 0]; "
+                f"bridge reinforcement z=[-{DEFAULT_T_LANDING_PAD_UM:.3f}, -{DEFAULT_T_MEMBRANE_UM:.3f}]"
+            )
         else:
             print(
-                f"Membrane z=[-0.025, 0]; bridge reinforcement "
-                f"z=[{pad_top - 0.150:.9g}, -0.025]; "
+                f"Membrane z=[-{DEFAULT_T_MEMBRANE_UM:.3f}, 0]; bridge reinforcement "
+                f"z=[{pad_top - DEFAULT_T_LANDING_PAD_UM:.9g}, -{DEFAULT_T_MEMBRANE_UM:.3f}]; "
                 f"recessed landing pad top z={pad_top:.9g}"
             )
         print(f"Teeth z=[{tip:.9g}, {tip + height:.9g}]")
