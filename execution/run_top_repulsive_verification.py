@@ -38,9 +38,22 @@ from typing import Any
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+if str(REPOSITORY_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPOSITORY_ROOT))
+
+from execution.casimir_bem_solver import BEM_TIER_HIGH, BEM_TIER_STANDARD
+from execution.clutch_geometry_redesign import (
+    DEFAULT_SECTOR_DEG,
+    DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+    disengaged_angle_deg,
+    engaged_angle_deg,
+    tooth_center_angle_deg,
+)
+
 FORMULATION = "vector_dyadic"
 MODEL = "casimir_bem_top_repulsive"
 DATASET = "top_repulsive_verification"
+SLOT_OFFSET_DELTA_DEG = 4.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,11 +74,24 @@ class Winner:
 
     def angle(self, state: str) -> float:
         if state == "disengaged":
-            return self.aperture_arc_deg / 2.0 - 15.0
+            return disengaged_angle_deg(
+                self.aperture_arc_deg,
+                tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+            )
         if state == "slot_offset":
-            return self.aperture_arc_deg / 2.0 - 15.0 + 4.0
+            return (
+                disengaged_angle_deg(
+                    self.aperture_arc_deg,
+                    tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+                )
+                + SLOT_OFFSET_DELTA_DEG
+            )
         if state == "engaged":
-            return (self.aperture_arc_deg + 90.0) / 2.0 - 15.0
+            return engaged_angle_deg(
+                self.aperture_arc_deg,
+                sector_deg=DEFAULT_SECTOR_DEG,
+                tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+            )
         raise ValueError(f"Unknown clutch state: {state!r}")
 
 
@@ -108,18 +134,78 @@ class Task:
 
 
 TASKS: tuple[Task, ...] = (
-    Task("C4_disengaged_base", "C4", "disengaged", -0.100, 2, 3, 3, 2, 24),
-    Task("C4_disengaged_highres", "C4", "disengaged", -0.100, 2, 4, 4, 2, 32),
-    Task("C4_slot_offset_4deg", "C4", "slot_offset", -0.100, 2, 3, 3, 2, 24),
-    Task("C4_engaged_pad_z15nm", "C4", "engaged", 0.015, 2, 3, 3, 2, 24),
-    Task("C8_disengaged_base", "C8", "disengaged", -0.100, 2, 3, 3, 2, 24),
-    Task("C8_disengaged_highres", "C8", "disengaged", -0.100, 2, 4, 4, 2, 32),
-    Task("C8_slot_offset_4deg", "C8", "slot_offset", -0.100, 2, 3, 3, 2, 24),
-    Task("C8_engaged_pad_z15nm", "C8", "engaged", 0.015, 2, 3, 3, 2, 24),
-    Task("C10_disengaged_base", "C10", "disengaged", -0.100, 2, 3, 3, 2, 24),
-    Task("C10_disengaged_highxi", "C10", "disengaged", -0.100, 2, 3, 3, 2, 32),
-    Task("C10_slot_offset_4deg", "C10", "slot_offset", -0.100, 2, 3, 3, 2, 24),
-    Task("C10_engaged_pad_z15nm", "C10", "engaged", 0.015, 2, 3, 3, 2, 24),
+    Task(
+        "C4_disengaged_base", "C4", "disengaged", -0.100,
+        BEM_TIER_STANDARD.n_r, BEM_TIER_STANDARD.n_phi_tooth,
+        BEM_TIER_STANDARD.n_phi_bridge, BEM_TIER_STANDARD.n_z,
+        BEM_TIER_STANDARD.n_xi,
+    ),
+    Task(
+        "C4_disengaged_highres", "C4", "disengaged", -0.100,
+        BEM_TIER_HIGH.n_r, BEM_TIER_HIGH.n_phi_tooth,
+        BEM_TIER_HIGH.n_phi_bridge, BEM_TIER_HIGH.n_z,
+        BEM_TIER_HIGH.n_xi,
+    ),
+    Task(
+        "C4_slot_offset_4deg", "C4", "slot_offset", -0.100,
+        BEM_TIER_STANDARD.n_r, BEM_TIER_STANDARD.n_phi_tooth,
+        BEM_TIER_STANDARD.n_phi_bridge, BEM_TIER_STANDARD.n_z,
+        BEM_TIER_STANDARD.n_xi,
+    ),
+    Task(
+        "C4_engaged_pad_z15nm", "C4", "engaged", 0.015,
+        BEM_TIER_STANDARD.n_r, BEM_TIER_STANDARD.n_phi_tooth,
+        BEM_TIER_STANDARD.n_phi_bridge, BEM_TIER_STANDARD.n_z,
+        BEM_TIER_STANDARD.n_xi,
+    ),
+    Task(
+        "C8_disengaged_base", "C8", "disengaged", -0.100,
+        BEM_TIER_STANDARD.n_r, BEM_TIER_STANDARD.n_phi_tooth,
+        BEM_TIER_STANDARD.n_phi_bridge, BEM_TIER_STANDARD.n_z,
+        BEM_TIER_STANDARD.n_xi,
+    ),
+    Task(
+        "C8_disengaged_highres", "C8", "disengaged", -0.100,
+        BEM_TIER_HIGH.n_r, BEM_TIER_HIGH.n_phi_tooth,
+        BEM_TIER_HIGH.n_phi_bridge, BEM_TIER_HIGH.n_z,
+        BEM_TIER_HIGH.n_xi,
+    ),
+    Task(
+        "C8_slot_offset_4deg", "C8", "slot_offset", -0.100,
+        BEM_TIER_STANDARD.n_r, BEM_TIER_STANDARD.n_phi_tooth,
+        BEM_TIER_STANDARD.n_phi_bridge, BEM_TIER_STANDARD.n_z,
+        BEM_TIER_STANDARD.n_xi,
+    ),
+    Task(
+        "C8_engaged_pad_z15nm", "C8", "engaged", 0.015,
+        BEM_TIER_STANDARD.n_r, BEM_TIER_STANDARD.n_phi_tooth,
+        BEM_TIER_STANDARD.n_phi_bridge, BEM_TIER_STANDARD.n_z,
+        BEM_TIER_STANDARD.n_xi,
+    ),
+    Task(
+        "C10_disengaged_base", "C10", "disengaged", -0.100,
+        BEM_TIER_STANDARD.n_r, BEM_TIER_STANDARD.n_phi_tooth,
+        BEM_TIER_STANDARD.n_phi_bridge, BEM_TIER_STANDARD.n_z,
+        BEM_TIER_STANDARD.n_xi,
+    ),
+    Task(
+        "C10_disengaged_highxi", "C10", "disengaged", -0.100,
+        BEM_TIER_STANDARD.n_r, BEM_TIER_STANDARD.n_phi_tooth,
+        BEM_TIER_STANDARD.n_phi_bridge, BEM_TIER_STANDARD.n_z,
+        BEM_TIER_HIGH.n_xi,
+    ),
+    Task(
+        "C10_slot_offset_4deg", "C10", "slot_offset", -0.100,
+        BEM_TIER_STANDARD.n_r, BEM_TIER_STANDARD.n_phi_tooth,
+        BEM_TIER_STANDARD.n_phi_bridge, BEM_TIER_STANDARD.n_z,
+        BEM_TIER_STANDARD.n_xi,
+    ),
+    Task(
+        "C10_engaged_pad_z15nm", "C10", "engaged", 0.015,
+        BEM_TIER_STANDARD.n_r, BEM_TIER_STANDARD.n_phi_tooth,
+        BEM_TIER_STANDARD.n_phi_bridge, BEM_TIER_STANDARD.n_z,
+        BEM_TIER_STANDARD.n_xi,
+    ),
 )
 
 
@@ -248,13 +334,17 @@ def config_for(task: Task) -> dict[str, Any]:
     config["theta_deg"] = winner.angle(task.state)
     config["z_tip"] = task.z_tip
 
-    center = (15.0 + config["theta_deg"] % 90.0) % 90.0
+    center = tooth_center_angle_deg(
+        config["theta_deg"],
+        sector_deg=DEFAULT_SECTOR_DEG,
+        tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+    )
     half_width = winner.tooth_arc_deg / 2.0
     lower, upper = center - half_width, center + half_width
     if task.state in {"disengaged", "slot_offset"}:
         if not (0.0 < lower < upper < winner.aperture_arc_deg):
             raise ValueError(f"{task.task_id}: tooth is not strictly inside slot")
-    elif not (winner.aperture_arc_deg < lower < upper < 90.0):
+    elif not (winner.aperture_arc_deg < lower < upper < DEFAULT_SECTOR_DEG):
         raise ValueError(f"{task.task_id}: tooth is not strictly above landing pad")
     return config
 

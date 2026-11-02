@@ -17,11 +17,11 @@ from datetime import datetime, timezone
 import numpy as np
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from execution.materials_database_dispersive import get_dielectric_tensor_imag
+from execution.materials_database_dispersive import KB_MEEP_PER_K as KB_MEEP, MEEP_TO_PA, get_dielectric_tensor_imag
 
 
-KB_MEEP = 0.00043676
-MEEP_TO_PA = 0.0316152649
+# KB_MEEP imported from materials_database_dispersive.py
+# MEEP_TO_PA imported from materials_database_dispersive.py
 PASSIVE_LIMIT = np.nextafter(1.0, 0.0)
 
 

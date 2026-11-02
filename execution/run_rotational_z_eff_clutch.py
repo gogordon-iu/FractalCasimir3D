@@ -31,6 +31,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from execution.casimir_bem_solver import (  # noqa: E402
+    BEM_TIER_STANDARD,
     ClutchSurfaceMesh,
     Geometry,
     TrackElement,
@@ -39,7 +40,21 @@ from execution.casimir_bem_solver import (  # noqa: E402
     _radial,
     run_bem_casimir_solver,
 )
-from execution.clutch_geometry_redesign import get_scoped_clutch_elements  # noqa: E402
+from execution.clutch_geometry_redesign import (  # noqa: E402
+    DEFAULT_H_TEETH_ROTATIONAL_UM,
+    DEFAULT_NUM_SECTORS,
+    DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+    DEFAULT_SECTOR_DEG,
+    DEFAULT_TOOTH_ARC_DEG,
+    DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+    DEFAULT_T_LANDING_PAD_UM,
+    DEFAULT_T_MEMBRANE_UM,
+    DEFAULT_Z_PAD_TOP_UM,
+    DEFAULT_Z_TIP_ROTATIONAL_UM,
+    ROTATIONAL_Z_EFF_DEFAULT_DESIGNS,
+    get_scoped_clutch_elements,
+    tooth_center_angle_deg,
+)
 from utils.metrics_logger import (  # noqa: E402
     export_macros,
     log_metric,
@@ -49,12 +64,12 @@ from utils.metrics_logger import (  # noqa: E402
 )
 
 
-Z_TIP_FIXED_UM = -0.100
-H_TEETH_UM = 0.100
+Z_TIP_FIXED_UM = DEFAULT_Z_TIP_ROTATIONAL_UM
+H_TEETH_UM = DEFAULT_H_TEETH_ROTATIONAL_UM
 Z_ROTOR_TOP_UM = Z_TIP_FIXED_UM + H_TEETH_UM
-Z_PAD_TOP_UM = -0.115
-SECTOR_DEG = 90.0
-SYMMETRY_ORDER = 4
+Z_PAD_TOP_UM = DEFAULT_Z_PAD_TOP_UM
+SECTOR_DEG = DEFAULT_SECTOR_DEG
+SYMMETRY_ORDER = DEFAULT_NUM_SECTORS
 
 OUTPUT_MODEL = "BEM_Meep_RotationalZEff"
 OUTPUT_DATASET = "rotational_z_eff_clutch"
@@ -63,50 +78,7 @@ MIN_MEEP_CACHE_VERSION = 6
 MAX_MEEP_FORCE_PN = 1e6
 MAX_MEEP_COUR = 0.35
 
-DEFAULT_DESIGNS = (
-    {
-        "name": "Rot_C4_TightSlot_N2",
-        "N": 2,
-        "R_min": 0.30,
-        "R_max": 1.35,
-        "w1_ratio": 0.65,
-        "min_tooth_w": 0.020,
-        "h_teeth": 0.100,
-        "t_membrane": 0.025,
-        "t_landing_pad": 0.150,
-        "tooth_arc_deg": 15.0,
-        "aperture_arc_deg": 36.0,
-        "angles": (0.0, 6.0, 12.0, 18.0, 24.0, 30.0, 36.0, 42.0, 48.0),
-    },
-    {
-        "name": "Rot_C8_Compact_N2",
-        "N": 2,
-        "R_min": 0.20,
-        "R_max": 0.90,
-        "w1_ratio": 0.45,
-        "min_tooth_w": 0.020,
-        "h_teeth": 0.100,
-        "t_membrane": 0.025,
-        "t_landing_pad": 0.150,
-        "tooth_arc_deg": 15.0,
-        "aperture_arc_deg": 36.0,
-        "angles": (0.0, 6.0, 12.0, 18.0, 24.0, 30.0, 36.0, 42.0, 48.0),
-    },
-    {
-        "name": "Rot_C10_Fractal_N3",
-        "N": 3,
-        "R_min": 0.30,
-        "R_max": 1.65,
-        "w1_ratio": 0.40,
-        "min_tooth_w": 0.015,
-        "h_teeth": 0.100,
-        "t_membrane": 0.025,
-        "t_landing_pad": 0.150,
-        "tooth_arc_deg": 12.0,
-        "aperture_arc_deg": 36.0,
-        "angles": (3.0, 21.0, 48.0),
-    },
-)
+DEFAULT_DESIGNS = ROTATIONAL_Z_EFF_DEFAULT_DESIGNS
 
 
 class ConfigurationError(ValueError):
@@ -404,17 +376,33 @@ def coerce_spec(value: object) -> ClutchSpec:
         R_min=finite_float(lookup(merged, "R_min", "R_min_um"), "R_min"),
         R_max=finite_float(lookup(merged, "R_max", "R_max_um"), "R_max"),
         aperture_arc_deg=finite_float(
-            lookup(merged, "aperture_arc_deg", default=36.0), "aperture_arc_deg"
+            lookup(
+                merged,
+                "aperture_arc_deg",
+                default=DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+            ),
+            "aperture_arc_deg",
         ),
         tooth_arc_deg=finite_float(
-            lookup(merged, "tooth_arc_deg", default=15.0), "tooth_arc_deg"
+            lookup(merged, "tooth_arc_deg", default=DEFAULT_TOOTH_ARC_DEG),
+            "tooth_arc_deg",
         ),
         t_membrane=finite_float(
-            lookup(merged, "t_membrane", "t_membrane_um", default=0.025),
+            lookup(
+                merged,
+                "t_membrane",
+                "t_membrane_um",
+                default=DEFAULT_T_MEMBRANE_UM,
+            ),
             "t_membrane",
         ),
         t_landing_pad=finite_float(
-            lookup(merged, "t_landing_pad", "t_landing_pad_um", default=0.150),
+            lookup(
+                merged,
+                "t_landing_pad",
+                "t_landing_pad_um",
+                default=DEFAULT_T_LANDING_PAD_UM,
+            ),
             "t_landing_pad",
         ),
         elements=tuple(pair[0] for pair in pairs),
@@ -459,7 +447,11 @@ def tooth_segments(
     width = finite_float(tooth_arc_deg, "tooth_arc_deg")
     if not 0.0 < width < SECTOR_DEG:
         raise ConfigurationError("Invalid tooth angular width.")
-    center = (15.0 + theta % SECTOR_DEG) % SECTOR_DEG
+    center = tooth_center_angle_deg(
+        theta,
+        sector_deg=SECTOR_DEG,
+        tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+    )
     low, high = center - width / 2.0, center + width / 2.0
     if low < 0.0:
         return ((0.0, high, False, True),
@@ -517,10 +509,10 @@ def repository_face(
 def build_rotational_stepped_clutch_mesh(
     spec: object,
     theta_deg: float,
-    n_r: int = 2,
-    n_phi_tooth: int = 3,
-    n_phi_bridge: int = 3,
-    n_z: int = 2,
+    n_r: int = BEM_TIER_STANDARD.n_r,
+    n_phi_tooth: int = BEM_TIER_STANDARD.n_phi_tooth,
+    n_phi_bridge: int = BEM_TIER_STANDARD.n_phi_bridge,
+    n_z: int = BEM_TIER_STANDARD.n_z,
 ) -> ClutchSurfaceMesh:
     """Build native rotor faces and a conforming occupied-cell stator boundary."""
     resolved = coerce_spec(spec)
@@ -925,10 +917,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--scope", default="concentric_cantor")
     parser.add_argument("--max-steps", type=int, default=0)
     parser.add_argument("--theta-deg", type=float, nargs="+")
-    parser.add_argument("--n-r", type=int, default=2)
-    parser.add_argument("--n-phi-tooth", type=int, default=3)
-    parser.add_argument("--n-phi-bridge", type=int, default=3)
-    parser.add_argument("--n-z", type=int, default=2)
+    parser.add_argument("--n-r", type=int, default=BEM_TIER_STANDARD.n_r)
+    parser.add_argument("--n-phi-tooth", type=int, default=BEM_TIER_STANDARD.n_phi_tooth)
+    parser.add_argument("--n-phi-bridge", type=int, default=BEM_TIER_STANDARD.n_phi_bridge)
+    parser.add_argument("--n-z", type=int, default=BEM_TIER_STANDARD.n_z)
     parser.add_argument("--n-kappa", type=int)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     parser.add_argument("--output-dir", type=Path, default=PROJECT_ROOT / "results")
@@ -976,7 +968,7 @@ def main() -> int:
         raise ConfigurationError("At least one evaluation task is required.")
 
     device = choose_device(args.device)
-    n_xi = args.n_kappa if args.n_kappa is not None else 24
+    n_xi = args.n_kappa if args.n_kappa is not None else BEM_TIER_STANDARD.n_xi
     args.output_dir.mkdir(parents=True, exist_ok=True)
     meep_audit = scan_meep_results(PROJECT_ROOT / "results_rotational_z_eff_meep")
     provenance = {

@@ -17,6 +17,7 @@ from numbers import Integral, Real
 import numpy as np
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from execution.materials_database_dispersive import SIERPINSKI_AREA_RATIO
 
 
 def _finite_scalar(name, value, positive=False):
@@ -121,7 +122,7 @@ def compute_6dof_forces_and_torques(
     if not 0.0 <= alpha_deg < 90.0:
         raise ValueError("alpha_deg must lie in [0, 90).")
 
-    Area = ((8.0 / 9.0) ** 2) * (L_um ** 2)
+    Area = (SIERPINSKI_AREA_RATIO ** 2) * (L_um ** 2)
 
     def pressure(separation, angle):
         return _finite_scalar(

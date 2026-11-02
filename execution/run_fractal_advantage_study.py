@@ -29,6 +29,7 @@ import numpy as np
 import torch
 
 from execution.casimir_bem_solver import (
+    BEM_TIER_STANDARD,
     ClutchSurfaceMesh,
     Geometry,
     TrackElement,
@@ -37,7 +38,30 @@ from execution.casimir_bem_solver import (
     _radial,
     run_bem_casimir_solver,
 )
-from execution.clutch_geometry_redesign import get_scoped_clutch_elements
+from execution.clutch_geometry_redesign import (
+    DEFAULT_H_TEETH_ROTATIONAL_UM,
+    DEFAULT_HYBRID_L2_H_TEETH_UM,
+    DEFAULT_HYBRID_L2_Z_TIP_UM,
+    DEFAULT_MIN_TOOTH_W_UM,
+    DEFAULT_NUM_SECTORS,
+    DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+    DEFAULT_R_MAX_UM,
+    DEFAULT_R_MIN_UM,
+    DEFAULT_SECTOR_DEG,
+    DEFAULT_STAIRCASE_H_TEETH_UM,
+    DEFAULT_STAIRCASE_Z_TIPS_UM,
+    DEFAULT_T_LANDING_PAD_UM,
+    DEFAULT_T_MEMBRANE_UM,
+    DEFAULT_TOOTH_ARC_DEG,
+    DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+    DEFAULT_Z_PAD_TOP_UM,
+    DEFAULT_Z_TIP_ROTATIONAL_UM,
+    ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC,
+    disengaged_angle_deg,
+    engaged_angle_deg,
+    get_scoped_clutch_elements,
+    tooth_center_angle_deg,
+)
 from utils.metrics_logger import (
     export_macros,
     log_metric,
@@ -53,6 +77,9 @@ REPORT_MD = RESULTS / "fractal_advantage_study_report.md"
 FIGURE_STEM = FIGURES / "fig_fractal_advantage_study"
 SOLVER_PROVENANCE: dict[str, Any] = {}
 
+THETA_DISENGAGED_DEG = disengaged_angle_deg(DEFAULT_ROTATIONAL_APERTURE_ARC_DEG)
+THETA_ENGAGED_DEG = engaged_angle_deg(DEFAULT_ROTATIONAL_APERTURE_ARC_DEG)
+SWITCHING_ANGLES_DEG: tuple[float, float] = (THETA_DISENGAGED_DEG, THETA_ENGAGED_DEG)
 DZ_VALUES = (-0.060, -0.030, 0.000, 0.020, 0.040)
 WINDOW_DESIGNS = (
     "Ctrl_UniformPeriodic",
@@ -179,14 +206,24 @@ def tooth_segments(
     """Tooth intervals and physical end caps in one periodic 90-degree sector."""
     theta_deg = finite(theta_deg, "theta_deg")
     width = finite(tooth_arc_deg, "tooth_arc_deg")
-    if not 0.0 < width < 90.0:
+    if not 0.0 < width < DEFAULT_SECTOR_DEG:
         raise ValueError("tooth_arc_deg must lie strictly between 0 and 90")
-    center = (15.0 + theta_deg % 90.0) % 90.0
+    center = tooth_center_angle_deg(
+        theta_deg,
+        sector_deg=DEFAULT_SECTOR_DEG,
+        tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+    )
     low, high = center - width / 2.0, center + width / 2.0
     if low < 0.0:
-        return ((0.0, high, False, True), (low + 90.0, 90.0, True, False))
-    if high > 90.0:
-        return ((0.0, high - 90.0, False, True), (low, 90.0, True, False))
+        return (
+            (0.0, high, False, True),
+            (low + DEFAULT_SECTOR_DEG, DEFAULT_SECTOR_DEG, True, False),
+        )
+    if high > DEFAULT_SECTOR_DEG:
+        return (
+            (0.0, high - DEFAULT_SECTOR_DEG, False, True),
+            (low, DEFAULT_SECTOR_DEG, True, False),
+        )
     return ((low, high, True, True),)
 
 
@@ -302,9 +339,7 @@ def make_mesh(
         geometry=geometry,
         parameters=parameters,
         config=dict(parameters),
-        panel_resolution=dict(panel_resolution) if panel_resolution is not None else {
-            "n_r": 1, "n_phi_tooth": 2, "n_phi_bridge": 2, "n_z": 2,
-        },
+        panel_resolution=dict(panel_resolution) if panel_resolution is not None else BEM_TIER_STANDARD.panel_kwargs(),
     )
 
 
@@ -312,10 +347,10 @@ def build_study_clutch_mesh(
     design: StudyDesign,
     theta_deg: float,
     delta_z_rotor: float = 0.0,
-    n_r: int = 1,
-    n_phi_tooth: int = 2,
-    n_phi_bridge: int = 2,
-    n_z: int = 2,
+    n_r: int = BEM_TIER_STANDARD.n_r,
+    n_phi_tooth: int = BEM_TIER_STANDARD.n_phi_tooth,
+    n_phi_bridge: int = BEM_TIER_STANDARD.n_phi_bridge,
+    n_z: int = BEM_TIER_STANDARD.n_z,
 ) -> ClutchSurfaceMesh:
     """Build one periodic 90-degree sector, with no artificial seam caps."""
     validate_design(design)
@@ -466,8 +501,15 @@ def build_study_clutch_mesh(
 
 
 def build_designs() -> tuple[StudyDesign, ...]:
+    r_min = DEFAULT_R_MIN_UM
+    r_max = DEFAULT_R_MAX_UM
+    w1_ratio = float(ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC["w1_ratio"])
     raw = get_scoped_clutch_elements(
-        N=2, R_min=0.30, R_max=1.35, w1_ratio=0.65, min_tooth_w=0.020,
+        N=int(ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC["N"]),
+        R_min=r_min,
+        R_max=r_max,
+        w1_ratio=w1_ratio,
+        min_tooth_w=DEFAULT_MIN_TOOTH_W_UM,
     )
     if isinstance(raw, Mapping):
         raw = field_value(raw, "tracks", "elements", "clutch_elements")
@@ -482,8 +524,8 @@ def build_designs() -> tuple[StudyDesign, ...]:
             r_outer=finite(field_value(t, "r_outer"), "r_outer"),
             r_tooth_in=finite(field_value(t, "r_tooth_in"), "r_tooth_in"),
             r_tooth_out=finite(field_value(t, "r_tooth_out"), "r_tooth_out"),
-            z_tip=-0.100,
-            h_teeth=0.100,
+            z_tip=DEFAULT_Z_TIP_ROTATIONAL_UM,
+            h_teeth=DEFAULT_H_TEETH_ROTATIONAL_UM,
             level=(2, 1, 2)[i],
         )
         for i, t in enumerate(elements)
@@ -491,18 +533,18 @@ def build_designs() -> tuple[StudyDesign, ...]:
     slot_widths = [t.r_outer - t.r_inner for t in base]
     tooth_widths = [t.r_tooth_out - t.r_tooth_in for t in base]
     ribs = [
-        base[0].r_inner - 0.30,
+        base[0].r_inner - r_min,
         base[1].r_inner - base[0].r_outer,
         base[2].r_inner - base[1].r_outer,
-        1.35 - base[2].r_outer,
+        r_max - base[2].r_outer,
     ]
     total_slot, total_tooth = math.fsum(slot_widths), math.fsum(tooth_widths)
-    midpoint = (0.30 + 1.35) / 2.0
+    midpoint = (r_min + r_max) / 2.0
     single = (
         TrackSpec3D(
             midpoint - total_slot / 2.0, midpoint + total_slot / 2.0,
             midpoint - total_tooth / 2.0, midpoint + total_tooth / 2.0,
-            -0.100, 0.100,
+            DEFAULT_Z_TIP_ROTATIONAL_UM, DEFAULT_H_TEETH_ROTATIONAL_UM,
         ),
     )
 
@@ -511,23 +553,23 @@ def build_designs() -> tuple[StudyDesign, ...]:
     ) -> tuple[TrackSpec3D, ...]:
         if len(rib_widths) != len(slots) + 1:
             raise ValueError("Incorrect number of stator ribs")
-        cursor = 0.30 + rib_widths[0]
+        cursor = r_min + rib_widths[0]
         output: list[TrackSpec3D] = []
         for i, (slot_width, tooth_width, level) in enumerate(slots):
             center = cursor + slot_width / 2.0
             output.append(TrackSpec3D(
                 cursor, cursor + slot_width,
                 center - tooth_width / 2.0, center + tooth_width / 2.0,
-                -0.100, 0.100, level,
+                DEFAULT_Z_TIP_ROTATIONAL_UM, DEFAULT_H_TEETH_ROTATIONAL_UM, level,
             ))
             cursor += slot_width + rib_widths[i + 1]
-        if not math.isclose(cursor, 1.35, abs_tol=1e-12):
+        if not math.isclose(cursor, r_max, abs_tol=1e-12):
             raise ValueError("Control construction failed to preserve radial envelope")
         return tuple(output)
 
     periodic = arrange(
         [(total_slot / 3.0, total_tooth / 3.0, 1)] * 3,
-        [(1.05 - total_slot) / 4.0] * 4,
+        [((r_max - r_min) - total_slot) / 4.0] * 4,
     )
     order = sorted(range(3), key=lambda i: (slot_widths[i], i))
     monotonic = arrange(
@@ -538,28 +580,40 @@ def build_designs() -> tuple[StudyDesign, ...]:
     def design(name: str, category: str, description: str,
                tracks: tuple[TrackSpec3D, ...]) -> StudyDesign:
         result = StudyDesign(
-            name, category, description, 0.30, 1.35, 36.0, 15.0,
-            0.025, 0.150, -0.115, tracks,
+            name, category, description, r_min, r_max,
+            DEFAULT_ROTATIONAL_APERTURE_ARC_DEG, DEFAULT_TOOTH_ARC_DEG,
+            DEFAULT_T_MEMBRANE_UM, DEFAULT_T_LANDING_PAD_UM, DEFAULT_Z_PAD_TOP_UM,
+            tracks,
         )
         validate_design(result)
         return result
 
+    hybrid_z_tips = (
+        DEFAULT_HYBRID_L2_Z_TIP_UM,
+        DEFAULT_Z_TIP_ROTATIONAL_UM,
+        DEFAULT_HYBRID_L2_Z_TIP_UM,
+    )
+    hybrid_h_teeth = (
+        DEFAULT_HYBRID_L2_H_TEETH_UM,
+        DEFAULT_H_TEETH_ROTATIONAL_UM,
+        DEFAULT_HYBRID_L2_H_TEETH_UM,
+    )
     designs = (
         design("Cantor_FlatZ", "fractal_radial", "Cantor N=2, uniform vertical geometry.", base),
         design(
             "Cantor_RZ_ScaleMatched", "mechanism_2",
             "Coupled radial/vertical scales; all tooth tops flush at z=0.",
             tuple(dataclasses.replace(
-                t, z_tip=(-0.090, -0.100, -0.090)[i],
-                h_teeth=(0.090, 0.100, 0.090)[i],
+                t, z_tip=hybrid_z_tips[i],
+                h_teeth=hybrid_h_teeth[i],
             ) for i, t in enumerate(base)),
         ),
         design(
             "Cantor_Z_Staircase", "mechanism_1",
             "Staggered tips and tops for a potentially broader repulsion window.",
             tuple(dataclasses.replace(
-                t, z_tip=(-0.075, -0.112, -0.100)[i],
-                h_teeth=(0.075, 0.082, 0.085)[i],
+                t, z_tip=DEFAULT_STAIRCASE_Z_TIPS_UM[i],
+                h_teeth=DEFAULT_STAIRCASE_H_TEETH_UM[i],
             ) for i, t in enumerate(base)),
         ),
         design("Ctrl_SingleWide", "control_A", "Single equal-total-width slot and tooth.", single),
@@ -701,8 +755,8 @@ def summaries(
     for design in designs:
         a = [r for r in records if r["design"] == design.name and r["experiment"] == "A"]
         forces = {r["theta_deg"]: r["F_z_pN"] for r in a}
-        if 3.0 in forces and 48.0 in forces:
-            rep, att = forces[3.0], forces[48.0]
+        if THETA_DISENGAGED_DEG in forces and THETA_ENGAGED_DEG in forces:
+            rep, att = forces[THETA_DISENGAGED_DEG], forces[THETA_ENGAGED_DEG]
             area, perimeter = active_geometry(design)
             entry: dict[str, Any] = {
                 "design": design.name,
@@ -861,11 +915,11 @@ def parser() -> argparse.ArgumentParser:
         "--formulation", choices=("vector_dyadic", "scalar_yukawa"),
         default="vector_dyadic",
     )
-    result.add_argument("--n-r", type=int, default=1)
-    result.add_argument("--n-phi-tooth", type=int, default=2)
-    result.add_argument("--n-phi-bridge", type=int, default=2)
-    result.add_argument("--n-z", type=int, default=2)
-    result.add_argument("--n-xi", type=int, default=16)
+    result.add_argument("--n-r", type=int, default=BEM_TIER_STANDARD.n_r)
+    result.add_argument("--n-phi-tooth", type=int, default=BEM_TIER_STANDARD.n_phi_tooth)
+    result.add_argument("--n-phi-bridge", type=int, default=BEM_TIER_STANDARD.n_phi_bridge)
+    result.add_argument("--n-z", type=int, default=BEM_TIER_STANDARD.n_z)
+    result.add_argument("--n-xi", type=int, default=BEM_TIER_STANDARD.n_xi)
     result.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     return result
 
@@ -916,9 +970,11 @@ def main() -> int:
     designs = build_designs()
     by_name = {d.name: d for d in designs}
     tasks = [
-        Task(d, angle, 0.0, "A") for d in designs for angle in (3.0, 48.0)
+        Task(d, angle, 0.0, "A") for d in designs for angle in SWITCHING_ANGLES_DEG
     ] + [
-        Task(by_name[name], 3.0, dz, "B") for name in WINDOW_DESIGNS for dz in DZ_VALUES
+        Task(by_name[name], THETA_DISENGAGED_DEG, dz, "B")
+        for name in WINDOW_DESIGNS
+        for dz in DZ_VALUES
     ]
     selected = tasks[:1] if micro else tasks
     records: list[dict[str, Any]] = []

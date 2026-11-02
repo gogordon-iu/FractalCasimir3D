@@ -39,6 +39,19 @@ import numpy as np
 import torch
 
 from execution import casimir_bem_solver as bem
+from execution.clutch_geometry_redesign import (
+    DEFAULT_ENGAGED_GAP_UM,
+    DEFAULT_NUM_SECTORS,
+    DEFAULT_SECTOR_DEG,
+    DEFAULT_Z_PAD_TOP_UM,
+    DEFAULT_Z_TIP_ROTATIONAL_UM,
+    ROTATIONAL_3SOLVER_N2_ANGLES_DEG,
+    ROTATIONAL_3STATE_ANGLES_DEG,
+)
+from execution.materials_database_dispersive import (
+    C_LIGHT_SI_M_S,
+    HBAR_SI_J_S,
+)
 from execution.run_rotational_z_eff_clutch import (
     DEFAULT_DESIGNS,
     SECTOR_DEG,
@@ -53,19 +66,21 @@ from execution.run_rotational_z_eff_clutch import (
 )
 from utils import metrics_logger
 
-HBAR = 1.054571817e-34
-C_LIGHT = 299_792_458.0
-GAP_UM = 0.015
+HBAR = HBAR_SI_J_S
+C_LIGHT = C_LIGHT_SI_M_S
+GAP_UM = float(Z_TIP_FIXED_UM) - float(Z_PAD_TOP_UM)
 CAMPAIGN = "rotational_clutch_3solver_verification"
-DESIGN_NAMES = (
-    "Rot_C4_TightSlot_N2",
-    "Rot_C8_Compact_N2",
-    "Rot_C10_Fractal_N3",
-)
-TIERS: tuple[dict[str, Any], ...] = (
-    dict(tier="Standard", n_r=2, n_phi_tooth=3, n_phi_bridge=3, n_z=2, n_xi=24),
-    dict(tier="High", n_r=3, n_phi_tooth=4, n_phi_bridge=4, n_z=3, n_xi=32),
-    dict(tier="Ultra_High", n_r=4, n_phi_tooth=6, n_phi_bridge=6, n_z=4, n_xi=40),
+DESIGN_NAMES = tuple(str(spec["name"]) for spec in DEFAULT_DESIGNS)
+TIERS: tuple[dict[str, Any], ...] = tuple(
+    dict(
+        tier=tier.name,
+        n_r=tier.n_r,
+        n_phi_tooth=tier.n_phi_tooth,
+        n_phi_bridge=tier.n_phi_bridge,
+        n_z=tier.n_z,
+        n_xi=tier.n_xi,
+    )
+    for tier in bem.BEM_RESOLUTION_LADDER
 )
 FORMULATIONS = ("vector_dyadic", "scalar_yukawa")
 
@@ -652,15 +667,21 @@ def main() -> int:
     if micro:
         torch.set_num_threads(1)
 
-    if int(SYMMETRY_ORDER) != 4 or not math.isclose(float(SECTOR_DEG), 90.0):
-        raise ValueError("This verification requires exact four-sector C4 geometry")
-    if not math.isclose(float(Z_TIP_FIXED_UM), -0.100, abs_tol=1e-12):
-        raise ValueError("Imported fixed tip elevation differs from -0.100 um")
-    if not math.isclose(float(Z_PAD_TOP_UM), -0.115, abs_tol=1e-12):
-        raise ValueError("Imported landing-pad elevation differs from -0.115 um")
-    if not math.isclose(
-        float(Z_TIP_FIXED_UM) - float(Z_PAD_TOP_UM), GAP_UM, abs_tol=1e-12
+    if int(SYMMETRY_ORDER) != DEFAULT_NUM_SECTORS or not math.isclose(
+        float(SECTOR_DEG), DEFAULT_SECTOR_DEG
     ):
+        raise ValueError("This verification requires exact four-sector C4 geometry")
+    if not math.isclose(
+        float(Z_TIP_FIXED_UM), DEFAULT_Z_TIP_ROTATIONAL_UM, abs_tol=1e-12
+    ):
+        raise ValueError(
+            f"Imported fixed tip elevation differs from {DEFAULT_Z_TIP_ROTATIONAL_UM} um"
+        )
+    if not math.isclose(float(Z_PAD_TOP_UM), DEFAULT_Z_PAD_TOP_UM, abs_tol=1e-12):
+        raise ValueError(
+            f"Imported landing-pad elevation differs from {DEFAULT_Z_PAD_TOP_UM} um"
+        )
+    if not math.isclose(GAP_UM, DEFAULT_ENGAGED_GAP_UM, abs_tol=1e-12):
         raise ValueError("Imported geometry does not have the required 15 nm gap")
 
     output: Path = args.output_dir
@@ -727,7 +748,11 @@ def main() -> int:
 
         tasks: list[tuple[str, float, str, int, dict[str, Any]]] = []
         for design in DESIGN_NAMES:
-            angles = (3.0, 21.0, 48.0) if design == DESIGN_NAMES[2] else (6.0, 18.0, 48.0)
+            angles = (
+                ROTATIONAL_3STATE_ANGLES_DEG
+                if design == DESIGN_NAMES[2]
+                else ROTATIONAL_3SOLVER_N2_ANGLES_DEG
+            )
             limit = 3 if design != DESIGN_NAMES[2] or args.include_c10_ultra else 2
             for tier_index, template in enumerate(TIERS[:limit]):
                 for theta, state in zip(angles, ("Aperture", "Straddling", "Landing Pad")):

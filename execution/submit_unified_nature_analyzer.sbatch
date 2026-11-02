@@ -1,11 +1,13 @@
 #!/bin/bash
 #SBATCH --exclude=nid0394
-#SBATCH -J casimir_nature_analyzer
+#SBATCH --job-name=fce_uana
 #SBATCH -p general
 #SBATCH -A r01540
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=16
 #SBATCH --time=02:00:00
+
+
 
 #SBATCH --signal=B:SIGUSR1@120
 #SBATCH -o logs/%x_%j.out
@@ -14,14 +16,438 @@
 # BIGRED200_TELEMETRY_HARNESS_V1
 # SIGKILL/node loss cannot be trapped; publication is best-effort.
 # Logs must exist BEFORE sbatch; the generator creates them locally.
-# Removed obsolete cluster proxy.
-# Removed obsolete cluster proxy.
-unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY
-export no_proxy="localhost,127.0.0.1,*.iu.edu,*.uits.iu.edu"
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
 export WANDB_MODE=offline
 export TORCH_HOME="${SLATE:-/N/slate/$USER}/.cache/torch"
+case $- in
+    *x*) BIGRED200_AUTH_XTRACE=1; set +x ;;
+    *) BIGRED200_AUTH_XTRACE=0 ;;
+esac
+if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+    GITHUB_TOKEN="$(python3 - <<'BIGRED200_AUTH_PYTHON'
+import os
+from pathlib import Path
+import re
+import shlex
+from typing import Optional
+from urllib.parse import quote, unquote, urlsplit
+
+def normalize_github_token(value):
+    if not isinstance(value, str):
+        return None
+    token = value.strip()
+    if not token or any(character.isspace() or ord(character) < 32
+                        or ord(character) == 127 for character in token):
+        return None
+    return token
+
+def read_token_file(path):
+    try:
+        with Path(path).open("r", encoding="utf-8") as stream:
+            value = stream.read(65537)
+        if len(value) > 65536:
+            return None
+        return normalize_github_token(value)
+    except (OSError, UnicodeError, ValueError):
+        return None
+
+def github_cli_token(path):
+    # Parse the small gh hosts.yml subset without an external YAML dependency.
+    try:
+        with Path(path).open("r", encoding="utf-8") as stream:
+            source = stream.read(1048577)
+        if len(source) > 1048576:
+            return None
+    except (OSError, UnicodeError, ValueError):
+        return None
+    host_indent = None
+    for line in source.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        indent = len(line) - len(line.lstrip())
+        if host_indent is not None and indent <= host_indent:
+            host_indent = None
+        if re.fullmatch(r"""(?:github\.com|'github\.com'|"github\.com"):\s*(?:#.*)?""",
+                        stripped):
+            host_indent = indent
+            continue
+        if host_indent is not None:
+            match = re.fullmatch(r"(?:oauth_token):\s*(.*?)\s*", stripped)
+            if match:
+                value = match.group(1)
+                if value.startswith('"'):
+                    import json
+                    try:
+                        value, _ = json.JSONDecoder().raw_decode(value)
+                    except ValueError:
+                        return None
+                elif value.startswith("'"):
+                    match = re.fullmatch(r"'((?:[^']|'')*)'\s*(?:#.*)?", value)
+                    if match is None:
+                        return None
+                    value = match.group(1).replace("''", "'")
+                else:
+                    value = re.split(r"\s+#", value, maxsplit=1)[0]
+                return normalize_github_token(value)
+    return None
+
+def github_credentials_token(path):
+    # Parse credential-store URLs directly; do not depend on Git's helper/PATH.
+    try:
+        with Path(path).open("r", encoding="utf-8") as stream:
+            source = stream.read(1048577)
+        if len(source) > 1048576:
+            return None
+    except (OSError, UnicodeError, ValueError):
+        return None
+    for line in source.splitlines():
+        value = line.strip()
+        if not value or value.startswith("#"):
+            continue
+        try:
+            url = urlsplit(value)
+            # Match the actual host, not a substring in userinfo or a path.
+            if url.scheme.lower() != "https" or url.hostname != "github.com":
+                continue
+            candidate = url.password or url.username
+            if candidate is None:
+                continue
+            token = normalize_github_token(
+                unquote(candidate, encoding="utf-8", errors="strict")
+            )
+        except (ValueError, UnicodeError):
+            continue
+        if token:
+            return token
+    return None
+
+def discover_github_token() -> Optional[str]:
+    for variable in ("GITHUB_TOKEN", "GH_TOKEN", "GIT_TOKEN"):
+        token = normalize_github_token(os.environ.get(variable))
+        if token:
+            return token
+    candidates = [Path.home() / ".github_token"]
+    user = os.environ.get("USER", "")
+    valid_user = bool(user and re.fullmatch(r"[A-Za-z0-9_.-]+", user))
+    if valid_user:
+        candidates.append(Path("/N/u") / user / ".github_token")
+    slate = os.environ.get("SLATE")
+    if slate:
+        candidates.append(Path(slate) / ".github_token")
+    for path in candidates:
+        token = read_token_file(path)
+        if token:
+            return token
+    token = github_cli_token(Path.home() / ".config" / "gh" / "hosts.yml")
+    if token:
+        return token
+    credentials = [Path.home() / ".git-credentials"]
+    if valid_user:
+        credentials.extend((
+            Path("/N/u") / user / ".git-credentials",
+            Path("/N/u") / user / "BigRed200" / ".git-credentials",
+        ))
+    for path in credentials:
+        token = github_credentials_token(path)
+        if token:
+            return token
+    return None
+
+def git_auth_environment(token=None):
+    environment = dict(os.environ)
+    environment["GIT_TERMINAL_PROMPT"] = "0"
+    environment["GIT_EDITOR"] = ":"
+    environment["GIT_SEQUENCE_EDITOR"] = ":"
+    token = normalize_github_token(token) or discover_github_token()
+    settings = []
+    if token:
+        authenticated = "https://x-access-token:" + quote(token, safe="") + "@github.com/"
+        # Equivalent to repeated `git -c url.<authenticated>.insteadOf=...`,
+        # but keep the PAT out of argv/process listings and on-disk Git config.
+        for original in ("https://github.com/", "git@github.com:",
+                         "ssh://git@github.com/"):
+            settings.append(("url." + authenticated + ".insteadOf", original))
+    credentials = Path.home() / ".git-credentials"
+    if credentials.is_file():
+        settings.append(("credential.helper",
+                         "store --file=" + shlex.quote(str(credentials))))
+    if not token:
+        for name in ("id_ed25519", "id_rsa"):
+            key = Path.home() / ".ssh" / name
+            if key.is_file():
+                environment["GIT_SSH_COMMAND"] = (
+                    "ssh -i " + shlex.quote(str(key))
+                    + " -o BatchMode=yes -o StrictHostKeyChecking=accept-new"
+                )
+                break
+    try:
+        count = int(environment.get("GIT_CONFIG_COUNT", "0"))
+    except ValueError:
+        raise ValueError("Invalid GIT_CONFIG_COUNT")
+    if count < 0:
+        raise ValueError("Invalid GIT_CONFIG_COUNT")
+    for key, value in settings:
+        environment["GIT_CONFIG_KEY_" + str(count)] = key
+        environment["GIT_CONFIG_VALUE_" + str(count)] = value
+        count += 1
+    environment["GIT_CONFIG_COUNT"] = str(count)
+    return environment
+
+def redact_git_output(value, environment=None):
+    text = str(value)
+    secrets = []
+    for variable in ("GITHUB_TOKEN", "GH_TOKEN", "GIT_TOKEN"):
+        token = normalize_github_token(os.environ.get(variable))
+        if token:
+            secrets.append(token)
+    token = discover_github_token()
+    if token:
+        secrets.append(token)
+    for secret in secrets:
+        text = text.replace(quote(secret, safe=""), "[REDACTED]")
+        text = text.replace(secret, "[REDACTED]")
+    if environment:
+        for key, value in environment.items():
+            if key.startswith("GIT_CONFIG_KEY_") and "x-access-token:" in value:
+                match = re.search(r"x-access-token:([^@]+)@", value)
+                if match:
+                    text = text.replace(match.group(1), "[REDACTED]")
+    return re.sub(r"(https?://)[^\s/@]+:[^\s/@]+@", r"\1[REDACTED]@", text)
+
+def git_authentication_failed(result):
+    output = (result.stderr or "") + "\n" + (result.stdout or "")
+    return result.returncode == 128 or bool(re.search(
+        r"could not read Username|Authentication failed|Permission denied"
+        r"|write access.*not granted|requested URL returned error: (?:401|403)",
+        output, re.IGNORECASE,
+    ))
+
+AUTHORIZATION_DIAGNOSTIC = (
+    "Remote Git push failed due to missing write authorization. "
+    "Run 'setup-auth --token <PAT>' on the login node or save your token "
+    "to ~/.github_token."
+)
+print(discover_github_token() or "")
+BIGRED200_AUTH_PYTHON
+    )" || GITHUB_TOKEN=""
+    export GITHUB_TOKEN
+fi
+if [[ -z "${GITHUB_TOKEN:-}" && -n "${HOME:-}" && -f "$HOME/.git-credentials" ]]; then
+    GITHUB_TOKEN="$(python3 - <<'BIGRED200_CREDENTIALS_PYTHON'
+import os
+from pathlib import Path
+import re
+import shlex
+from typing import Optional
+from urllib.parse import quote, unquote, urlsplit
+
+def normalize_github_token(value):
+    if not isinstance(value, str):
+        return None
+    token = value.strip()
+    if not token or any(character.isspace() or ord(character) < 32
+                        or ord(character) == 127 for character in token):
+        return None
+    return token
+
+def read_token_file(path):
+    try:
+        with Path(path).open("r", encoding="utf-8") as stream:
+            value = stream.read(65537)
+        if len(value) > 65536:
+            return None
+        return normalize_github_token(value)
+    except (OSError, UnicodeError, ValueError):
+        return None
+
+def github_cli_token(path):
+    # Parse the small gh hosts.yml subset without an external YAML dependency.
+    try:
+        with Path(path).open("r", encoding="utf-8") as stream:
+            source = stream.read(1048577)
+        if len(source) > 1048576:
+            return None
+    except (OSError, UnicodeError, ValueError):
+        return None
+    host_indent = None
+    for line in source.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        indent = len(line) - len(line.lstrip())
+        if host_indent is not None and indent <= host_indent:
+            host_indent = None
+        if re.fullmatch(r"""(?:github\.com|'github\.com'|"github\.com"):\s*(?:#.*)?""",
+                        stripped):
+            host_indent = indent
+            continue
+        if host_indent is not None:
+            match = re.fullmatch(r"(?:oauth_token):\s*(.*?)\s*", stripped)
+            if match:
+                value = match.group(1)
+                if value.startswith('"'):
+                    import json
+                    try:
+                        value, _ = json.JSONDecoder().raw_decode(value)
+                    except ValueError:
+                        return None
+                elif value.startswith("'"):
+                    match = re.fullmatch(r"'((?:[^']|'')*)'\s*(?:#.*)?", value)
+                    if match is None:
+                        return None
+                    value = match.group(1).replace("''", "'")
+                else:
+                    value = re.split(r"\s+#", value, maxsplit=1)[0]
+                return normalize_github_token(value)
+    return None
+
+def github_credentials_token(path):
+    # Parse credential-store URLs directly; do not depend on Git's helper/PATH.
+    try:
+        with Path(path).open("r", encoding="utf-8") as stream:
+            source = stream.read(1048577)
+        if len(source) > 1048576:
+            return None
+    except (OSError, UnicodeError, ValueError):
+        return None
+    for line in source.splitlines():
+        value = line.strip()
+        if not value or value.startswith("#"):
+            continue
+        try:
+            url = urlsplit(value)
+            # Match the actual host, not a substring in userinfo or a path.
+            if url.scheme.lower() != "https" or url.hostname != "github.com":
+                continue
+            candidate = url.password or url.username
+            if candidate is None:
+                continue
+            token = normalize_github_token(
+                unquote(candidate, encoding="utf-8", errors="strict")
+            )
+        except (ValueError, UnicodeError):
+            continue
+        if token:
+            return token
+    return None
+
+def discover_github_token() -> Optional[str]:
+    for variable in ("GITHUB_TOKEN", "GH_TOKEN", "GIT_TOKEN"):
+        token = normalize_github_token(os.environ.get(variable))
+        if token:
+            return token
+    candidates = [Path.home() / ".github_token"]
+    user = os.environ.get("USER", "")
+    valid_user = bool(user and re.fullmatch(r"[A-Za-z0-9_.-]+", user))
+    if valid_user:
+        candidates.append(Path("/N/u") / user / ".github_token")
+    slate = os.environ.get("SLATE")
+    if slate:
+        candidates.append(Path(slate) / ".github_token")
+    for path in candidates:
+        token = read_token_file(path)
+        if token:
+            return token
+    token = github_cli_token(Path.home() / ".config" / "gh" / "hosts.yml")
+    if token:
+        return token
+    credentials = [Path.home() / ".git-credentials"]
+    if valid_user:
+        credentials.extend((
+            Path("/N/u") / user / ".git-credentials",
+            Path("/N/u") / user / "BigRed200" / ".git-credentials",
+        ))
+    for path in credentials:
+        token = github_credentials_token(path)
+        if token:
+            return token
+    return None
+
+def git_auth_environment(token=None):
+    environment = dict(os.environ)
+    environment["GIT_TERMINAL_PROMPT"] = "0"
+    environment["GIT_EDITOR"] = ":"
+    environment["GIT_SEQUENCE_EDITOR"] = ":"
+    token = normalize_github_token(token) or discover_github_token()
+    settings = []
+    if token:
+        authenticated = "https://x-access-token:" + quote(token, safe="") + "@github.com/"
+        # Equivalent to repeated `git -c url.<authenticated>.insteadOf=...`,
+        # but keep the PAT out of argv/process listings and on-disk Git config.
+        for original in ("https://github.com/", "git@github.com:",
+                         "ssh://git@github.com/"):
+            settings.append(("url." + authenticated + ".insteadOf", original))
+    credentials = Path.home() / ".git-credentials"
+    if credentials.is_file():
+        settings.append(("credential.helper",
+                         "store --file=" + shlex.quote(str(credentials))))
+    if not token:
+        for name in ("id_ed25519", "id_rsa"):
+            key = Path.home() / ".ssh" / name
+            if key.is_file():
+                environment["GIT_SSH_COMMAND"] = (
+                    "ssh -i " + shlex.quote(str(key))
+                    + " -o BatchMode=yes -o StrictHostKeyChecking=accept-new"
+                )
+                break
+    try:
+        count = int(environment.get("GIT_CONFIG_COUNT", "0"))
+    except ValueError:
+        raise ValueError("Invalid GIT_CONFIG_COUNT")
+    if count < 0:
+        raise ValueError("Invalid GIT_CONFIG_COUNT")
+    for key, value in settings:
+        environment["GIT_CONFIG_KEY_" + str(count)] = key
+        environment["GIT_CONFIG_VALUE_" + str(count)] = value
+        count += 1
+    environment["GIT_CONFIG_COUNT"] = str(count)
+    return environment
+
+def redact_git_output(value, environment=None):
+    text = str(value)
+    secrets = []
+    for variable in ("GITHUB_TOKEN", "GH_TOKEN", "GIT_TOKEN"):
+        token = normalize_github_token(os.environ.get(variable))
+        if token:
+            secrets.append(token)
+    token = discover_github_token()
+    if token:
+        secrets.append(token)
+    for secret in secrets:
+        text = text.replace(quote(secret, safe=""), "[REDACTED]")
+        text = text.replace(secret, "[REDACTED]")
+    if environment:
+        for key, value in environment.items():
+            if key.startswith("GIT_CONFIG_KEY_") and "x-access-token:" in value:
+                match = re.search(r"x-access-token:([^@]+)@", value)
+                if match:
+                    text = text.replace(match.group(1), "[REDACTED]")
+    return re.sub(r"(https?://)[^\s/@]+:[^\s/@]+@", r"\1[REDACTED]@", text)
+
+def git_authentication_failed(result):
+    output = (result.stderr or "") + "\n" + (result.stdout or "")
+    return result.returncode == 128 or bool(re.search(
+        r"could not read Username|Authentication failed|Permission denied"
+        r"|write access.*not granted|requested URL returned error: (?:401|403)",
+        output, re.IGNORECASE,
+    ))
+
+AUTHORIZATION_DIAGNOSTIC = (
+    "Remote Git push failed due to missing write authorization. "
+    "Run 'setup-auth --token <PAT>' on the login node or save your token "
+    "to ~/.github_token."
+)
+print(github_credentials_token(Path(os.environ["HOME"]) / ".git-credentials") or "")
+BIGRED200_CREDENTIALS_PYTHON
+    )" || GITHUB_TOKEN=""
+    if [[ -n "$GITHUB_TOKEN" ]]; then
+        export GITHUB_TOKEN
+    fi
+fi
+if [[ "$BIGRED200_AUTH_XTRACE" == "1" ]]; then set -x; fi
+unset BIGRED200_AUTH_XTRACE
 export JOB_START_TIME="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 TERMINATION_REASON="UNEXPECTED_EXIT"
 CHILD_PID=""
@@ -69,87 +495,209 @@ handle_job_exit() {
         )
     fi
     python3 - "$EXIT_CODE" "$TERMINATION_REASON" <<'BIGRED200_TELEMETRY_PYTHON'
+import os
+from pathlib import Path
+import re
+import shlex
+from typing import Optional
+from urllib.parse import quote, unquote, urlsplit
 
-def _bigred200_telemetry_git_call(_call, *args, **kwargs):
-    import fcntl as _fcntl
-    import os as _os
-    import shlex as _shlex
-    import time as _time
-    from pathlib import Path as _Path
+def normalize_github_token(value):
+    if not isinstance(value, str):
+        return None
+    token = value.strip()
+    if not token or any(character.isspace() or ord(character) < 32
+                        or ord(character) == 127 for character in token):
+        return None
+    return token
 
-    _command = args[0] if args else kwargs.get("args")
-    if isinstance(_command, (str, bytes)):
+def read_token_file(path):
+    try:
+        with Path(path).open("r", encoding="utf-8") as stream:
+            value = stream.read(65537)
+        if len(value) > 65536:
+            return None
+        return normalize_github_token(value)
+    except (OSError, UnicodeError, ValueError):
+        return None
+
+def github_cli_token(path):
+    # Parse the small gh hosts.yml subset without an external YAML dependency.
+    try:
+        with Path(path).open("r", encoding="utf-8") as stream:
+            source = stream.read(1048577)
+        if len(source) > 1048576:
+            return None
+    except (OSError, UnicodeError, ValueError):
+        return None
+    host_indent = None
+    for line in source.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        indent = len(line) - len(line.lstrip())
+        if host_indent is not None and indent <= host_indent:
+            host_indent = None
+        if re.fullmatch(r"""(?:github\.com|'github\.com'|"github\.com"):\s*(?:#.*)?""",
+                        stripped):
+            host_indent = indent
+            continue
+        if host_indent is not None:
+            match = re.fullmatch(r"(?:oauth_token):\s*(.*?)\s*", stripped)
+            if match:
+                value = match.group(1)
+                if value.startswith('"'):
+                    import json
+                    try:
+                        value, _ = json.JSONDecoder().raw_decode(value)
+                    except ValueError:
+                        return None
+                elif value.startswith("'"):
+                    match = re.fullmatch(r"'((?:[^']|'')*)'\s*(?:#.*)?", value)
+                    if match is None:
+                        return None
+                    value = match.group(1).replace("''", "'")
+                else:
+                    value = re.split(r"\s+#", value, maxsplit=1)[0]
+                return normalize_github_token(value)
+    return None
+
+def github_credentials_token(path):
+    # Parse credential-store URLs directly; do not depend on Git's helper/PATH.
+    try:
+        with Path(path).open("r", encoding="utf-8") as stream:
+            source = stream.read(1048577)
+        if len(source) > 1048576:
+            return None
+    except (OSError, UnicodeError, ValueError):
+        return None
+    for line in source.splitlines():
+        value = line.strip()
+        if not value or value.startswith("#"):
+            continue
         try:
-            _argv = _shlex.split(_os.fsdecode(_command))
-        except ValueError:
-            raise RuntimeError("Cannot safely parse telemetry subprocess command")
-    elif isinstance(_command, (list, tuple)):
-        _argv = [_os.fsdecode(_item) for _item in _command]
-    else:
-        return _call(*args, **kwargs)
+            url = urlsplit(value)
+            # Match the actual host, not a substring in userinfo or a path.
+            if url.scheme.lower() != "https" or url.hostname != "github.com":
+                continue
+            candidate = url.password or url.username
+            if candidate is None:
+                continue
+            token = normalize_github_token(
+                unquote(candidate, encoding="utf-8", errors="strict")
+            )
+        except (ValueError, UnicodeError):
+            continue
+        if token:
+            return token
+    return None
 
-    if not _argv or _Path(_argv[0]).name != "git":
-        return _call(*args, **kwargs)
+def discover_github_token() -> Optional[str]:
+    for variable in ("GITHUB_TOKEN", "GH_TOKEN", "GIT_TOKEN"):
+        token = normalize_github_token(os.environ.get(variable))
+        if token:
+            return token
+    candidates = [Path.home() / ".github_token"]
+    user = os.environ.get("USER", "")
+    valid_user = bool(user and re.fullmatch(r"[A-Za-z0-9_.-]+", user))
+    if valid_user:
+        candidates.append(Path("/N/u") / user / ".github_token")
+    slate = os.environ.get("SLATE")
+    if slate:
+        candidates.append(Path(slate) / ".github_token")
+    for path in candidates:
+        token = read_token_file(path)
+        if token:
+            return token
+    token = github_cli_token(Path.home() / ".config" / "gh" / "hosts.yml")
+    if token:
+        return token
+    credentials = [Path.home() / ".git-credentials"]
+    if valid_user:
+        credentials.extend((
+            Path("/N/u") / user / ".git-credentials",
+            Path("/N/u") / user / "BigRed200" / ".git-credentials",
+        ))
+    for path in credentials:
+        token = github_credentials_token(path)
+        if token:
+            return token
+    return None
 
-    _cwd = kwargs.get("cwd")
-    _root = _Path(_os.fsdecode(_cwd)) if _cwd is not None else _Path.cwd()
-    _root = _root.resolve()
-    _index = 1
-    while _index < len(_argv):
-        _option = _argv[_index]
-        if _option == "-C":
-            if _index + 1 >= len(_argv):
-                raise RuntimeError("Missing git -C directory")
-            _directory = _Path(_argv[_index + 1])
-            _root = (_root / _directory).resolve()
-            _index += 2
-        elif _option.startswith("-C") and len(_option) > 2:
-            _root = (_root / _option[2:]).resolve()
-            _index += 1
-        elif _option in ("-c", "--git-dir", "--work-tree"):
-            if _index + 1 >= len(_argv):
-                raise RuntimeError("Missing git option value")
-            if _option == "--git-dir":
-                raise RuntimeError("Explicit git directories are not supported by telemetry")
-            _index += 2
-        elif _option.startswith("--git-dir="):
-            raise RuntimeError("Explicit git directories are not supported by telemetry")
-        elif _option.startswith("-"):
-            _index += 1
-        else:
-            break
-
-    _git_dir = None
-    for _parent in (_root, *_root.parents):
-        _candidate = _parent / ".git"
-        if _candidate.is_dir():
-            _git_dir = _candidate
-            break
-        if _candidate.is_file():
-            _reference = _candidate.read_text(encoding="utf-8").strip()
-            if not _reference.startswith("gitdir:"):
-                raise RuntimeError("Invalid repository .git file")
-            _git_dir = (_parent / _reference.split(":", 1)[1].strip()).resolve()
-            break
-    if _git_dir is None or not _git_dir.is_dir():
-        raise RuntimeError("Cannot locate repository for telemetry git lock")
-
-    _deadline = _time.monotonic() + 300
-    with (_git_dir / "bigred200_telemetry.lock").open("a+b") as _lock:
-        while True:
-            try:
-                _fcntl.flock(_lock.fileno(), _fcntl.LOCK_EX | _fcntl.LOCK_NB)
+def git_auth_environment(token=None):
+    environment = dict(os.environ)
+    environment["GIT_TERMINAL_PROMPT"] = "0"
+    environment["GIT_EDITOR"] = ":"
+    environment["GIT_SEQUENCE_EDITOR"] = ":"
+    token = normalize_github_token(token) or discover_github_token()
+    settings = []
+    if token:
+        authenticated = "https://x-access-token:" + quote(token, safe="") + "@github.com/"
+        # Equivalent to repeated `git -c url.<authenticated>.insteadOf=...`,
+        # but keep the PAT out of argv/process listings and on-disk Git config.
+        for original in ("https://github.com/", "git@github.com:",
+                         "ssh://git@github.com/"):
+            settings.append(("url." + authenticated + ".insteadOf", original))
+    credentials = Path.home() / ".git-credentials"
+    if credentials.is_file():
+        settings.append(("credential.helper",
+                         "store --file=" + shlex.quote(str(credentials))))
+    if not token:
+        for name in ("id_ed25519", "id_rsa"):
+            key = Path.home() / ".ssh" / name
+            if key.is_file():
+                environment["GIT_SSH_COMMAND"] = (
+                    "ssh -i " + shlex.quote(str(key))
+                    + " -o BatchMode=yes -o StrictHostKeyChecking=accept-new"
+                )
                 break
-            except BlockingIOError:
-                _remaining = _deadline - _time.monotonic()
-                if _remaining <= 0:
-                    raise TimeoutError("Telemetry git lock exceeded 300 seconds")
-                _time.sleep(min(0.1, _remaining))
-        try:
-            kwargs["timeout"] = 180
-            return _call(*args, **kwargs)
-        finally:
-            _fcntl.flock(_lock.fileno(), _fcntl.LOCK_UN)
+    try:
+        count = int(environment.get("GIT_CONFIG_COUNT", "0"))
+    except ValueError:
+        raise ValueError("Invalid GIT_CONFIG_COUNT")
+    if count < 0:
+        raise ValueError("Invalid GIT_CONFIG_COUNT")
+    for key, value in settings:
+        environment["GIT_CONFIG_KEY_" + str(count)] = key
+        environment["GIT_CONFIG_VALUE_" + str(count)] = value
+        count += 1
+    environment["GIT_CONFIG_COUNT"] = str(count)
+    return environment
+
+def redact_git_output(value, environment=None):
+    text = str(value)
+    secrets = []
+    for variable in ("GITHUB_TOKEN", "GH_TOKEN", "GIT_TOKEN"):
+        token = normalize_github_token(os.environ.get(variable))
+        if token:
+            secrets.append(token)
+    token = discover_github_token()
+    if token:
+        secrets.append(token)
+    for secret in secrets:
+        text = text.replace(quote(secret, safe=""), "[REDACTED]")
+        text = text.replace(secret, "[REDACTED]")
+    if environment:
+        for key, value in environment.items():
+            if key.startswith("GIT_CONFIG_KEY_") and "x-access-token:" in value:
+                match = re.search(r"x-access-token:([^@]+)@", value)
+                if match:
+                    text = text.replace(match.group(1), "[REDACTED]")
+    return re.sub(r"(https?://)[^\s/@]+:[^\s/@]+@", r"\1[REDACTED]@", text)
+
+def git_authentication_failed(result):
+    output = (result.stderr or "") + "\n" + (result.stdout or "")
+    return result.returncode == 128 or bool(re.search(
+        r"could not read Username|Authentication failed|Permission denied"
+        r"|write access.*not granted|requested URL returned error: (?:401|403)",
+        output, re.IGNORECASE,
+    ))
+
+AUTHORIZATION_DIAGNOSTIC = (
+    "Remote Git push failed due to missing write authorization. "
+    "Run 'setup-auth --token <PAT>' on the login node or save your token "
+    "to ~/.github_token."
+)
 
 import datetime
 import json
@@ -157,24 +705,28 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import time
 
-CONFIG = json.loads('{"auto_resubmit": "0", "figures_dir": "Papers/Fractal_Casimir_Nature_EM/figures", "git_remote": "origin", "logs_dir": "logs", "results_dir": "results"}')
+CONFIG = json.loads('{"auto_resubmit": "0", "figures_dir": "figures", "git_remote": "origin", "logs_dir": "logs", "proxy": "", "results_dir": "results", "strict_telemetry": "0"}')
 BLOCKED_SUFFIXES = (".pt", ".ckpt", ".bin", ".h5", ".safetensors", ".tar")
-GIT_TIMEOUT_SECONDS = 180
+GIT_TIMEOUT_SECONDS = 45
+SYNC_FAILURE_NOTICE = (
+    "NOTICE: Workload completed successfully (exit 0), but remote Git sync "
+    "failed. All results and logs are safely preserved on cluster disk."
+)
 
 def diagnostic(message):
     print("[BigRed200 telemetry] " + str(message), file=sys.stderr, flush=True)
 
 def run(command, check=True):
-    environment = dict(os.environ)
-    environment["GIT_TERMINAL_PROMPT"] = "0"
-    environment["GIT_EDITOR"] = ":"
-    environment["GIT_SEQUENCE_EDITOR"] = ":"
-    result = _bigred200_telemetry_git_call(subprocess.run, 
+    environment = git_auth_environment()
+    result = subprocess.run(
         command, cwd=str(ROOT), env=environment,
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         text=True, errors="replace", timeout=GIT_TIMEOUT_SECONDS,
     )
+    result.stdout = redact_git_output(result.stdout, environment)
+    result.stderr = redact_git_output(result.stderr, environment)
     if check and result.returncode != 0:
         raise RuntimeError(
             "{} failed ({}): {}".format(
@@ -186,6 +738,46 @@ def run(command, check=True):
 
 def git(arguments, check=True):
     return run(["git"] + arguments, check=check)
+
+def abort_rebase():
+    # A failed pull may not have started a rebase; abort is still attempted.
+    aborted = git(["rebase", "--abort"], check=False)
+    git_directory = Path(git(["rev-parse", "--absolute-git-dir"]).stdout.strip())
+    if (git_directory / "rebase-merge").exists() or (git_directory / "rebase-apply").exists():
+        raise RuntimeError(
+            "Could not abort failed rebase; resolve manually before synchronization: "
+            + (aborted.stderr or aborted.stdout).strip()[-3000:]
+        )
+
+def remote_git(arguments, rebase=False):
+    # Three bounded attempts, including timeout/network exceptions.
+    for attempt in range(3):
+        result = None
+        error = None
+        try:
+            result = git(arguments, check=False)
+        except (OSError, subprocess.SubprocessError) as caught:
+            error = caught
+        finally:
+            if rebase and (result is None or result.returncode != 0):
+                # Recover immediately, before sleeping, retrying, or pushing.
+                abort_rebase()
+        if result is not None and result.returncode == 0:
+            return result
+        if attempt == 2:
+            if error is not None:
+                raise error
+            return result
+        delay = (2, 5)[attempt]
+        detail = redact_git_output(error) if error is not None else (
+            result.stderr or result.stdout
+        ).strip()[-3000:]
+        diagnostic(
+            "git {} attempt {} failed; retrying in {}s: {}".format(
+                arguments[0], attempt + 1, delay, detail
+            )
+        )
+        time.sleep(delay)
 
 def safe_path(relative):
     path = Path(relative)
@@ -288,20 +880,33 @@ def publish(paths, message):
     git(["check-ref-format", "--branch", current_branch])
     git(["remote", "get-url", "--", CONFIG["git_remote"]])
 
+    # Git diff names are repository-relative even when cwd is a subdirectory.
+    prefix = git(["rev-parse", "--show-prefix"]).stdout.rstrip("\n")
+    selected_repository_paths = {prefix + relative for relative in selected}
+
+    # Unstage unrelated changes without modifying their working-tree contents.
+    staged = git(["diff", "--cached", "--name-only", "-z"]).stdout
+    unrelated = sorted(
+        set(name for name in staged.split("\0") if name)
+        - selected_repository_paths
+    )
+    if unrelated:
+        for offset in range(0, len(unrelated), 100):
+            git(["reset", "HEAD", "--"] + [
+                ":(top,literal)" + name for name in unrelated[offset:offset + 100]
+            ])
+        diagnostic("Unstaged unrelated changes; working-tree files were preserved.")
+
     # Stage only enumerated files; never recursively `git add` a directory.
     # -f permits required diagnostics in repositories that ignore logs/results.
     for offset in range(0, len(selected), 100):
         git(["add", "-f", "--"] + selected[offset:offset + 100])
 
-    # Refuse to commit pre-existing staged files unrelated to this job.
     staged = git(["diff", "--cached", "--name-only", "-z"]).stdout
     staged_paths = [name for name in staged.split("\0") if name]
-    unrelated = sorted(set(staged_paths) - set(selected))
-    if unrelated:
-        raise RuntimeError(
-            "Unrelated staged changes; refusing mixed commit: "
-            + ", ".join(unrelated[:20])
-        )
+    # Retain the safety check against concurrently staged unrelated changes.
+    if set(staged_paths) - selected_repository_paths:
+        raise RuntimeError("Unrelated changes were staged during telemetry publication")
     for relative in staged_paths:
         if any(s.lower() in BLOCKED_SUFFIXES for s in Path(relative).suffixes):
             raise RuntimeError("Checkpoint staging safety violation: " + relative)
@@ -312,13 +917,53 @@ def publish(paths, message):
         diagnostic("No new safe changes to commit; attempting synchronization.")
 
     # A dirty worktree can make pull fail even when a push remains possible.
-    pulled = git(["pull", "--rebase", CONFIG["git_remote"], current_branch], check=False)
-    if pulled.returncode != 0:
-        diagnostic("git pull --rebase failed: " + pulled.stderr.strip()[-3000:])
-        git_directory = Path(git(["rev-parse", "--absolute-git-dir"]).stdout.strip())
-        if (git_directory / "rebase-merge").exists() or (git_directory / "rebase-apply").exists():
-            raise RuntimeError("Rebase conflict; resolve manually before pushing")
-    git(["push", CONFIG["git_remote"], current_branch])
+    try:
+        pulled = remote_git(
+            ["pull", "--rebase", CONFIG["git_remote"], current_branch],
+            rebase=True,
+        )
+    except (OSError, subprocess.SubprocessError) as error:
+        diagnostic("git pull --rebase failed: " + redact_git_output(error))
+    else:
+        if pulled.returncode != 0:
+            diagnostic(
+                "git pull --rebase failed: "
+                + (pulled.stderr or pulled.stdout).strip()[-3000:]
+            )
+
+    pushed = remote_git(["push", CONFIG["git_remote"], current_branch])
+    if pushed.returncode != 0:
+        output = (pushed.stderr or "") + "\n" + (pushed.stdout or "")
+        detail = output.strip()[-6000:]
+        if re.search(
+            r"non-fast-forward|fetch first|remote contains work"
+            r"|diverg(?:ed|ence|ent)|tip of your current branch is behind",
+            output, re.IGNORECASE,
+        ):
+            fallback_branch = f"telemetry/job-{JOB_ID}"
+            git(["check-ref-format", "refs/heads/" + fallback_branch])
+            fallback = remote_git([
+                "push", CONFIG["git_remote"],
+                f"HEAD:refs/heads/{fallback_branch}",
+            ])
+            if fallback.returncode == 0:
+                diagnostic(
+                    "Pushed results to fallback branch '{}' due to divergence on '{}'.".format(
+                        fallback_branch, current_branch
+                    )
+                )
+                return
+            fallback_detail = (fallback.stderr or fallback.stdout).strip()[-6000:]
+            if git_authentication_failed(fallback):
+                raise RuntimeError(AUTHORIZATION_DIAGNOSTIC + "\n" + fallback_detail)
+            raise RuntimeError(
+                "git push failed on '{}' and fallback '{}': {}\n{}".format(
+                    current_branch, fallback_branch, detail, fallback_detail
+                )
+            )
+        if git_authentication_failed(pushed):
+            raise RuntimeError(AUTHORIZATION_DIAGNOSTIC + "\n" + detail)
+        raise RuntimeError("git push failed ({}): {}".format(pushed.returncode, detail))
 
 def continuation_detected(code, reason):
     submit_directory = Path(os.environ.get("SLURM_SUBMIT_DIR") or str(ROOT)).resolve()
@@ -404,51 +1049,69 @@ def main():
         },
         "telemetry_errors": [],
     }
-    paths = []
-    if code == 0:
-        paths.extend(collect(CONFIG["results_dir"]))
-        paths.extend(collect(CONFIG["figures_dir"]))
-        paths.extend(collect(CONFIG["logs_dir"]))
-        message = "[BigRed200] SUCCESS: Job {} ({}) on {}".format(
-            JOB_ID, name, report["hostname"]
-        )
-    else:
-        paths.append(write_report(report))
-        message = "[BigRed200] FAILED: Job {} ({}) exit code {} [{}]".format(
-            JOB_ID, name, code, reason
-        )
-    for log in (stdout_log, stderr_log):
-        if safe_file(log):
-            paths.append(str(log.relative_to(ROOT)))
 
     try:
-        repository = Path(git(["rev-parse", "--show-toplevel"]).stdout.strip()).resolve()
-        if repository != ROOT:
-            raise RuntimeError("Submit from the repository root, not a subdirectory")
-        publish(paths, message)
-    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
-        diagnostic(error)
-        report["telemetry_errors"].append(str(error))
+        paths = []
         if code == 0:
-            code = 74
-            report["exit_code"] = code
-            report["termination_reason"] = "TELEMETRY_FAILURE"
+            paths.extend(collect(CONFIG["results_dir"]))
+            paths.extend(collect(CONFIG["figures_dir"]))
+            paths.extend(collect(CONFIG["logs_dir"]))
+            message = "[BigRed200] SUCCESS: Job {} ({}) on {}".format(
+                JOB_ID, name, report["hostname"]
+            )
+        else:
+            paths.append(write_report(report))
+            message = "[BigRed200] FAILED: Job {} ({}) exit code {} [{}]".format(
+                JOB_ID, name, code, reason
+            )
+        for log in (stdout_log, stderr_log):
+            if safe_file(log):
+                paths.append(str(log.relative_to(ROOT)))
+
+        repository = Path(git(["rev-parse", "--show-toplevel"]).stdout.strip()).resolve()
+        if ROOT != repository and repository not in ROOT.parents:
+            raise RuntimeError("Submit from inside the git repository")
+        publish(paths, message)
+    except Exception as error:
+        safe_error = redact_git_output(error)
+        diagnostic(safe_error)
+        report["telemetry_errors"].append(safe_error)
+        report["telemetry_status"] = "TELEMETRY_SYNC_FAILED"
+        if code == 0:
+            diagnostic(SYNC_FAILURE_NOTICE)
+            if CONFIG.get("strict_telemetry", "0") == "1":
+                code = 74
+                report["exit_code"] = code
+                report["termination_reason"] = "TELEMETRY_FAILURE"
         report["finished_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
         try:
             write_report(report)
-        except (OSError, ValueError) as report_error:
-            diagnostic("Could not persist telemetry failure: " + str(report_error))
+        except Exception as report_error:
+            diagnostic("Could not persist telemetry failure: " + redact_git_output(report_error))
     return code
 
 try:
     sys.exit(main())
-except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
-    diagnostic("Fatal telemetry error: " + str(error))
-    sys.exit(74)
+except Exception as error:
+    diagnostic("Fatal telemetry error: " + redact_git_output(error))
+    # Even failures before report construction must not poison workload success.
+    try:
+        original_code = int(sys.argv[1])
+        if not 0 <= original_code <= 255:
+            original_code = 1
+    except (IndexError, ValueError):
+        original_code = 1
+    if original_code == 0:
+        diagnostic(SYNC_FAILURE_NOTICE)
+        if CONFIG.get("strict_telemetry", "0") == "1":
+            original_code = 74
+    sys.exit(original_code)
 BIGRED200_TELEMETRY_PYTHON
     local TELEMETRY_CODE=$?
-    if [[ "$EXIT_CODE" -eq 0 && "$TELEMETRY_CODE" -ne 0 ]]; then
-        EXIT_CODE="$TELEMETRY_CODE"
+    if [[ "$EXIT_CODE" -eq 0 && "$TERMINATION_REASON" != "RESUBMITTED" ]]; then
+        if [[ "$TELEMETRY_CODE" -eq 66 || ( "0" == "1" && "$TELEMETRY_CODE" -ne 0 ) ]]; then
+            EXIT_CODE="$TELEMETRY_CODE"
+        fi
     fi
     exit "$EXIT_CODE"
 }
@@ -475,6 +1138,7 @@ run_user_job() (
     trap 'trap - SIGTERM SIGINT; kill -15 0 2>/dev/null || true; exit 143' SIGTERM
     trap 'trap - SIGTERM SIGINT; kill -15 0 2>/dev/null || true; exit 130' SIGINT
     set -Eeuo pipefail
+set -Eeuo pipefail
 echo "================================================================================"
 echo "UNIFIED NATURE CAMPAIGN POST-SIMULATION ANALYZER"
 echo "Host: $(hostname)"

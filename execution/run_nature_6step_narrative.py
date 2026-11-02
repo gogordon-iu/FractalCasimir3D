@@ -40,6 +40,9 @@ if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from execution.casimir_bem_solver import (
+    BEM_TIER_HIGH,
+    BEM_TIER_STANDARD,
+    BEM_TIER_ULTRA_HIGH,
     ClutchSurfaceMesh,
     Geometry,
     TrackElement,
@@ -48,7 +51,36 @@ from execution.casimir_bem_solver import (
     _radial,
     run_bem_casimir_solver,
 )
-from execution.clutch_geometry_redesign import get_scoped_clutch_elements
+from execution.clutch_geometry_redesign import (
+    DEFAULT_H_TEETH_ROTATIONAL_UM,
+    DEFAULT_HYBRID_L2_H_TEETH_UM,
+    DEFAULT_HYBRID_L2_Z_TIP_UM,
+    DEFAULT_MIN_TOOTH_W_UM,
+    DEFAULT_N3_TOOTH_ARC_DEG,
+    DEFAULT_NUM_SECTORS,
+    DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+    DEFAULT_R_MAX_UM,
+    DEFAULT_R_MIN_UM,
+    DEFAULT_SECTOR_DEG,
+    DEFAULT_T_LANDING_PAD_UM,
+    DEFAULT_T_MEMBRANE_UM,
+    DEFAULT_TOOTH_ARC_DEG,
+    DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+    DEFAULT_Z_PAD_TOP_UM,
+    DEFAULT_Z_TIP_ROTATIONAL_UM,
+    MONOLITHIC_SPOKE_Z_MAX_UM,
+    MONOLITHIC_SPOKE_Z_MIN_UM,
+    MONOLITHIC_TRENCH_Z_MAX_UM,
+    MONOLITHIC_TRENCH_Z_MIN_UM,
+    ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC,
+    ROTATIONAL_C8_COMPACT_N2_SPEC,
+    ROTATIONAL_C10_FRACTAL_N3_SPEC,
+    disengaged_angle_deg,
+    engaged_angle_deg,
+    get_scoped_clutch_elements,
+    straddling_angle_deg,
+)
+from execution.materials_database_dispersive import HBAR_C_PN_UM2
 from utils.metrics_logger import (
     export_macros,
     log_metric,
@@ -60,12 +92,23 @@ from utils.metrics_logger import (
 Body = Literal["rotor", "stator"]
 Formulation = Literal["scalar_yukawa", "vector_dyadic"]
 
-SECTOR_ANGLE = math.pi / 2.0
-HBAR_C_PN_UM2 = 0.031615267735
+NUM_SECTORS = DEFAULT_NUM_SECTORS
+SECTOR_ANGLE_DEG = DEFAULT_SECTOR_DEG
+SECTOR_ANGLE = math.radians(SECTOR_ANGLE_DEG)
 # Meep force units are hbar*c/um^2, converted here to newtons.
 MEEP_FORCE_TO_SI_N = HBAR_C_PN_UM2 * 1e-12
 MEEP_CACHE_VERSION = 6
+MEEP_PLANNED_TASKS = 12
+MEEP_MAX_STABLE_DT = 0.0075
+MEEP_RICHARDSON_TASK_IDS: tuple[int, int, int] = (11, 8, 12)
+MEEP_RICHARDSON_RESOLUTIONS: tuple[int, int, int] = (40, 50, 60)
+MEEP_RICHARDSON_ORDER = 4
+MEEP_RICHARDSON_DESIGN = "Cantor_N2_HybridRZ"
 SOLVER_NAME = "execution.casimir_bem_solver.run_bem_casimir_solver"
+# Pre-parameterization source hash of run_bem_casimir_solver (numerically identical).
+LEGACY_COMPATIBLE_SOLVER_SHA256: tuple[str, ...] = (
+    "c85cce406ee59062524106d0e1c378372bdfe494ea7c8c3264baf317685ef71d",
+)
 REPORT_MODEL = "BEM_Meep_Nature6Step"
 REPORT_DATASET = "nature_6step_narrative"
 STEP_NAMES = (
@@ -76,6 +119,88 @@ STEP_NAMES = (
     "step5_best_active_configuration",
     "step6_monolithic_ultrahigh_validation",
 )
+
+# Canonical study geometry defaults imported from clutch_geometry_redesign.py
+STUDY_R_MIN_UM = DEFAULT_R_MIN_UM
+SINGLE_TRACK_R_MAX_UM = 0.65
+COMPACT_R_MIN_UM = float(ROTATIONAL_C8_COMPACT_N2_SPEC["R_min"])
+COMPACT_R_MAX_UM = float(ROTATIONAL_C8_COMPACT_N2_SPEC["R_max"])
+COMPACT_W1_RATIO = float(ROTATIONAL_C8_COMPACT_N2_SPEC["w1_ratio"])
+STANDARD_R_MAX_UM = DEFAULT_R_MAX_UM
+N3_R_MAX_UM = float(ROTATIONAL_C10_FRACTAL_N3_SPEC["R_max"])
+STUDY_APERTURE_ARC_DEG = DEFAULT_ROTATIONAL_APERTURE_ARC_DEG
+STUDY_TOOTH_ARC_DEG = DEFAULT_TOOTH_ARC_DEG
+STUDY_N3_TOOTH_ARC_DEG = DEFAULT_N3_TOOTH_ARC_DEG
+STUDY_T_MEMBRANE_UM = DEFAULT_T_MEMBRANE_UM
+STUDY_T_LANDING_PAD_UM = DEFAULT_T_LANDING_PAD_UM
+STUDY_Z_PAD_TOP_UM = DEFAULT_Z_PAD_TOP_UM
+NOMINAL_Z_TIP_UM = DEFAULT_Z_TIP_ROTATIONAL_UM
+NOMINAL_H_TEETH_UM = DEFAULT_H_TEETH_ROTATIONAL_UM
+HYBRID_L2_Z_TIP_UM = DEFAULT_HYBRID_L2_Z_TIP_UM
+HYBRID_L2_H_TEETH_UM = DEFAULT_HYBRID_L2_H_TEETH_UM
+DEFAULT_W1_RATIO_N1 = 0.82
+DEFAULT_W1_RATIO_N2 = float(ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC["w1_ratio"])
+DEFAULT_W1_RATIO_N3 = float(ROTATIONAL_C10_FRACTAL_N3_SPEC["w1_ratio"])
+DEFAULT_MIN_TOOTH_W_N2_UM = DEFAULT_MIN_TOOTH_W_UM
+DEFAULT_MIN_TOOTH_W_COMPACT_UM = float(ROTATIONAL_C10_FRACTAL_N3_SPEC["min_tooth_w"])
+
+# Single-track N=0 middle-third slot [0.30 + 0.35/3, 0.65 - 0.35/3] and 0.65-ratio tooth (rounded to 7 decimals)
+SINGLE_TRACK_R_INNER_UM = 0.4166667
+SINGLE_TRACK_R_OUTER_UM = 0.5333333
+SINGLE_TRACK_R_TOOTH_IN_UM = 0.4370833
+SINGLE_TRACK_R_TOOTH_OUT_UM = 0.5129167
+SINGLE_TRACK_LEVEL = 2
+
+# Passive monolithic support geometry constants (Step 6)
+MONOLITHIC_COLLAR_OVERHANG_UM = 0.12
+MONOLITHIC_MIN_INNER_RADIUS_UM = 0.08
+
+# Canonical operating angles derived from aperture_arc_deg (36 deg), sector_angle_deg (90 deg),
+# and tooth_center_offset_deg (15 deg):
+#   - Disengaged (open-slot midpoint): 36/2 - 15 = 3.0 deg
+#   - Straddling (slot-to-pad boundary): 36 - 15 = 21.0 deg
+#   - Engaged (landing-pad midpoint): (36 + 90)/2 - 15 = 48.0 deg
+THETA_DISENGAGED_DEG = disengaged_angle_deg(
+    STUDY_APERTURE_ARC_DEG, tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG
+)
+THETA_STRADDLING_DEG = straddling_angle_deg(
+    STUDY_APERTURE_ARC_DEG, tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG
+)
+THETA_ENGAGED_DEG = engaged_angle_deg(
+    STUDY_APERTURE_ARC_DEG,
+    sector_deg=SECTOR_ANGLE_DEG,
+    tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+)
+SWITCHING_ANGLES_DEG: tuple[float, float] = (THETA_DISENGAGED_DEG, THETA_ENGAGED_DEG)
+HIERARCHY_ANGLES_DEG: tuple[float, float, float] = (
+    THETA_DISENGAGED_DEG,
+    THETA_STRADDLING_DEG,
+    THETA_ENGAGED_DEG,
+)
+STEP1_Z_TIP_SWEEP_UM: tuple[float, ...] = (
+    -0.110,
+    -0.105,
+    NOMINAL_Z_TIP_UM,
+    -0.090,
+    -0.075,
+    -0.055,
+)
+STEP2_THETA_SWEEP_DEG: tuple[float, ...] = (
+    0.0,
+    THETA_DISENGAGED_DEG,
+    6.0,
+    12.0,
+    18.0,
+    24.0,
+    30.0,
+    39.0,
+    THETA_ENGAGED_DEG,
+)
+
+DEFAULT_CONVERGENCE_TOLERANCE = 0.15
+DEFAULT_AGREEMENT_TOLERANCE = 0.15
+MICRO_PROBE_MAX_STEPS = 10
+MICRO_PROBE_RUNTIME_TARGET_S = 20.0
 _MISSING = object()
 
 
@@ -124,14 +249,14 @@ class StudyDesign:
     tracks: tuple[TrackSpec3D, ...]
     R_min: float
     R_max: float
-    aperture_arc_deg: float = 36.0
-    tooth_arc_deg: float = 15.0
-    t_membrane: float = 0.025
-    t_landing_pad: float = 0.150
-    z_pad_top: float = -0.115
+    aperture_arc_deg: float = STUDY_APERTURE_ARC_DEG
+    tooth_arc_deg: float = STUDY_TOOTH_ARC_DEG
+    t_membrane: float = STUDY_T_MEMBRANE_UM
+    t_landing_pad: float = STUDY_T_LANDING_PAD_UM
+    z_pad_top: float = STUDY_Z_PAD_TOP_UM
     generation: int = 2
-    w1_ratio: float = 0.65
-    min_tooth_w: float = 0.020
+    w1_ratio: float = DEFAULT_W1_RATIO_N2
+    min_tooth_w: float = DEFAULT_MIN_TOOTH_W_N2_UM
 
     def __post_init__(self) -> None:
         if not self.name or not self.tracks:
@@ -151,7 +276,7 @@ class StudyDesign:
             raise ValueError("Design dimensions must be finite.")
         if not 0.0 < self.R_min < self.R_max:
             raise ValueError("Invalid annulus.")
-        if not 0.0 < self.tooth_arc_deg < self.aperture_arc_deg < 90.0:
+        if not 0.0 < self.tooth_arc_deg < self.aperture_arc_deg < SECTOR_ANGLE_DEG:
             raise ValueError("Require 0 < tooth arc < aperture arc < 90 degrees.")
         if self.t_membrane <= 0.0 or self.t_landing_pad <= 0.0:
             raise ValueError("Stator thicknesses must be positive.")
@@ -190,9 +315,30 @@ class Resolution:
                 raise ValueError("Resolution counts must be positive integers.")
 
 
-STANDARD = Resolution("Standard", 1, 2, 2, 2, 10)
-HIGH = Resolution("High", 1, 3, 3, 2, 12)
-ULTRA_HIGH = Resolution("Ultra_High", 2, 3, 3, 2, 14)
+STANDARD = Resolution(
+    BEM_TIER_STANDARD.name,
+    BEM_TIER_STANDARD.n_r,
+    BEM_TIER_STANDARD.n_phi_tooth,
+    BEM_TIER_STANDARD.n_phi_bridge,
+    BEM_TIER_STANDARD.n_z,
+    BEM_TIER_STANDARD.n_xi,
+)
+HIGH = Resolution(
+    BEM_TIER_HIGH.name,
+    BEM_TIER_HIGH.n_r,
+    BEM_TIER_HIGH.n_phi_tooth,
+    BEM_TIER_HIGH.n_phi_bridge,
+    BEM_TIER_HIGH.n_z,
+    BEM_TIER_HIGH.n_xi,
+)
+ULTRA_HIGH = Resolution(
+    BEM_TIER_ULTRA_HIGH.name,
+    BEM_TIER_ULTRA_HIGH.n_r,
+    BEM_TIER_ULTRA_HIGH.n_phi_tooth,
+    BEM_TIER_ULTRA_HIGH.n_phi_bridge,
+    BEM_TIER_ULTRA_HIGH.n_z,
+    BEM_TIER_ULTRA_HIGH.n_xi,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -569,8 +715,14 @@ def subdivisions(start: float, stop: float, count: int) -> list[float]:
     return [start + (stop - start) * index / count for index in range(count + 1)]
 
 
-def tooth_intervals(theta_deg: float, arc_deg: float) -> list[tuple[float, float]]:
-    center = math.radians((15.0 + theta_deg % 90.0) % 90.0)
+def tooth_intervals(
+    theta_deg: float,
+    arc_deg: float,
+    tooth_center_offset_deg: float = DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+) -> list[tuple[float, float]]:
+    center = math.radians(
+        (tooth_center_offset_deg + theta_deg % SECTOR_ANGLE_DEG) % SECTOR_ANGLE_DEG
+    )
     half_width = math.radians(arc_deg) / 2.0
     intervals: list[tuple[float, float]] = []
     for offset in (-SECTOR_ANGLE, 0.0, SECTOR_ANGLE):
@@ -727,13 +879,14 @@ def build_monolithic_sector_mesh(
     for p0, p1 in intervals:
         rotor.extend(
             sector_solid_panels(
-                design.R_min, design.R_max, p0, p1, 0.350, 0.470,
+                design.R_min, design.R_max, p0, p1,
+                MONOLITHIC_SPOKE_Z_MIN_UM, MONOLITHIC_SPOKE_Z_MAX_UM,
                 "rotor", n_r, n_phi_tooth, n_z, cyclic_cut=True,
             )
         )
 
-    inner = max(0.08, design.R_min - 0.12)
-    outer = design.R_max + 0.12
+    inner = max(MONOLITHIC_MIN_INNER_RADIUS_UM, design.R_min - MONOLITHIC_COLLAR_OVERHANG_UM)
+    outer = design.R_max + MONOLITHIC_COLLAR_OVERHANG_UM
     cuts = sorted({0.0, SECTOR_ANGLE, *(v for interval in intervals for v in interval)})
     for p0, p1 in zip(cuts[:-1], cuts[1:], strict=True):
         if p1 - p0 <= 1e-14:
@@ -745,14 +898,18 @@ def build_monolithic_sector_mesh(
         ):
             radii = subdivisions(r0, r1, n_r)
             angles = subdivisions(p0, p1, n_phi_tooth)
-            heights = subdivisions(0.350, 0.470, n_z)
+            heights = subdivisions(
+                MONOLITHIC_SPOKE_Z_MIN_UM, MONOLITHIC_SPOKE_Z_MAX_UM, n_z
+            )
             for ra, rb in zip(radii[:-1], radii[1:], strict=True):
                 for pa, pb in zip(angles[:-1], angles[1:], strict=True):
                     rotor.append(_horizontal(
-                        ra, rb, pa, pb, 0.350, -1.0, "rotor_bottom", "rotor"
+                        ra, rb, pa, pb, MONOLITHIC_SPOKE_Z_MIN_UM, -1.0,
+                        "rotor_bottom", "rotor",
                     ))
                     rotor.append(_horizontal(
-                        ra, rb, pa, pb, 0.470, +1.0, "rotor_top", "rotor"
+                        ra, rb, pa, pb, MONOLITHIC_SPOKE_Z_MAX_UM, +1.0,
+                        "rotor_top", "rotor",
                     ))
             for radius, sign in ((r0, -1.0), (r1, +1.0)):
                 if covered and radius == shared_radius and sign == shared_sign:
@@ -769,14 +926,18 @@ def build_monolithic_sector_mesh(
     for p0, p1 in intervals:
         radii = subdivisions(design.R_min, design.R_max, n_r)
         angles = subdivisions(p0, p1, n_phi_tooth)
-        heights = subdivisions(0.350, 0.470, n_z)
+        heights = subdivisions(
+            MONOLITHIC_SPOKE_Z_MIN_UM, MONOLITHIC_SPOKE_Z_MAX_UM, n_z
+        )
         for ra, rb in zip(radii[:-1], radii[1:], strict=True):
             for pa, pb in zip(angles[:-1], angles[1:], strict=True):
                 spoke_horizontal_and_azimuthal.append(_horizontal(
-                    ra, rb, pa, pb, 0.350, -1.0, "rotor_bottom", "rotor"
+                    ra, rb, pa, pb, MONOLITHIC_SPOKE_Z_MIN_UM, -1.0,
+                    "rotor_bottom", "rotor",
                 ))
                 spoke_horizontal_and_azimuthal.append(_horizontal(
-                    ra, rb, pa, pb, 0.470, +1.0, "rotor_top", "rotor"
+                    ra, rb, pa, pb, MONOLITHIC_SPOKE_Z_MAX_UM, +1.0,
+                    "rotor_top", "rotor",
                 ))
         for phi, sign in ((p0, -1.0), (p1, +1.0)):
             if math.isclose(phi, 0.0, abs_tol=1e-13) or math.isclose(
@@ -791,7 +952,8 @@ def build_monolithic_sector_mesh(
                     ))
     original_spoke_count = sum(
         len(sector_solid_panels(
-            design.R_min, design.R_max, p0, p1, 0.350, 0.470,
+            design.R_min, design.R_max, p0, p1,
+            MONOLITHIC_SPOKE_Z_MIN_UM, MONOLITHIC_SPOKE_Z_MAX_UM,
             "rotor", n_r, n_phi_tooth, n_z, cyclic_cut=True,
         ))
         for p0, p1 in intervals
@@ -799,7 +961,8 @@ def build_monolithic_sector_mesh(
     rotor = spoke_horizontal_and_azimuthal + rotor[original_spoke_count:]
 
     stator = sector_solid_panels(
-        design.R_min, design.R_max, 0.0, SECTOR_ANGLE, -0.650, -0.550,
+        design.R_min, design.R_max, 0.0, SECTOR_ANGLE,
+        MONOLITHIC_TRENCH_Z_MIN_UM, MONOLITHIC_TRENCH_Z_MAX_UM,
         "stator", n_r, n_phi_bridge, n_z, cyclic_cut=True,
     )
     return append_mesh_panels(active, rotor, stator)
@@ -834,51 +997,99 @@ def cantor_tracks(
         center = (low + high) / 2.0
         tracks.append(TrackSpec3D(
             low, high, center - width / 2.0, center + width / 2.0,
-            -0.100, 0.100, level,
+            NOMINAL_Z_TIP_UM, NOMINAL_H_TEETH_UM, level,
         ))
     return tuple(tracks)
 
 
 def build_designs() -> dict[str, StudyDesign]:
     single_track = TrackSpec3D(
-        0.4166667, 0.5333333, 0.4370833, 0.5129167,
-        -0.100, 0.100, 2,
+        SINGLE_TRACK_R_INNER_UM,
+        SINGLE_TRACK_R_OUTER_UM,
+        SINGLE_TRACK_R_TOOTH_IN_UM,
+        SINGLE_TRACK_R_TOOTH_OUT_UM,
+        NOMINAL_Z_TIP_UM,
+        NOMINAL_H_TEETH_UM,
+        SINGLE_TRACK_LEVEL,
     )
     n0 = StudyDesign(
-        "Fractal_N0_SingleTrack", (single_track,), 0.30, 0.65,
-        generation=0, min_tooth_w=0.0,
+        "Fractal_N0_SingleTrack",
+        (single_track,),
+        STUDY_R_MIN_UM,
+        SINGLE_TRACK_R_MAX_UM,
+        generation=0,
+        min_tooth_w=0.0,
     )
     n1 = StudyDesign(
         "Fractal_N1_FundRing",
-        cantor_tracks(0.30, 1.35, 1, 0.82, 0.020),
-        0.30, 1.35, generation=1, w1_ratio=0.82,
+        cantor_tracks(
+            STUDY_R_MIN_UM,
+            STANDARD_R_MAX_UM,
+            1,
+            DEFAULT_W1_RATIO_N1,
+            DEFAULT_MIN_TOOTH_W_N2_UM,
+        ),
+        STUDY_R_MIN_UM,
+        STANDARD_R_MAX_UM,
+        generation=1,
+        w1_ratio=DEFAULT_W1_RATIO_N1,
     )
     n2 = StudyDesign(
         "Fractal_N2_Cantor3Track",
-        cantor_tracks(0.30, 1.35, 2, 0.65, 0.020),
-        0.30, 1.35,
+        cantor_tracks(
+            STUDY_R_MIN_UM,
+            STANDARD_R_MAX_UM,
+            2,
+            DEFAULT_W1_RATIO_N2,
+            DEFAULT_MIN_TOOTH_W_N2_UM,
+        ),
+        STUDY_R_MIN_UM,
+        STANDARD_R_MAX_UM,
     )
     n3 = StudyDesign(
         "Fractal_N3_Cantor7Track",
-        cantor_tracks(0.30, 1.65, 3, 0.40, 0.015),
-        0.30, 1.65, generation=3, w1_ratio=0.40,
-        min_tooth_w=0.015, tooth_arc_deg=12.0,
+        cantor_tracks(
+            STUDY_R_MIN_UM,
+            N3_R_MAX_UM,
+            3,
+            DEFAULT_W1_RATIO_N3,
+            DEFAULT_MIN_TOOTH_W_COMPACT_UM,
+        ),
+        STUDY_R_MIN_UM,
+        N3_R_MAX_UM,
+        generation=3,
+        w1_ratio=DEFAULT_W1_RATIO_N3,
+        min_tooth_w=DEFAULT_MIN_TOOTH_W_COMPACT_UM,
+        tooth_arc_deg=STUDY_N3_TOOTH_ARC_DEG,
     )
     flat = dataclasses.replace(n2, name="Cantor_N2_FlatZ")
     hybrid = dataclasses.replace(
         flat,
         name="Cantor_N2_HybridRZ",
         tracks=tuple(
-            dataclasses.replace(track, z_tip=-0.090, h_teeth=0.090)
+            dataclasses.replace(
+                track, z_tip=HYBRID_L2_Z_TIP_UM, h_teeth=HYBRID_L2_H_TEETH_UM
+            )
             if track.level == 2
-            else dataclasses.replace(track, z_tip=-0.100, h_teeth=0.100)
+            else dataclasses.replace(
+                track, z_tip=NOMINAL_Z_TIP_UM, h_teeth=NOMINAL_H_TEETH_UM
+            )
             for track in flat.tracks
         ),
     )
     compact = StudyDesign(
         "Rot_C8_Compact_N2",
-        cantor_tracks(0.30, 0.65, 2, 0.65, 0.015),
-        0.30, 0.65, min_tooth_w=0.015,
+        cantor_tracks(
+            COMPACT_R_MIN_UM,
+            COMPACT_R_MAX_UM,
+            int(ROTATIONAL_C8_COMPACT_N2_SPEC["N"]),
+            COMPACT_W1_RATIO,
+            float(ROTATIONAL_C8_COMPACT_N2_SPEC["min_tooth_w"]),
+        ),
+        COMPACT_R_MIN_UM,
+        COMPACT_R_MAX_UM,
+        w1_ratio=COMPACT_W1_RATIO,
+        min_tooth_w=float(ROTATIONAL_C8_COMPACT_N2_SPEC["min_tooth_w"]),
     )
 
     total_slot = sum(track.r_outer - track.r_inner for track in flat.tracks)
@@ -887,7 +1098,7 @@ def build_designs() -> dict[str, StudyDesign]:
     wide_track = TrackSpec3D(
         center - total_slot / 2.0, center + total_slot / 2.0,
         center - total_tooth / 2.0, center + total_tooth / 2.0,
-        -0.100, 0.100, 1,
+        NOMINAL_Z_TIP_UM, NOMINAL_H_TEETH_UM, 1,
     )
     single = dataclasses.replace(flat, name="Ctrl_SingleWide", tracks=(wide_track,))
 
@@ -899,7 +1110,7 @@ def build_designs() -> dict[str, StudyDesign]:
             cursor, cursor + slot_width,
             cursor + (slot_width - tooth_width) / 2.0,
             cursor + (slot_width + tooth_width) / 2.0,
-            -0.100, 0.100, 1,
+            NOMINAL_Z_TIP_UM, NOMINAL_H_TEETH_UM, 1,
         )
         for cursor in (
             flat.R_min + rib_w + index * (slot_width + rib_w)
@@ -933,7 +1144,7 @@ def build_designs() -> dict[str, StudyDesign]:
         middle = cursor + slot / 2.0
         monotonic_tracks.append(TrackSpec3D(
             cursor, cursor + slot, middle - tooth / 2.0, middle + tooth / 2.0,
-            -0.100, 0.100, track.level,
+            NOMINAL_Z_TIP_UM, NOMINAL_H_TEETH_UM, track.level,
         ))
         cursor += slot + ribs[index + 1]
     monotonic = dataclasses.replace(
@@ -972,6 +1183,7 @@ def tooth_geometry_metrics(design: StudyDesign) -> dict[str, Any]:
         for left, right in zip(ordered[:-1], ordered[1:], strict=True)
     )
     ribs.append(design.R_max - ordered[-1].r_outer)
+    sector_count = float(NUM_SECTORS)
     return {
         "track_count": len(design.tracks),
         "total_slot_width_um": sum(slot_widths),
@@ -979,14 +1191,70 @@ def tooth_geometry_metrics(design: StudyDesign) -> dict[str, Any]:
         "slot_widths_um": slot_widths,
         "tooth_widths_um": tooth_widths,
         "rib_widths_um": ribs,
-        "full_tooth_planform_area_um2": 4.0 * area_sector,
-        "full_tooth_planform_perimeter_um": 4.0 * perimeter_sector,
-        "full_slot_planform_area_um2": 4.0 * slot_area_sector,
+        "full_tooth_planform_area_um2": sector_count * area_sector,
+        "full_tooth_planform_perimeter_um": sector_count * perimeter_sector,
+        "full_slot_planform_area_um2": sector_count * slot_area_sector,
         "full_annular_footprint_um2": design.footprint_um2,
     }
 
 
+def validate_operating_angles(designs: Mapping[str, StudyDesign]) -> None:
+    """Verify that canonical operating angles match the geometric landmarks of every design."""
+    for name, design in designs.items():
+        expected_disengaged = (
+            design.aperture_arc_deg / 2.0 - DEFAULT_TOOTH_CENTER_OFFSET_DEG
+        )
+        expected_straddling = (
+            design.aperture_arc_deg - DEFAULT_TOOTH_CENTER_OFFSET_DEG
+        )
+        expected_engaged = (
+            (design.aperture_arc_deg + SECTOR_ANGLE_DEG) / 2.0
+            - DEFAULT_TOOTH_CENTER_OFFSET_DEG
+        )
+        if not math.isclose(
+            THETA_DISENGAGED_DEG, expected_disengaged, abs_tol=1e-12
+        ):
+            raise ValueError(
+                f"{name}: THETA_DISENGAGED_DEG={THETA_DISENGAGED_DEG} does not match "
+                f"aperture midpoint {expected_disengaged}."
+            )
+        if not math.isclose(
+            THETA_STRADDLING_DEG, expected_straddling, abs_tol=1e-12
+        ):
+            raise ValueError(
+                f"{name}: THETA_STRADDLING_DEG={THETA_STRADDLING_DEG} does not match "
+                f"aperture-to-pad boundary {expected_straddling}."
+            )
+        if not math.isclose(THETA_ENGAGED_DEG, expected_engaged, abs_tol=1e-12):
+            raise ValueError(
+                f"{name}: THETA_ENGAGED_DEG={THETA_ENGAGED_DEG} does not match "
+                f"landing-pad midpoint {expected_engaged}."
+            )
+        if not math.isclose(
+            landing_overlap(design, THETA_DISENGAGED_DEG), 0.0, abs_tol=1e-12
+        ):
+            raise ValueError(
+                f"{name}: tooth is not completely inside open aperture at "
+                f"theta={THETA_DISENGAGED_DEG} deg."
+            )
+        if not math.isclose(
+            landing_overlap(design, THETA_STRADDLING_DEG), 0.5, abs_tol=1e-12
+        ):
+            raise ValueError(
+                f"{name}: tooth does not straddle 50% pad boundary at "
+                f"theta={THETA_STRADDLING_DEG} deg."
+            )
+        if not math.isclose(
+            landing_overlap(design, THETA_ENGAGED_DEG), 1.0, abs_tol=1e-12
+        ):
+            raise ValueError(
+                f"{name}: tooth is not completely over landing pad at "
+                f"theta={THETA_ENGAGED_DEG} deg."
+            )
+
+
 def validate_controls(designs: Mapping[str, StudyDesign]) -> dict[str, Any]:
+    validate_operating_angles(designs)
     names = (
         "Cantor_N2_FlatZ",
         "Cantor_N2_HybridRZ",
@@ -1083,9 +1351,12 @@ class Campaign:
             if not isinstance(previous, Mapping):
                 return 0
             configuration = previous.get("configuration", {})
+            compatible_hashes = {
+                callable_source_hash(run_bem_casimir_solver),
+                *LEGACY_COMPATIBLE_SOLVER_SHA256,
+            }
             if not isinstance(configuration, Mapping) or (
-                configuration.get("solver_sha256")
-                != callable_source_hash(run_bem_casimir_solver)
+                configuration.get("solver_sha256") not in compatible_hashes
                 or configuration.get("formulation") != self.formulation
                 or configuration.get("max_steps") != 0
             ):
@@ -1355,27 +1626,27 @@ def tasks_steps_1_to_5(
 ) -> list[Task]:
     tasks: list[Task] = []
     single = designs["Fractal_N0_SingleTrack"]
-    for z_tip in (-0.110, -0.105, -0.100, -0.090, -0.075, -0.055):
+    for z_tip in STEP1_Z_TIP_SWEEP_UM:
         design = dataclasses.replace(
             single, name="SingleTooth_Track0",
             tracks=(dataclasses.replace(single.tracks[0], z_tip=z_tip),),
         )
-        for angle in (3.0, 48.0):
+        for angle in SWITCHING_ANGLES_DEG:
             tasks.append(Task(STEP_NAMES[0], design, angle, formulation))
-    for angle in (0.0, 3.0, 6.0, 12.0, 18.0, 24.0, 30.0, 39.0, 48.0):
+    for angle in STEP2_THETA_SWEEP_DEG:
         tasks.append(Task(STEP_NAMES[1], single, angle, formulation))
     for name in (
         "Fractal_N0_SingleTrack", "Fractal_N1_FundRing",
         "Fractal_N2_Cantor3Track", "Fractal_N3_Cantor7Track",
     ):
-        for angle in (3.0, 21.0, 48.0):
+        for angle in HIERARCHY_ANGLES_DEG:
             tasks.append(Task(STEP_NAMES[2], designs[name], angle, formulation))
     for name in (
         "Cantor_N2_FlatZ", "Cantor_N2_HybridRZ", "Ctrl_SingleWide",
         "Ctrl_UniformPeriodic", "Ctrl_SizeMatched_Monotonic",
         "Uniform_3Track_Control",
     ):
-        for angle in (3.0, 48.0):
+        for angle in SWITCHING_ANGLES_DEG:
             tasks.append(Task(STEP_NAMES[3], designs[name], angle, formulation))
     step5_names = (
         "Rot_C8_Compact_N2", "Cantor_N2_FlatZ",
@@ -1384,7 +1655,7 @@ def tasks_steps_1_to_5(
         "Ctrl_SizeMatched_Monotonic", "Uniform_3Track_Control",
     )
     for name in step5_names:
-        for angle in (3.0, 48.0):
+        for angle in SWITCHING_ANGLES_DEG:
             tasks.append(Task(STEP_NAMES[4], designs[name], angle, formulation))
     return tasks
 
@@ -1396,19 +1667,21 @@ def step5_scores(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
             candidates.setdefault(str(row["design"]), {})[float(row["theta_deg"])] = row
     scores: list[dict[str, Any]] = []
     for name, angles in candidates.items():
-        if 3.0 not in angles or 48.0 not in angles:
+        if THETA_DISENGAGED_DEG not in angles or THETA_ENGAGED_DEG not in angles:
             continue
-        repulsive = finite_float(angles[3.0]["F_z_pN"], "repulsive force")
-        attractive = finite_float(angles[48.0]["F_z_pN"], "attractive force")
-        footprint = finite_float(angles[3.0]["footprint_um2"], "footprint")
-        track_count = finite_float(angles[3.0]["track_count"], "track count")
-        tooth_count = 4.0 * track_count
-        parameters = angles[3.0].get("solver_parameters", {})
-        tooth_area_value = angles[3.0].get("full_tooth_planform_area_um2")
+        disengaged_row = angles[THETA_DISENGAGED_DEG]
+        engaged_row = angles[THETA_ENGAGED_DEG]
+        repulsive = finite_float(disengaged_row["F_z_pN"], "repulsive force")
+        attractive = finite_float(engaged_row["F_z_pN"], "attractive force")
+        footprint = finite_float(disengaged_row["footprint_um2"], "footprint")
+        track_count = finite_float(disengaged_row["track_count"], "track count")
+        tooth_count = float(NUM_SECTORS) * track_count
+        parameters = disengaged_row.get("solver_parameters", {})
+        tooth_area_value = disengaged_row.get("full_tooth_planform_area_um2")
         if tooth_area_value is None and isinstance(parameters, Mapping):
             design = parameters.get("design")
             if isinstance(design, Mapping):
-                tooth_area_value = 4.0 * sum(
+                tooth_area_value = float(NUM_SECTORS) * sum(
                     0.5 * math.radians(finite_float(design["tooth_arc_deg"], "tooth arc"))
                     * (
                         finite_float(track["r_tooth_out"], "outer tooth radius") ** 2
@@ -1471,7 +1744,7 @@ def step6_tasks(
 ) -> list[Task]:
     tasks: list[Task] = []
     for name in ("Cantor_N2_HybridRZ", "Fractal_N3_Cantor7Track"):
-        for angle in (3.0, 48.0):
+        for angle in SWITCHING_ANGLES_DEG:
             for boundary in ("Active-Only", "Full-Monolithic"):
                 tasks.append(Task(
                     STEP_NAMES[5], designs[name], angle, selected,
@@ -1480,7 +1753,7 @@ def step6_tasks(
                 ))
     validation_design = designs["Cantor_N2_HybridRZ"]
     for resolution in (STANDARD, HIGH, ULTRA_HIGH):
-        for angle in (3.0, 48.0):
+        for angle in SWITCHING_ANGLES_DEG:
             tasks.append(Task(
                 STEP_NAMES[5], validation_design, angle, selected,
                 resolution=resolution,
@@ -1489,7 +1762,7 @@ def step6_tasks(
     cross_check: Formulation = (
         "vector_dyadic" if selected == "scalar_yukawa" else "scalar_yukawa"
     )
-    for angle in (3.0, 48.0):
+    for angle in SWITCHING_ANGLES_DEG:
         tasks.append(Task(
             STEP_NAMES[5], validation_design, angle, cross_check,
             resolution=STANDARD,
@@ -1541,7 +1814,7 @@ def meep_value(
 def load_meep_verification() -> dict[str, Any]:
     """Read measured Meep data; invalid or absent files never become measurements."""
     tasks: list[dict[str, Any]] = []
-    for task_id in range(1, 13):
+    for task_id in range(1, MEEP_PLANNED_TASKS + 1):
         result_path = (
             REPOSITORY_ROOT / "results_nature_meep_verification"
             / f"task_{task_id}_meep.json"
@@ -1604,7 +1877,7 @@ def load_meep_verification() -> dict[str, Any]:
                 finite_float(value, "Meep dt")
                 for value in dt_values if value is not _MISSING
             ]
-            if not recorded_dt or any(not 0.0 < dt <= 0.0075 for dt in recorded_dt):
+            if not recorded_dt or any(not 0.0 < dt <= MEEP_MAX_STABLE_DT for dt in recorded_dt):
                 raise ValueError("Meep task requires 0 < dt <= 0.0075.")
             row["dt"] = max(recorded_dt)
 
@@ -1668,11 +1941,11 @@ def load_meep_verification() -> dict[str, Any]:
 
     richardson: dict[str, Any] = {
         "status": "unavailable",
-        "task_ids": [11, 8, 12],
-        "design": "Cantor_N2_HybridRZ",
-        "theta_deg": 3.0,
-        "resolutions": [40, 50, 60],
-        "order": 4,
+        "task_ids": list(MEEP_RICHARDSON_TASK_IDS),
+        "design": MEEP_RICHARDSON_DESIGN,
+        "theta_deg": THETA_DISENGAGED_DEG,
+        "resolutions": list(MEEP_RICHARDSON_RESOLUTIONS),
+        "order": MEEP_RICHARDSON_ORDER,
         "method": "Three-point least-squares Richardson fit F(R)=F_inf+C*(1/R)^4.",
         "F_inf_4pass_pN": None,
         "r2_4pass": None,
@@ -1681,12 +1954,16 @@ def load_meep_verification() -> dict[str, Any]:
     try:
         by_id = {row["task_id"]: row for row in tasks}
         points = []
-        for task_id, resolution in zip((11, 8, 12), (40, 50, 60), strict=True):
+        for task_id, resolution in zip(
+            MEEP_RICHARDSON_TASK_IDS, MEEP_RICHARDSON_RESOLUTIONS, strict=True
+        ):
             row = by_id[task_id]
             if (
                 row["status"] != "complete"
-                or row["design"] != "Cantor_N2_HybridRZ"
-                or not math.isclose(row["theta_deg"], 3.0, rel_tol=0.0, abs_tol=1e-12)
+                or row["design"] != MEEP_RICHARDSON_DESIGN
+                or not math.isclose(
+                    row["theta_deg"], THETA_DISENGAGED_DEG, rel_tol=0.0, abs_tol=1e-12
+                )
                 or row["R"] != resolution
             ):
                 raise ValueError(f"Task {task_id} is not a valid Richardson input.")
@@ -1697,10 +1974,11 @@ def load_meep_verification() -> dict[str, Any]:
                 "f_net_pN": row["f_net_pN"],
             })
         # Scale dx^4 to avoid an ill-conditioned intercept fit.
-        x = [(40.0 / point["R"]) ** 4 for point in points]
+        ref_r = float(MEEP_RICHARDSON_RESOLUTIONS[0])
+        x = [(ref_r / point["R"]) ** MEEP_RICHARDSON_ORDER for point in points]
         y = [point["f_net_pN"] for point in points]
-        x_mean = math.fsum(x) / 3.0
-        y_mean = math.fsum(y) / 3.0
+        x_mean = math.fsum(x) / float(len(points))
+        y_mean = math.fsum(y) / float(len(points))
         denominator = math.fsum((value - x_mean) ** 2 for value in x)
         if denominator <= 0.0:
             raise ValueError("Degenerate Richardson grid.")
@@ -1722,7 +2000,7 @@ def load_meep_verification() -> dict[str, Any]:
             "F_inf_4pass_pN": asymptote,
             "r2_4pass": r2,
             "coefficient_pN_um_minus4": finite_float(
-                slope * 40.0**4, "Richardson coefficient"
+                slope * (ref_r ** MEEP_RICHARDSON_ORDER), "Richardson coefficient"
             ),
             "residual_sum_squares_pN2": finite_float(residual, "Richardson residual"),
         })
@@ -1731,11 +2009,15 @@ def load_meep_verification() -> dict[str, Any]:
 
     complete_count = sum(row["status"] == "complete" for row in tasks)
     return {
-        "status": "complete" if complete_count == 12 else "partial" if complete_count else "unavailable",
+        "status": (
+            "complete"
+            if complete_count == MEEP_PLANNED_TASKS
+            else "partial" if complete_count else "unavailable"
+        ),
         "completed_tasks": complete_count,
-        "planned_tasks": 12,
+        "planned_tasks": MEEP_PLANNED_TASKS,
         "cache_version": MEEP_CACHE_VERSION,
-        "dt_max": 0.0075,
+        "dt_max": MEEP_MAX_STABLE_DT,
         "MEEP_FORCE_TO_SI_N": MEEP_FORCE_TO_SI_N,
         "tasks": tasks,
         "richardson": richardson,
@@ -1751,27 +2033,27 @@ def derive_analysis(campaign: Campaign) -> dict[str, Any]:
     open_reference = next(
         (
             row for row in step1
-            if row["theta_deg"] == 3.0
-            and math.isclose(row["z_tip_um"], -0.100, abs_tol=1e-12)
+            if row["theta_deg"] == THETA_DISENGAGED_DEG
+            and math.isclose(row["z_tip_um"], NOMINAL_Z_TIP_UM, abs_tol=1e-12)
         ),
         None,
     )
     pad_reference = next(
         (
             row for row in step1
-            if row["theta_deg"] == 48.0
-            and math.isclose(row["z_tip_um"], -0.100, abs_tol=1e-12)
+            if row["theta_deg"] == THETA_ENGAGED_DEG
+            and math.isclose(row["z_tip_um"], NOMINAL_Z_TIP_UM, abs_tol=1e-12)
         ),
         None,
     )
     analysis[STEP_NAMES[0]] = {
         "aperture_repulsive_z_tip_um": [
             row["z_tip_um"] for row in step1
-            if row["theta_deg"] == 3.0 and row["F_z_pN"] > 0.0
+            if row["theta_deg"] == THETA_DISENGAGED_DEG and row["F_z_pN"] > 0.0
         ],
         "aperture_attractive_overhanging_z_tip_um": [
             row["z_tip_um"] for row in step1
-            if row["theta_deg"] == 3.0
+            if row["theta_deg"] == THETA_DISENGAGED_DEG
             and row["max_z_top_um"] > 0.0 and row["F_z_pN"] < 0.0
         ],
         "flush_tip_aperture_repulsive": (
@@ -1966,8 +2248,8 @@ def derive_analysis(campaign: Campaign) -> dict[str, Any]:
         }
         for row in validation
         if row["status"] == "ok"
-        and row["design"] == "Cantor_N2_HybridRZ"
-        and row["theta_deg"] == 3.0
+        and row["design"] == MEEP_RICHARDSON_DESIGN
+        and row["theta_deg"] == THETA_DISENGAGED_DEG
     ]
     return analysis
 
@@ -2034,7 +2316,7 @@ def plot_campaign(
 
     rows = campaign.rows
     axis = axes[0, 0]
-    for index, angle in enumerate((3.0, 48.0)):
+    for index, angle in enumerate(SWITCHING_ANGLES_DEG):
         selected = sorted(
             (
                 row for row in rows
@@ -2077,7 +2359,7 @@ def plot_campaign(
         "Fractal_N0_SingleTrack", "Fractal_N1_FundRing",
         "Fractal_N2_Cantor3Track", "Fractal_N3_Cantor7Track",
     )
-    for index, angle in enumerate((3.0, 21.0, 48.0)):
+    for index, angle in enumerate(HIERARCHY_ANGLES_DEG):
         selected = {
             row["design"]: row for row in rows
             if row["step"] == STEP_NAMES[2] and row["theta_deg"] == angle
@@ -2099,7 +2381,7 @@ def plot_campaign(
         "Uniform_3Track_Control",
     )
     control_labels = ("Flat Z", "Hybrid RZ", "Wide", "Periodic", "Monotonic", "Uniform 3")
-    for index, angle in enumerate((3.0, 48.0)):
+    for index, angle in enumerate(SWITCHING_ANGLES_DEG):
         selected = {
             row["design"]: row for row in rows
             if row["step"] == STEP_NAMES[3] and row["theta_deg"] == angle
@@ -2147,8 +2429,10 @@ def plot_campaign(
         if row["purpose"] == "resolution convergence and formulation cross-check"
     ]
     for index, (angle, formulation) in enumerate((
-        (3.0, "scalar_yukawa"), (48.0, "scalar_yukawa"),
-        (3.0, "vector_dyadic"), (48.0, "vector_dyadic"),
+        (THETA_DISENGAGED_DEG, "scalar_yukawa"),
+        (THETA_ENGAGED_DEG, "scalar_yukawa"),
+        (THETA_DISENGAGED_DEG, "vector_dyadic"),
+        (THETA_ENGAGED_DEG, "vector_dyadic"),
     )):
         selected = {
             row["tier"]: row for row in ladder
@@ -2166,7 +2450,7 @@ def plot_campaign(
                 label=f"{angle:g}° {'scalar' if formulation == 'scalar_yukawa' else 'vector'}",
             )
     for index, name in enumerate(("Cantor_N2_HybridRZ", "Fractal_N3_Cantor7Track")):
-        for angle_index, angle in enumerate((3.0, 48.0)):
+        for angle_index, angle in enumerate(SWITCHING_ANGLES_DEG):
             selected = [
                 row for row in validation
                 if row["design"] == name and row["theta_deg"] == angle
@@ -2218,7 +2502,11 @@ def plot_campaign(
 
     figure.suptitle(
         "Fractal Casimir Rotary Clutch — six-step BEM narrative"
-        + (" (INCOMPLETE MICRO-PROBE)" if 0 < campaign.max_steps <= 10 else ""),
+        + (
+            " (INCOMPLETE MICRO-PROBE)"
+            if 0 < campaign.max_steps <= MICRO_PROBE_MAX_STEPS
+            else ""
+        ),
         fontsize=12,
     )
     output_directory.mkdir(parents=True, exist_ok=True)
@@ -2505,11 +2793,11 @@ def parse_arguments() -> argparse.Namespace:
         default="vector_dyadic",
     )
     parser.add_argument(
-        "--convergence-tolerance", type=float, default=0.15,
+        "--convergence-tolerance", type=float, default=DEFAULT_CONVERGENCE_TOLERANCE,
         help="Relative force-change threshold for adjacent resolution tiers.",
     )
     parser.add_argument(
-        "--agreement-tolerance", type=float, default=0.15,
+        "--agreement-tolerance", type=float, default=DEFAULT_AGREEMENT_TOLERANCE,
         help="Relative threshold for active/full and scalar/vector comparisons.",
     )
     arguments = parser.parse_args()
@@ -2548,7 +2836,7 @@ def main() -> int:
     )
     if resumed_rows:
         print(f"Loaded {resumed_rows} validated BEM task records for resume.", flush=True)
-    micro_probe = 0 < arguments.max_steps <= 10
+    micro_probe = 0 < arguments.max_steps <= MICRO_PROBE_MAX_STEPS
     configuration = {
         "python_version": sys.version,
         "repository_root": str(REPOSITORY_ROOT),
@@ -2624,7 +2912,7 @@ def main() -> int:
         "freshness_status_scope": "report and table-record generation, not solver success",
         "configuration": configuration,
         "elapsed_s": time.perf_counter() - campaign.started,
-        "micro_probe_runtime_target_s": 20.0 if micro_probe else None,
+        "micro_probe_runtime_target_s": MICRO_PROBE_RUNTIME_TARGET_S if micro_probe else None,
         "micro_probe_runtime_note": (
             "Target is hardware-dependent; measured runtime is reported, not guaranteed."
             if micro_probe else None
@@ -2730,7 +3018,7 @@ def main() -> int:
                         **configuration,
                         "design": score["design"],
                         "derived_from_step": STEP_NAMES[4],
-                        "sample_angles_deg": [3.0, 48.0],
+                        "sample_angles_deg": list(SWITCHING_ANGLES_DEG),
                         "full_tooth_count": score["full_tooth_count"],
                         "footprint_um2": score["footprint_um2"],
                         "full_tooth_planform_area_um2": score["full_tooth_planform_area_um2"],
@@ -2827,7 +3115,9 @@ def main() -> int:
         report["artifact_error"] = artifact_error
         report["total_elapsed_s"] = time.perf_counter() - campaign.started
         if micro_probe:
-            report["micro_probe_runtime_target_met"] = report["total_elapsed_s"] < 20.0
+            report["micro_probe_runtime_target_met"] = (
+                report["total_elapsed_s"] < MICRO_PROBE_RUNTIME_TARGET_S
+            )
         if artifact_error:
             report["campaign_status"] = "failed"
         report["executed_at"] = datetime.now(timezone.utc).isoformat()

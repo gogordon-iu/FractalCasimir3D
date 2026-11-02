@@ -60,9 +60,47 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy import linalg
 
+try:
+    from execution.clutch_geometry_redesign import (
+        DEFAULT_APERTURE_ARC_DEG,
+        DEFAULT_NUM_SECTORS,
+        DEFAULT_R_MAX_UM,
+        DEFAULT_R_MIN_UM,
+        DEFAULT_TOOTH_ARC_DEG,
+        DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+    )
+    from execution.materials_database_dispersive import (
+        BOLTZMANN_K_EV_PER_K,
+        GOLD_EPS_INF,
+        GOLD_GAMMA_EV,
+        GOLD_OSCILLATORS,
+        GOLD_WP_EV,
+        HBAR_C_EV_UM,
+        MEEP_FORCE_TO_SI,
+    )
+except ImportError:
+    from clutch_geometry_redesign import (  # type: ignore[no-redef]
+        DEFAULT_APERTURE_ARC_DEG,
+        DEFAULT_NUM_SECTORS,
+        DEFAULT_R_MAX_UM,
+        DEFAULT_R_MIN_UM,
+        DEFAULT_TOOTH_ARC_DEG,
+        DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+    )
+    from materials_database_dispersive import (  # type: ignore[no-redef]
+        BOLTZMANN_K_EV_PER_K,
+        GOLD_EPS_INF,
+        GOLD_GAMMA_EV,
+        GOLD_OSCILLATORS,
+        GOLD_WP_EV,
+        HBAR_C_EV_UM,
+        MEEP_FORCE_TO_SI,
+    )
+
 FloatArray: TypeAlias = NDArray[np.float64]
 ComplexArray: TypeAlias = NDArray[np.complex128]
 Formulation: TypeAlias = Literal["vector_dyadic", "scalar_yukawa"]
+BemTierName: TypeAlias = Literal["Standard", "High", "Ultra_High"]
 PanelType: TypeAlias = Literal[
     "rotor_bottom",
     "rotor_top",
@@ -74,9 +112,9 @@ PanelType: TypeAlias = Literal[
     "stator_azimuthal_wall",
 ]
 
-MEEP_FORCE_TO_SI = 3.16152649e-14
-HBAR_C_EV_UM = 0.1973269804
-SYMMETRY_MULTIPLIER = 4.0
+SYMMETRY_MULTIPLIER = float(DEFAULT_NUM_SECTORS)
+DEFAULT_CONDITION_LIMIT = 1.0e14
+DEFAULT_MAX_MEMORY_GIB = 8.0
 SCALAR_MODEL = "dielectric_weighted_two_channel_scalar_yukawa"
 VECTOR_MODEL = "dielectric_weighted_tangential_vector_dyadic"
 PHYSICS_QUALIFICATION = (
@@ -90,6 +128,90 @@ VECTOR_PHYSICS_QUALIFICATION = (
     "an approximate model, not the complete electromagnetic FSC/PMCHWT equations. "
     "Use SCUFF-EM for first-principles electromagnetic results."
 )
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class BemResolutionTier:
+    """Canonical BEM panel-discretization and frequency-quadrature tier."""
+
+    name: BemTierName
+    n_r: int
+    n_phi_tooth: int
+    n_phi_bridge: int
+    n_z: int
+    n_xi: int
+
+    def __post_init__(self) -> None:
+        if self.name not in ("Standard", "High", "Ultra_High"):
+            raise ValueError(
+                f"Invalid BEM tier name {self.name!r}; expected Standard, High, or Ultra_High."
+            )
+        for field_name in ("n_r", "n_phi_tooth", "n_phi_bridge", "n_z", "n_xi"):
+            value = getattr(self, field_name)
+            if isinstance(value, bool) or not isinstance(value, (int, np.integer)) or int(value) < 1:
+                raise ValueError(f"{field_name} must be a positive integer.")
+
+    @property
+    def tier(self) -> BemTierName:
+        return self.name
+
+    def panel_kwargs(self) -> dict[str, int]:
+        return {
+            "n_r": self.n_r,
+            "n_phi_tooth": self.n_phi_tooth,
+            "n_phi_bridge": self.n_phi_bridge,
+            "n_z": self.n_z,
+        }
+
+    def solver_kwargs(self) -> dict[str, int]:
+        return {
+            **self.panel_kwargs(),
+            "n_xi": self.n_xi,
+        }
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "tier": self.name,
+            "name": self.name,
+            "n_r": self.n_r,
+            "n_phi_tooth": self.n_phi_tooth,
+            "n_phi_bridge": self.n_phi_bridge,
+            "n_z": self.n_z,
+            "n_xi": self.n_xi,
+        }
+
+
+BEM_TIER_STANDARD = BemResolutionTier(
+    name="Standard", n_r=2, n_phi_tooth=3, n_phi_bridge=3, n_z=2, n_xi=24
+)
+BEM_TIER_HIGH = BemResolutionTier(
+    name="High", n_r=3, n_phi_tooth=4, n_phi_bridge=4, n_z=3, n_xi=32
+)
+BEM_TIER_ULTRA_HIGH = BemResolutionTier(
+    name="Ultra_High", n_r=4, n_phi_tooth=6, n_phi_bridge=6, n_z=4, n_xi=40
+)
+BEM_RESOLUTION_LADDER: tuple[BemResolutionTier, ...] = (
+    BEM_TIER_STANDARD,
+    BEM_TIER_HIGH,
+    BEM_TIER_ULTRA_HIGH,
+)
+BEM_RESOLUTION_TIERS: dict[str, BemResolutionTier] = {
+    tier.name: tier for tier in BEM_RESOLUTION_LADDER
+}
+
+
+def get_bem_resolution_tier(name: str = "Standard") -> BemResolutionTier:
+    """Return the canonical BemResolutionTier for a case-insensitive tier name."""
+    if not isinstance(name, str) or not name.strip():
+        raise ValueError("tier name must be a nonempty string.")
+    normalized = name.strip().lower().replace("-", "_").replace(" ", "_")
+    for canonical, tier in BEM_RESOLUTION_TIERS.items():
+        if normalized == canonical.lower():
+            return tier
+    raise ValueError(
+        f"Unsupported BEM resolution tier {name!r}; "
+        f"expected one of {tuple(BEM_RESOLUTION_TIERS)}."
+    )
 
 
 def _formulation_qualification(formulation: Formulation) -> str:
@@ -240,6 +362,7 @@ class Geometry:
     tooth_arc_deg: float
     aperture_arc_deg: float
     elements: tuple[TrackElement, ...]
+    tooth_center_offset_deg: float = DEFAULT_TOOTH_CENTER_OFFSET_DEG
 
 
 @dataclasses.dataclass(frozen=True)
@@ -514,14 +637,14 @@ def _read_geometry(parameters: Any) -> tuple[Geometry, dict[str, Any], dict[str,
         R_min=_positive_float(
             _pick(
                 values, ("R_min", "r_min", "R_min_um", "r_min_um"),
-                required=False, default=0.30,
+                required=False, default=DEFAULT_R_MIN_UM,
             ),
             "R_min",
         ),
         R_max=_positive_float(
             _pick(
                 values, ("R_max", "r_max", "R_max_um", "r_max_um"),
-                required=False, default=1.35,
+                required=False, default=DEFAULT_R_MAX_UM,
             ),
             "R_max",
         ),
@@ -540,14 +663,23 @@ def _read_geometry(parameters: Any) -> tuple[Geometry, dict[str, Any], dict[str,
             _pick(values, ("theta_deg",), required=False, default=0.0), "theta_deg"
         ),
         tooth_arc_deg=_positive_float(
-            _pick(values, ("tooth_arc_deg",), required=False, default=15.0),
+            _pick(values, ("tooth_arc_deg",), required=False, default=DEFAULT_TOOTH_ARC_DEG),
             "tooth_arc_deg",
         ),
         aperture_arc_deg=_positive_float(
-            _pick(values, ("aperture_arc_deg",), required=False, default=30.0),
+            _pick(values, ("aperture_arc_deg",), required=False, default=DEFAULT_APERTURE_ARC_DEG),
             "aperture_arc_deg",
         ),
         elements=tuple(elements),
+        tooth_center_offset_deg=_finite_float(
+            _pick(
+                values,
+                ("tooth_center_offset_deg",),
+                required=False,
+                default=DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+            ),
+            "tooth_center_offset_deg",
+        ),
     )
     if not geometry.R_min < geometry.R_max:
         raise ValueError("R_min must be smaller than R_max.")
@@ -559,7 +691,7 @@ def _read_geometry(parameters: Any) -> tuple[Geometry, dict[str, Any], dict[str,
         if not geometry.R_min <= element.r_inner < element.r_outer <= geometry.R_max:
             raise ValueError("Every stator slot must lie inside [R_min, R_max].")
 
-    center_deg = (15.0 + geometry.theta_deg % 90.0) % 90.0
+    center_deg = (geometry.tooth_center_offset_deg + geometry.theta_deg % 90.0) % 90.0
     phi_min = center_deg - geometry.tooth_arc_deg / 2.0
     phi_max = center_deg + geometry.tooth_arc_deg / 2.0
     inside_aperture = 0.0 < phi_min and phi_max < geometry.aperture_arc_deg
@@ -668,10 +800,10 @@ def _azimuthal(
 
 def build_clutch_surface_mesh(
     parameters: Any,
-    n_r: int = 2,
-    n_phi_tooth: int = 3,
-    n_phi_bridge: int = 3,
-    n_z: int = 2,
+    n_r: int = BEM_TIER_STANDARD.n_r,
+    n_phi_tooth: int = BEM_TIER_STANDARD.n_phi_tooth,
+    n_phi_bridge: int = BEM_TIER_STANDARD.n_phi_bridge,
+    n_z: int = BEM_TIER_STANDARD.n_z,
 ) -> ClutchSurfaceMesh:
     """Construct oriented boundary panels for sector zero of both physical bodies."""
     resolution = {
@@ -684,7 +816,9 @@ def build_clutch_surface_mesh(
     rotor: list[SurfacePanel] = []
     stator: list[SurfacePanel] = []
 
-    center = math.radians((15.0 + geometry.theta_deg % 90.0) % 90.0)
+    center = math.radians(
+        (geometry.tooth_center_offset_deg + geometry.theta_deg % 90.0) % 90.0
+    )
     half_span = math.radians(geometry.tooth_arc_deg) / 2.0
     tooth_phis = np.linspace(center - half_span, center + half_span, n_phi_tooth + 1)
     rotor_z = np.linspace(geometry.z_tip, geometry.z_tip + geometry.h_teeth, n_z + 1)
@@ -1070,25 +1204,37 @@ class MaterialModel:
         if isinstance(dispersion, Mapping):
             material_values.update(dispersion)
         epsilon_inf = _positive_float(
-            _pick(material_values, ("epsilon_inf",), required=False, default=1.0),
+            _pick(
+                material_values, ("epsilon_inf",),
+                required=False, default=GOLD_EPS_INF,
+            ),
             "epsilon_inf",
         )
         wp = _positive_float(
             _pick(
                 material_values, ("plasma_frequency",),
-                required=False, default=9.03 / HBAR_C_EV_UM,
+                required=False, default=GOLD_WP_EV / HBAR_C_EV_UM,
             ),
             "plasma_frequency",
         )
         gamma = _positive_float(
             _pick(
                 material_values, ("gamma",),
-                required=False, default=0.053 / HBAR_C_EV_UM,
+                required=False, default=GOLD_GAMMA_EV / HBAR_C_EV_UM,
             ),
             "gamma", allow_zero=True,
         )
+        default_oscillators = [
+            {
+                "strength": float(f_j),
+                "omega_0": float(e0_ev) / HBAR_C_EV_UM,
+                "gamma": float(gam_ev) / HBAR_C_EV_UM,
+            }
+            for f_j, e0_ev, gam_ev in GOLD_OSCILLATORS
+        ]
         raw = _pick(
-            material_values, ("lorentz_oscillators",), required=False, default=[]
+            material_values, ("lorentz_oscillators",),
+            required=False, default=default_oscillators,
         )
         if not isinstance(raw, (list, tuple)):
             raise TypeError("lorentz_oscillators must be a sequence.")
@@ -1615,15 +1761,15 @@ def _record_provenance(result: dict[str, Any]) -> None:
 def run_bem_casimir_solver(
     parameters: Any,
     *,
-    n_r: int = 2,
-    n_phi_tooth: int = 3,
-    n_phi_bridge: int = 3,
-    n_z: int = 2,
-    n_xi: int = 24,
+    n_r: int = BEM_TIER_STANDARD.n_r,
+    n_phi_tooth: int = BEM_TIER_STANDARD.n_phi_tooth,
+    n_phi_bridge: int = BEM_TIER_STANDARD.n_phi_bridge,
+    n_z: int = BEM_TIER_STANDARD.n_z,
+    n_xi: int = BEM_TIER_STANDARD.n_xi,
     max_steps: int = 0,
     device: Literal["auto", "cpu", "cuda"] = "auto",
-    condition_limit: float = 1.0e14,
-    max_memory_gib: float = 4.0,
+    condition_limit: float = DEFAULT_CONDITION_LIMIT,
+    max_memory_gib: float = DEFAULT_MAX_MEMORY_GIB,
     config_file: str | Path | None = None,
     task_id: str | None = None,
     mesh: ClutchSurfaceMesh | None = None,
@@ -1696,7 +1842,7 @@ def run_bem_casimir_solver(
     kappa_cut = 0.0
     if temperature_K > 0.0:
         delta_kappa = (
-            2.0 * math.pi * (8.617333262e-5 * temperature_K) / HBAR_C_EV_UM
+            2.0 * math.pi * (BOLTZMANN_K_EV_PER_K * temperature_K) / HBAR_C_EV_UM
         )
         if not math.isfinite(delta_kappa) or delta_kappa <= 0.0:
             raise FloatingPointError("Invalid Matsubara frequency spacing.")
@@ -2072,10 +2218,10 @@ def export_scuff_files_and_run(
     parameters: Any,
     *,
     output_dir: str | Path = "results/scuff_clutch",
-    n_r: int = 2,
-    n_phi_tooth: int = 3,
-    n_phi_bridge: int = 3,
-    n_z: int = 2,
+    n_r: int = BEM_TIER_STANDARD.n_r,
+    n_phi_tooth: int = BEM_TIER_STANDARD.n_phi_tooth,
+    n_phi_bridge: int = BEM_TIER_STANDARD.n_phi_bridge,
+    n_z: int = BEM_TIER_STANDARD.n_z,
     mesh: ClutchSurfaceMesh | None = None,
     export_only: bool = False,
     timeout_seconds: float | None = None,
@@ -2298,15 +2444,21 @@ def _parser() -> argparse.ArgumentParser:
         "--z-tip-um", type=float,
         help="Override the rotor tooth bottom z coordinate in micrometres.",
     )
-    parser.add_argument("--n-r", type=int, default=2)
-    parser.add_argument("--n-phi-tooth", type=int, default=3)
-    parser.add_argument("--n-phi-bridge", type=int, default=3)
-    parser.add_argument("--n-z", type=int, default=2)
-    parser.add_argument("--n-xi", type=int, default=24)
+    parser.add_argument(
+        "--tier",
+        choices=tuple(BEM_RESOLUTION_TIERS),
+        default=None,
+        help="Optional BEM resolution tier preset (Standard, High, Ultra_High).",
+    )
+    parser.add_argument("--n-r", type=int, default=None)
+    parser.add_argument("--n-phi-tooth", type=int, default=None)
+    parser.add_argument("--n-phi-bridge", type=int, default=None)
+    parser.add_argument("--n-z", type=int, default=None)
+    parser.add_argument("--n-xi", type=int, default=None)
     parser.add_argument("--max-steps", type=int, default=0)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
-    parser.add_argument("--condition-limit", type=float, default=1.0e14)
-    parser.add_argument("--max-memory-gib", type=float, default=4.0)
+    parser.add_argument("--condition-limit", type=float, default=DEFAULT_CONDITION_LIMIT)
+    parser.add_argument("--max-memory-gib", type=float, default=DEFAULT_MAX_MEMORY_GIB)
     parser.add_argument("--task-id")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--scuff-output-dir", type=Path, default=Path("results/scuff_clutch"))
@@ -2331,6 +2483,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
     args = _parser().parse_args(argv)
+    tier = get_bem_resolution_tier(args.tier or BEM_TIER_STANDARD.name)
+    n_r = args.n_r if args.n_r is not None else tier.n_r
+    n_phi_tooth = args.n_phi_tooth if args.n_phi_tooth is not None else tier.n_phi_tooth
+    n_phi_bridge = args.n_phi_bridge if args.n_phi_bridge is not None else tier.n_phi_bridge
+    n_z = args.n_z if args.n_z is not None else tier.n_z
+    n_xi = args.n_xi if args.n_xi is not None else tier.n_xi
     config = _load_config(args.config)
     if args.z_tip_um is not None:
         z_tip = _finite_float(args.z_tip_um, "z_tip")
@@ -2345,10 +2503,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                 config[key] = z_tip
         config["parameters"] = values
     common: dict[str, Any] = {
-        "n_r": args.n_r,
-        "n_phi_tooth": args.n_phi_tooth,
-        "n_phi_bridge": args.n_phi_bridge,
-        "n_z": args.n_z,
+        "n_r": n_r,
+        "n_phi_tooth": n_phi_tooth,
+        "n_phi_bridge": n_phi_bridge,
+        "n_z": n_z,
         "config_file": args.config.resolve(),
         "task_id": args.task_id,
     }
@@ -2359,7 +2517,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = run_bem_casimir_solver(
             config,
             **common,
-            n_xi=args.n_xi,
+            n_xi=n_xi,
             max_steps=args.max_steps,
             device=args.device,
             condition_limit=args.condition_limit,

@@ -2,6 +2,7 @@ import argparse
 from datetime import datetime, timezone
 import json
 import logging
+import math
 import os
 import sys
 import time
@@ -9,18 +10,33 @@ import time
 import numpy as np
 import scipy.integrate as integrate
 
-MEEP_TO_PA = 0.0316152649
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
 
+from execution.materials_database_dispersive import (
+    BOLTZMANN_K_EV_PER_K as KB_EV_K,
+    GOLD_EPS_INF,
+    GOLD_GAMMA_EV,
+    GOLD_OSCILLATORS,
+    GOLD_WP_EV,
+    HBAR_C_EV_UM,
+    KB_MEEP_PER_K as KB_MEEP_K,
+    MEEP_TO_PA,
+    ROOM_TEMPERATURE_K,
+    SIERPINSKI_AREA_RATIO,
+    SILICON_EPS_INF,
+    SILICON_OSCILLATORS,
+    evaluate_drude_lorentz_eps_imag,
+    evaluate_lorentz_eps_imag,
+)
 
 # Constants in Meep units (hbar = c = 1), with lengths in microns.
 L = 0.3
 T_77 = 77
-T_300 = 300
-HBAR_C_EV_UM = 0.1973269804
+T_300 = int(ROOM_TEMPERATURE_K)
 EV_TO_ANGULAR_UM = 1.0 / HBAR_C_EV_UM
 MEEP_TO_ANGULAR = 2.0 * np.pi
-KB_EV_K = 8.617333262e-5
-KB_MEEP_K = KB_EV_K / HBAR_C_EV_UM
 MATERIALS = ("PEC", "Gold", "Silicon")
 
 
@@ -44,39 +60,60 @@ def _validate_material(material):
         raise ValueError(f"Unknown material: {material}")
 
 
-def get_epsilon_imag(xi, material_name):
+def get_epsilon_imag(
+    xi,
+    material_name,
+    *,
+    gold_eps_inf=GOLD_EPS_INF,
+    gold_wp_eV=GOLD_WP_EV,
+    gold_gamma_eV=GOLD_GAMMA_EV,
+    gold_oscillators=GOLD_OSCILLATORS,
+    silicon_eps_inf=SILICON_EPS_INF,
+    silicon_oscillators=SILICON_OSCILLATORS,
+    use_meep_materials=False,
+):
+    """
+    Evaluate imaginary-frequency permittivity epsilon(i*xi) for PEC, Gold, or Silicon.
+    By default uses the platform-consistent parameterized Drude-Lorentz models from
+    materials_database_dispersive so Windows and Linux/BigRed 200 produce identical
+    results. If use_meep_materials=True and meep is installed, evaluates Meep's
+    native Au/cSi susceptibilities with proper Drude vs Lorentzian denominators.
+    """
     xi = _finite_scalar(xi, "xi")
     _validate_material(material_name)
 
     if material_name == "PEC":
-        return -1e20
+        return math.inf
 
-    try:
-        import meep.materials as mat
-    except ImportError:
-        # Optical energies must be converted to angular wavenumbers (rad/um),
-        # not Meep's cyclical frequencies (cycles/um).
-        if material_name == "Gold":
-            wp = 9.0 * EV_TO_ANGULAR_UM
-            gam = 0.035 * EV_TO_ANGULAR_UM
-            return 1.0 + wp**2 / (xi * (xi + gam) + 1e-30)
+    if use_meep_materials:
+        try:
+            import meep as mp
+            import meep.materials as mat
+        except ImportError:
+            mp = None
+            mat = None
+        if mp is not None and mat is not None:
+            mat_obj = mat.Au if material_name == "Gold" else mat.cSi
+            val = float(mat_obj.epsilon_diag.x)
+            for sus in mat_obj.E_susceptibilities:
+                # Meep stores both resonance frequencies and damping in cycles/um.
+                freq = MEEP_TO_ANGULAR * float(sus.frequency)
+                gamma = MEEP_TO_ANGULAR * float(sus.gamma)
+                sigma = float(sus.sigma_diag.x)
+                if isinstance(sus, mp.DrudeSusceptibility):
+                    if xi == 0.0:
+                        return math.inf
+                    val += sigma * (freq ** 2) / (xi * (xi + gamma))
+                else:
+                    val += sigma * (freq ** 2) / (freq ** 2 + xi ** 2 + gamma * xi)
+            return val
 
-        w0 = 3.64 * EV_TO_ANGULAR_UM
-        gam = 0.10 * EV_TO_ANGULAR_UM
-        f0 = (11.87 - 1.0) * w0**2
-        return 1.0 + f0 / (w0**2 + xi**2 + gam * xi + 1e-30)
-
-    mat_obj = mat.Au if material_name == "Gold" else mat.cSi
-    val = mat_obj.epsilon_diag.x
-    for sus in mat_obj.E_susceptibilities:
-        # Meep stores both resonance frequencies and damping in cycles/um.
-        freq = MEEP_TO_ANGULAR * sus.frequency
-        gamma = MEEP_TO_ANGULAR * sus.gamma
-        sigma = sus.sigma_diag.x
-        val += sigma * freq**2 / (
-            freq**2 + xi**2 + gamma * xi + 1e-30
+    if material_name == "Gold":
+        return evaluate_drude_lorentz_eps_imag(
+            xi, gold_eps_inf, gold_wp_eV, gold_gamma_eV, gold_oscillators
         )
-    return val
+
+    return evaluate_lorentz_eps_imag(xi, silicon_eps_inf, silicon_oscillators)
 
 
 def lifshitz_integrand(k_parallel, xi, d, material):
@@ -86,24 +123,35 @@ def lifshitz_integrand(k_parallel, xi, d, material):
     _validate_material(material)
 
     if material == "PEC":
-        return 0.0  # Handled analytically.
+        return 0.0  # Handled analytically in get_force_density_lifshitz.
     if k_parallel == 0.0:
         return 0.0
 
     eps = get_epsilon_imag(xi, material)
-
     kz = np.sqrt(xi**2 + k_parallel**2)
-    kzm = np.sqrt(eps * xi**2 + k_parallel**2)
 
-    # Fresnel reflection coefficients.
-    rp = (eps * kz - kzm) / (eps * kz + kzm + 1e-15)
-    rs = (kz - kzm) / (kz + kzm + 1e-15)
+    # Static Matsubara mode (xi == 0):
+    # For a dissipative Drude metal (eps == inf), xi^2 * eps -> 0 as xi -> 0,
+    # so kzm -> k_parallel = kz, rs -> 0 (Bohr-van Leeuwen), and rp -> 1.
+    if xi == 0.0 or math.isinf(eps):
+        if math.isinf(eps):
+            rp = 1.0
+            rs = 0.0 if xi == 0.0 else -1.0
+        else:
+            rp = (eps - 1.0) / (eps + 1.0)
+            rs = 0.0
+    else:
+        kzm = np.sqrt(eps * xi**2 + k_parallel**2)
+        rp = (eps * kz - kzm) / (eps * kz + kzm)
+        rs = (kz - kzm) / (kz + kzm)
 
     exp_factor = np.exp(-2.0 * kz * d)
-    term_p = rp**2 * exp_factor / (1.0 - rp**2 * exp_factor + 1e-15)
-    term_s = rs**2 * exp_factor / (1.0 - rs**2 * exp_factor + 1e-15)
+    denom_p = 1.0 - (rp ** 2) * exp_factor
+    denom_s = 1.0 - (rs ** 2) * exp_factor
+    term_p = (rp ** 2) * exp_factor / denom_p if denom_p > 0.0 else 0.0
+    term_s = (rs ** 2) * exp_factor / denom_s if denom_s > 0.0 else 0.0
 
-    return k_parallel * kz * (term_p + term_s)
+    return float(k_parallel * kz * (term_p + term_s))
 
 
 def get_force_density_lifshitz(d, material, T=0):
@@ -163,7 +211,12 @@ def get_force_density_lifshitz(d, material, T=0):
     return -(thermal_frequency / np.pi) * sum_val
 
 
-def get_effective_area(N, L=L):
+def get_effective_area(N, L=L, *, area_ratio=SIERPINSKI_AREA_RATIO):
+    """
+    Compute the solid planar area for a prefractal generation N >= 1 of side L.
+    Default area_ratio = 8/9 corresponds to the 2D Sierpinski carpet; pass
+    area_ratio = 1.0 for unperforated full-footprint normalization.
+    """
     if (
         isinstance(N, bool)
         or not isinstance(N, (int, np.integer))
@@ -171,7 +224,10 @@ def get_effective_area(N, L=L):
     ):
         raise ValueError("N must be a positive integer")
     L = _finite_scalar(L, "L", strictly_positive=True)
-    return ((8.0 / 9.0)**(N - 1)) * L**2
+    ratio = _finite_scalar(area_ratio, "area_ratio", strictly_positive=True)
+    if ratio > 1.0:
+        raise ValueError("area_ratio must not exceed 1.0")
+    return float((ratio ** (int(N) - 1)) * (L ** 2))
 
 
 def _nonnegative_int(value):
@@ -220,7 +276,24 @@ def main():
         default=None,
         help="Maximum number of force evaluations across the sweep (default: all).",
     )
+    parser.add_argument(
+        "--L",
+        type=float,
+        default=L,
+        help="Plate side length in microns (default: 0.3).",
+    )
+    parser.add_argument(
+        "--area-ratio",
+        type=float,
+        default=SIERPINSKI_AREA_RATIO,
+        help="Per-level solid area retention ratio (default: 8/9 for Sierpinski carpet).",
+    )
     args = parser.parse_args()
+
+    plate_L = _finite_scalar(args.L, "L", strictly_positive=True)
+    area_ratio = _finite_scalar(args.area_ratio, "area_ratio", strictly_positive=True)
+    if area_ratio > 1.0:
+        parser.error("--area-ratio must not exceed 1.0")
 
     separations = np.logspace(np.log10(0.02), np.log10(1.0), 30)
     generations = [1, 2, 3, 4]
@@ -251,7 +324,7 @@ def main():
                     break
                 records = []
                 results[mat][t_label][f"N_{N}"] = records
-                area = get_effective_area(N)
+                area = get_effective_area(N, plate_L, area_ratio=area_ratio)
                 for d in separations:
                     if limit_reached():
                         break
@@ -264,7 +337,9 @@ def main():
                     records.append({
                         "d_nm": float(d * 1000.0),
                         "force_val": force,
-                     'pressure_Pa': float(f_dens * MEEP_TO_PA), 'force_pN': float(force * MEEP_TO_PA), })
+                        "pressure_Pa": float(f_dens * MEEP_TO_PA),
+                        "force_pN": float(force * MEEP_TO_PA),
+                    })
                     steps += 1
 
     results["status"] = "completed"

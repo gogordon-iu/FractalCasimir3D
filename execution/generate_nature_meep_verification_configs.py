@@ -32,7 +32,25 @@ if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
 from execution.clutch_geometry_redesign import (  # noqa: E402
+    DEFAULT_H_TEETH_ROTATIONAL_UM,
+    DEFAULT_HYBRID_L2_H_TEETH_UM,
+    DEFAULT_HYBRID_L2_Z_TIP_UM,
+    DEFAULT_MIN_TOOTH_W_UM,
+    DEFAULT_NUM_SECTORS,
+    DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+    DEFAULT_R_MAX_UM,
+    DEFAULT_R_MIN_UM,
+    DEFAULT_SECTOR_DEG,
+    DEFAULT_T_LANDING_PAD_UM,
+    DEFAULT_T_MEMBRANE_UM,
+    DEFAULT_TOOTH_ARC_DEG,
+    DEFAULT_Z_PAD_TOP_UM,
+    DEFAULT_Z_TIP_ROTATIONAL_UM,
+    ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC,
+    ROTATIONAL_C8_COMPACT_N2_SPEC,
     compute_dynamic_Trun,
+    disengaged_angle_deg,
+    engaged_angle_deg,
     get_scoped_clutch_elements,
 )
 from utils.metrics_logger import (  # noqa: E402
@@ -47,17 +65,19 @@ JSONDict = dict[str, Any]
 TOTAL_TASKS = 12
 REL_TOL = 1.0e-10
 ABS_TOL = 1.0e-12
+THETA_DISENGAGED_DEG = disengaged_angle_deg(DEFAULT_ROTATIONAL_APERTURE_ARC_DEG)
+THETA_ENGAGED_DEG = engaged_angle_deg(DEFAULT_ROTATIONAL_APERTURE_ARC_DEG)
 
 COMMON: JSONDict = {
     "solver": "meep",
     "dimensions": 3,
-    "z_pad_top_um": -0.115,
-    "t_membrane_um": 0.025,
-    "t_landing_pad_um": 0.150,
-    "aperture_arc_deg": 30.0,
-    "bridge_arc_deg": 60.0,
-    "tooth_arc_deg": 15.0,
-    "num_sectors": 4,
+    "z_pad_top_um": DEFAULT_Z_PAD_TOP_UM,
+    "t_membrane_um": DEFAULT_T_MEMBRANE_UM,
+    "t_landing_pad_um": DEFAULT_T_LANDING_PAD_UM,
+    "aperture_arc_deg": DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+    "bridge_arc_deg": DEFAULT_SECTOR_DEG - DEFAULT_ROTATIONAL_APERTURE_ARC_DEG,
+    "tooth_arc_deg": DEFAULT_TOOTH_ARC_DEG,
+    "num_sectors": DEFAULT_NUM_SECTORS,
     "nmax": 1,
     "pml_thickness_um": 0.25,
     "courant": 0.3,
@@ -71,21 +91,21 @@ TASK_SPECS: tuple[JSONDict, ...] = (
         "name": "Step1_SingleTooth_Repulsive_z100_th3",
         "geometry": "SingleTooth_Track0",
         "steps": [1, 2],
-        "theta_deg": 3.0,
+        "theta_deg": THETA_DISENGAGED_DEG,
         "purpose": "Single-tooth open-slot repulsion.",
     },
     {
         "name": "Step1_SingleTooth_AttractivePad_z100_th48",
         "geometry": "SingleTooth_Track0",
         "steps": [1, 2],
-        "theta_deg": 48.0,
+        "theta_deg": THETA_ENGAGED_DEG,
         "purpose": "Single-tooth landing-pad attraction.",
     },
     {
         "name": "Step1_SingleTooth_OverhangFlip_z055_th3",
         "geometry": "SingleTooth_Track0",
         "steps": [1],
-        "theta_deg": 3.0,
+        "theta_deg": THETA_DISENGAGED_DEG,
         "z_tip_um": -0.055,
         "purpose": "Overhang sign reversal: tooth top is +45 nm above z=0.",
     },
@@ -93,49 +113,49 @@ TASK_SPECS: tuple[JSONDict, ...] = (
         "name": "Step4_Ctrl_UniformPeriodic_th3_R50",
         "geometry": "Ctrl_UniformPeriodic",
         "steps": [4],
-        "theta_deg": 3.0,
+        "theta_deg": THETA_DISENGAGED_DEG,
         "purpose": "Equal-area/equal-perimeter non-fractal control, disengaged.",
     },
     {
         "name": "Step4_Ctrl_UniformPeriodic_th48_R50",
         "geometry": "Ctrl_UniformPeriodic",
         "steps": [4],
-        "theta_deg": 48.0,
+        "theta_deg": THETA_ENGAGED_DEG,
         "purpose": "Equal-area/equal-perimeter non-fractal control, engaged.",
     },
     {
         "name": "Step3_4_Cantor_N2_FlatZ_th3_R50",
         "geometry": "Cantor_N2_FlatZ",
         "steps": [3, 4],
-        "theta_deg": 3.0,
+        "theta_deg": THETA_DISENGAGED_DEG,
         "purpose": "Fractal N=2 disengaged repulsion.",
     },
     {
         "name": "Step3_4_Cantor_N2_FlatZ_th48_R50",
         "geometry": "Cantor_N2_FlatZ",
         "steps": [3, 4],
-        "theta_deg": 48.0,
+        "theta_deg": THETA_ENGAGED_DEG,
         "purpose": "Fractal N=2 engaged clamping.",
     },
     {
         "name": "Step4_5_Cantor_N2_HybridRZ_th3_R50",
         "geometry": "Cantor_N2_HybridRZ",
         "steps": [4, 5],
-        "theta_deg": 3.0,
+        "theta_deg": THETA_DISENGAGED_DEG,
         "purpose": "Optimal coupled (r,z) fractal, disengaged, standard grid.",
     },
     {
         "name": "Step4_5_Cantor_N2_HybridRZ_th48_R50",
         "geometry": "Cantor_N2_HybridRZ",
         "steps": [4, 5],
-        "theta_deg": 48.0,
+        "theta_deg": THETA_ENGAGED_DEG,
         "purpose": "Optimal coupled (r,z) fractal, engaged, standard grid.",
     },
     {
         "name": "Step5_Rot_C8_Compact_N2_th3_R50",
         "geometry": "Rot_C8_Compact_N2",
         "steps": [5],
-        "theta_deg": 3.0,
+        "theta_deg": THETA_DISENGAGED_DEG,
         "L_domain_um": 2.0,
         "purpose": "Compact peak-force design, disengaged.",
     },
@@ -143,7 +163,7 @@ TASK_SPECS: tuple[JSONDict, ...] = (
         "name": "Step6_Conv_Cantor_N2_HybridRZ_th3_R40",
         "geometry": "Cantor_N2_HybridRZ",
         "steps": [6],
-        "theta_deg": 3.0,
+        "theta_deg": THETA_DISENGAGED_DEG,
         "resolution": 40,
         "purpose": "Yee-grid convergence coarse tier: dx=25 nm.",
     },
@@ -151,7 +171,7 @@ TASK_SPECS: tuple[JSONDict, ...] = (
         "name": "Step6_Conv_Cantor_N2_HybridRZ_th3_R60",
         "geometry": "Cantor_N2_HybridRZ",
         "steps": [6],
-        "theta_deg": 3.0,
+        "theta_deg": THETA_DISENGAGED_DEG,
         "resolution": 60,
         "purpose": "Yee-grid convergence fine tier: dx=16.6666667 nm.",
     },
@@ -347,7 +367,7 @@ def verify_scoped_elements(config: JSONDict) -> None:
         R_min=float(config["R_min_um"]),
         R_max=float(config["R_max_um"]),
         w1_ratio=float(config["w1_ratio"]),
-        min_tooth_w=0.020,
+        min_tooth_w=DEFAULT_MIN_TOOTH_W_UM,
     )
     scoped = extract_elements(result)
     scoped.sort(key=lambda element: element_value(element, "r_inner", "r_inner_um"))
@@ -378,10 +398,18 @@ def build_config(task_id: int, spec: JSONDict) -> JSONDict:
     compact = geometry == "Rot_C8_Compact_N2"
     single = geometry == "SingleTooth_Track0"
     control = geometry == "Ctrl_UniformPeriodic"
-    lower, upper = (0.20, 0.90) if compact else (0.30, 1.35)
-    ratio = 0.45 if compact else 0.65
-    z_tip = float(spec.get("z_tip_um", -0.100))
-    height = 0.100
+    lower, upper = (
+        (float(ROTATIONAL_C8_COMPACT_N2_SPEC["R_min"]), float(ROTATIONAL_C8_COMPACT_N2_SPEC["R_max"]))
+        if compact
+        else (DEFAULT_R_MIN_UM, DEFAULT_R_MAX_UM)
+    )
+    ratio = (
+        float(ROTATIONAL_C8_COMPACT_N2_SPEC["w1_ratio"])
+        if compact
+        else float(ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC["w1_ratio"])
+    )
+    z_tip = float(spec.get("z_tip_um", DEFAULT_Z_TIP_ROTATIONAL_UM))
+    height = DEFAULT_H_TEETH_ROTATIONAL_UM
     depth = 1 if single else 2
 
     config: JSONDict = {
@@ -403,8 +431,11 @@ def build_config(task_id: int, spec: JSONDict) -> JSONDict:
     }
 
     if control:
-        slot_width = 0.19444444444444445
-        wall_width = 0.11666666666666665
+        base_cantor = cantor_elements(lower, upper, 2, ratio, z_tip, height)
+        total_slot_width = math.fsum(elem["W_slot"] for elem in base_cantor)
+        num_control_tracks = len(base_cantor)
+        slot_width = total_slot_width / float(num_control_tracks)
+        wall_width = ((upper - lower) - total_slot_width) / float(num_control_tracks + 1)
         elements = [
             make_element(
                 lower + wall_width + index * (slot_width + wall_width),
@@ -414,26 +445,22 @@ def build_config(task_id: int, spec: JSONDict) -> JSONDict:
                 z_tip,
                 height,
             )
-            for index in range(3)
+            for index in range(num_control_tracks)
         ]
         config.update(
             {
                 "N": 0,
-                "M": 3,
+                "M": num_control_tracks,
                 "slot_distribution": "uniform_periodic",
-                "total_slot_width_um": 0.5833333333333334,
+                "total_slot_width_um": total_slot_width,
                 "metal_wall_width_um": wall_width,
                 "W_slot_um": slot_width,
-                "w_tooth_um": 0.1263888888888889,
+                "w_tooth_um": ratio * slot_width,
             }
         )
     else:
         elements = cantor_elements(lower, upper, depth, ratio, z_tip, height)
         config["slot_distribution"] = "cantor"
-        if single:
-            elements = [make_element(0.65, 1.00, 1, ratio, z_tip, height)]
-            elements[0]["W_slot"] = 0.35
-            elements[0]["w_tooth"] = 0.2275
 
     for track_id, element in enumerate(elements):
         element["track_id"] = track_id
@@ -446,13 +473,13 @@ def build_config(task_id: int, spec: JSONDict) -> JSONDict:
 
     if geometry == "Cantor_N2_HybridRZ":
         for element in elements:
-            if element["level"] == 1:
+            if element["level"] == 2:
                 element.update(
                     {
-                        "z_tip": -0.110,
-                        "z_tip_um": -0.110,
-                        "h_teeth": 0.110,
-                        "H_teeth_um": 0.110,
+                        "z_tip": DEFAULT_HYBRID_L2_Z_TIP_UM,
+                        "z_tip_um": DEFAULT_HYBRID_L2_Z_TIP_UM,
+                        "h_teeth": DEFAULT_HYBRID_L2_H_TEETH_UM,
+                        "H_teeth_um": DEFAULT_HYBRID_L2_H_TEETH_UM,
                     }
                 )
 

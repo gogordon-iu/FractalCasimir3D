@@ -38,6 +38,14 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
+from execution.casimir_bem_solver import BEM_TIER_STANDARD
+from execution.clutch_geometry_redesign import (
+    DEFAULT_SECTOR_DEG,
+    DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+    disengaged_angle_deg,
+    tooth_center_angle_deg,
+)
+
 Formulation = Literal["vector_dyadic", "scalar_yukawa"]
 
 FORCE_KEYS = (
@@ -74,7 +82,10 @@ class ConfigSpec:
 
     @property
     def theta_deg(self) -> float:
-        return (self.aperture_arc_deg / 2.0) - 15.0
+        return disengaged_angle_deg(
+            self.aperture_arc_deg,
+            tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+        )
 
     def validate(self) -> None:
         for name, value in asdict(self).items():
@@ -90,9 +101,13 @@ class ConfigSpec:
             raise ValueError(f"{self.slug}: tooth width, height, and membrane must be positive")
         if self.t_landing_pad < 0.0:
             raise ValueError(f"{self.slug}: landing-pad thickness cannot be negative")
-        if not 0.0 < self.tooth_arc_deg < self.aperture_arc_deg < 90.0:
+        if not 0.0 < self.tooth_arc_deg < self.aperture_arc_deg < DEFAULT_SECTOR_DEG:
             raise ValueError(f"{self.slug}: invalid disengaged angular geometry")
-        center = (15.0 + self.theta_deg) % 90.0
+        center = tooth_center_angle_deg(
+            self.theta_deg,
+            sector_deg=DEFAULT_SECTOR_DEG,
+            tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+        )
         if not math.isclose(center, self.aperture_arc_deg / 2.0, abs_tol=1e-12):
             raise ValueError(f"{self.slug}: tooth is not centered in its aperture")
 
@@ -185,11 +200,11 @@ def parse_args() -> argparse.Namespace:
         "--max-steps", type=int, default=0,
         help="solver iteration cap per configuration/formulation (default: 0)",
     )
-    parser.add_argument("--n-r", type=positive_int, default=2)
-    parser.add_argument("--n-phi-tooth", type=positive_int, default=3)
-    parser.add_argument("--n-phi-bridge", type=positive_int, default=3)
-    parser.add_argument("--n-z", type=positive_int, default=2)
-    parser.add_argument("--n-xi", type=positive_int, default=24)
+    parser.add_argument("--n-r", type=positive_int, default=BEM_TIER_STANDARD.n_r)
+    parser.add_argument("--n-phi-tooth", type=positive_int, default=BEM_TIER_STANDARD.n_phi_tooth)
+    parser.add_argument("--n-phi-bridge", type=positive_int, default=BEM_TIER_STANDARD.n_phi_bridge)
+    parser.add_argument("--n-z", type=positive_int, default=BEM_TIER_STANDARD.n_z)
+    parser.add_argument("--n-xi", type=positive_int, default=BEM_TIER_STANDARD.n_xi)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     parser.add_argument(
         "--configs", type=int, nargs="+", choices=range(1, 11),

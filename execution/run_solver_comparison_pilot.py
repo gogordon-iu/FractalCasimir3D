@@ -39,8 +39,23 @@ if str(ROOT) not in sys.path:
 Array: TypeAlias = npt.NDArray[np.float64]
 Json: TypeAlias = dict[str, Any]
 
-HBAR = 1.054571817e-34
-LIGHT_SPEED = 299_792_458.0
+from execution.casimir_bem_solver import BEM_TIER_STANDARD
+from execution.clutch_geometry_redesign import (
+    DEFAULT_APERTURE_ARC_DEG,
+    DEFAULT_BRIDGE_ARC_DEG,
+    DEFAULT_NUM_SECTORS,
+    DEFAULT_TOOTH_ARC_DEG,
+    DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+    DEFAULT_Z_TIP_UM,
+    tooth_center_angle_deg,
+)
+from execution.materials_database_dispersive import (
+    C_LIGHT_SI_M_S,
+    HBAR_SI_J_S,
+)
+
+HBAR = HBAR_SI_J_S
+LIGHT_SPEED = C_LIGHT_SI_M_S
 MEEP_FORCE_TO_SI = 3.16152649e-14
 MEEP_MEMORY_GB = 481.27
 MEEP_MEMORY_GIB = MEEP_MEMORY_GB * 1e9 / 2**30
@@ -52,16 +67,12 @@ Z_TIP_SCAN_UM = (
     -0.30, -0.25, -0.20, -0.175, -0.15, -0.125, -0.10, -0.05,
     0.0, 0.015, 0.05,
 )
+
 PENDING_DECLARATION = (
     "No fresh post-bugfix 4-pass Meep data on disk yet; "
     "awaiting BigRed 200 Job completion"
 )
-DISCRETIZATION = {
-    "n_r": 2,
-    "n_phi_tooth": 3,
-    "n_phi_bridge": 3,
-    "n_z": 2,
-}
+DISCRETIZATION = BEM_TIER_STANDARD.panel_kwargs()
 
 
 def parse_args() -> argparse.Namespace:
@@ -71,7 +82,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, default=Path("results"))
     parser.add_argument("--figures-dir", type=Path, default=Path("figures"))
     parser.add_argument("--max-steps", type=int, default=0)
-    parser.add_argument("--n-xi", type=int, default=24)
+    parser.add_argument("--n-xi", type=int, default=BEM_TIER_STANDARD.n_xi)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     args = parser.parse_args()
     if args.max_steps < 0:
@@ -780,15 +791,20 @@ def local_pfa_patches(meshes: dict[str, Any], scale: float) -> list[tuple[float,
     theta_deg = finite_number(
         find_value(config, ("theta_deg", "theta", "rotation_deg")), "theta_deg"
     )
-    num_sectors = 4
-    tooth_arc_deg = 15.0
-    aperture_arc_deg = 30.0
-    bridge_arc_deg = 60.0
-    z_tip_um = 0.015
+    num_sectors = DEFAULT_NUM_SECTORS
+    tooth_arc_deg = DEFAULT_TOOTH_ARC_DEG
+    aperture_arc_deg = DEFAULT_APERTURE_ARC_DEG
+    bridge_arc_deg = DEFAULT_BRIDGE_ARC_DEG
+    z_tip_um = DEFAULT_Z_TIP_UM
     sector_arc_deg = aperture_arc_deg + bridge_arc_deg
     gap_m = z_tip_um * 1e-6
 
-    start = (15.0 + theta_deg % sector_arc_deg - tooth_arc_deg / 2) % sector_arc_deg
+    center = tooth_center_angle_deg(
+        theta_deg,
+        sector_deg=sector_arc_deg,
+        tooth_center_offset_deg=DEFAULT_TOOTH_CENTER_OFFSET_DEG,
+    )
+    start = (center - tooth_arc_deg / 2) % sector_arc_deg
     end = start + tooth_arc_deg
     intervals = [(start, min(end, sector_arc_deg))]
     if end > sector_arc_deg:

@@ -53,20 +53,45 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-DESIGN_NAMES = (
-    "Rot_C4_TightSlot_N2",
-    "Rot_C8_Compact_N2",
-    "Rot_C10_Fractal_N3",
+from execution.clutch_geometry_redesign import (  # noqa: E402
+    DEFAULT_ENGAGED_GAP_UM,
+    DEFAULT_NUM_SECTORS,
+    DEFAULT_SECTOR_DEG,
+    DEFAULT_SLOT_OVERHANG_UM,
+    DEFAULT_T_MEMBRANE_UM,
+    DEFAULT_Z_PAD_TOP_UM,
+    DEFAULT_Z_TIP_ROTATIONAL_UM,
+    MONOLITHIC_PAD_BOT_Z_UM,
+    MONOLITHIC_SPOKE_Z_MAX_UM,
+    MONOLITHIC_SPOKE_Z_MIN_UM,
+    MONOLITHIC_TRENCH_Z_MAX_UM,
+    MONOLITHIC_TRENCH_Z_MIN_UM,
+    ROTATIONAL_Z_EFF_DEFAULT_DESIGNS,
 )
+from execution.materials_database_dispersive import (  # noqa: E402
+    C_LIGHT_SI_M_S,
+    GOLD_EPS_INF,
+    GOLD_GAMMA_EV,
+    GOLD_WP_EV,
+    HBAR_C_EV_UM,
+    HBAR_SI_J_S,
+    SILICA_EPS_STATIC,
+    SILICON_NITRIDE_CHI_UV,
+    SILICON_NITRIDE_EPS_INF,
+    SILICON_NITRIDE_EPS_STATIC,
+    SILICON_NITRIDE_GAMMA_INV_UM,
+    SILICON_NITRIDE_OMEGA_0_INV_UM,
+)
+
+DESIGN_NAMES = tuple(str(spec["name"]) for spec in ROTATIONAL_Z_EFF_DEFAULT_DESIGNS)
 FLOAT = np.float64
 EPS = 1.0e-11
-HBAR = 1.054571817e-34
-LIGHT_SPEED = 299_792_458.0
+HBAR = HBAR_SI_J_S
+LIGHT_SPEED = C_LIGHT_SI_M_S
 UM_TO_M = 1.0e-6
-HBAR_C_EV_UM = 0.1973269804
-GOLD_OMEGA_P_INV_UM = 9.03 / HBAR_C_EV_UM
-GOLD_GAMMA_INV_UM = 0.053 / HBAR_C_EV_UM
-SUPPORT_CLEARANCE_UM = 0.002
+GOLD_OMEGA_P_INV_UM = GOLD_WP_EV / HBAR_C_EV_UM
+GOLD_GAMMA_INV_UM = GOLD_GAMMA_EV / HBAR_C_EV_UM
+SUPPORT_CLEARANCE_UM = DEFAULT_SLOT_OVERHANG_UM
 DATASET = "real_world_nems_clutch"
 EXECUTED_AT = datetime.now(timezone.utc).isoformat()
 Array = NDArray[np.float64]
@@ -169,6 +194,7 @@ def repository() -> dict[str, Any]:
             extract_fz,
         )
         from execution.casimir_bem_solver import (
+            BEM_TIER_STANDARD,
             ClutchSurfaceMesh,
             Geometry,
             MaterialModel,
@@ -564,7 +590,7 @@ def configuration(designs: Sequence[Design]) -> dict[str, Any]:
         "materials": {
             "gold": {
                 "model": "Drude",
-                "eps_inf": 1.0,
+                "eps_inf": GOLD_EPS_INF,
                 "omega_p_inv_um": GOLD_OMEGA_P_INV_UM,
                 "gamma_inv_um": GOLD_GAMMA_INV_UM,
                 "hbar_c_eV_um": HBAR_C_EV_UM,
@@ -573,15 +599,15 @@ def configuration(designs: Sequence[Design]) -> dict[str, Any]:
             },
             "silicon_nitride": {
                 "model": "Lorentz",
-                "eps_inf": 1.0,
-                "omega_0_inv_um": 5.85,
-                "strength_inv_um2": 2.89 * 5.85**2,
-                "gamma_inv_um": 0.10,
-                "eps_static": 3.89,
+                "eps_inf": SILICON_NITRIDE_EPS_INF,
+                "omega_0_inv_um": SILICON_NITRIDE_OMEGA_0_INV_UM,
+                "strength_inv_um2": SILICON_NITRIDE_CHI_UV * SILICON_NITRIDE_OMEGA_0_INV_UM**2,
+                "gamma_inv_um": SILICON_NITRIDE_GAMMA_INV_UM,
+                "eps_static": SILICON_NITRIDE_EPS_STATIC,
             },
             "silica": {
                 "model": "constant dielectric",
-                "eps_static": 2.10,
+                "eps_static": SILICA_EPS_STATIC,
                 "note": "No optical oscillator was specified; no dispersion is invented.",
             },
         },
@@ -623,18 +649,18 @@ def cell_label(
     z: float,
     variant: str,
 ) -> str | None:
-    angular = phi % 90.0
+    angular = phi % DEFAULT_SECTOR_DEG
     tooth = in_intervals(r, design.teeth) and in_intervals(angular, tooth_angles)
     if body == "rotor":
         if variant == "isolated":
-            return "active" if tooth and -0.100 < z < 0.0 else None
-        if tooth and -0.100 < z < 0.0:
+            return "active" if tooth and DEFAULT_Z_TIP_ROTATIONAL_UM < z < 0.0 else None
+        if tooth and DEFAULT_Z_TIP_ROTATIONAL_UM < z < 0.0:
             return "active"
-        if tooth and 0.0 < z < 0.350:
+        if tooth and 0.0 < z < MONOLITHIC_SPOKE_Z_MIN_UM:
             return None if variant == "without_spider" else "spider"
         hub = max(0.08, design.r_min - 0.12)
         rim = design.r_max + 0.12
-        if 0.350 < z < 0.470 and hub < r < rim:
+        if MONOLITHIC_SPOKE_Z_MIN_UM < z < MONOLITHIC_SPOKE_Z_MAX_UM and hub < r < rim:
             collar = r < design.r_min or r > design.r_max
             spoke = in_intervals(angular, tooth_angles)
             if collar:
@@ -647,37 +673,37 @@ def cell_label(
         if (
             angular < design.aperture_arc_deg
             and in_intervals(r, design.rings)
-            and -0.025 < z < 0.0
+            and -DEFAULT_T_MEMBRANE_UM < z < 0.0
         ):
             return "active"
         if (
             angular > design.aperture_arc_deg
             and design.r_min < r < design.r_max
-            and -0.265 < z < -0.115
+            and MONOLITHIC_PAD_BOT_Z_UM < z < DEFAULT_Z_PAD_TOP_UM
         ):
             return "active"
         return None
 
-    if -0.650 < z < -0.550:
+    if MONOLITHIC_TRENCH_Z_MIN_UM < z < MONOLITHIC_TRENCH_Z_MAX_UM:
         return None if variant == "without_foundation" else "foundation"
-    if (r < design.r_min or r > design.r_max) and -0.550 < z < 0.0:
+    if (r < design.r_min or r > design.r_max) and MONOLITHIC_TRENCH_Z_MAX_UM < z < 0.0:
         return None if variant == "without_foundation" else "foundation"
     if (
         angular > design.aperture_arc_deg
         and in_intervals(r, design.rings)
-        and -0.550 < z < 0.0
+        and MONOLITHIC_TRENCH_Z_MAX_UM < z < 0.0
     ):
         return "active"
     if (
         angular > design.aperture_arc_deg
         and design.r_min < r < design.r_max
-        and -0.550 < z < -0.115
+        and MONOLITHIC_TRENCH_Z_MAX_UM < z < DEFAULT_Z_PAD_TOP_UM
     ):
         return "active"
     if (
         angular < design.aperture_arc_deg
         and in_intervals(r, design.rings)
-        and -0.025 < z < 0.0
+        and -DEFAULT_T_MEMBRANE_UM < z < 0.0
     ):
         return "active"
     return None
@@ -803,9 +829,21 @@ def build_surface(
         subdivisions,
     )
     heights = grid_nodes(
-        [-0.100, 0.0, 0.350, 0.470]
+        [
+            DEFAULT_Z_TIP_ROTATIONAL_UM,
+            0.0,
+            MONOLITHIC_SPOKE_Z_MIN_UM,
+            MONOLITHIC_SPOKE_Z_MAX_UM,
+        ]
         if body == "rotor"
-        else [-0.650, -0.550, -0.265, -0.115, -0.025, 0.0],
+        else [
+            MONOLITHIC_TRENCH_Z_MIN_UM,
+            MONOLITHIC_TRENCH_Z_MAX_UM,
+            MONOLITHIC_PAD_BOT_Z_UM,
+            DEFAULT_Z_PAD_TOP_UM,
+            -DEFAULT_T_MEMBRANE_UM,
+            0.0,
+        ],
         subdivisions,
     )
     shape = (len(radii) - 1, len(angles) - 1, len(heights) - 1)
@@ -1017,11 +1055,12 @@ def repository_mesh(
         raise ValueError("subdivisions must be a positive integer.")
     theta_deg = finite_number(theta_deg, "theta_deg")
     repo = repository()
+    std_tier = repo["BEM_TIER_STANDARD"]
     panel_resolution = {
-        "n_r": 2 * subdivisions,
-        "n_phi_tooth": 3 * subdivisions,
-        "n_phi_bridge": 3 * subdivisions,
-        "n_z": 2 * subdivisions,
+        "n_r": std_tier.n_r * subdivisions,
+        "n_phi_tooth": std_tier.n_phi_tooth * subdivisions,
+        "n_phi_bridge": std_tier.n_phi_bridge * subdivisions,
+        "n_z": std_tier.n_z * subdivisions,
     }
     # The audit pair remains a full 360-degree occupancy mesh. Do not replace
     # the active solver panels with its coarser, single-centroid tooth walls.
@@ -1103,12 +1142,12 @@ def repository_mesh(
                 append_support(
                     rotor_faces, "rotor", r_mid - stem_half_w,
                     r_mid + stem_half_w, p0, p1,
-                    clearance, 0.350 - clearance,
+                    clearance, MONOLITHIC_SPOKE_Z_MIN_UM - clearance,
                 )
         for p0, p1 in tooth_angles:
             append_support(
                 rotor_faces, "rotor", design.r_min, design.r_max,
-                p0, p1, 0.350, 0.470,
+                p0, p1, MONOLITHIC_SPOKE_Z_MIN_UM, MONOLITHIC_SPOKE_Z_MAX_UM,
             )
     if variant != "without_foundation":
         for r0, r1 in (
@@ -1116,18 +1155,20 @@ def repository_mesh(
             (design.r_max + clearance, design.r_max + 0.12),
         ):
             append_support(
-                rotor_faces, "rotor", r0, r1, 0.0, 90.0, 0.350, 0.470
+                rotor_faces, "rotor", r0, r1, 0.0, DEFAULT_SECTOR_DEG,
+                MONOLITHIC_SPOKE_Z_MIN_UM, MONOLITHIC_SPOKE_Z_MAX_UM,
             )
 
     for r0, r1 in design.rings:
         append_support(
             stator_faces, "stator", r0, r1,
             design.aperture_arc_deg + math.degrees(clearance / design.r_min),
-            90.0, -0.115 + clearance, 0.0,
+            DEFAULT_SECTOR_DEG, DEFAULT_Z_PAD_TOP_UM + clearance, 0.0,
         )
     append_support(
         stator_faces, "stator", design.r_min, design.r_max,
-        design.aperture_arc_deg, 90.0, -0.550, -0.265 - clearance,
+        design.aperture_arc_deg, DEFAULT_SECTOR_DEG,
+        MONOLITHIC_TRENCH_Z_MAX_UM, MONOLITHIC_PAD_BOT_Z_UM - clearance,
     )
     if variant != "without_foundation":
         stator_hub = max(0.10, design.r_min - 0.10)
@@ -1136,20 +1177,22 @@ def repository_mesh(
             (design.r_max + clearance, design.r_max + 0.10),
         ):
             append_support(
-                stator_faces, "stator", r0, r1, 0.0, 90.0, -0.550, 0.0
+                stator_faces, "stator", r0, r1, 0.0, DEFAULT_SECTOR_DEG,
+                MONOLITHIC_TRENCH_Z_MAX_UM, 0.0,
             )
         append_support(
             stator_faces, "stator", stator_hub, design.r_max + 0.10,
-            0.0, 90.0, -0.650, -0.550 - clearance,
+            0.0, DEFAULT_SECTOR_DEG,
+            MONOLITHIC_TRENCH_Z_MIN_UM, MONOLITHIC_TRENCH_Z_MAX_UM - clearance,
         )
 
     geom = repo["Geometry"](
         R_min=design.r_min,
         R_max=design.r_max,
-        z_tip=-0.100,
-        h_teeth=0.450,
-        t_membrane=0.025,
-        t_landing_pad=0.435,
+        z_tip=DEFAULT_Z_TIP_ROTATIONAL_UM,
+        h_teeth=MONOLITHIC_SPOKE_Z_MIN_UM - DEFAULT_Z_TIP_ROTATIONAL_UM,
+        t_membrane=DEFAULT_T_MEMBRANE_UM,
+        t_landing_pad=DEFAULT_Z_PAD_TOP_UM - MONOLITHIC_TRENCH_Z_MAX_UM,
         theta_deg=theta_deg,
         tooth_arc_deg=design.tooth_arc_deg,
         aperture_arc_deg=design.aperture_arc_deg,
@@ -1290,13 +1333,15 @@ def solve_job(job: Job) -> dict[str, Any]:
         "rotor": len(mesh.rotor),
         "stator": len(mesh.stator),
     }
-    solver = repository()["run_bem_casimir_solver"]
+    repo = repository()
+    std_tier = repo["BEM_TIER_STANDARD"]
+    solver = repo["run_bem_casimir_solver"]
     result = solver(
         mesh.parameters,
-        n_r=2 * job.subdivisions,
-        n_phi_tooth=3 * job.subdivisions,
-        n_phi_bridge=3 * job.subdivisions,
-        n_z=2 * job.subdivisions,
+        n_r=std_tier.n_r * job.subdivisions,
+        n_phi_tooth=std_tier.n_phi_tooth * job.subdivisions,
+        n_phi_bridge=std_tier.n_phi_bridge * job.subdivisions,
+        n_z=std_tier.n_z * job.subdivisions,
         n_xi=job.n_xi,
         max_steps=0,
         device=job.device,
@@ -1429,16 +1474,22 @@ def execute_jobs(
 
 
 def epsilon_imaginary(material: str, frequency_inv_um: Array) -> Array:
-    u = np.maximum(np.asarray(frequency_inv_um, dtype=FLOAT), np.finfo(FLOAT).tiny)
-    if not np.all(np.isfinite(u)):
-        raise ValueError("Imaginary frequencies must be finite.")
+    u = np.asarray(frequency_inv_um, dtype=FLOAT)
+    if not np.all(np.isfinite(u)) or np.any(u <= 0.0):
+        raise ValueError("Imaginary frequencies must be finite and strictly positive.")
     if material == "gold":
         # u is an angular wavenumber: convert eV using hbar*c, not h*c.
-        result = 1.0 + GOLD_OMEGA_P_INV_UM**2 / (u * (u + GOLD_GAMMA_INV_UM))
+        result = GOLD_EPS_INF + GOLD_OMEGA_P_INV_UM**2 / (u * (u + GOLD_GAMMA_INV_UM))
     elif material == "silicon_nitride":
-        result = 1.0 + 2.89 * 5.85**2 / (u**2 + 0.10 * u + 5.85**2)
+        result = SILICON_NITRIDE_EPS_INF + (
+            SILICON_NITRIDE_CHI_UV * SILICON_NITRIDE_OMEGA_0_INV_UM**2
+        ) / (
+            u**2
+            + SILICON_NITRIDE_GAMMA_INV_UM * u
+            + SILICON_NITRIDE_OMEGA_0_INV_UM**2
+        )
     elif material == "silica":
-        result = np.full_like(u, 2.10)
+        result = np.full_like(u, SILICA_EPS_STATIC)
     else:
         raise ValueError(f"Unknown material {material!r}.")
     if not np.all(np.isfinite(result)) or np.any(result < 1.0):

@@ -453,178 +453,75 @@ def specification_source(
 def register_supplied_metrics(
     registry: Registry, documents: Sequence[TexDocument]
 ) -> None:
+    """Register true-vacuum NEMS feasibility and 3-solver verification metrics from JSON reports."""
     register_macro_definitions(registry, documents)
-    # Force units are not guessed. Reported pressures retain their Meep values;
-    # Registry.add records the dimensionless and converted SI values together.
-    groups: dict[str, list[tuple[str, float, str, str]]] = {
-        "model_1": [
-            ("model_1_ssr", 0.00928379, "reported units", "Offset sum of squared residuals"),
-        ],
-        "model_2": [
-            ("model_2_ssr", 0.03148498, "reported units", "Pure power-law sum of squared residuals"),
-        ],
-        "model_3": [
-            ("model_3_ssr", 0.03148498, "reported units", "Dual power-law sum of squared residuals"),
-        ],
-        "model_4": [
-            ("model_4_lambda", 1.223087, "um", "Screened power-law screening length"),
-            ("model_4_ssr", 0.00440022, "reported units", "Screened power-law sum of squared residuals"),
-        ],
-        "lifshitz": [
-            (
-                f"lifshitz_d_{distance}_pressure",
-                pressure,
-                "reported pressure units",
-                f"Table 3 semi-analytical Lifshitz pressure at d={distance} nm",
-            )
-            for distance, pressure in (
-                (100, -0.00395),
-                (150, 0.00340),
-                (200, 0.00376),
-                (250, 0.00305),
-                (300, 0.00231),
-                (400, 0.00129),
-                (500, 0.000748),
-            )
-        ],
-        "asymmetric_cavity": [
-            ("asymmetric_cavity_F_both", -0.583529, "reported force units", "Combined force"),
-            ("asymmetric_cavity_F_self", -0.538354, "reported force units", "Self-force"),
-            ("asymmetric_cavity_F_net", -0.045175, "reported force units", "Net force"),
-            ("asymmetric_cavity_A_eff", 3.160494, "reported area units", "Effective area"),
-            ("asymmetric_cavity_pressure", -0.014294, "reported pressure units", "Net pressure"),
-            (
-                "asymmetric_cavity_pressure_pa",
-                round(-0.014294 * MEEP_TO_PA, 6),
-                "Pa",
-                "Net pressure converted from Meep to SI, rounded to six decimals",
-            ),
-            ("asymmetric_cavity_suppression_factor", 8.25, "dimensionless", "Suppression factor"),
-        ],
-        "frontier_1": [
-            ("frontier_1_pressure", -0.218758, "reported pressure units", "Stepped-sieve pressure"),
-            (
-                "frontier_1_pressure_pa",
-                round(-0.218758 * MEEP_TO_PA, 6),
-                "Pa",
-                "Stepped-sieve pressure converted from Meep to SI, rounded to six decimals",
-            ),
-        ],
-        "frontier_2": [
-            ("frontier_2_F_both", 4838.044314, "reported force units", "Combined force"),
-            ("frontier_2_F_self", 4838.065605, "reported force units", "Self-force"),
-            ("frontier_2_F_net", -0.021291, "reported force units", "Reported net force"),
-            ("frontier_2_pressure", -0.006736, "reported pressure units", "Net pressure"),
-            (
-                "frontier_2_pressure_pa",
-                round(-0.006736 * MEEP_TO_PA, 6),
-                "Pa",
-                "Net pressure converted from Meep to SI, rounded to six decimals",
-            ),
-            ("frontier_2_cancellation_percent", 94.3, "%", "Reported cancellation percentage"),
-            ("frontier_2_reduction_ratio", 17.52, "dimensionless", "Reported reduction ratio"),
-        ],
-        "scaling": [
-            (
-                "scaling_L_2p00_R_40_pressure_pa",
-                round(-0.118022 * MEEP_TO_PA, 6),
-                "Pa",
-                "Scaling pressure at L=2.00, R=40 converted from Meep to SI, "
-                "rounded to six decimals",
-            ),
-        ],
-        "atomic_cqed": [
-            ("atomic_cqed_lamb_shift_delta_nu", 2.4, "kHz", "Lamb frequency shift"),
-            ("atomic_cqed_lamb_shift_delta_E", 1.0e-11, "eV", "Lamb energy shift"),
-            ("atomic_cqed_purcell_lifetime_variation_min", 10.0, "%", "Minimum lifetime variation"),
-            ("atomic_cqed_purcell_lifetime_variation_max", 50.0, "%", "Maximum lifetime variation"),
-            ("atomic_cqed_cp_shift", 1.0e-6, "eV", "Casimir-Polder energy shift"),
-            ("atomic_cqed_scattering_deviation", 3.0e-19, "reported units", "Scattering deviation"),
-        ],
-    }
-    for group, entries in groups.items():
-        for name, value, unit, description in entries:
-            registry.add(
-                name, value, unit, description, group,
-                specification_source(value, documents, registry, name),
-            )
 
-    for name, value, unit, group in (
-        ("model_1_to_model_4_ssr_ratio", 2.1, "dimensionless", "model_4"),
-        ("model_2_to_model_4_ssr_ratio", 7.1, "dimensionless", "model_4"),
-        ("sweet_spot_repulsive_count", 41.0, "count", "repulsive_sweet_spots"),
-    ):
-        registry.add(name, value, unit, name, group,
-                     specification_source(value, documents, registry, name))
-    tags = ("0p30", "0p40", "0p50", "0p60", "2p00", "3p00", "4p00", "4p50")
-    predictions = (
-        (-1.165453, -0.924698, -0.766718, -0.653668, -0.166753, -0.071940, -0.018364, 0.000829),
-        (-1.214739, -0.906809, -0.722824, -0.600573, -0.176684, -0.117017, -0.087354, -0.077499),
-        (-1.214740, -0.906809, -0.722824, -0.600573, -0.176684, -0.117016, -0.087353, -0.077499),
-        (-1.146881, -0.934706, -0.783064, -0.667556, -0.127105, -0.047197, -0.018429, -0.011644),
-    )
-    for m, values in enumerate(predictions, 1):
-        for tag, value in zip(tags, values):
-            name = f"model_{m}_pred_L_{tag}"
-            registry.add(name, value, "reported pressure units", name, f"model_{m}",
-                         specification_source(value, documents, registry, name))
-    sweet_metrics_path = REPO_ROOT / "results" / "sweet_spot_table_metrics.json"
-    if sweet_metrics_path.is_file():
-        import json
-        import math
-        payload = json.loads(sweet_metrics_path.read_text(encoding="utf-8"))
-        for k, v in payload.get("macros", {}).items():
-            value = float(v)
-            if not isinstance(k, str) or not math.isfinite(value):
-                raise ValueError("Invalid sweet-spot table metric")
-            registry.add(k, value, "Pa" if k.endswith("_pa") else
-                         ("nm" if k.endswith("_nm") else "deg"), k, "sweet_spot_tables",
-                         Source("results/sweet_spot_table_metrics.json", None,
-                                digest(sweet_metrics_path), "sweet_spot_table_metric"))
-    registry.datasets["lifshitz"] = {
-        "columns": ["d_nm", "pressure"],
-        "rows": [
-            [distance, entry[1]]
-            for distance, entry in zip(
-                (100, 150, 200, 250, 300, 400, 500), groups["lifshitz"], strict=True
-            )
-        ],
-        "basis": "explicit experiment specification; Table 3 semi-analytical pressures",
-    }
-
-    sweet_spots = (
-        (75.0, 82.0, 50.0, 3.610842),
-        (75.0, 90.0, 150.0, 3.575480),
-        (75.0, 94.0, 50.0, 0.901610),
-        (60.0, 91.1, 100.0, 0.049422),
-        (60.0, 89.2, 200.0, 0.024319),
-        (60.0, 86.7, 200.0, 0.019608),
-    )
-    registry.datasets["repulsive_sweet_spots"] = {
-        "columns": ["alpha_deg", "theta_deg", "d_nm", "pressure", "pressure_meep"],
-        "units": ["deg", "deg", "nm", "Pa", "dimensionless"],
-        "rows": [
-            [alpha, theta, distance, round(pressure * MEEP_TO_PA, 6), pressure]
-            for alpha, theta, distance, pressure in sweet_spots
-        ],
-        "basis": "explicit experiment specification; Table 4 repulsive sweet spots",
-    }
-    for index, row in enumerate(sweet_spots, start=1):
-        for field_name, value, unit in zip(
-            ("alpha", "theta", "d", "pressure", "pressure_meep"),
-            (*row[:3], round(row[3] * MEEP_TO_PA, 6), row[3]),
-            ("deg", "deg", "nm", "Pa", "reported pressure units"),
-            strict=True,
-        ):
-            name = f"sweet_spot_{index}_{field_name}"
-            registry.add(
-                name,
-                value,
-                unit,
-                f"Repulsive sweet spot {index}: {field_name}",
-                "repulsive_sweet_spots",
-                specification_source(value, documents, registry, name),
-            )
+    # Register true-vacuum NEMS feasibility and 3-solver verification metrics
+    # recorded with exact caller provenance in results/provenance_metrics.json.
+    manifest_path = REPO_ROOT / "results" / "provenance_metrics.json"
+    if manifest_path.is_file():
+        manifest_checksum = digest(manifest_path)
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest_metrics = manifest.get("metrics", {})
+        nems_exported: dict[str, float] = {}
+        solver3_exported: dict[str, float] = {}
+        if isinstance(manifest_metrics, Mapping):
+            for name, entry in manifest_metrics.items():
+                if not isinstance(entry, Mapping):
+                    continue
+                src_file = str(entry.get("source_file", ""))
+                raw_val = entry.get("value")
+                if isinstance(raw_val, bool) or not isinstance(raw_val, (int, float)):
+                    continue
+                if not math.isfinite(float(raw_val)):
+                    continue
+                val = float(raw_val)
+                line_no = entry.get("line_number")
+                line_int = int(line_no) if isinstance(line_no, int) else None
+                if "run_nature_feasibility_and_stability.py" in src_file:
+                    registry.add(
+                        name,
+                        val,
+                        "SI / NEMS feasibility units",
+                        f"True-vacuum NEMS feasibility metric: {name}",
+                        "nems_feasibility",
+                        Source(
+                            src_file,
+                            line_int,
+                            manifest_checksum,
+                            f"logged by {src_file} into results/provenance_metrics.json",
+                        ),
+                    )
+                    nems_exported[name] = val
+                elif "run_rotational_clutch_3solver_verification.py" in src_file:
+                    registry.add(
+                        name,
+                        val,
+                        "pN / panel count",
+                        f"True-vacuum 3-solver verification metric: {name}",
+                        "rotational_clutch_3solver_verification",
+                        Source(
+                            src_file,
+                            line_int,
+                            manifest_checksum,
+                            f"logged by {src_file} into results/provenance_metrics.json",
+                        ),
+                    )
+                    solver3_exported[name] = val
+        if nems_exported:
+            registry.datasets["nems_feasibility"] = {
+                "name": "True-Vacuum NEMS Feasibility and 6-DOF Stability (eps_bg=1.0)",
+                "eps_bg": 1.0,
+                "metric_count": len(nems_exported),
+                "source": "results/nature_feasibility_stability_report.json",
+            }
+        if solver3_exported:
+            registry.datasets["rotational_clutch_3solver_verification"] = {
+                "name": "True-Vacuum 3-Solver Multi-Resolution Verification (eps_bg=1.0)",
+                "eps_bg": 1.0,
+                "metric_count": len(solver3_exported),
+                "source": "results/rotational_clutch_3solver_verification_report.json",
+            }
 
 
 def resolution_column(cell: str, resolution: int) -> bool:
@@ -1097,6 +994,12 @@ def register_rotary_clutch_campaigns(registry: Registry) -> None:
         ("fractal_n3_cantor7track_bem_theta3_f_z_pn", "Fractal_N3_Cantor7Track", 3.0, "Standard"),
         ("fractal_n3_cantor7track_bem_theta21_f_z_pn", "Fractal_N3_Cantor7Track", 21.0, "Standard"),
         ("fractal_n3_cantor7track_bem_theta48_f_z_pn", "Fractal_N3_Cantor7Track", 48.0, "Standard"),
+        ("ctrl_singlewide_bem_theta3_f_z_pn", "Ctrl_SingleWide", 3.0, "Standard"),
+        ("ctrl_singlewide_bem_theta48_f_z_pn", "Ctrl_SingleWide", 48.0, "Standard"),
+        ("ctrl_sizematched_monotonic_bem_theta3_f_z_pn", "Ctrl_SizeMatched_Monotonic", 3.0, "Standard"),
+        ("ctrl_sizematched_monotonic_bem_theta48_f_z_pn", "Ctrl_SizeMatched_Monotonic", 48.0, "Standard"),
+        ("fractal_n1_fundring_bem_theta3_f_z_pn", "Fractal_N1_FundRing", 3.0, "Standard"),
+        ("fractal_n1_fundring_bem_theta48_f_z_pn", "Fractal_N1_FundRing", 48.0, "Standard"),
     )
 
     def bem_candidates(
@@ -1153,6 +1056,25 @@ def register_rotary_clutch_campaigns(registry: Registry) -> None:
                 narrative_path, checksum,
             )
 
+        # Register overhang sign-reversal, full-monolithic BEM, and scalar-Yukawa BEM controls
+        extra_bem_specs = (
+            ("singletooth_track0_overhang_bem_theta3_f_z_pn", "step1_single_tooth_ztip_0011"),
+            ("cantor_n2_hybridrz_bem_monolithic_theta3_f_z_pn", "step6_monolithic_ultrahigh_validation_0063"),
+            ("cantor_n2_hybridrz_bem_monolithic_theta48_f_z_pn", "step6_monolithic_ultrahigh_validation_0065"),
+            ("fractal_n3_cantor7track_bem_monolithic_theta3_f_z_pn", "step6_monolithic_ultrahigh_validation_0067"),
+            ("fractal_n3_cantor7track_bem_monolithic_theta48_f_z_pn", "step6_monolithic_ultrahigh_validation_0069"),
+            ("cantor_n2_hybridrz_bem_scalar_std_theta3_f_z_pn", "step6_monolithic_ultrahigh_validation_0076"),
+            ("cantor_n2_hybridrz_bem_scalar_std_theta48_f_z_pn", "step6_monolithic_ultrahigh_validation_0077"),
+        )
+        for name, target_task_id in extra_bem_specs:
+            candidates = [
+                (record.get("F_z_pN"), (*pointer, "F_z_pN"))
+                for record, pointer in bem_entries
+                if record.get("task_id") == target_task_id
+                and record.get("F_z_pN") is not None
+            ]
+            register_candidates(name, candidates, narrative_path, checksum)
+
         raw_tasks = verification.get("tasks", []) if isinstance(verification.get("tasks"), Sequence) else []
         meep_entries = [
             (item, ("analysis", "meep_verification", "tasks", str(idx)))
@@ -1170,6 +1092,7 @@ def register_rotary_clutch_campaigns(registry: Registry) -> None:
             ("ctrl_uniformperiodic_meep_theta48_f_z_pn", 5, 48.0, None),
             ("singletooth_track0_meep_theta3_f_z_pn", 1, 3.0, None),
             ("singletooth_track0_meep_theta48_f_z_pn", 2, 48.0, None),
+            ("singletooth_track0_overhang_meep_theta3_f_z_pn", 3, 3.0, None),
             ("rot_c8_compact_n2_meep_theta3_f_z_pn", 10, 3.0, None),
         )
         for name, task_id, theta, resolution in meep_specs:
@@ -1655,11 +1578,7 @@ def export_pipeline(args: argparse.Namespace) -> int:
     tables = extract_tables(documents)
     registry = Registry()
     register_supplied_metrics(registry, documents)
-    register_scaling(registry, tables)
-    register_models(registry, tables, documents)
-    register_equilibria(registry, tables)
     register_rotary_clutch_campaigns(registry)
-    validate_benchmarks(registry)
 
     all_metrics = list(registry.metrics.values())
     selected = (

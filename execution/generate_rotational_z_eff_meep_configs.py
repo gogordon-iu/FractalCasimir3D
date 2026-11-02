@@ -20,6 +20,12 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from execution.clutch_geometry_redesign import (  # noqa: E402
+    DEFAULT_Z_PAD_TOP_UM,
+    DEFAULT_Z_TIP_ROTATIONAL_UM,
+    ROTATIONAL_3STATE_ANGLES_DEG,
+    ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC,
+    ROTATIONAL_C8_COMPACT_N2_SPEC,
+    ROTATIONAL_C10_FRACTAL_N3_SPEC,
     compute_dynamic_Trun,
     get_scoped_clutch_elements,
 )
@@ -29,8 +35,8 @@ from utils.metrics_logger import export_macros, log_metric, log_step  # noqa: E4
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "sweep_configs_rotational_z_eff_meep"
 COMMON_ANGLES = (6.0, 18.0, 48.0, 0.0, 12.0, 24.0, 30.0, 36.0, 42.0)
 
-Z_TIP_UM = -0.100
-Z_PAD_TOP_UM = -0.115
+Z_TIP_UM = DEFAULT_Z_TIP_ROTATIONAL_UM
+Z_PAD_TOP_UM = DEFAULT_Z_PAD_TOP_UM
 RESOLUTION = 50
 
 
@@ -49,37 +55,37 @@ class Candidate:
 
 CANDIDATES = (
     Candidate(
-        "Rot_C8_Compact_N2",
-        2,
-        0.20,
-        0.90,
-        0.45,
-        0.020,
-        15.0,
-        2.0,
-        COMMON_ANGLES,
+        name=str(ROTATIONAL_C8_COMPACT_N2_SPEC["name"]),
+        n=int(ROTATIONAL_C8_COMPACT_N2_SPEC["N"]),
+        r_min_um=float(ROTATIONAL_C8_COMPACT_N2_SPEC["R_min"]),
+        r_max_um=float(ROTATIONAL_C8_COMPACT_N2_SPEC["R_max"]),
+        w1_ratio=float(ROTATIONAL_C8_COMPACT_N2_SPEC["w1_ratio"]),
+        min_tooth_w_um=float(ROTATIONAL_C8_COMPACT_N2_SPEC["min_tooth_w"]),
+        tooth_arc_deg=float(ROTATIONAL_C8_COMPACT_N2_SPEC["tooth_arc_deg"]),
+        domain_um=2.0,
+        angles_deg=COMMON_ANGLES,
     ),
     Candidate(
-        "Rot_C4_TightSlot_N2",
-        2,
-        0.30,
-        1.35,
-        0.65,
-        0.020,
-        15.0,
-        3.0,
-        COMMON_ANGLES,
+        name=str(ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC["name"]),
+        n=int(ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC["N"]),
+        r_min_um=float(ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC["R_min"]),
+        r_max_um=float(ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC["R_max"]),
+        w1_ratio=float(ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC["w1_ratio"]),
+        min_tooth_w_um=float(ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC["min_tooth_w"]),
+        tooth_arc_deg=float(ROTATIONAL_C4_TIGHT_SLOT_N2_SPEC["tooth_arc_deg"]),
+        domain_um=3.0,
+        angles_deg=COMMON_ANGLES,
     ),
     Candidate(
-        "Rot_C10_Fractal_N3",
-        3,
-        0.30,
-        1.65,
-        0.40,
-        0.015,
-        12.0,
-        3.5,
-        (3.0, 21.0, 48.0),
+        name=str(ROTATIONAL_C10_FRACTAL_N3_SPEC["name"]),
+        n=int(ROTATIONAL_C10_FRACTAL_N3_SPEC["N"]),
+        r_min_um=float(ROTATIONAL_C10_FRACTAL_N3_SPEC["R_min"]),
+        r_max_um=float(ROTATIONAL_C10_FRACTAL_N3_SPEC["R_max"]),
+        w1_ratio=float(ROTATIONAL_C10_FRACTAL_N3_SPEC["w1_ratio"]),
+        min_tooth_w_um=float(ROTATIONAL_C10_FRACTAL_N3_SPEC["min_tooth_w"]),
+        tooth_arc_deg=float(ROTATIONAL_C10_FRACTAL_N3_SPEC["tooth_arc_deg"]),
+        domain_um=3.5,
+        angles_deg=ROTATIONAL_3STATE_ANGLES_DEG,
     ),
 )
 

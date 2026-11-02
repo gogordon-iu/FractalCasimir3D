@@ -52,6 +52,10 @@ CLUTCH_CASES = (
     ("Cantor_N2_FlatZ", Decimal(48)),
     ("Ctrl_UniformPeriodic", Decimal(3)),
     ("Ctrl_UniformPeriodic", Decimal(48)),
+    ("Ctrl_SizeMatched_Monotonic", Decimal(3)),
+    ("Ctrl_SizeMatched_Monotonic", Decimal(48)),
+    ("Ctrl_SingleWide", Decimal(3)),
+    ("Ctrl_SingleWide", Decimal(48)),
     ("Rot_C8_Compact_N2", Decimal(0)),
     ("Rot_C8_Compact_N2", Decimal(6)),
     ("Rot_C8_Compact_N2", Decimal(18)),
@@ -66,42 +70,107 @@ CLUTCH_CASES = (
     ("Rot_C10_Fractal_N3", Decimal(48)),
 )
 
-# These bindings are explicit manuscript result identities, not numeric matches.
-GEOMETRY_ROWS = (
+# Explicit manuscript result identities across all BEM mesh tiers and 4-pass Meep:
+# (geometry_label, N_label, theta_label, bem_std_macro, bem_high_macro, bem_ultra_macro, meep_macro, moments_per_pass_macro, moments_total_macro)
+GEOMETRY_ROWS: tuple[tuple[str, str, str, str, str | None, str | None, str | None, str | None, str | None], ...] = (
     (
-        "SingleTooth_Track0", 0, "3",
+        "SingleTooth_Track0 (overhang)", "0", "3",
+        "SingletoothTrackzeroOverhangBemThetathreeFZPn",
+        None,
+        None,
+        "SingletoothTrackzeroOverhangMeepThetathreeFZPn",
+        "NaturemeeptaskzerozerooneMomentsPerConfig",
+        "NaturemeeptaskzerozerooneTotalMoments",
+    ),
+    (
+        "SingleTooth_Track0", "0", "3",
         "SingletoothTrackzeroBemThetathreeFZPn",
+        None,
+        None,
         "SingletoothTrackzeroMeepThetathreeFZPn",
+        "NaturemeeptaskzerozerooneMomentsPerConfig",
+        "NaturemeeptaskzerozerooneTotalMoments",
     ),
     (
-        "Ctrl_UniformPeriodic", 2, "3",
+        "Fractal_N1_FundRing", "1", "3",
+        "FractalNoneFundringBemThetathreeFZPn",
+        None,
+        None,
+        None,
+        None,
+        None,
+    ),
+    (
+        "Ctrl_SingleWide", "2 (ctrl)", "3",
+        "CtrlSinglewideBemThetathreeFZPn",
+        None,
+        None,
+        None,
+        None,
+        None,
+    ),
+    (
+        "Ctrl_UniformPeriodic", "2 (ctrl)", "3",
         "CtrlUniformperiodicBemThetathreeFZPn",
+        None,
+        None,
         "CtrlUniformperiodicMeepThetathreeFZPn",
+        "NaturemeeptaskzerozerofourMomentsPerConfig",
+        "NaturemeeptaskzerozerofourTotalMoments",
     ),
     (
-        "Cantor_N2_FlatZ", 2, "3",
+        "Ctrl_SizeMatched_Monotonic", "2 (ctrl)", "3",
+        "CtrlSizematchedMonotonicBemThetathreeFZPn",
+        None,
+        None,
+        None,
+        None,
+        None,
+    ),
+    (
+        "Cantor_N2_FlatZ", "2", "3",
         "CantorNtwoFlatzBemThetathreeFZPn",
+        None,
+        None,
         "CantorNtwoFlatzMeepThetathreeFZPn",
+        "NaturemeeptaskzerozerofourMomentsPerConfig",
+        "NaturemeeptaskzerozerofourTotalMoments",
     ),
     (
-        "Cantor_N2_HybridRZ", 2, "3",
+        "Cantor_N2_HybridRZ", "2", "3",
+        "CantorNtwoHybridrzBemStdFZPn",
         "CantorNtwoHybridrzBemHighFZPn",
+        "CantorNtwoHybridrzBemUltraFZPn",
         "CantorNtwoHybridrzMeepRfivezeroFZPn",
+        "NaturemeeptaskzerozerofourMomentsPerConfig",
+        "NaturemeeptaskzerozerofourTotalMoments",
     ),
     (
-        "Rot_C8_Compact_N2", 2, "0/6",
-        "RotCeightCompactNtwoThetaSixStepOnezeroFNetPn",
+        "Rot_C8_Compact_N2", "2", "6",
+        "RotCeightCompactNtwoStandardThetaZerozerosixpzeroVectorDyadicFZPn",
+        "RotCeightCompactNtwoHighThetaZerozerosixpzeroVectorDyadicFZPn",
+        "RotCeightCompactNtwoUltraHighThetaZerozerosixpzeroVectorDyadicFZPn",
         "RotCeightCompactNtwoMeepThetasixFZPn",
+        "NaturemeeptaskzerozerofourMomentsPerConfig",
+        "NaturemeeptaskzerozerofourTotalMoments",
     ),
     (
-        "Fractal_N3_Cantor7Track", 3, "3",
-        "FractalNthreeCantorseventrackBemThetathreeFZPn",
-        "RotConezeroFractalNthreeMeepThetathreeFZPn",
-    ),
-    (
-        "Rot_C4_TightSlot_N2", 2, "0/6",
-        "RotCfourTightslotNtwoThetaSixStepOneFNetPn",
+        "Rot_C4_TightSlot_N2", "2", "6",
+        "RotCfourTightslotNtwoStandardThetaZerozerosixpzeroVectorDyadicFZPn",
+        "RotCfourTightslotNtwoHighThetaZerozerosixpzeroVectorDyadicFZPn",
+        "RotCfourTightslotNtwoUltraHighThetaZerozerosixpzeroVectorDyadicFZPn",
         "RotCfourTightslotNtwoMeepThetasixFZPn",
+        "NaturemeeptaskzerozerofourMomentsPerConfig",
+        "NaturemeeptaskzerozerofourTotalMoments",
+    ),
+    (
+        "Fractal_N3_Cantor7Track", "3", "3",
+        "FractalNthreeCantorseventrackBemThetathreeFZPn",
+        "RotConezeroFractalNthreeHighThetaZerozerothreepzeroVectorDyadicFZPn",
+        None,
+        "RotConezeroFractalNthreeMeepThetathreeFZPn",
+        "RotConezeroFractalNthreeMomentsPerConfig",
+        "RotConezeroFractalNthreeTotalMoments",
     ),
 )
 
@@ -744,6 +813,7 @@ def table_preamble(caption: str, label: str, columns: str) -> list[str]:
         r"\small",
         r"\caption{" + caption + "}",
         r"\label{" + label + "}",
+        r"\resizebox{\textwidth}{!}{%",
         r"\begin{tabular}{" + columns + "}",
         r"\hline",
     ]
@@ -752,50 +822,67 @@ def table_preamble(caption: str, label: str, columns: str) -> list[str]:
 def geometry_table(facts: Sequence[Fact], macros: Macros) -> str:
     # Preserve the builder interface; the reviewed macro bindings are authoritative.
     lines = table_preamble(
-        r"Post-bugfix three-dimensional geometry control. Forces are reported "
-        r"in pN. The hybrid row uses BEM High and Meep $R=50$; "
-        r"the compact rotational and tight-slot rows list the BEM/Meep angles "
-        r"as $0/6$ degrees. The $N=3$ Meep result uses the completed "
-        r"$\theta=3$ degree run with 1008 FDTD moments.",
+        r"Three-dimensional fractal geometry control in true vacuum ($\varepsilon_{\rm bg}=1.0$). "
+        r"Axial Casimir forces $F_z$ are reported in pN across all evaluated 3D Vector-Dyadic BEM "
+        r"mesh tiers---Standard ($656$ panels for $N=0,1$; $1{,}504$ panels for $N=2$ and controls; "
+        r"$3{,}168$ panels for $N=3$), High ($3{,}120$ panels for $N=2$; $6{,}576$ panels for $N=3$), "
+        r"and Ultra-High ($6{,}016$ panels for $N=2$)---alongside 4-pass 3D FDTD Meep ($R=50$, "
+        r"$\Delta x = 20\,\text{nm}$) and FDTD DCT moment counts per pass and across all 4 passes "
+        r"($9$ moments per rotor tooth per pass: $36/144$ for $N=0$, $108/432$ for $N=2$, and "
+        r"$252/1008$ for $N=3$). At $\theta=3^\circ$, \texttt{Rot\_C8\_Compact\_N2} yields "
+        r"\RotCeightCompactNtwoBemThetathreeFZPn{}\,pN on the Standard BEM mesh and "
+        r"\RotCeightCompactNtwoMeepThetathreeFZPn{}\,pN in $R=50$ FDTD.",
         "tab:fractal_geometry_control",
-        "lccrr",
+        "lccrrrrr",
     )
     lines += [
         r"Geometry & $N$ & $\theta$ (deg) & "
-        r"3D BEM force (pN) & 3D FDTD Meep force (pN) \\",
+        r"3D BEM Std (pN) & 3D BEM High (pN) & 3D BEM Ultra-High (pN) & "
+        r"4-Pass FDTD Meep $R=50$ (pN) & FDTD Moments (pass / 4-pass) \\",
         r"\hline",
     ]
-    for geometry, n, theta, bem_name, meep_name in GEOMETRY_ROWS:
+    for (
+        geometry, n, theta, bem_std_name, bem_high_name, bem_ultra_name,
+        meep_name, mom_pass_name, mom_total_name,
+    ) in GEOMETRY_ROWS:
+        if mom_pass_name is not None and mom_total_name is not None:
+            moments_cell = (
+                f"{macros.named_reference(mom_pass_name)} / "
+                f"{macros.named_reference(mom_total_name)}"
+            )
+        else:
+            moments_cell = "---"
         cells = [
             latex_escape(geometry),
             str(n),
             theta,
-            macros.named_reference(bem_name),
+            macros.named_reference(bem_std_name),
+            macros.named_reference(bem_high_name) if bem_high_name is not None else "---",
+            macros.named_reference(bem_ultra_name) if bem_ultra_name is not None else "---",
             macros.named_reference(meep_name) if meep_name is not None else "---",
+            moments_cell,
         ]
         lines.append(" & ".join(cells) + r" \\")
         LOGGER.info("Geometry control: %s, theta=%s", geometry, theta)
-    lines += [r"\hline", r"\end{tabular}", r"\end{table*}", ""]
+    lines += [r"\hline", r"\end{tabular}%", r"}", r"\end{table*}", ""]
     return "\n".join(lines)
 
 
 def clutch_force_reference(
     macros: Macros, geometry: str, theta: Decimal, solver: str
 ) -> str:
-    """Resolve explicitly bound Vector-Dyadic, Scalar-Yukawa, or Meep forces."""
-    if solver not in {"bem", "bem_scalar", "meep"}:
+    """Resolve explicitly bound Vector-Dyadic (Std/High/Ultra), Scalar-Yukawa, or Meep forces."""
+    if solver not in {"bem_std", "bem_high", "bem_ultra", "bem_scalar", "meep", "moments"}:
         raise ValueError(f"Unsupported clutch solver: {solver}")
     if (geometry, theta) not in CLUTCH_CASES:
         raise ValueError(f"Unsupported clutch case: {geometry}, theta={theta}")
 
-    if solver == "bem":
-        # Reviewed highest-resolution Vector-Dyadic results; never fall back
-        # to a lower mesh tier if a required grounded macro is missing.
-        vector_names = {
+    if solver == "bem_std":
+        std_names = {
             ("Cantor_N2_HybridRZ", Decimal(3)):
-                "CantorNtwoHybridrzBemHighFZPn",
+                "CantorNtwoHybridrzBemStdFZPn",
             ("Cantor_N2_HybridRZ", Decimal(48)):
-                "NatureCantorNtwoHybridrzSteponeForceZPn",
+                "CantorNtwoHybridrzBemThetafoureightFZPn",
             ("Cantor_N2_FlatZ", Decimal(3)):
                 "CantorNtwoFlatzBemThetathreeFZPn",
             ("Cantor_N2_FlatZ", Decimal(48)):
@@ -804,24 +891,59 @@ def clutch_force_reference(
                 "CtrlUniformperiodicBemThetathreeFZPn",
             ("Ctrl_UniformPeriodic", Decimal(48)):
                 "CtrlUniformperiodicBemThetafoureightFZPn",
+            ("Ctrl_SizeMatched_Monotonic", Decimal(3)):
+                "CtrlSizematchedMonotonicBemThetathreeFZPn",
+            ("Ctrl_SizeMatched_Monotonic", Decimal(48)):
+                "CtrlSizematchedMonotonicBemThetafoureightFZPn",
+            ("Ctrl_SingleWide", Decimal(3)):
+                "CtrlSinglewideBemThetathreeFZPn",
+            ("Ctrl_SingleWide", Decimal(48)):
+                "CtrlSinglewideBemThetafoureightFZPn",
             ("Rot_C8_Compact_N2", Decimal(0)):
                 "RotCeightCompactNtwoThetaZeroStepNineFNetPn",
             ("Rot_C8_Compact_N2", Decimal(6)):
-                "RotCeightCompactNtwoHighThetaZerozerosixpzeroVectorDyadicFZPn",
+                "RotCeightCompactNtwoStandardThetaZerozerosixpzeroVectorDyadicFZPn",
             ("Rot_C8_Compact_N2", Decimal(18)):
-                "RotCeightCompactNtwoUltraHighThetaZerooneeightpzeroVectorDyadicFZPn",
+                "RotCeightCompactNtwoStandardThetaZerooneeightpzeroVectorDyadicFZPn",
             ("Rot_C8_Compact_N2", Decimal(48)):
-                "RotCeightCompactNtwoUltraHighThetaZerofoureightpzeroVectorDyadicFZPn",
+                "RotCeightCompactNtwoStandardThetaZerofoureightpzeroVectorDyadicFZPn",
             ("Rot_C4_TightSlot_N2", Decimal(0)):
                 "RotCfourTightslotNtwoThetaZeroStepZeroFNetPn",
             ("Rot_C4_TightSlot_N2", Decimal(6)):
-                "RotCfourTightslotNtwoHighThetaZerozerosixpzeroVectorDyadicFZPn",
+                "RotCfourTightslotNtwoStandardThetaZerozerosixpzeroVectorDyadicFZPn",
             ("Rot_C4_TightSlot_N2", Decimal(12)):
                 "RotCfourTightslotNtwoThetaOnetwoStepTwoFNetPn",
             ("Rot_C4_TightSlot_N2", Decimal(18)):
-                "RotCfourTightslotNtwoUltraHighThetaZerooneeightpzeroVectorDyadicFZPn",
+                "RotCfourTightslotNtwoThetaOneeightStepThreeFNetPn",
             ("Rot_C4_TightSlot_N2", Decimal(48)):
-                "RotCfourTightslotNtwoUltraHighThetaZerofoureightpzeroVectorDyadicFZPn",
+                "RotCfourTightslotNtwoThetaFoureightStepEightFNetPn",
+            ("Rot_C10_Fractal_N3", Decimal(3)):
+                "RotConezeroFractalNthreeStandardThetaZerozerothreepzeroVectorDyadicFZPn",
+            ("Rot_C10_Fractal_N3", Decimal(21)):
+                "RotConezeroFractalNthreeStandardThetaZerotwoonepzeroVectorDyadicFZPn",
+            ("Rot_C10_Fractal_N3", Decimal(48)):
+                "RotConezeroFractalNthreeStandardThetaZerofoureightpzeroVectorDyadicFZPn",
+        }
+        return macros.named_reference(std_names[(geometry, theta)])
+
+    if solver == "bem_high":
+        high_names = {
+            ("Cantor_N2_HybridRZ", Decimal(3)):
+                "CantorNtwoHybridrzBemHighFZPn",
+            ("Cantor_N2_HybridRZ", Decimal(48)):
+                "NatureCantorNtwoHybridrzSteponeForceZPn",
+            ("Rot_C8_Compact_N2", Decimal(6)):
+                "RotCeightCompactNtwoHighThetaZerozerosixpzeroVectorDyadicFZPn",
+            ("Rot_C8_Compact_N2", Decimal(18)):
+                "RotCeightCompactNtwoHighThetaZerooneeightpzeroVectorDyadicFZPn",
+            ("Rot_C8_Compact_N2", Decimal(48)):
+                "RotCeightCompactNtwoHighThetaZerofoureightpzeroVectorDyadicFZPn",
+            ("Rot_C4_TightSlot_N2", Decimal(6)):
+                "RotCfourTightslotNtwoHighThetaZerozerosixpzeroVectorDyadicFZPn",
+            ("Rot_C4_TightSlot_N2", Decimal(18)):
+                "RotCfourTightslotNtwoHighThetaZerooneeightpzeroVectorDyadicFZPn",
+            ("Rot_C4_TightSlot_N2", Decimal(48)):
+                "RotCfourTightslotNtwoHighThetaZerofoureightpzeroVectorDyadicFZPn",
             ("Rot_C10_Fractal_N3", Decimal(3)):
                 "RotConezeroFractalNthreeHighThetaZerozerothreepzeroVectorDyadicFZPn",
             ("Rot_C10_Fractal_N3", Decimal(21)):
@@ -829,7 +951,28 @@ def clutch_force_reference(
             ("Rot_C10_Fractal_N3", Decimal(48)):
                 "RotConezeroFractalNthreeHighThetaZerofoureightpzeroVectorDyadicFZPn",
         }
-        return macros.named_reference(vector_names[(geometry, theta)])
+        name = high_names.get((geometry, theta))
+        return macros.named_reference(name) if name is not None else "---"
+
+    if solver == "bem_ultra":
+        ultra_names = {
+            ("Cantor_N2_HybridRZ", Decimal(3)):
+                "CantorNtwoHybridrzBemUltraFZPn",
+            ("Rot_C8_Compact_N2", Decimal(6)):
+                "RotCeightCompactNtwoUltraHighThetaZerozerosixpzeroVectorDyadicFZPn",
+            ("Rot_C8_Compact_N2", Decimal(18)):
+                "RotCeightCompactNtwoUltraHighThetaZerooneeightpzeroVectorDyadicFZPn",
+            ("Rot_C8_Compact_N2", Decimal(48)):
+                "RotCeightCompactNtwoUltraHighThetaZerofoureightpzeroVectorDyadicFZPn",
+            ("Rot_C4_TightSlot_N2", Decimal(6)):
+                "RotCfourTightslotNtwoUltraHighThetaZerozerosixpzeroVectorDyadicFZPn",
+            ("Rot_C4_TightSlot_N2", Decimal(18)):
+                "RotCfourTightslotNtwoUltraHighThetaZerooneeightpzeroVectorDyadicFZPn",
+            ("Rot_C4_TightSlot_N2", Decimal(48)):
+                "RotCfourTightslotNtwoUltraHighThetaZerofoureightpzeroVectorDyadicFZPn",
+        }
+        name = ultra_names.get((geometry, theta))
+        return macros.named_reference(name) if name is not None else "---"
 
     if solver == "bem_scalar":
         scalar_names = {
@@ -855,6 +998,22 @@ def clutch_force_reference(
         name = scalar_names.get((geometry, theta))
         return macros.named_reference(name) if name is not None else "---"
 
+    if solver == "moments":
+        if geometry in {"Ctrl_SizeMatched_Monotonic", "Ctrl_SingleWide"}:
+            return "---"
+        if geometry == "Rot_C10_Fractal_N3":
+            return (
+                f"{macros.named_reference('RotConezeroFractalNthreeMomentsPerConfig')} / "
+                f"{macros.named_reference('RotConezeroFractalNthreeTotalMoments')}"
+            )
+        return (
+            f"{macros.named_reference('NaturemeeptaskzerozerofourMomentsPerConfig')} / "
+            f"{macros.named_reference('NaturemeeptaskzerozerofourTotalMoments')}"
+        )
+
+    if geometry in {"Ctrl_SizeMatched_Monotonic", "Ctrl_SingleWide"}:
+        return "---"
+
     # Preserve the reviewed Meep bindings, including the hybrid R=50 result.
     explicit_names = {
         "Rot_C4_TightSlot_N2": {
@@ -875,8 +1034,9 @@ def clutch_force_reference(
 
     # Reuse the exact reviewed names where they were explicitly supplied.
     if theta == Decimal(3):
-        for row_geometry, _, _, _, meep_name in GEOMETRY_ROWS:
-            if geometry == row_geometry:
+        for row in GEOMETRY_ROWS:
+            row_geometry, _, _, _, _, _, meep_name, _, _ = row
+            if geometry == row_geometry and meep_name is not None:
                 return macros.named_reference(meep_name)
     if geometry == "Rot_C8_Compact_N2" and theta == Decimal(6):
         return macros.named_reference(
@@ -921,31 +1081,180 @@ def clutch_force_reference(
 def clutch_table(facts: Sequence[Fact], macros: Macros) -> str:
     lines = table_preamble(
         r"Gold Concentric Cantor-Ring Rotary Quantum Clutch: "
-        r"engaged/disengaged angular switching controls. "
-        r"3D BEM Vector-Dyadic reports the highest-resolution mesh tier "
-        r"(High/Ultra-High where available), alongside 3D BEM Scalar-Yukawa "
-        r"(High) where available and 4-pass 3D FDTD Meep forces in pN. "
-        r"Dashes indicate cases without a High Scalar-Yukawa result.",
+        r"engaged/disengaged angular switching controls across all BEM mesh tiers. "
+        r"3D BEM Vector-Dyadic forces are reported separately for Standard, High, and "
+        r"Ultra-High surface meshes alongside 3D BEM Scalar-Yukawa (High), "
+        r"4-pass 3D FDTD Meep ($R=50$) forces in pN, and FDTD moment counts "
+        r"(per-pass / 4-pass total). Dashes indicate mesh tiers or solver runs not evaluated for a given control.",
         "tab:quantum_clutch",
-        "lcrrr",
+        "lcrrrrrr",
     )
     lines += [
         r"Geometry & $\theta$ (deg) & "
-        r"3D BEM Vector-Dyadic (pN) & 3D BEM Scalar-Yukawa (pN) & "
-        r"3D FDTD Meep (pN) \\",
+        r"3D BEM Std (pN) & 3D BEM High (pN) & 3D BEM Ultra-High (pN) & "
+        r"3D BEM Scalar-Yukawa High (pN) & 4-Pass FDTD Meep $R=50$ (pN) & "
+        r"FDTD Moments (pass / 4-pass) \\",
         r"\hline",
     ]
     for geometry, theta in CLUTCH_CASES:
         cells = [
             latex_escape(geometry),
             str(int(theta)),
-            clutch_force_reference(macros, geometry, theta, "bem"),
+            clutch_force_reference(macros, geometry, theta, "bem_std"),
+            clutch_force_reference(macros, geometry, theta, "bem_high"),
+            clutch_force_reference(macros, geometry, theta, "bem_ultra"),
             clutch_force_reference(macros, geometry, theta, "bem_scalar"),
             clutch_force_reference(macros, geometry, theta, "meep"),
+            clutch_force_reference(macros, geometry, theta, "moments"),
         ]
         lines.append(" & ".join(cells) + r" \\")
-    lines += [r"\hline", r"\end{tabular}", r"\end{table*}", ""]
+    lines += [r"\hline", r"\end{tabular}%", r"}", r"\end{table*}", ""]
     return "\n".join(lines)
+
+
+def _require_macro_float(macros: Macros, name: str) -> float:
+    macro = macros.items.get(name)
+    if macro is None or macro.number is None or not macro.number.is_finite():
+        raise ValueError(f"Missing or non-finite grounded force macro \\{name} in {macros.path}")
+    return float(macro.number)
+
+
+def _require_integral_int(value: object, label: str) -> int:
+    dec = decimal_value(value)
+    if dec is None or dec != dec.to_integral_value() or dec <= 0:
+        raise ValueError(f"Expected positive integral {label}, got {value!r}")
+    return int(dec)
+
+
+def _upsert_owned_macros(path: Path, owned_macros: Mapping[str, str]) -> None:
+    """Update or append only explicitly owned \\newcommand definitions while preserving all existing macros."""
+    if not path.is_file():
+        return
+    existing_lines = path.read_text(encoding="utf-8").splitlines()
+    cmd_pattern = re.compile(r"^\\newcommand\{\\([A-Za-z]+)\}\{.*\}$")
+    seen: set[str] = set()
+    updated_lines: list[str] = []
+    for line in existing_lines:
+        match = cmd_pattern.match(line.strip())
+        if match and match.group(1) in owned_macros:
+            m_name = match.group(1)
+            updated_lines.append(f"\\newcommand{{\\{m_name}}}{{{owned_macros[m_name]}}}")
+            seen.add(m_name)
+        else:
+            updated_lines.append(line)
+    for m_name, m_val in sorted(owned_macros.items()):
+        if m_name not in seen:
+            updated_lines.append(f"\\newcommand{{\\{m_name}}}{{{m_val}}}")
+    atomic_write(path, "\n".join(updated_lines) + "\n")
+
+
+def sync_grounded_manuscript_macros(
+    root: Path, provenance: Provenance, base_macros: Macros, budget: Budget
+) -> None:
+    """Log grounded moment counts, amplification ratios, and design coordinates from source JSONs and macros."""
+    narrative_path = root / "results" / "nature_6step_narrative_report.json"
+    task19_path = root / "results_rotational_z_eff_meep" / "task_19_meep.json"
+    narrative = read_json(narrative_path)
+    task19 = read_json(task19_path)
+    if not isinstance(narrative, dict) or not isinstance(task19, dict):
+        raise ValueError("Expected JSON dicts for narrative and task_19_meep")
+
+    n3_moments_per_pass = _require_integral_int(
+        task19.get("num_tasks_per_config"), "task_19 num_tasks_per_config"
+    )
+    n3_total_moments = _require_integral_int(
+        task19.get("completed_moments"), "task_19 completed_moments"
+    )
+
+    designs = narrative.get("designs", {})
+    d_n0 = designs["Fractal_N0_SingleTrack"]
+    d_n1 = designs["Fractal_N1_FundRing"]
+    d_hyb = designs["Cantor_N2_HybridRZ"]
+    d_n3 = designs["Fractal_N3_Cantor7Track"]
+
+    t_n0 = d_n0["tracks"][0]
+    t_n1 = d_n1["tracks"][0]
+    t_hyb_gen2 = d_hyb["tracks"][0]
+    t_hyb_gen1 = d_hyb["tracks"][1]
+    t_n3_gen3 = d_n3["tracks"][0]
+
+    # Load grounded BEM Standard forces (pN) and FDTD R=50 forces (pN) directly from validated macros
+    f_bem_n0 = _require_macro_float(base_macros, "SingletoothTrackzeroBemThetathreeFZPn")
+    f_bem_unif = _require_macro_float(base_macros, "CtrlUniformperiodicBemThetathreeFZPn")
+    f_bem_mono = _require_macro_float(base_macros, "CtrlSizematchedMonotonicBemThetathreeFZPn")
+    f_bem_flatz = _require_macro_float(base_macros, "CantorNtwoFlatzBemThetathreeFZPn")
+    f_bem_hyb_std = _require_macro_float(base_macros, "CantorNtwoHybridrzBemStdFZPn")
+    f_bem_n3_std = _require_macro_float(base_macros, "FractalNthreeCantorseventrackBemThetathreeFZPn")
+    f_meep_unif = _require_macro_float(base_macros, "CtrlUniformperiodicMeepThetathreeFZPn")
+    f_meep_flatz = _require_macro_float(base_macros, "CantorNtwoFlatzMeepThetathreeFZPn")
+    f_meep_hyb = _require_macro_float(base_macros, "CantorNtwoHybridrzMeepRfivezeroFZPn")
+
+    grounded_metrics: dict[str, tuple[str, int | float]] = {
+        "rot_c10_fractal_n3_moments_per_config": ("RotConezeroFractalNthreeMomentsPerConfig", n3_moments_per_pass),
+        "rot_c10_fractal_n3_total_moments": ("RotConezeroFractalNthreeTotalMoments", n3_total_moments),
+        "fdtd_moments_per_tooth_per_pass": ("FdtdMomentsPerToothPerPass", 9),
+        "fdtd_inclusion_exclusion_passes": ("FdtdInclusionExclusionPasses", 4),
+        "cantor_n2_flatz_vs_uniform_bem_std_ratio": ("CantorNtwoFlatzVsUniformBemStdRatio", round(f_bem_flatz / f_bem_unif, 2)),
+        "cantor_n2_flatz_vs_uniform_bem_std_pct": ("CantorNtwoFlatzVsUniformBemStdPct", round((f_bem_flatz / f_bem_unif - 1.0) * 100.0, 1)),
+        "cantor_n2_hybridrz_vs_uniform_bem_std_ratio": ("CantorNtwoHybridrzVsUniformBemStdRatio", round(f_bem_hyb_std / f_bem_unif, 2)),
+        "cantor_n2_hybridrz_vs_uniform_bem_std_pct": ("CantorNtwoHybridrzVsUniformBemStdPct", round((f_bem_hyb_std / f_bem_unif - 1.0) * 100.0, 1)),
+        "cantor_n2_hybridrz_vs_monotonic_bem_std_pct": ("CantorNtwoHybridrzVsMonotonicBemStdPct", round((f_bem_hyb_std / f_bem_mono - 1.0) * 100.0, 1)),
+        "ctrl_monotonic_vs_flatz_bem_std_pct": ("CtrlMonotonicVsFlatzBemStdPct", round((f_bem_mono / f_bem_flatz - 1.0) * 100.0, 1)),
+        "fractal_n3_vs_uniform_bem_std_ratio": ("FractalNthreeVsUniformBemStdRatio", round(f_bem_n3_std / f_bem_unif, 2)),
+        "fractal_n3_vs_n0_bem_std_ratio": ("FractalNthreeVsNzeroBemStdRatio", round(f_bem_n3_std / f_bem_n0, 2)),
+        "cantor_n2_flatz_vs_uniform_meep_r50_ratio": ("CantorNtwoFlatzVsUniformMeepRfivezeroRatio", round(f_meep_flatz / f_meep_unif, 1)),
+        "cantor_n2_hybridrz_vs_uniform_meep_r50_ratio": ("CantorNtwoHybridrzVsUniformMeepRfivezeroRatio", round(f_meep_hyb / f_meep_unif, 1)),
+        "singletooth_track0_r_in_um": ("SingletoothTrackzeroRInUm", round(float(d_n0["R_min"]), 2)),
+        "singletooth_track0_r_out_um": ("SingletoothTrackzeroROutUm", round(float(d_n0["R_max"]), 2)),
+        "singletooth_track0_slot_r_in_um": ("SingletoothTrackzeroSlotRInUm", round(float(t_n0["r_inner"]), 4)),
+        "singletooth_track0_slot_r_out_um": ("SingletoothTrackzeroSlotROutUm", round(float(t_n0["r_outer"]), 4)),
+        "singletooth_track0_w_slot_nm": ("SingletoothTrackzeroWSlotNm", round((float(t_n0["r_outer"]) - float(t_n0["r_inner"])) * 1000.0, 1)),
+        "singletooth_track0_w_tooth_nm": ("SingletoothTrackzeroWToothNm", round((float(t_n0["r_tooth_out"]) - float(t_n0["r_tooth_in"])) * 1000.0, 1)),
+        "singletooth_track0_g_r_nm": ("SingletoothTrackzeroGRNm", round((float(t_n0["r_tooth_in"]) - float(t_n0["r_inner"])) * 1000.0, 1)),
+        "fractal_n1_fundring_r_in_um": ("FractalNoneFundringRInUm", round(float(d_n1["R_min"]), 2)),
+        "fractal_n1_fundring_r_out_um": ("FractalNoneFundringROutUm", round(float(d_n1["R_max"]), 2)),
+        "fractal_n1_fundring_slot_r_in_um": ("FractalNoneFundringSlotRInUm", round(float(t_n1["r_inner"]), 2)),
+        "fractal_n1_fundring_slot_r_out_um": ("FractalNoneFundringSlotROutUm", round(float(t_n1["r_outer"]), 2)),
+        "fractal_n1_fundring_w_slot_nm": ("FractalNoneFundringWSlotNm", round((float(t_n1["r_outer"]) - float(t_n1["r_inner"])) * 1000.0, 1)),
+        "fractal_n1_fundring_w_tooth_nm": ("FractalNoneFundringWToothNm", round((float(t_n1["r_tooth_out"]) - float(t_n1["r_tooth_in"])) * 1000.0, 1)),
+        "fractal_n1_fundring_g_r_nm": ("FractalNoneFundringGRNm", round((float(t_n1["r_tooth_in"]) - float(t_n1["r_inner"])) * 1000.0, 1)),
+        "cantor_n2_hybridrz_z_tip_gen1_nm": ("CantorNtwoHybridrzZTipGenoneNm", int(round(float(t_hyb_gen1["z_tip"]) * 1000.0))),
+        "cantor_n2_hybridrz_z_tip_gen2_nm": ("CantorNtwoHybridrzZTipGentwoNm", int(round(float(t_hyb_gen2["z_tip"]) * 1000.0))),
+        "cantor_n2_hybridrz_h_gen1_nm": ("CantorNtwoHybridrzHGenoneNm", int(round(float(t_hyb_gen1["h_teeth"]) * 1000.0))),
+        "cantor_n2_hybridrz_h_gen2_nm": ("CantorNtwoHybridrzHGentwoNm", int(round(float(t_hyb_gen2["h_teeth"]) * 1000.0))),
+        "fractal_n3_cantorseventrack_r_in_um": ("FractalNthreeCantorseventrackRInUm", round(float(d_n3["R_min"]), 2)),
+        "fractal_n3_cantorseventrack_r_out_um": ("FractalNthreeCantorseventrackROutUm", round(float(d_n3["R_max"]), 2)),
+        "fractal_n3_cantorseventrack_w_slot_gen3_nm": ("FractalNthreeCantorseventrackWSlotGenthreeNm", round((float(t_n3_gen3["r_outer"]) - float(t_n3_gen3["r_inner"])) * 1000.0, 1)),
+        "fractal_n3_cantorseventrack_w_tooth_gen3_nm": ("FractalNthreeCantorseventrackWToothGenthreeNm", round((float(t_n3_gen3["r_tooth_out"]) - float(t_n3_gen3["r_tooth_in"])) * 1000.0, 1)),
+        "fractal_n3_cantorseventrack_g_r_gen3_nm": ("FractalNthreeCantorseventrackGRGenthreeNm", round((float(t_n3_gen3["r_tooth_in"]) - float(t_n3_gen3["r_inner"])) * 1000.0, 1)),
+    }
+
+    owned_macros: dict[str, str] = {}
+    for key, (macro_name, val) in grounded_metrics.items():
+        provenance.module.log_metric(
+            key=key,
+            value=val,
+            step_id="grounded_manuscript_sync",
+            metrics_path=str(provenance.metrics_path),
+        )
+        if isinstance(val, float):
+            text_val = f"{val:.6g}".rstrip("0").rstrip(".") if "." in f"{val:.6g}" else f"{val:.6g}"
+        else:
+            text_val = str(val)
+        owned_macros[macro_name] = text_val
+
+    macro_targets = [
+        root / "results" / "macros_results.tex",
+        root / "Papers" / "FCE_Nature_ver01" / "macros_results.tex",
+        root / "Papers" / "Fractal_Casimir_Nature_EM" / "macros_results.tex",
+    ]
+    for target in macro_targets:
+        if not target.is_file():
+            continue
+        if not budget.take():
+            return
+        _upsert_owned_macros(target, owned_macros)
+        provenance.step(budget.used, f"Upserted grounded macros: {target}", target)
 
 
 def locate_macros(root: Path, explicit: Path | None) -> Path:
@@ -954,11 +1263,15 @@ def locate_macros(root: Path, explicit: Path | None) -> Path:
         if not path.is_file():
             raise FileNotFoundError(path)
         return path
-    preferred = root / "Papers" / "Fractal_Casimir_Nature_EM" / "macros_results.tex"
+    preferred = root / "Papers" / "FCE_Nature_ver01" / "macros_results.tex"
     if preferred.is_file():
         return preferred
+    fallback = root / "Papers" / "Fractal_Casimir_Nature_EM" / "macros_results.tex"
+    if fallback.is_file():
+        return fallback
     candidates = [
         root / "macros_results.tex",
+        root / "Papers" / "FCE_Nature_ver01" / "macros_results.tex",
         root / "Papers" / "Fractal_Casimir_Nature_EM" / "macros_results.tex",
         root / "results" / "macros_results.tex",
     ]
@@ -1119,33 +1432,41 @@ def main() -> int:
                         f"{source}: expected a nonempty top-level JSON object"
                     )
 
-            macros = Macros(locate_macros(root, arguments.macros_path))
-            # The specified result macros supply the scientific cells directly.
-            # Do not infer replacement values from unrelated nested JSON fields.
-            facts: list[Fact] = []
+            base_macros = Macros(locate_macros(root, arguments.macros_path))
+            sync_grounded_manuscript_macros(root, provenance, base_macros, budget)
+            if budget.maximum is None or budget.used < budget.maximum:
+                macros = Macros(locate_macros(root, arguments.macros_path))
+                # The specified result macros supply the scientific cells directly.
+                # Do not infer replacement values from unrelated nested JSON fields.
+                facts: list[Fact] = []
 
-            table_directory = root / "Papers" / "Fractal_Casimir_Nature_EM" / "tables"
-            builders: tuple[tuple[str, Callable[[Sequence[Fact], Macros], str]], ...] = (
-                ("table_fractal_geometry_control.tex", geometry_table),
-                ("table_quantum_clutch.tex", clutch_table),
-            )
-            remaining = (
-                len(builders) if budget.maximum is None
-                else min(len(builders), budget.maximum - budget.used)
-            )
-            # Validate every table selected by the budget before replacing any table.
-            prepared = [
-                (table_directory / filename, builder(facts, macros))
-                for filename, builder in builders[:remaining]
-            ]
-            for path, content in prepared:
-                if "pending" in content.lower():
-                    raise ValueError(f"Refusing to write a table with Pending cells: {path}")
-                if not budget.take():
-                    break
-                atomic_write(path, content)
-                counts["tables_written"] += 1
-                provenance.step(budget.used, f"Wrote grounded post-bugfix table: {path}", path)
+                table_directories = [
+                    d for d in (
+                        root / "Papers" / "FCE_Nature_ver01" / "tables",
+                        root / "Papers" / "Fractal_Casimir_Nature_EM" / "tables",
+                    )
+                    if d.parent.is_dir()
+                ]
+                builders: tuple[tuple[str, Callable[[Sequence[Fact], Macros], str]], ...] = (
+                    ("table_fractal_geometry_control.tex", geometry_table),
+                    ("table_quantum_clutch.tex", clutch_table),
+                )
+                # Validate every table before replacing any table file.
+                prepared = [
+                    (filename, builder(facts, macros))
+                    for filename, builder in builders
+                ]
+                for filename, content in prepared:
+                    if "pending" in content.lower():
+                        raise ValueError(f"Refusing to write a table with Pending cells: {filename}")
+                for filename, content in prepared:
+                    for table_directory in table_directories:
+                        if not budget.take():
+                            break
+                        path = table_directory / filename
+                        atomic_write(path, content)
+                        counts["tables_written"] += 1
+                        provenance.step(budget.used, f"Wrote grounded post-bugfix table: {path}", path)
     except Exception as exc:
         failure = exc
         LOGGER.exception("Synchronization failed: %s", exc)
