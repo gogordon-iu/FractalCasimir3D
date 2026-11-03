@@ -1,15 +1,15 @@
 {
   "run_metadata": {
     "created_at": "2026-11-02T18:47:46.170236+00:00",
-    "updated_at": "2026-11-03T00:46:44.421450+00:00",
+    "updated_at": "2026-11-03T00:59:59.881809+00:00",
     "environment": "Linux",
     "entry_point": "execution/run_scoped_clutch_meep.py",
     "solver": "meep",
     "solver_parameters": {
       "solver": "meep",
       "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
-      "resolution": 50,
-      "dx_um": 0.02,
+      "resolution": 60,
+      "dx_um": 0.016666666666666666,
       "courant": 0.5,
       "t_run": 3.0,
       "sigma": 33.333333333333336,
@@ -28,8 +28,8 @@
       "eps_averaging": false,
       "geometry_mode": "rectilinear_xz",
       "max_steps": 0,
-      "timesteps_per_last_moment": 300,
-      "dt": 0.01
+      "timesteps_per_last_moment": 360,
+      "dt": 0.008333333333333333
     }
   },
   "intermediate_steps": {
@@ -812,6 +812,84 @@
         "timesteps_per_last_moment": 300,
         "dt": 0.01
       }
+    },
+    "clutch_pilot_task_11_complete": {
+      "timestamp": "2026-11-03T00:59:58.150825+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 357,
+      "data_summary": {
+        "task_id": 11,
+        "theta_deg": 3.0,
+        "N_fractal": 2,
+        "Sigma": 33.333333333333336,
+        "completed_moments": 432,
+        "completed_by_config": {
+          "both": 108,
+          "rotor": 108,
+          "stator": 108,
+          "vac": 108
+        },
+        "F_sector0_both": 968.6753220226931,
+        "F_sector0_rotor": 1272.5671631945331,
+        "F_sector0_self": 1272.5671631945331,
+        "F_sector0_stator": 707.2021899225255,
+        "F_sector0_vac": 856.6904470007154,
+        "solver": "meep",
+        "solver_parameters": {
+          "solver": "meep",
+          "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+          "resolution": 60,
+          "dx_um": 0.016666666666666666,
+          "courant": 0.5,
+          "t_run": 3.0,
+          "sigma": 33.333333333333336,
+          "nmax": 1,
+          "moments_per_config": 108,
+          "configurations": [
+            "both",
+            "rotor",
+            "stator",
+            "vac"
+          ],
+          "inclusion_exclusion_passes": 4,
+          "pml_thickness": 0.25,
+          "force_complex_fields": true,
+          "fixed_stress_box_margin_um": 0.01,
+          "eps_averaging": false,
+          "geometry_mode": "rectilinear_xz",
+          "max_steps": 0,
+          "timesteps_per_last_moment": 360,
+          "dt": 0.008333333333333333
+        }
+      },
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 1,
+        "moments_per_config": 108,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.25,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.01,
+        "eps_averaging": false,
+        "geometry_mode": "rectilinear_xz",
+        "max_steps": 0,
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
+      }
     }
   },
   "metrics": {
@@ -851,18 +929,18 @@
       }
     },
     "F_both": {
-      "value": 747.8943252275295,
+      "value": 3874.7012880907723,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 390,
-      "step_id": "clutch_pilot_task_10_complete",
-      "recorded_at": "2026-11-03T00:46:42.805804+00:00",
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:58.208123+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
         "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
-        "resolution": 50,
-        "dx_um": 0.02,
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
         "courant": 0.5,
         "t_run": 3.0,
         "sigma": 33.333333333333336,
@@ -881,8 +959,8 @@
         "eps_averaging": false,
         "geometry_mode": "rectilinear_xz",
         "max_steps": 0,
-        "timesteps_per_last_moment": 300,
-        "dt": 0.01
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
       }
     },
     "clutch_pilot_task_1_F_rotor": {
@@ -921,18 +999,18 @@
       }
     },
     "F_rotor": {
-      "value": 209.07250507018358,
+      "value": 5090.2686527781325,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 390,
-      "step_id": "clutch_pilot_task_10_complete",
-      "recorded_at": "2026-11-03T00:46:42.861736+00:00",
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:58.455647+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
         "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
-        "resolution": 50,
-        "dx_um": 0.02,
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
         "courant": 0.5,
         "t_run": 3.0,
         "sigma": 33.333333333333336,
@@ -951,8 +1029,8 @@
         "eps_averaging": false,
         "geometry_mode": "rectilinear_xz",
         "max_steps": 0,
-        "timesteps_per_last_moment": 300,
-        "dt": 0.01
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
       }
     },
     "clutch_pilot_task_1_F_self": {
@@ -991,18 +1069,18 @@
       }
     },
     "F_self": {
-      "value": 209.07250507018358,
+      "value": 5090.2686527781325,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 390,
-      "step_id": "clutch_pilot_task_10_complete",
-      "recorded_at": "2026-11-03T00:46:42.949496+00:00",
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:58.630779+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
         "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
-        "resolution": 50,
-        "dx_um": 0.02,
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
         "courant": 0.5,
         "t_run": 3.0,
         "sigma": 33.333333333333336,
@@ -1021,8 +1099,8 @@
         "eps_averaging": false,
         "geometry_mode": "rectilinear_xz",
         "max_steps": 0,
-        "timesteps_per_last_moment": 300,
-        "dt": 0.01
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
       }
     },
     "clutch_pilot_task_1_F_stator": {
@@ -1061,18 +1139,18 @@
       }
     },
     "F_stator": {
-      "value": -1849.5724483109661,
+      "value": 2828.808759690102,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 390,
-      "step_id": "clutch_pilot_task_10_complete",
-      "recorded_at": "2026-11-03T00:46:43.437411+00:00",
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:58.681446+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
         "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
-        "resolution": 50,
-        "dx_um": 0.02,
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
         "courant": 0.5,
         "t_run": 3.0,
         "sigma": 33.333333333333336,
@@ -1091,8 +1169,8 @@
         "eps_averaging": false,
         "geometry_mode": "rectilinear_xz",
         "max_steps": 0,
-        "timesteps_per_last_moment": 300,
-        "dt": 0.01
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
       }
     },
     "clutch_pilot_task_1_F_vac": {
@@ -1131,18 +1209,18 @@
       }
     },
     "F_vac": {
-      "value": -129.95412526667144,
+      "value": 3426.7617880028615,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 390,
-      "step_id": "clutch_pilot_task_10_complete",
-      "recorded_at": "2026-11-03T00:46:43.940347+00:00",
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:58.732922+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
         "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
-        "resolution": 50,
-        "dx_um": 0.02,
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
         "courant": 0.5,
         "t_run": 3.0,
         "sigma": 33.333333333333336,
@@ -1161,8 +1239,8 @@
         "eps_averaging": false,
         "geometry_mode": "rectilinear_xz",
         "max_steps": 0,
-        "timesteps_per_last_moment": 300,
-        "dt": 0.01
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
       }
     },
     "clutch_pilot_task_1_F_2pass": {
@@ -1201,18 +1279,18 @@
       }
     },
     "F_2pass": {
-      "value": 538.8218201573459,
+      "value": -1215.5673646873602,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 390,
-      "step_id": "clutch_pilot_task_10_complete",
-      "recorded_at": "2026-11-03T00:46:43.993417+00:00",
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:58.797286+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
         "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
-        "resolution": 50,
-        "dx_um": 0.02,
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
         "courant": 0.5,
         "t_run": 3.0,
         "sigma": 33.333333333333336,
@@ -1231,8 +1309,8 @@
         "eps_averaging": false,
         "geometry_mode": "rectilinear_xz",
         "max_steps": 0,
-        "timesteps_per_last_moment": 300,
-        "dt": 0.01
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
       }
     },
     "clutch_pilot_task_1_F_stator_only": {
@@ -1271,18 +1349,18 @@
       }
     },
     "F_stator_only": {
-      "value": -1719.6183230442948,
+      "value": -597.9530283127597,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 390,
-      "step_id": "clutch_pilot_task_10_complete",
-      "recorded_at": "2026-11-03T00:46:44.085132+00:00",
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:58.960067+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
         "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
-        "resolution": 50,
-        "dx_um": 0.02,
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
         "courant": 0.5,
         "t_run": 3.0,
         "sigma": 33.333333333333336,
@@ -1301,8 +1379,8 @@
         "eps_averaging": false,
         "geometry_mode": "rectilinear_xz",
         "max_steps": 0,
-        "timesteps_per_last_moment": 300,
-        "dt": 0.01
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
       }
     },
     "clutch_pilot_task_1_F_net": {
@@ -1341,18 +1419,18 @@
       }
     },
     "F_net": {
-      "value": 2258.4401432016407,
+      "value": -617.6143363746005,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 390,
-      "step_id": "clutch_pilot_task_10_complete",
-      "recorded_at": "2026-11-03T00:46:44.169376+00:00",
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:59.304446+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
         "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
-        "resolution": 50,
-        "dx_um": 0.02,
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
         "courant": 0.5,
         "t_run": 3.0,
         "sigma": 33.333333333333336,
@@ -1371,8 +1449,8 @@
         "eps_averaging": false,
         "geometry_mode": "rectilinear_xz",
         "max_steps": 0,
-        "timesteps_per_last_moment": 300,
-        "dt": 0.01
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
       }
     },
     "clutch_pilot_task_1_f_net_fN": {
@@ -1411,18 +1489,18 @@
       }
     },
     "f_net_fN": {
-      "value": 71401.1833881138,
+      "value": -19526.0408505207,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 390,
-      "step_id": "clutch_pilot_task_10_complete",
-      "recorded_at": "2026-11-03T00:46:44.242459+00:00",
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:59.726923+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
         "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
-        "resolution": 50,
-        "dx_um": 0.02,
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
         "courant": 0.5,
         "t_run": 3.0,
         "sigma": 33.333333333333336,
@@ -1441,8 +1519,8 @@
         "eps_averaging": false,
         "geometry_mode": "rectilinear_xz",
         "max_steps": 0,
-        "timesteps_per_last_moment": 300,
-        "dt": 0.01
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
       }
     },
     "clutch_pilot_task_1_f_net_pN": {
@@ -1481,18 +1559,18 @@
       }
     },
     "f_net_pN": {
-      "value": 71.40118338811381,
+      "value": -19.5260408505207,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 390,
-      "step_id": "clutch_pilot_task_10_complete",
-      "recorded_at": "2026-11-03T00:46:44.300972+00:00",
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:59.779472+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
         "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
-        "resolution": 50,
-        "dx_um": 0.02,
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
         "courant": 0.5,
         "t_run": 3.0,
         "sigma": 33.333333333333336,
@@ -1511,8 +1589,8 @@
         "eps_averaging": false,
         "geometry_mode": "rectilinear_xz",
         "max_steps": 0,
-        "timesteps_per_last_moment": 300,
-        "dt": 0.01
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
       }
     },
     "clutch_pilot_task_1_elapsed_seconds": {
@@ -1551,18 +1629,18 @@
       }
     },
     "elapsed_seconds": {
-      "value": 1154.0126616260968,
+      "value": 1692.3577400739305,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 390,
-      "step_id": "clutch_pilot_task_10_complete",
-      "recorded_at": "2026-11-03T00:46:44.355807+00:00",
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:59.830167+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
         "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
-        "resolution": 50,
-        "dx_um": 0.02,
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
         "courant": 0.5,
         "t_run": 3.0,
         "sigma": 33.333333333333336,
@@ -1581,8 +1659,8 @@
         "eps_averaging": false,
         "geometry_mode": "rectilinear_xz",
         "max_steps": 0,
-        "timesteps_per_last_moment": 300,
-        "dt": 0.01
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
       }
     },
     "clutch_pilot_task_1_completed_moments": {
@@ -1625,14 +1703,14 @@
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 390,
-      "step_id": "clutch_pilot_task_10_complete",
-      "recorded_at": "2026-11-03T00:46:44.421442+00:00",
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:59.881801+00:00",
       "solver": "meep",
       "solver_parameters": {
         "solver": "meep",
         "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
-        "resolution": 50,
-        "dx_um": 0.02,
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
         "courant": 0.5,
         "t_run": 3.0,
         "sigma": 33.333333333333336,
@@ -1651,8 +1729,8 @@
         "eps_averaging": false,
         "geometry_mode": "rectilinear_xz",
         "max_steps": 0,
-        "timesteps_per_last_moment": 300,
-        "dt": 0.01
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
       }
     },
     "clutch_pilot_task_2_F_both": {
@@ -5434,10 +5512,430 @@
         "timesteps_per_last_moment": 300,
         "dt": 0.01
       }
+    },
+    "clutch_pilot_task_11_F_both": {
+      "value": 3874.7012880907723,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 390,
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:58.182924+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 1,
+        "moments_per_config": 108,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.25,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.01,
+        "eps_averaging": false,
+        "geometry_mode": "rectilinear_xz",
+        "max_steps": 0,
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
+      }
+    },
+    "clutch_pilot_task_11_F_rotor": {
+      "value": 5090.2686527781325,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 390,
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:58.233319+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 1,
+        "moments_per_config": 108,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.25,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.01,
+        "eps_averaging": false,
+        "geometry_mode": "rectilinear_xz",
+        "max_steps": 0,
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
+      }
+    },
+    "clutch_pilot_task_11_F_self": {
+      "value": 5090.2686527781325,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 390,
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:58.606973+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 1,
+        "moments_per_config": 108,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.25,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.01,
+        "eps_averaging": false,
+        "geometry_mode": "rectilinear_xz",
+        "max_steps": 0,
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
+      }
+    },
+    "clutch_pilot_task_11_F_stator": {
+      "value": 2828.808759690102,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 390,
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:58.655308+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 1,
+        "moments_per_config": 108,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.25,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.01,
+        "eps_averaging": false,
+        "geometry_mode": "rectilinear_xz",
+        "max_steps": 0,
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
+      }
+    },
+    "clutch_pilot_task_11_F_vac": {
+      "value": 3426.7617880028615,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 390,
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:58.708117+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 1,
+        "moments_per_config": 108,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.25,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.01,
+        "eps_averaging": false,
+        "geometry_mode": "rectilinear_xz",
+        "max_steps": 0,
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
+      }
+    },
+    "clutch_pilot_task_11_F_2pass": {
+      "value": -1215.5673646873602,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 390,
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:58.760569+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 1,
+        "moments_per_config": 108,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.25,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.01,
+        "eps_averaging": false,
+        "geometry_mode": "rectilinear_xz",
+        "max_steps": 0,
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
+      }
+    },
+    "clutch_pilot_task_11_F_stator_only": {
+      "value": -597.9530283127597,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 390,
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:58.824331+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 1,
+        "moments_per_config": 108,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.25,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.01,
+        "eps_averaging": false,
+        "geometry_mode": "rectilinear_xz",
+        "max_steps": 0,
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
+      }
+    },
+    "clutch_pilot_task_11_F_net": {
+      "value": -617.6143363746005,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 390,
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:59.280355+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 1,
+        "moments_per_config": 108,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.25,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.01,
+        "eps_averaging": false,
+        "geometry_mode": "rectilinear_xz",
+        "max_steps": 0,
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
+      }
+    },
+    "clutch_pilot_task_11_f_net_fN": {
+      "value": -19526.0408505207,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 390,
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:59.328314+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 1,
+        "moments_per_config": 108,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.25,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.01,
+        "eps_averaging": false,
+        "geometry_mode": "rectilinear_xz",
+        "max_steps": 0,
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
+      }
+    },
+    "clutch_pilot_task_11_f_net_pN": {
+      "value": -19.5260408505207,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 390,
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:59.752502+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 1,
+        "moments_per_config": 108,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.25,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.01,
+        "eps_averaging": false,
+        "geometry_mode": "rectilinear_xz",
+        "max_steps": 0,
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
+      }
+    },
+    "clutch_pilot_task_11_elapsed_seconds": {
+      "value": 1692.3577400739305,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 390,
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:59.804013+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 1,
+        "moments_per_config": 108,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.25,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.01,
+        "eps_averaging": false,
+        "geometry_mode": "rectilinear_xz",
+        "max_steps": 0,
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
+      }
+    },
+    "clutch_pilot_task_11_completed_moments": {
+      "value": 432,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 390,
+      "step_id": "clutch_pilot_task_11_complete",
+      "recorded_at": "2026-11-03T00:59:59.855774+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 60,
+        "dx_um": 0.016666666666666666,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 1,
+        "moments_per_config": 108,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.25,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.01,
+        "eps_averaging": false,
+        "geometry_mode": "rectilinear_xz",
+        "max_steps": 0,
+        "timesteps_per_last_moment": 360,
+        "dt": 0.008333333333333333
+      }
     }
   },
   "model": "meep",
   "dataset": "fractal_casimir_3d",
   "status": "completed",
-  "executed_at": "2026-11-03T00:46:44.421470+00:00"
+  "executed_at": "2026-11-03T00:59:59.881828+00:00"
 }
