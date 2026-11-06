@@ -375,6 +375,9 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     payload = {
         "generated_at_utc": now_iso,
+        "executed_at": now_iso,
+        "model": "BEM_Unified3DFractal_Factorial",
+        "dataset": "n3_unified_3d_fractal_factorial_study",
         "execution_status": "micro_probe_complete" if is_micro else "complete",
         "solver_config": {
             "n_r_slot": 2,
