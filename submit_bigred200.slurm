@@ -1146,21 +1146,21 @@ export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
 export HF_DATASETS_OFFLINE=1
 export WANDB_MODE=offline
-export TORCH_HOME="$SCRATCH/torch_cache"
+export TORCH_HOME="${SLATE:-/N/slate/${USER:-gogordon}}/.cache/torch"
 
 module purge
 module load python/gpu/3.10.10
 
 # Source project venv if present
-if [ -d "$HOME/venvs/research" ]; then
-    source "$HOME/venvs/research/bin/activate"
+if [ -d "${HOME:-}/venvs/research" ]; then
+    source "${HOME}/venvs/research/bin/activate"
 fi
 
 mkdir -p results figures logs
 
 echo "=== [Big Red 200 Job Started: $(date)] ==="
 echo "Host: $(hostname)"
-echo "CUDA_VISIBLE_DEVICES: $CUDA_VISIBLE_DEVICES"
+echo "CUDA_VISIBLE_DEVICES: ${CUDA_VISIBLE_DEVICES:-none}"
 
 # Execute unmodified Python script with full production parameters
 export OMP_NUM_THREADS=64

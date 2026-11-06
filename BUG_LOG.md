@@ -335,6 +335,10 @@
 - **Bug**: compute_discretization_pull_in_bounds inferred theta=48 deg r_edge=5 nm force by multiplying sharp Ultra-High attraction by the theta=3 deg rounding ratio.
 - **Solution**: Loaded all BEM forces directly from solver JSON outputs and set r_edge=5 nm theta=48 deg engaged force to None unless directly solved.
 
-### [BUG-261106-01] 2026-11-06 | execution/multiscale_3d_fractal_architecture.py | scope=model
+### [BUG-261106-01] 2026-11-06T18:00:00Z | execution/multiscale_3d_fractal_architecture.py | scope=model dataset=n3_unified_3d_fractal_factorial_study
 - **Bug**: Hardcoded z_pad_top switching, >36 deg tooth overhang, and rotor-only sub-teeth without stator Cantor sub-ribs distorted 2^3 factorial comparisons.
 - **Solution**: Centralized lab-bounded 3D (r,theta,z) Cantor rotor+stator generation with invariant z_pad_top=-0.115 um and <=28 deg cap in dedicated modules.
+
+### [BUG-261106-02] 2026-11-06 | submit_bigred200.slurm,utils/hpc_gate.py | scope=harness
+- **Bug**: Unbound SCRATCH and CUDA_VISIBLE_DEVICES in submit_bigred200.slurm caused immediate exit code 1 under set -Eeuo pipefail on BigRed200 CPU nodes.
+- **Solution**: Replaced unbound variables with nounset-safe SLATE and CUDA_VISIBLE_DEVICES parameter expansions.
