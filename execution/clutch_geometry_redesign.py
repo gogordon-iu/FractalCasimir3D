@@ -38,7 +38,28 @@ __all__ = [
     "DEFAULT_MAX_TRUN_CEIL",
     "DEFAULT_MIN_TOOTH_W_UM",
     "DEFAULT_MIN_TRUN_FLOOR",
+    "DEFAULT_N3_ANGLES_BY_GEN_DEG",
+    "DEFAULT_N3_APERTURE_MARGIN_DEG",
+    "DEFAULT_N3_CANTOR_GENERATIONS",
+    "DEFAULT_N3_CANTOR_SLOT_WIDTHS_NM",
+    "DEFAULT_N3_CONFORMAL_SLOT_WIDTHS_NM",
+    "DEFAULT_N3_H_TEETH_BY_GEN_UM",
+    "DEFAULT_N3_ISO_AREA_TARGET_UM2",
+    "DEFAULT_N3_MAX_TOOTH_ARC_DEG",
+    "DEFAULT_N3_MONOTONIC_GENERATIONS",
+    "DEFAULT_N3_MONOTONIC_SLOT_WIDTHS_NM",
+    "DEFAULT_N3_OUT_OF_PHASE_SLOT_ORDER",
+    "DEFAULT_N3_QUASI_PLANAR_R_MAX_UM",
+    "DEFAULT_N3_QUASI_PLANAR_R_MIN_UM",
+    "DEFAULT_N3_RAIL_CLEARANCE_UM",
+    "DEFAULT_N3_RAIL_WIDTH_UM",
+    "DEFAULT_N3_R_MAX_UM",
+    "DEFAULT_N3_SUBTOOTH_MIN_SLOT_NM",
     "DEFAULT_N3_TOOTH_ARC_DEG",
+    "DEFAULT_N3_UNIFORM_GENERATIONS",
+    "DEFAULT_N3_UNIFORM_SLOT_WIDTHS_NM",
+    "DEFAULT_N3_W1_RATIO",
+    "DEFAULT_N3_Z_TIPS_BY_GEN_UM",
     "DEFAULT_NUM_SECTORS",
     "DEFAULT_ROTATIONAL_APERTURE_ARC_DEG",
     "DEFAULT_R_MAX_UM",
@@ -70,10 +91,20 @@ __all__ = [
     "ROTATIONAL_C8_COMPACT_N2_SPEC",
     "ROTATIONAL_C10_FRACTAL_N3_SPEC",
     "ROTATIONAL_Z_EFF_DEFAULT_DESIGNS",
+    "DEFAULT_LAB_MIN_FEATURE_UM",
+    "DEFAULT_LAB_MIN_CLEARANCE_UM",
+    "DEFAULT_LAB_MIN_AZIMUTHAL_ARC_UM",
+    "DEFAULT_LAB_MIN_AXIAL_STEP_UM",
+    "DEFAULT_MAX_THETA_CANTOR_DEPTH",
     "compute_dynamic_Trun",
+    "compute_max_feasible_cantor_depth",
     "disengaged_angle_deg",
     "engaged_angle_deg",
+    "get_bounded_cantor_intervals",
+    "get_cantor_dust_intervals",
     "get_cantor_radial_intervals",
+    "get_conformal_cantor_slot_widths_nm",
+    "get_equal_subslots",
     "get_scoped_clutch_elements",
     "generate_annular_sector_prism_vertices",
     "generate_rectilinear_rotor_geometry",
@@ -123,6 +154,41 @@ MONOLITHIC_SPOKE_Z_MAX_UM = 0.470
 MONOLITHIC_TRENCH_Z_MIN_UM = -0.650
 MONOLITHIC_TRENCH_Z_MAX_UM = -0.550
 MONOLITHIC_PAD_BOT_Z_UM = DEFAULT_Z_PAD_TOP_UM - DEFAULT_T_LANDING_PAD_UM
+
+# Canonical N=3 (7-track) multi-dimensional fractal & matched-control parameters.
+DEFAULT_LAB_MIN_FEATURE_UM = 0.015
+DEFAULT_LAB_MIN_CLEARANCE_UM = 0.015
+DEFAULT_LAB_MIN_AZIMUTHAL_ARC_UM = 0.015
+DEFAULT_LAB_MIN_AXIAL_STEP_UM = 0.002
+DEFAULT_N3_R_MAX_UM = 1.65
+DEFAULT_N3_W1_RATIO = 0.40
+DEFAULT_N3_QUASI_PLANAR_R_MIN_UM = 10.0
+DEFAULT_N3_QUASI_PLANAR_R_MAX_UM = 11.35
+DEFAULT_N3_CANTOR_GENERATIONS: tuple[int, ...] = (3, 2, 3, 1, 3, 2, 3)
+DEFAULT_N3_MONOTONIC_GENERATIONS: tuple[int, ...] = (3, 3, 3, 3, 2, 2, 1)
+DEFAULT_N3_UNIFORM_GENERATIONS: tuple[int, ...] = (2, 2, 2, 2, 2, 2, 2)
+DEFAULT_N3_CANTOR_SLOT_WIDTHS_NM: tuple[float, ...] = (50.0, 150.0, 50.0, 450.0, 50.0, 150.0, 50.0)
+DEFAULT_N3_MONOTONIC_SLOT_WIDTHS_NM: tuple[float, ...] = (50.0, 50.0, 50.0, 50.0, 150.0, 150.0, 450.0)
+DEFAULT_N3_UNIFORM_SLOT_WIDTHS_NM: tuple[float, ...] = tuple([sum(DEFAULT_N3_CANTOR_SLOT_WIDTHS_NM) / 7.0] * 7)
+DEFAULT_N3_APERTURE_MARGIN_DEG = 4.0
+DEFAULT_N3_MAX_TOOTH_ARC_DEG = DEFAULT_ROTATIONAL_APERTURE_ARC_DEG - 2.0 * DEFAULT_N3_APERTURE_MARGIN_DEG
+DEFAULT_N3_RAIL_CLEARANCE_UM = 0.0150
+DEFAULT_N3_RAIL_WIDTH_UM = 0.0200
+DEFAULT_N3_SUBTOOTH_MIN_SLOT_NM = 130.0
+DEFAULT_MAX_THETA_CANTOR_DEPTH = 1
+# Strictly orthogonal generation-indexed axial step profile that fits above DEFAULT_Z_PAD_TOP_UM (-0.115 um):
+DEFAULT_N3_Z_TIPS_BY_GEN_UM: dict[int, float] = {1: -0.090, 2: -0.080, 3: -0.070}
+DEFAULT_N3_H_TEETH_BY_GEN_UM: dict[int, float] = {1: 0.090, 2: 0.080, 3: 0.070}
+DEFAULT_N3_ANGLES_BY_GEN_DEG: dict[int, float] = {1: 14.0, 2: 18.0, 3: 22.0}
+DEFAULT_N3_OUT_OF_PHASE_SLOT_ORDER: tuple[int, ...] = (3, 0, 5, 2, 1, 6, 4)
+# Exact active tooth footprint area of the baseline N=3 Cantor clutch (A_tooth in um^2):
+DEFAULT_N3_ISO_AREA_TARGET_UM2 = (
+    DEFAULT_NUM_SECTORS
+    * math.radians(DEFAULT_N3_TOOTH_ARC_DEG)
+    * 0.5
+    * (DEFAULT_R_MIN_UM + DEFAULT_N3_R_MAX_UM)
+    * (DEFAULT_N3_W1_RATIO * sum(DEFAULT_N3_CANTOR_SLOT_WIDTHS_NM) * 1e-3)
+)
 
 
 def tooth_center_angle_deg(
@@ -368,8 +434,8 @@ def get_cantor_radial_intervals(
 ) -> list[RadialInterval]:
     """Return removed middle-third intervals, ordered by inner then outer radius."""
     depth = _integer("N", N)
-    if depth not in (1, 2, 3):
-        raise ValueError("N must be one of 1, 2, or 3.")
+    if depth not in (1, 2, 3, 4):
+        raise ValueError("N must be one of 1, 2, 3, or 4.")
     inner = _finite("R_min", R_min)
     outer = _positive("R_max", R_max)
     if inner < 0.0 or inner >= outer:
@@ -389,6 +455,112 @@ def get_cantor_radial_intervals(
         survivors = next_survivors
     removed.sort(key=lambda item: (item["r_inner"], item["r_outer"]))
     return removed
+
+
+def compute_max_feasible_cantor_depth(
+    span: float,
+    min_feature: float,
+    max_depth_cap: int = 4,
+) -> int:
+    """Return the deepest Cantor generation N >= 0 whose smallest feature span / 3^N >= min_feature."""
+    s = _positive("span", span)
+    mf = _positive("min_feature", min_feature)
+    cap = int(max_depth_cap)
+    if cap < 0:
+        raise ValueError("max_depth_cap must be >= 0")
+    depth = 0
+    while depth < cap and (s / (3.0 ** (depth + 1))) >= mf - 1e-12:
+        depth += 1
+    return depth
+
+
+def get_cantor_dust_intervals(
+    depth: int,
+    low: float,
+    high: float,
+) -> list[tuple[float, float]]:
+    """Return the 2^depth surviving Cantor sub-intervals on [low, high] at generation depth >= 0."""
+    d = int(depth)
+    if d < 0:
+        raise ValueError("depth must be >= 0")
+    _positive("interval span", high - low)
+    survivors: list[tuple[float, float]] = [(float(low), float(high))]
+    for _ in range(d):
+        next_survivors: list[tuple[float, float]] = []
+        for left, right in survivors:
+            third = (right - left) / 3.0
+            next_survivors.extend(((left, left + third), (right - third, right)))
+        survivors = next_survivors
+    return survivors
+
+
+def get_equal_subslots(
+    count: int,
+    low: float,
+    high: float,
+    rib_um: float = DEFAULT_LAB_MIN_FEATURE_UM,
+) -> list[tuple[float, float]]:
+    """Subdivide [low, high] into `count >= 1` equal sub-intervals separated by `count - 1` ribs of width `rib_um`."""
+    c = _integer("count", count)
+    if c < 1:
+        raise ValueError("count must be >= 1")
+    span = _positive("interval span", high - low)
+    r_w = _finite("rib_um", rib_um)
+    if r_w < 0.0:
+        raise ValueError("rib_um must be >= 0")
+    total_rib = float(c - 1) * r_w
+    if total_rib >= span:
+        raise ValueError("Total internal rib width must be strictly less than interval span")
+    sub_w = (span - total_rib) / float(c)
+    step = sub_w + r_w
+    return [(float(low + i * step), float(low + i * step + sub_w)) for i in range(c)]
+
+
+
+def get_bounded_cantor_intervals(
+    low: float,
+    high: float,
+    min_feature: float,
+    max_depth_cap: int = 4,
+) -> tuple[int, list[RadialInterval]]:
+    """Recursively subdivide [low, high] into middle-third Cantor intervals up to the deepest
+    generation N <= max_depth_cap where every interval and surviving rib is >= min_feature."""
+    span = _positive("interval span", high - low)
+    mf = _positive("min_feature", min_feature)
+    n_max = max(1, compute_max_feasible_cantor_depth(span, mf, max_depth_cap=max_depth_cap))
+    return n_max, get_cantor_radial_intervals(n_max, low, high)
+
+
+def get_conformal_cantor_slot_widths_nm(
+    N: int = 3,
+    R_min: float = DEFAULT_R_MIN_UM,
+    R_max: float = DEFAULT_N3_R_MAX_UM,
+    total_slot_nm: float = 950.0,
+    min_slot_nm: float = 50.0,
+) -> tuple[float, ...]:
+    """Compute conformal logarithmic Cantor slot widths in nm via r(u) = R_min * (R_max/R_min)^u,
+    preserving total slot width and the minimum Generation-N slot width."""
+    unit_intervals = get_cantor_radial_intervals(N, 0.0, 1.0)
+    ratio = _positive("R_max / R_min", R_max / R_min)
+    raw_widths = [
+        R_min * (ratio ** item["r_outer"] - ratio ** item["r_inner"])
+        for item in unit_intervals
+    ]
+    levels = [item["level"] for item in unit_intervals]
+    max_level = max(levels)
+    fixed_total = sum(min_slot_nm for lvl in levels if lvl == max_level)
+    rem_budget = total_slot_nm - fixed_total
+    coarse_raw_sum = sum(w for w, lvl in zip(raw_widths, levels) if lvl < max_level)
+    out: list[float] = []
+    for w, lvl in zip(raw_widths, levels):
+        if lvl == max_level or coarse_raw_sum <= 0.0:
+            out.append(float(min_slot_nm))
+        else:
+            out.append(float(rem_budget * (w / coarse_raw_sum)))
+    return tuple(out)
+
+
+DEFAULT_N3_CONFORMAL_SLOT_WIDTHS_NM: tuple[float, ...] = get_conformal_cantor_slot_widths_nm()
 
 
 def get_scoped_clutch_elements(
@@ -794,19 +966,22 @@ def generate_rectilinear_stator_geometry(
     mp = _meep()
     metal = mp.metal if plate_material is None else plate_material
     void = mp.air if void_material is None else void_material
-    # Full square membrane + full pad slab, then carve axis-aligned rectangular slots.
+    # Full square membrane + recessed landing-pad slab, then carve axis-aligned rectangular slots.
     geometry: list[Any] = [
         mp.Block(
             size=mp.Vector3(side, side, membrane),
             center=mp.Vector3(0.0, 0.0, -membrane / 2.0),
             material=metal,
         ),
-        mp.Block(
-            size=mp.Vector3(side, side, -membrane - pad_bottom),
-            center=mp.Vector3(0.0, 0.0, 0.5 * (-membrane + pad_bottom)),
-            material=metal,
-        ),
     ]
+    if pad_top is not None:
+        geometry.append(
+            mp.Block(
+                size=mp.Vector3(side, side, pad),
+                center=mp.Vector3(0.0, 0.0, 0.5 * (pad_top + pad_bottom)),
+                material=metal,
+            )
+        )
     alpha_slot = math.radians(aperture / 2.0)
     # Shift slot transverse center according to relative stator rotation.
     center_angle_deg = (theta_stator_deg + aperture / 2.0) % 90.0

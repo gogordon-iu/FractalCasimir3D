@@ -294,3 +294,47 @@
 ### [BUG-261102-03] 2026-11-02T16:05:00Z | execution/materials_database_dispersive.py | scope=infra
 - **Bug**: Job 8798621 failed with ImportError for GOLD_EPS_INF because execution/materials_database_dispersive.py was unstaged locally.
 - **Solution**: Staged and pushed execution/materials_database_dispersive.py and all execution/ modules so cluster nodes have centralized constants.
+
+### [BUG-261102-04] 2026-11-02T21:45:00Z | execution/clutch_geometry_redesign.py | scope=model model=Rectilinear_Cantor_N2_HybridXZ dataset=rectilinear_xz
+- **Bug**: generate_rectilinear_stator_geometry spanned the landing-pad block across [-membrane, pad_bottom] instead of [pad_top, pad_bottom], filling the bridge gap.
+- **Solution**: Restricted the landing-pad mp.Block to size pad and center 0.5*(pad_top+pad_bottom) when pad_top is not None.
+
+### [BUG-261104-01] 2026-11-04 | execution/build_rotational_z_eff_clutch_blender.py | scope=ui
+- **Bug**: set_rotor overrode two rotor elements to z_tip=-0.090 um in Blender while metadata and cross-sections used design.rotor_tip_um.
+- **Solution**: Removed the hardcoded -0.090 um override in set_rotor so all 3D meshes, metadata, and cross-sections consistently use design.rotor_tip_um.
+
+### [BUG-261104-02] 2026-11-04T18:16:30Z | execution/run_clutch_log_periodicity_probe.py | scope=eval model=BEM_LogPeriodicity_Clutch_Bridge dataset=clutch_log_periodicity_probe
+- **Bug**: Defaulting `panel_levels` to `1` and `min_tooth_w` to `0.020` in `run_clutch_log_periodicity_probe.py` clamped Level 3 radial tooth widths and risked attributing unassigned rotor panels to Generation 1.
+- **Solution**: Initialized `panel_levels` to `0` (unassigned), passed `min_tooth_w=0.005` for exact $b=3$ radial clearances ($g_{r,m} = \{135, 45, 15\}\text{ nm}$), and isolated the radial-wall cross-coupling block with explicit non-negative magnitude peak selection.
+
+### [BUG-261104-03] 2026-11-04T19:13:10Z | execution/run_clutch_log_periodicity_probe.py | scope=eval model=BEM_LogPeriodicity_Clutch_Bridge dataset=clutch_log_periodicity_probe
+- **Bug**: Centroid-radius matching in `evaluate_spectral_trace_by_level` suffered from chord-sag distortion on wide stator bridge panels, while two-step sequential quadratic detrending in `extract_log_periodic_modulation` partially absorbed the fundamental log-periodic harmonic and lacked a sample-count guard for 5-point micro-probes.
+- **Solution**: Replaced centroid radii with exact panel vertex radii (`< 1e-5`), replaced two-step detrending with a simultaneous 7-column joint least-squares design matrix with a sample-count/rank guard (`n_samples >= 10`), and logged/exported all 23 provenance metrics and LaTeX macros via `metrics_logger`.
+
+### [BUG-261104-04] 2026-11-04 | Papers/FCE_Nature_ver01/tables/table_quantum_clutch.tex | scope=docs
+- **Bug**: Table 2 row Cantor_N2_HybridRZ (48 deg) mapped 3D BEM High to Ideal PEC Standard mesh (-9.2572 pN) and omitted Ultra-High.
+- **Solution**: Replaced High and Ultra-High macros with Step 6 Drude gold BEM macros (-6.8872 and -16.5426 pN) and linked N=3 panel count macros.
+
+### [BUG-261105-01] 2026-11-05 | utils/metrics_logger.py | scope=infra
+- **Bug**: export_macros emitted duplicate \newcommand definitions when distinct metric keys sanitized to the same LaTeX macro name.
+- **Solution**: Added _resolve_unique_macro_records to deduplicate sanitized macro names by selecting the latest timestamped metric record.
+
+### [BUG-261105-02] 2026-11-05 | execution/run_nature_feasibility_and_stability.py,execution/export_provenance_pipeline.py | scope=eval
+- **Bug**: Extended Data Table 3 and Fig. 5a previously used true-(r,z) H2=33.3nm child teeth and n_xi=16 for Cantor_N2.
+- **Solution**: Unified Cantor_N2_HybridRZ (H1=100nm, H2=90nm) and Rot_C8_Compact_N2 across all scripts at Standard (2,3,3,2) n_xi=24.
+
+### [BUG-261105-03] 2026-11-05 | execution/run_nature_feasibility_and_stability.py | scope=eval model=BEM_ElectroThermal_Feasibility dataset=nature_feasibility_stability
+- **Bug**: Fig. 5e-f plotted analytical hydrogen CQED and sine-wave drum curves instead of 3D BEM rotational energy/torque and 300 K thermomechanical SNR.
+- **Solution**: Replaced Panels 5e-f with 3D BEM Delta E_C(theta), torque tau_theta(theta), and 300 K lock-in SNR(tau), updated Panel 5b V_crit label, and exported 7 macros.
+
+### [BUG-261105-04] 2026-11-05 | execution/run_clutch_log_periodicity_probe.py,execution/run_nature_feasibility_and_stability.py | scope=eval
+- **Bug**: Figure 4c previously evaluated log-periodic modulation only at fixed $\omega_1 = 2\pi/\ln b = 6.8572$, while Extended Data Table 3 and manuscript text reported NEMS pull-in thresholds only at Standard sharp-edge BEM (with an approximate continuum estimate in text).
+- **Solution**: Added unconstrained free-frequency nonlinear/Lomb-Scargle recovery across $\omega \in [1.0, 14.0]$ with Figure 4c inset $R^2(\omega)$ and computed/logged exact pull-in thresholds and Regime I-III safety factors across Standard sharp-edge, $r_{\mathrm{edge}}=5\text{ nm}$ rounded-edge Ultra-High, and continuum-extrapolated BEM tiers.
+
+### [BUG-261105-05] 2026-11-05 | execution/run_nature_feasibility_and_stability.py | scope=eval
+- **Bug**: compute_discretization_pull_in_bounds inferred theta=48 deg r_edge=5 nm force by multiplying sharp Ultra-High attraction by the theta=3 deg rounding ratio.
+- **Solution**: Loaded all BEM forces directly from solver JSON outputs and set r_edge=5 nm theta=48 deg engaged force to None unless directly solved.
+
+### [BUG-261106-01] 2026-11-06 | execution/multiscale_3d_fractal_architecture.py | scope=model
+- **Bug**: Hardcoded z_pad_top switching, >36 deg tooth overhang, and rotor-only sub-teeth without stator Cantor sub-ribs distorted 2^3 factorial comparisons.
+- **Solution**: Centralized lab-bounded 3D (r,theta,z) Cantor rotor+stator generation with invariant z_pad_top=-0.115 um and <=28 deg cap in dedicated modules.
