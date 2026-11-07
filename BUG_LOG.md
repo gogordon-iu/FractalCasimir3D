@@ -342,3 +342,7 @@
 ### [BUG-261106-02] 2026-11-06 | submit_bigred200.slurm,utils/hpc_gate.py | scope=harness
 - **Bug**: Unbound SCRATCH and CUDA_VISIBLE_DEVICES in submit_bigred200.slurm caused immediate exit code 1 under set -Eeuo pipefail on BigRed200 CPU nodes.
 - **Solution**: Replaced unbound variables with nounset-safe SLATE and CUDA_VISIBLE_DEVICES parameter expansions.
+
+### [BUG-261106-03] 2026-11-06 | utils/metrics_logger.py | scope=infra
+- **Bug**: Uncommitted defer_save keyword argument in utils/metrics_logger.py caused TypeError in log_metric() after all 19 BEM designs finished on BigRed200.
+- **Solution**: Committed defer_save support in utils/metrics_logger.py so post-solve metric logging and macro export complete with exit code 0.

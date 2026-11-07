@@ -50,14 +50,14 @@ def _resolve_manifest_paths(metrics_path: str) -> tuple[Path, Path]:
 
 
 def _replace_with_retry(tmp_path: Path, path: Path) -> None:
-    for attempt in range(20):
+    for attempt in range(50):
         try:
             os.replace(tmp_path, path)
             return
         except OSError:
-            if attempt == 19:
+            if attempt == 49:
                 raise
-            time.sleep(0.02)
+            time.sleep(0.03)
 
 
 def _atomic_write_json(path: Path, payload: Any) -> None:
@@ -148,6 +148,12 @@ def _compact_step_data(obj: Any) -> Any:
         for key, value in obj.items():
             if key == "solver_parameters":
                 compacted[key] = value
+            elif key == "diagnostics" and isinstance(value, Mapping):
+                compacted[key] = {
+                    dk: dv
+                    for dk, dv in value.items()
+                    if isinstance(dv, (int, float, str, bool)) or dv is None
+                }
             elif (
                 key in ("per_xi_integrands", "frequency_contributions")
                 and isinstance(value, (list, tuple))
@@ -156,14 +162,24 @@ def _compact_step_data(obj: Any) -> Any:
                 compacted[key] = {"count": len(value)}
             elif key in ("panels", "vertices") and isinstance(value, (list, tuple)):
                 compacted[key] = {"count": len(value)}
+            elif isinstance(value, (list, tuple)) and len(value) > 16:
+                compacted[key] = {"count": len(value)}
             else:
                 compacted[key] = _compact_step_data(value)
         return compacted
     if isinstance(obj, list):
+        if len(obj) > 16:
+            return {"count": len(obj)}
         return [_compact_step_data(item) for item in obj]
     if isinstance(obj, tuple):
+        if len(obj) > 16:
+            return {"count": len(obj)}
         return tuple(_compact_step_data(item) for item in obj)
     return obj
+
+
+_COMPACTED_MANIFEST_PATHS: set[str] = set()
+_MANIFEST_MEM_CACHE: Dict[str, tuple[int, int, Dict[str, Any]]] = {}
 
 
 def _ensure_manifest_fields(
@@ -204,11 +220,13 @@ def _save_manifest(metrics_path: str, manifest: Dict[str, Any]) -> None:
     manifest_path, jsonl_path = _resolve_manifest_paths(metrics_path)
     _ensure_manifest_fields(manifest)
 
-    # Compact historical steps as well as newly logged data.
-    if "intermediate_steps" in manifest:
+    resolved_key = str(manifest_path.resolve())
+    # Compact historical steps once per manifest path; new steps are compacted in log_step.
+    if "intermediate_steps" in manifest and resolved_key not in _COMPACTED_MANIFEST_PATHS:
         manifest["intermediate_steps"] = _compact_step_data(
             manifest["intermediate_steps"]
         )
+        _COMPACTED_MANIFEST_PATHS.add(resolved_key)
 
     lines = []
     for key, record in manifest.get("metrics", {}).items():
@@ -228,12 +246,26 @@ def _save_manifest(metrics_path: str, manifest: Dict[str, Any]) -> None:
 
     _atomic_write_json(manifest_path, manifest)
     _atomic_write_text(jsonl_path, "\n".join(lines) + ("\n" if lines else ""))
+    try:
+        st = manifest_path.stat()
+        _MANIFEST_MEM_CACHE[resolved_key] = (st.st_mtime_ns, st.st_size, manifest)
+    except OSError:
+        pass
 
 
 def _load_or_init_manifest(path: Path) -> Dict[str, Any]:
     path, _ = _resolve_manifest_paths(str(path))
     path.parent.mkdir(parents=True, exist_ok=True)
+    resolved_key = str(path.resolve())
     if path.exists():
+        try:
+            st = path.stat()
+            cached = _MANIFEST_MEM_CACHE.get(resolved_key)
+            if cached is not None and cached[0] == st.st_mtime_ns and cached[1] == st.st_size:
+                _ensure_manifest_fields(cached[2])
+                return cached[2]
+        except OSError:
+            pass
         manifest = _read_json_with_retry(path)
     else:
         manifest = {
@@ -383,6 +415,7 @@ def log_metric(
     metrics_path: str = str(DEFAULT_METRICS_PATH),
     solver_name: Optional[str] = None,
     solver_parameters: Optional[Dict[str, Any]] = None,
+    defer_save: bool = False,
 ) -> None:
     """Records final metric with rigorous caller lineage."""
     path = Path(metrics_path)
@@ -409,7 +442,8 @@ def log_metric(
         manifest["run_metadata"]["solver_parameters"] = solver["solver_parameters"]
     manifest["run_metadata"]["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-    _save_manifest(metrics_path, manifest)
+    if not defer_save:
+        _save_manifest(metrics_path, manifest)
 
 
 def log_metrics(
@@ -479,6 +513,35 @@ def _sanitize_macro_name(key: str) -> str:
     return result or "MacroValue"
 
 
+def _resolve_unique_macro_records(
+    metrics: Mapping[str, Any],
+) -> Dict[str, tuple[str, Mapping[str, Any]]]:
+    """
+    Map sanitized LaTeX macro names to a single canonical (metric_key, record) pair.
+    When multiple metric keys sanitize to the same macro name, prefer the record
+    with the most recent recorded_at/timestamp (and deterministic key tie-break)
+    to prevent duplicate \\newcommand definitions in macros_results.tex.
+    """
+    resolved: Dict[str, tuple[tuple[str, int, str], str, Mapping[str, Any]]] = {}
+    for key, data in metrics.items():
+        if not isinstance(data, Mapping):
+            continue
+        val = data.get("value")
+        if isinstance(val, bool) or not isinstance(val, (int, float, str)):
+            continue
+        macro_name = _sanitize_macro_name(key)
+        ts = str(data.get("recorded_at") or data.get("timestamp") or "")
+        has_recorded_at = 1 if data.get("recorded_at") else 0
+        priority = (ts, has_recorded_at, key)
+        existing = resolved.get(macro_name)
+        if existing is None or priority > existing[0]:
+            resolved[macro_name] = (priority, key, data)
+    return {
+        macro_name: (key, data)
+        for macro_name, (_, key, data) in sorted(resolved.items())
+    }
+
+
 def export_macros(
     metrics_path: str = str(DEFAULT_METRICS_PATH),
     output_path: str = str(DEFAULT_MACROS_PATH),
@@ -500,10 +563,9 @@ def export_macros(
         "",
     ]
 
-    for key, data in sorted(metrics.items()):
+    for macro_name, (_key, data) in _resolve_unique_macro_records(metrics).items():
         val = data.get("value")
         if isinstance(val, (int, float, str)):
-            macro_name = _sanitize_macro_name(key)
             if isinstance(val, float):
                 if val != 0 and (abs(val) < 1e-4 or abs(val) >= 1e5):
                     formatted_val = f"{val:.2e}"
@@ -718,7 +780,11 @@ def generate_manuscript_map(
 
     ledger: Dict[str, Any] = {"macros": {}, "figures": {}, "audit_status": "PASS"}
 
-    metric_macro_to_key = {_sanitize_macro_name(k): k for k in metrics_data.keys()}
+    unique_macro_records = _resolve_unique_macro_records(metrics_data)
+    metric_macro_to_key = {
+        macro_name: metric_key
+        for macro_name, (metric_key, _record) in unique_macro_records.items()
+    }
     macro_matches = set(re.findall(r"\\([a-zA-Z]+)", text))
     results_metric_prefixes = (
         "Model",
@@ -730,10 +796,10 @@ def generate_manuscript_map(
         "AtomicCqed",
         "ClutchPilot",
         "SolverComparison",
+        "BemVal",
     )
 
-    for macro_name, metric_key in sorted(metric_macro_to_key.items()):
-        record = metrics_data[metric_key]
+    for macro_name, (metric_key, record) in sorted(unique_macro_records.items()):
         ledger["macros"][f"\\{macro_name}"] = {
             "status": "RESOLVED" if macro_name in macro_matches else "UNUSED_MACRO",
             "value": record.get("value"),
