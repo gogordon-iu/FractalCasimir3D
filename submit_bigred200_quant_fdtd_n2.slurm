@@ -6,8 +6,8 @@
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=18
 #SBATCH --cpus-per-task=7
-#SBATCH --time=08:00:00
-#SBATCH --array=1-8%4
+#SBATCH --time=12:00:00
+#SBATCH --array=3-8%4
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu
 #SBATCH --exclude=nid0394
@@ -1356,7 +1356,7 @@ run_user_job() (
             --task-id "$TASK_ID" \
             --config all \
             --checkpoint-prefix chk_moments_quant_fdtd_n2_task \
-            --max-walltime-hours 7.5 \
+            --max-walltime-hours 11.5 \
             --output-file "$OUTPUT_FILE" || MEEP_RC=$?
     else
         "$PYTHON_BIN" execution/run_scoped_clutch_meep.py \
@@ -1364,7 +1364,7 @@ run_user_job() (
             --task-id "$TASK_ID" \
             --config all \
             --checkpoint-prefix chk_moments_quant_fdtd_n2_task \
-            --max-walltime-hours 7.5 \
+            --max-walltime-hours 11.5 \
             --output-file "$OUTPUT_FILE" || MEEP_RC=$?
     fi
 
@@ -1372,6 +1372,9 @@ run_user_job() (
         cp -f -- "$OUTPUT_FILE" "results_quant_fdtd_n2/task_${TASK_ID}_meep.json" || true
     fi
     "$PYTHON_BIN" execution/aggregate_quant_fdtd_n2_results.py || true
+    if [[ -f "results/quant_fdtd_n2_summary.json" ]]; then
+        cp -f -- "results/quant_fdtd_n2_summary.json" "results_quant_fdtd_n2/quant_fdtd_n2_summary.json" || true
+    fi
     exit "$MEEP_RC"
 )
 set -m

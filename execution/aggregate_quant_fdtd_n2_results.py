@@ -132,9 +132,12 @@ def aggregate_quant_fdtd_n2(
         if task_id <= 0:
             stem_digits = "".join(ch for ch in cfg_path.stem if ch.isdigit())
             task_id = _safe_int(stem_digits, 0)
-        design_id = str(cfg.get("design_id", "unknown"))
+        design_id = str(cfg.get("design_id") or cfg.get("design_name") or "unknown")
+        study_role = str(cfg.get("study_role") or cfg.get("control_label") or "")
         resolution = _safe_int(cfg.get("resolution"), 0)
-        n_max = _safe_int(cfg.get("casimir_Order_N", cfg.get("n_max", 1)), 1)
+        n_max = _safe_int(
+            cfg.get("nmax", cfg.get("casimir_Order_N", cfg.get("n_max", 1))), 1
+        )
         r_edge_nm = _finite_float_or_default(cfg.get("r_edge_nm"), 5.0)
         dx_nm = (1000.0 / float(resolution)) if resolution > 0 else None
 
@@ -153,11 +156,25 @@ def aggregate_quant_fdtd_n2(
         f_2pass_pN: float | None = None
         f_stator_only_pN: float | None = None
         elapsed_s: float | None = None
+        executed_at: str | None = None
         completed_moments = 0
-        moments_per_config = _safe_int(cfg.get("moments_per_pass"), 0)
+        default_moments_per_pass = 6 * 8 * ((n_max + 1) ** 2) if n_max >= 0 else 0
+        moments_per_config = _safe_int(
+            cfg.get("moments_per_pass"), default_moments_per_pass
+        )
 
         if task_result is not None:
-            status = str(task_result.get("status", "unknown"))
+            status = str(
+                task_result.get(
+                    "status",
+                    "complete" if task_result.get("f_net_pN") is not None else "unknown",
+                )
+            )
+            executed_at = (
+                str(task_result["executed_at"])
+                if task_result.get("executed_at") is not None
+                else None
+            )
             completed_moments = _safe_int(task_result.get("completed_moments"), 0)
             moments_per_config = _safe_int(
                 task_result.get("num_tasks_per_config"), moments_per_config
@@ -191,23 +208,29 @@ def aggregate_quant_fdtd_n2(
             else None
         )
 
+        stress_box_um = cfg.get(
+            "fixed_stress_box_margin_um", cfg.get("stress_box_margin_um")
+        )
+        pml_um = cfg.get("pml_thickness_um", cfg.get("pml_thickness"))
+
         entry = {
             "task_id": task_id,
             "config_id": str(cfg.get("config_id", cfg_path.stem)),
             "design_id": design_id,
-            "study_role": str(cfg.get("study_role", "")),
+            "study_role": study_role,
             "resolution": resolution,
             "dx_nm": round(dx_nm, 4) if dx_nm is not None else None,
             "cells_across_20p4nm_radial_gap": round(20.4167 / dx_nm, 3) if (dx_nm is not None and dx_nm > 0.0) else None,
             "cells_across_15nm_vertical_gap": round(15.0 / dx_nm, 3) if (dx_nm is not None and dx_nm > 0.0) else None,
             "n_max": n_max,
             "r_edge_nm": r_edge_nm,
-            "material": str(cfg.get("material", "gold_drude1")),
-            "stress_box_margin_nm": round(_finite_float_or_default(cfg.get("stress_box_margin_um"), 0.008) * 1000.0, 2),
-            "pml_thickness_um": _finite_float_or_default(cfg.get("pml_thickness"), 0.18),
-            "cell_buffer_um": _finite_float_or_default(cfg.get("cell_buffer_um"), 0.10),
+            "material": str(cfg.get("material", "Gold_Drude")),
+            "stress_box_margin_nm": round(_finite_float_or_default(stress_box_um, 0.0075) * 1000.0, 2),
+            "pml_thickness_um": _finite_float_or_default(pml_um, 0.20),
+            "cell_buffer_um": _finite_float_or_default(cfg.get("cell_buffer_um"), 0.15),
             "T_run": _finite_float_or_default(cfg.get("T_run"), 3.0),
             "status": status,
+            "executed_at": executed_at,
             "result_file": result_source,
             "completed_moments": completed_moments,
             "total_4pass_moments": 4 * moments_per_config,
@@ -226,9 +249,10 @@ def aggregate_quant_fdtd_n2(
 
     pair_comparisons: dict[str, dict[str, Any]] = {}
     for label, t_cantor, t_unif in (
-        ("R120_nmax1", 1, 2),
-        ("R160_nmax1", 3, 4),
+        ("R100_nmax2", 1, 2),
+        ("R150_nmax2", 3, 4),
         ("R200_nmax2", 5, 6),
+        ("R150_nmax3", 7, 8),
     ):
         c_row = completed_by_task.get(t_cantor)
         u_row = completed_by_task.get(t_unif)
@@ -242,7 +266,11 @@ def aggregate_quant_fdtd_n2(
                         "cantor_f_z_pN": fc,
                         "uniform_f_z_pN": fu,
                         "fdtd_cantor_to_uniform_ratio": fdtd_ratio,
+                        "bem_std_cantor_to_uniform_ratio": bem_ratios["Standard"],
                         "bem_ultra_cantor_to_uniform_ratio": bem_ratios["Ultra-High"],
+                        "ratio_rel_diff_vs_bem_std_pct": 100.0
+                        * (fdtd_ratio - bem_ratios["Standard"])
+                        / bem_ratios["Standard"],
                         "ratio_rel_diff_vs_bem_ultra_pct": 100.0
                         * (fdtd_ratio - bem_ratios["Ultra-High"])
                         / bem_ratios["Ultra-High"],
@@ -250,43 +278,51 @@ def aggregate_quant_fdtd_n2(
 
     convergence_checks: dict[str, Any] = {}
     if 1 in completed_by_task and 3 in completed_by_task:
-        f120 = float(completed_by_task[1]["f_net_pN"])
-        f160 = float(completed_by_task[3]["f_net_pN"])
-        convergence_checks["cantor_R120_to_R160_nmax1"] = {
-            "f_R120_pN": f120,
-            "f_R160_pN": f160,
-            "rel_drift_pct": 100.0 * abs(f160 - f120) / max(abs(f160), 1e-12),
-            "richardson_extrap_pN": _richardson_two_point(120.0, f120, 160.0, f160),
+        f1 = float(completed_by_task[1]["f_net_pN"])
+        f3 = float(completed_by_task[3]["f_net_pN"])
+        r1 = float(completed_by_task[1]["resolution"])
+        r3 = float(completed_by_task[3]["resolution"])
+        convergence_checks["cantor_R100_to_R150_nmax2"] = {
+            "f_coarse_pN": f1,
+            "f_fine_pN": f3,
+            "rel_drift_pct": 100.0 * abs(f3 - f1) / max(abs(f3), 1e-12),
+            "richardson_extrap_pN": _richardson_two_point(r1, f1, r3, f3),
         }
     if 2 in completed_by_task and 4 in completed_by_task:
-        u120 = float(completed_by_task[2]["f_net_pN"])
-        u160 = float(completed_by_task[4]["f_net_pN"])
-        convergence_checks["uniform_R120_to_R160_nmax1"] = {
-            "f_R120_pN": u120,
-            "f_R160_pN": u160,
-            "rel_drift_pct": 100.0 * abs(u160 - u120) / max(abs(u160), 1e-12),
-            "richardson_extrap_pN": _richardson_two_point(120.0, u120, 160.0, u160),
+        u2 = float(completed_by_task[2]["f_net_pN"])
+        u4 = float(completed_by_task[4]["f_net_pN"])
+        r2 = float(completed_by_task[2]["resolution"])
+        r4 = float(completed_by_task[4]["resolution"])
+        convergence_checks["uniform_R100_to_R150_nmax2"] = {
+            "f_coarse_pN": u2,
+            "f_fine_pN": u4,
+            "rel_drift_pct": 100.0 * abs(u4 - u2) / max(abs(u4), 1e-12),
+            "richardson_extrap_pN": _richardson_two_point(r2, u2, r4, u4),
         }
     if 3 in completed_by_task and 7 in completed_by_task:
-        fn1 = float(completed_by_task[3]["f_net_pN"])
+        fn2 = float(completed_by_task[3]["f_net_pN"])
         fn3 = float(completed_by_task[7]["f_net_pN"])
-        convergence_checks["cantor_R160_nmax1_to_nmax3"] = {
-            "f_nmax1_pN": fn1,
+        convergence_checks["cantor_R150_nmax2_to_nmax3"] = {
+            "f_nmax2_pN": fn2,
             "f_nmax3_pN": fn3,
-            "rel_drift_pct": 100.0 * (fn3 - fn1) / max(abs(fn1), 1e-12),
+            "rel_drift_pct": 100.0 * (fn3 - fn2) / max(abs(fn2), 1e-12),
         }
-    if 3 in completed_by_task and 8 in completed_by_task:
-        f_std = float(completed_by_task[3]["f_net_pN"])
-        f_pml = float(completed_by_task[8]["f_net_pN"])
-        convergence_checks["cantor_R160_pml_pad_trun_check"] = {
-            "f_base_pN": f_std,
-            "f_extended_pml_trun_pN": f_pml,
-            "rel_drift_pct": 100.0 * (f_pml - f_std) / max(abs(f_std), 1e-12),
+    if 4 in completed_by_task and 8 in completed_by_task:
+        un2 = float(completed_by_task[4]["f_net_pN"])
+        un3 = float(completed_by_task[8]["f_net_pN"])
+        convergence_checks["uniform_R150_nmax2_to_nmax3"] = {
+            "f_nmax2_pN": un2,
+            "f_nmax3_pN": un3,
+            "rel_drift_pct": 100.0 * (un3 - un2) / max(abs(un2), 1e-12),
         }
 
+    now_iso = datetime.now(timezone.utc).isoformat()
     summary_payload = {
+        "model": "Quant_FDTD_N2_BigRed200",
+        "dataset": "cantor_n2_hybridrz_vs_uniform_r5nm",
         "study": "quant_fdtd_n2_bigred200_validation",
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "executed_at": now_iso,
+        "generated_at": now_iso,
         "total_configured_tasks": len(tasks_summary),
         "completed_tasks_count": len(completed_by_task),
         "completed_task_ids": sorted(completed_by_task.keys()),
