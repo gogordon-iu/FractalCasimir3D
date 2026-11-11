@@ -116,6 +116,9 @@ class Parameters:
     fixed_stress_box_margin_um: float | None = None
     eps_averaging: bool = False
     geometry_mode: str = "cylindrical"
+    cell_buffer_um: float = DEFAULT_CELL_BUFFER_UM
+    r_edge_nm: float = 0.0
+    sector0_crop: bool = False
 
     @property
     def sigma(self) -> float:
@@ -242,7 +245,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--resolution", type=positive_integer)
     parser.add_argument("--nmax", type=positive_integer, default=None)
     parser.add_argument(
-        "--material", choices=("PEC", "Gold", "pec", "gold"), default=None
+        "--material", choices=("PEC", "Gold", "Gold_Drude", "pec", "gold", "gold_drude"), default=None
     )
     parser.add_argument(
         "--fixed-stress-box-margin-um", type=positive_float, default=None
@@ -253,6 +256,8 @@ def build_parser() -> argparse.ArgumentParser:
         choices=("cylindrical", "rectilinear_xz"),
         default=None,
     )
+    parser.add_argument("--r-edge-nm", type=float, default=None)
+    parser.add_argument("--sector0-crop", action="store_true", default=None)
     parser.add_argument("--bem-n-xi", type=positive_integer, default=24)
     parser.add_argument("--bem-n-r", type=positive_integer, default=2)
     parser.add_argument("--bem-n-phi-tooth", type=positive_integer, default=3)
@@ -286,11 +291,38 @@ def read_config(path: Path) -> dict[str, Any]:
     return value
 
 
+def _extract_r_edge_nm(raw: Mapping[str, Any]) -> tuple[float, bool]:
+    geometry = raw.get("geometry")
+    geom_dict = geometry if isinstance(geometry, Mapping) else {}
+    if "r_edge_nm" in raw and raw["r_edge_nm"] is not None:
+        r_edge_raw = raw["r_edge_nm"]
+    elif "r_edge_nm" in geom_dict and geom_dict["r_edge_nm"] is not None:
+        r_edge_raw = geom_dict["r_edge_nm"]
+    else:
+        r_edge_raw = 0.0
+    r_edge_nm = finite_number(r_edge_raw, "r_edge_nm")
+    if r_edge_nm < 0.0:
+        raise ValueError("r_edge_nm must be nonnegative")
+    if "r_edge_preapplied" in raw and raw["r_edge_preapplied"] is not None:
+        preapplied_raw = raw["r_edge_preapplied"]
+    else:
+        preapplied_raw = geom_dict.get("r_edge_preapplied", False)
+    if not isinstance(preapplied_raw, bool):
+        raise ValueError("r_edge_preapplied must be a JSON boolean")
+    return r_edge_nm, preapplied_raw
+
+
 def geometry_elements(raw: Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
     geometry = raw.get("geometry")
     entries = geometry.get("elements") if isinstance(geometry, dict) else geometry
     if not isinstance(entries, list) or not entries:
         raise ValueError("geometry must be a nonempty list or an object containing elements")
+    r_edge_nm, r_edge_preapplied = _extract_r_edge_nm(raw)
+    delta_w_um = (
+        -2.0 * (1.0 - math.pi / 4.0) * (r_edge_nm * 1e-3)
+        if (r_edge_nm > 0.0 and not r_edge_preapplied)
+        else 0.0
+    )
     output: list[dict[str, Any]] = []
     for index, entry in enumerate(entries):
         if not isinstance(entry, dict):
@@ -302,6 +334,17 @@ def geometry_elements(raw: Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
             item[key] = finite_number(
                 item[key], f"geometry[{index}].{key}", positive=key != "r_inner"
             )
+        if delta_w_um != 0.0:
+            w_orig = item["r_tooth_out"] - item["r_tooth_in"]
+            if 2.0 * (r_edge_nm * 1e-3) >= w_orig or w_orig + delta_w_um <= 0.005:
+                raise ValueError(
+                    f"r_edge_nm={r_edge_nm} exceeds the allowable corner radius for geometry element {index}"
+                )
+            c_r = 0.5 * (item["r_tooth_in"] + item["r_tooth_out"])
+            w_r = w_orig + delta_w_um
+            item["r_tooth_in"] = c_r - 0.5 * w_r
+            item["r_tooth_out"] = c_r + 0.5 * w_r
+            item["w_tooth"] = w_r
         for key in ("z_tip", "h_teeth"):
             if key in item:
                 if item[key] is None:
@@ -315,8 +358,12 @@ def geometry_elements(raw: Mapping[str, Any]) -> tuple[dict[str, Any], ...]:
                     )
         if item["r_inner"] < 0 or item["r_inner"] >= item["r_outer"]:
             raise ValueError(f"Invalid inner/outer radii in geometry element {index}")
-        if item["r_tooth_in"] >= item["r_tooth_out"]:
-            raise ValueError(f"Invalid tooth radii in geometry element {index}")
+        if not (
+            0.0 < item["r_tooth_in"] < item["r_tooth_out"]
+            and item["r_inner"] < item["r_tooth_in"]
+            and item["r_tooth_out"] < item["r_outer"]
+        ):
+            raise ValueError(f"Invalid tooth radii or slot bounds in geometry element {index}")
         output.append(item)
     return tuple(output)
 
@@ -481,8 +528,11 @@ def parse_parameters(
         else finite_number(t_value, "T_run", positive=True)
     )
     material = get("material", "Gold")
-    if not isinstance(material, str) or material.lower() not in ("gold", "pec"):
-        raise ValueError("material must be 'Gold' or 'PEC'")
+    if not isinstance(material, str) or material.lower() not in ("gold", "gold_drude", "pec"):
+        raise ValueError("material must be 'Gold', 'Gold_Drude', or 'PEC'")
+    cell_buffer_um = finite_number(
+        get("cell_buffer_um", DEFAULT_CELL_BUFFER_UM), "cell_buffer_um", positive=True
+    )
     gamma = finite_number(
         get("gamma", DEFAULT_GOLD_GAMMA_EV * EV_TO_MEEP_CYCLICAL_UM), "gamma"
     )
@@ -506,6 +556,10 @@ def parse_parameters(
         "rectilinear_xz",
     ):
         raise ValueError("geometry_mode must be 'cylindrical' or 'rectilinear_xz'")
+    r_edge_nm, _ = _extract_r_edge_nm(raw)
+    sector0_crop = get("sector0_crop", False)
+    if not isinstance(sector0_crop, bool):
+        raise ValueError("sector0_crop must be a JSON boolean")
     return Parameters(
         elements=elements,
         theta_deg=theta,
@@ -542,6 +596,9 @@ def parse_parameters(
         fixed_stress_box_margin_um=fixed_stress_box_margin_um,
         eps_averaging=eps_averaging,
         geometry_mode=geometry_mode,
+        cell_buffer_um=cell_buffer_um,
+        r_edge_nm=r_edge_nm,
+        sector0_crop=sector0_crop,
     )
 
 
@@ -568,14 +625,65 @@ def meep_solver_parameters(
         "fixed_stress_box_margin_um": parameters.fixed_stress_box_margin_um,
         "eps_averaging": parameters.eps_averaging,
         "geometry_mode": parameters.geometry_mode,
+        "r_edge_nm": parameters.r_edge_nm,
+        "sector0_crop": parameters.sector0_crop,
+        "cell_dimensions_um": cell_dimensions(parameters),
+        "cell_center_um": cell_center(parameters),
         "max_steps": args.max_steps,
         "timesteps_per_last_moment": latest_steps,
         "dt": latest_dt,
     }
 
 
+def _sector0_phys_bounds(
+    parameters: Parameters,
+) -> tuple[tuple[float, float], tuple[float, float], tuple[float, float]]:
+    if parameters.stress_box_mode != "per_tooth_rotor_frame":
+        raise ValueError("sector0_crop requires stress_box_mode='per_tooth_rotor_frame'")
+    max_arc_deg = max(parameters.aperture_arc_deg, parameters.tooth_arc_deg)
+    if not 0.0 < max_arc_deg < 90.0:
+        raise ValueError("sector0_crop requires aperture_arc_deg and tooth_arc_deg in (0, 90) degrees")
+    margin = (
+        parameters.fixed_stress_box_margin_um
+        if parameters.fixed_stress_box_margin_um is not None
+        else STRESS_BOX_GRID_MARGIN_CELLS / parameters.resolution
+    )
+    alpha_slot = math.radians(max_arc_deg / 2.0)
+    r_in_min = min(float(el["r_inner"]) for el in parameters.elements)
+    r_out_max = max(float(el["r_outer"]) for el in parameters.elements)
+    r_in_bound = max(0.0, r_in_min - 0.12)
+    r_out_bound = r_out_max + 0.05
+    x_min = max(0.0, r_in_bound * math.cos(alpha_slot) - margin)
+    x_max = r_out_bound + margin
+    y_max = r_out_bound * math.sin(alpha_slot) + 0.05 + margin
+    z_top = max(
+        float(element.get("z_tip", parameters.z_tip))
+        + float(element.get("h_teeth", parameters.h_teeth))
+        for element in parameters.elements
+    )
+    stator_depth = (
+        abs(parameters.z_pad_top) + parameters.t_landing_pad
+        if parameters.z_pad_top is not None
+        else parameters.t_membrane + parameters.t_landing_pad
+    )
+    z_min = -(stator_depth + margin)
+    z_max = z_top + margin
+    return (x_min, x_max), (-y_max, y_max), (z_min, z_max)
+
+
+def cell_center(parameters: Parameters) -> tuple[float, float, float]:
+    if not parameters.sector0_crop:
+        return (0.0, 0.0, 0.0)
+    (x_min, x_max), (y_min, y_max), (z_min, z_max) = _sector0_phys_bounds(parameters)
+    return (0.5 * (x_min + x_max), 0.5 * (y_min + y_max), 0.5 * (z_min + z_max))
+
+
 def cell_dimensions(parameters: Parameters) -> tuple[float, float, float]:
-    buffer = DEFAULT_CELL_BUFFER_UM
+    buffer = parameters.cell_buffer_um
+    if parameters.sector0_crop:
+        (x_min, x_max), (y_min, y_max), (z_min, z_max) = _sector0_phys_bounds(parameters)
+        pad = 2.0 * (buffer + parameters.pml_thickness)
+        return (x_max - x_min + pad, y_max - y_min + pad, z_max - z_min + pad)
     margin = (
         parameters.fixed_stress_box_margin_um
         if parameters.fixed_stress_box_margin_um is not None
@@ -601,16 +709,18 @@ def cell_dimensions(parameters: Parameters) -> tuple[float, float, float]:
 
 
 def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
+    dims = cell_dimensions(parameters)
+    centers = cell_center(parameters)
     interiors = tuple(
         length / 2.0 - parameters.pml_thickness
-        for length in cell_dimensions(parameters)
+        for length in dims
     )
     stator_depth = (
         abs(parameters.z_pad_top) + parameters.t_landing_pad
         if parameters.z_pad_top is not None
         else parameters.t_membrane + parameters.t_landing_pad
     )
-    if stator_depth >= interiors[2]:
+    if -stator_depth <= centers[2] - interiors[2]:
         raise ValueError("The stator thickness reaches the lower PML")
 
     def box_faces(
@@ -622,8 +732,8 @@ def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
         ):
             raise ValueError("The stress box must have finite, positive dimensions")
         if any(
-            interior <= 0 or lo <= -interior or hi >= interior
-            for lo, hi, interior in zip(lower, upper, interiors)
+            interior <= 0 or lo <= center_c - interior or hi >= center_c + interior
+            for lo, hi, center_c, interior in zip(lower, upper, centers, interiors)
         ):
             raise ValueError("The stress box intersects the PML; increase L_domain_um")
         midpoint = [(lo + hi) / 2 for lo, hi in zip(lower, upper)]
@@ -862,6 +972,21 @@ def material_pair(mp: Any, parameters: Parameters, electric: bool) -> tuple[Any,
     background = mp.Medium(epsilon=1.0, **conductivity)
     if parameters.material.lower() == "pec":
         return background, mp.metal
+    if parameters.material.lower() == "gold_drude":
+        # In Meep, DrudeSusceptibility evaluates chi(f) = -sigma * frequency^2 / (f * (f + i*gamma)),
+        # where `frequency` is a multiplicative scale factor (NOT a restoring pole; setting frequency=0 zeroes chi).
+        # Setting frequency=1.0 and sigma=plasma_frequency^2 (in Meep cyclical 1/um units) gives exact Drude dispersion.
+        drude_sus = mp.DrudeSusceptibility(
+            frequency=1.0,
+            gamma=parameters.gamma,
+            sigma=parameters.plasma_frequency ** 2,
+        )
+        material = mp.Medium(
+            epsilon=parameters.epsilon_inf,
+            E_susceptibilities=[drude_sus],
+            **conductivity,
+        )
+        return background, material
 
     from meep.materials import Au
 
@@ -982,6 +1107,8 @@ def run_moment(
             0.0 if rotor_frame else parameters.tooth_center_offset_deg
         )
     }
+    dims = cell_dimensions(parameters)
+    centers = cell_center(parameters)
     geometry: list[Any] = []
     if configuration in ("both", "stator"):
         geometry.extend(
@@ -1011,6 +1138,73 @@ def run_moment(
                 **rotor_options,
             )
         )
+    if parameters.sector0_crop and geometry:
+        (x_min, x_max), (y_min, y_max), _ = _sector0_phys_bounds(parameters)
+
+        def _overlaps_sector0(obj: Any) -> bool:
+            verts = getattr(obj, "vertices", None)
+            if verts:
+                xs = [float(v.x) for v in verts]
+                ys = [float(v.y) for v in verts]
+                return not (
+                    max(xs) < x_min
+                    or min(xs) > x_max
+                    or max(ys) < y_min
+                    or min(ys) > y_max
+                )
+            center_vec = getattr(obj, "center", None)
+            size_vec = getattr(obj, "size", None)
+            if center_vec is not None and size_vec is not None:
+                cx, cy = float(center_vec.x), float(center_vec.y)
+                hx, hy = 0.5 * abs(float(size_vec.x)), 0.5 * abs(float(size_vec.y))
+                return not (
+                    cx + hx < x_min
+                    or cx - hx > x_max
+                    or cy + hy < y_min
+                    or cy - hy > y_max
+                )
+            return True
+
+        geometry = [obj for obj in geometry if _overlaps_sector0(obj)]
+        # Mask the exterior of _sector0_phys_bounds with `background` so that zero
+        # metal/dielectric ever enters the cell_buffer_um vacuum padding or PML layers.
+        cell_x_min = centers[0] - dims[0] / 2.0 - 0.05
+        cell_x_max = centers[0] + dims[0] / 2.0 + 0.05
+        cell_y_min = centers[1] - dims[1] / 2.0 - 0.05
+        cell_y_max = centers[1] + dims[1] / 2.0 + 0.05
+        mask_z_size = dims[2] + 0.10
+        if x_min > cell_x_min:
+            geometry.append(
+                mp.Block(
+                    size=mp.Vector3(x_min - cell_x_min, cell_y_max - cell_y_min, mask_z_size),
+                    center=mp.Vector3(0.5 * (cell_x_min + x_min), centers[1], centers[2]),
+                    material=background,
+                )
+            )
+        if cell_x_max > x_max:
+            geometry.append(
+                mp.Block(
+                    size=mp.Vector3(cell_x_max - x_max, cell_y_max - cell_y_min, mask_z_size),
+                    center=mp.Vector3(0.5 * (x_max + cell_x_max), centers[1], centers[2]),
+                    material=background,
+                )
+            )
+        if y_min > cell_y_min:
+            geometry.append(
+                mp.Block(
+                    size=mp.Vector3(cell_x_max - cell_x_min, y_min - cell_y_min, mask_z_size),
+                    center=mp.Vector3(centers[0], 0.5 * (cell_y_min + y_min), centers[2]),
+                    material=background,
+                )
+            )
+        if cell_y_max > y_max:
+            geometry.append(
+                mp.Block(
+                    size=mp.Vector3(cell_x_max - cell_x_min, cell_y_max - y_max, mask_z_size),
+                    center=mp.Vector3(centers[0], 0.5 * (y_max + cell_y_max), centers[2]),
+                    material=background,
+                )
+            )
     timestep = [parameters.courant / parameters.resolution]
 
     def impulse(t: float) -> float:
@@ -1033,8 +1227,14 @@ def run_moment(
         mp.Hz: mp.Z,
     }
 
+    # In Meep, `geometry_center` positions the computational cell over
+    # [centers - dims/2, centers + dims/2] in the shared global coordinate frame.
+    # Both `geometry` and `face.center` (from `stress_faces`, which verifies
+    # `abs(coord - centers[axis]) < interiors[axis]`) are expressed in this same
+    # global frame, so no additional translation of `face.center` is needed or allowed.
     simulation = mp.Simulation(
-        cell_size=mp.Vector3(*cell_dimensions(parameters)),
+        cell_size=mp.Vector3(*dims),
+        geometry_center=mp.Vector3(*centers),
         dimensions=3,
         resolution=parameters.resolution,
         Courant=parameters.courant,
@@ -1213,6 +1413,7 @@ def run_numpy_micro_probe(
 
     faces = stress_faces(parameters)
     dimensions = cell_dimensions(parameters)
+    centers = cell_center(parameters)
     requested_shape = tuple(
         max(3, math.ceil(length * parameters.resolution)) for length in dimensions
     )
@@ -1220,8 +1421,8 @@ def run_numpy_micro_probe(
     spacing = tuple(length / count for length, count in zip(dimensions, shape))
     dt = parameters.courant * min(spacing)
     coordinates = tuple(
-        (np.arange(count, dtype=np.float64) + 0.5) * dx - length / 2.0
-        for count, dx, length in zip(shape, spacing, dimensions)
+        (np.arange(count, dtype=np.float64) + 0.5) * dx - length / 2.0 + center_c
+        for count, dx, length, center_c in zip(shape, spacing, dimensions, centers)
     )
     electric = np.zeros((3, *shape), dtype=np.float64)
     magnetic = np.zeros_like(electric)
@@ -1398,6 +1599,10 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
         raw["eps_averaging"] = bool(args.eps_averaging)
     if getattr(args, "geometry_mode", None) is not None:
         raw["geometry_mode"] = str(args.geometry_mode)
+    if getattr(args, "r_edge_nm", None) is not None:
+        raw["r_edge_nm"] = float(args.r_edge_nm)
+    if getattr(args, "sector0_crop", None) is not None:
+        raw["sector0_crop"] = bool(args.sector0_crop)
     checkpoint_prefix = getattr(
         args, "checkpoint_prefix", "chk_moments_clutch_pilot_task"
     )
@@ -1498,6 +1703,10 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
         canonical_parameters.pop("eps_averaging", None)
     if canonical_parameters.get("geometry_mode") == "cylindrical":
         canonical_parameters.pop("geometry_mode", None)
+    if canonical_parameters.get("r_edge_nm") == 0.0:
+        canonical_parameters.pop("r_edge_nm", None)
+    if canonical_parameters.get("sector0_crop") is False:
+        canonical_parameters.pop("sector0_crop", None)
     canonical = {
         "version": CACHE_VERSION,
         "parameters": canonical_parameters,

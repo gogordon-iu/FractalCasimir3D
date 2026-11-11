@@ -346,3 +346,35 @@
 ### [BUG-261106-03] 2026-11-06 | utils/metrics_logger.py | scope=infra
 - **Bug**: Uncommitted defer_save keyword argument in utils/metrics_logger.py caused TypeError in log_metric() after all 19 BEM designs finished on BigRed200.
 - **Solution**: Committed defer_save support in utils/metrics_logger.py so post-solve metric logging and macro export complete with exit code 0.
+
+### [BUG-261107-01] 2026-11-07 | execution/build_rotational_z_eff_clutch_blender.py | scope=ui
+- **Bug**: Importing execution.multiscale_3d_fractal_architecture inside Blender failed with ModuleNotFoundError for torch in Blender's embedded Python.
+- **Solution**: Cached the serialized F3_111 geometry spec to JSON in --mode python so --mode blender loads it with pure stdlib json without importing torch.
+
+### [BUG-261107-02] 2026-11-07 | execution/build_rotational_z_eff_clutch_blender.py | scope=ui
+- **Bug**: Figure 1 builder borrowed straddling (21 deg) and engaged (48 deg) BEM forces from Rot_C10_Fractal_N3 when rendering Cantor_111_Unified3DFractal.
+- **Solution**: Computed and stored exact n_xi=24 3D BEM evaluations for Cantor_111_Unified3DFractal at theta=21 and 48 deg in f3_111_angular_states.
+
+### [BUG-261110-01] 2026-11-10T05:50:00Z | execution/run_nature_feasibility_and_stability.py | scope=eval model=BEM_ElectroThermal_Feasibility dataset=nature_feasibility_stability
+- **Bug**: compute_thermomechanical_noise_and_snr converted k_z from pN/nm to N/m with factor 1 instead of 1e-3, inflating f_0 by 31.62x and S_F^1/2 by 5.62x.
+- **Solution**: Refactored NEMS mass, f_0, force noise, and SNR to use pint.UnitRegistry() and validated f_0 with a 64-element beam FEM solver.
+
+### [BUG-261110-02] 2026-11-10T17:00:00Z | execution/run_clutch_log_periodicity_probe.py | scope=eval model=BEM_LogPeriodicity_Clutch_Bridge dataset=clutch_log_periodicity_probe
+- **Bug**: Coarse 21-pt kappa grid and Gauss-Legendre markers mischaracterized compressed/converged 3D bands as ln(3)-spaced sub-bands.
+- **Solution**: Added 91-pt/76-pt dense kappa grids, 21-pt local quadratic peak refinement with delta-method uncertainty, and 3-model AIC/BIC tests.
+
+### [BUG-261110-03] 2026-11-10T17:20:00Z | execution/run_n3_unified_3d_fractal_factorial_study.py | scope=eval model=BEM_Unified3DFractal_Factorial dataset=n3_unified_3d_fractal_factorial_study
+- **Bug**: Single-tier sharp-edge BEM estimates (+18.55 pN, +57% synergy) lacked multi-tier corner-rounded convergence under common resolution.
+- **Solution**: Evaluated 3 nested physical-resolution mesh tiers at r_edge=5 and 10 nm with Tier-1 self-term normalization and exported macros.
+
+### [BUG-261110-04] 2026-11-10T18:15:00Z | execution/run_n3_unified_3d_fractal_factorial_study.py | scope=eval model=BEM_Unified3DFractal_Factorial dataset=n3_unified_3d_fractal_factorial_study
+- **Bug**: Manuscript labeled F3-111 as a 3-axis middle-third Cantor hierarchy despite heuristic azimuthal/axial staging.
+- **Solution**: Reframed F3-111 as radial Cantor with generation-aligned splitting/stepping and evaluated 4 exact b=3 variants.
+
+### [BUG-261110-05] 2026-11-10T19:15:00Z | execution/run_bem_fdtd_convergence_resolution.py | scope=eval model=BEM_FDTD_Convergence_Resolution dataset=cantor_n2_hybridrz_convergence_controls
+- **Bug**: Manuscript overstated coarse-grid 4-pass FDTD (1 Yee voxel across 15 nm gap, 42.6% nmax=1->2 shift) as quantitative validation.
+- **Solution**: Reframed FDTD strictly as an independent qualitative sign check, added BEM single-pole vs 6-pole Rakic dispersion comparison.
+
+### [BUG-261110-06] 2026-11-10 | `execution/run_n3_unified_3d_fractal_factorial_study.py`, `Papers/FCE_Nature_ver01/fce_nature_ver07.tex`, `Papers/FCE_Nature_ver01/tables/table_unified_3d_fractal_factorial.tex` | scope=eval
+- **Bug**: Factorial controls had 0.3049 vs 0.3104 um^2 area mismatch, omitted 3D perimeter/sidewall/clearance modeling, 3-way contrast, and phase permutations.
+- **Solution**: Added exact 0.3049 um^2 matched runs, 4-feature 3D geometric OLS model, full 2^3 contrast table, (theta,z) phase permutations, and M1-M4 controls.
