@@ -22,8 +22,9 @@ import importlib
 import json
 import math
 import sys
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from functools import lru_cache
+from types import MappingProxyType
 from typing import Any, TypedDict
 
 
@@ -96,6 +97,39 @@ __all__ = [
     "DEFAULT_LAB_MIN_AZIMUTHAL_ARC_UM",
     "DEFAULT_LAB_MIN_AXIAL_STEP_UM",
     "DEFAULT_MAX_THETA_CANTOR_DEPTH",
+    "H3_ROBUST_APERTURE_ARC_DEG",
+    "H3_ROBUST_BASE_B",
+    "H3_ROBUST_BRIDGE_ARC_WIDTH_BY_GEN_DEG",
+    "H3_ROBUST_BRIDGE_THICKNESS_BY_GEN_UM",
+    "H3_ROBUST_CANTOR_GENERATIONS",
+    "H3_ROBUST_CANTOR_RIB_WIDTHS_NM",
+    "H3_ROBUST_CLEANROOM_NOMINAL_Z_UM",
+    "H3_ROBUST_CLEANROOM_PATCH_RAYLEIGH_MV",
+    "H3_ROBUST_CLEANROOM_REDGE_MAX_NM",
+    "H3_ROBUST_CLEANROOM_REDGE_MIN_NM",
+    "H3_ROBUST_CLEANROOM_SIGMA_DW_NM",
+    "H3_ROBUST_CLEANROOM_SIGMA_DR_NM",
+    "H3_ROBUST_CLEANROOM_SIGMA_DTHETA_DEG",
+    "H3_ROBUST_CLEANROOM_SIGMA_DZ_NM",
+    "H3_ROBUST_ENGAGED_PAD_GAP_UM",
+    "H3_ROBUST_GOLD_YOUNGS_MODULUS_PA",
+    "H3_ROBUST_G_MIN_NM",
+    "H3_ROBUST_G_MIN_UM",
+    "H3_ROBUST_HEIGHT_TO_STAGE_RATIO",
+    "H3_ROBUST_INTER_LOBE_GAP_BY_GEN_DEG",
+    "H3_ROBUST_KNIFE_EDGE_TRACK_COUNT",
+    "H3_ROBUST_LOBE_CHORD_FINE_UM",
+    "H3_ROBUST_LOBES_BY_GEN",
+    "H3_ROBUST_MIN_SURVIVING_FEATURE_UM",
+    "H3_ROBUST_MIN_UNSHORTED_GAP_UM",
+    "H3_ROBUST_NOMINAL_OP_Z_UM",
+    "H3_ROBUST_PAD_THICKNESS_UM",
+    "H3_ROBUST_R_MAX_UM",
+    "H3_ROBUST_R_MIN_UM",
+    "H3_ROBUST_SLOT_FINE_UM",
+    "H3_ROBUST_VERNIER_PHASE_DEG",
+    "H3_ROBUST_W_RATIO",
+    "H3_ROBUST_Z_STAGE_FINE_UM",
     "compute_dynamic_Trun",
     "compute_max_feasible_cantor_depth",
     "disengaged_angle_deg",
@@ -189,6 +223,43 @@ DEFAULT_N3_ISO_AREA_TARGET_UM2 = (
     * (DEFAULT_R_MIN_UM + DEFAULT_N3_R_MAX_UM)
     * (DEFAULT_N3_W1_RATIO * sum(DEFAULT_N3_CANTOR_SLOT_WIDTHS_NM) * 1e-3)
 )
+
+# Canonical H3-Cantor-Robust (b=3.0, g_min=27 nm) unified robustness architecture constants.
+H3_ROBUST_BASE_B: float = 3.0
+H3_ROBUST_R_MIN_UM: float = 3.50
+H3_ROBUST_R_MAX_UM: float = 6.20
+H3_ROBUST_APERTURE_ARC_DEG: float = 36.0
+H3_ROBUST_CANTOR_GENERATIONS: tuple[int, ...] = (3, 2, 3, 1, 3, 2, 3)
+H3_ROBUST_SLOT_FINE_UM: float = 0.090
+H3_ROBUST_G_MIN_NM: float = 27.0
+H3_ROBUST_G_MIN_UM: float = 0.027
+H3_ROBUST_W_RATIO: float = 0.40
+H3_ROBUST_Z_STAGE_FINE_UM: float = -0.040
+H3_ROBUST_HEIGHT_TO_STAGE_RATIO: float = 0.70
+H3_ROBUST_LOBE_CHORD_FINE_UM: float = 0.081
+H3_ROBUST_LOBES_BY_GEN: Mapping[int, int] = MappingProxyType({1: 2, 2: 4, 3: 8})
+H3_ROBUST_VERNIER_PHASE_DEG: Mapping[int, float] = MappingProxyType({1: 0.0, 2: 1.75, 3: -1.15})
+H3_ROBUST_INTER_LOBE_GAP_BY_GEN_DEG: Mapping[int, float] = MappingProxyType({1: 6.0, 2: 3.6, 3: 2.1})
+H3_ROBUST_BRIDGE_ARC_WIDTH_BY_GEN_DEG: Mapping[int, float] = MappingProxyType({1: 1.80, 2: 1.00, 3: 0.55})
+H3_ROBUST_BRIDGE_THICKNESS_BY_GEN_UM: Mapping[int, float] = MappingProxyType({1: 0.117, 2: 0.039, 3: 0.013})
+H3_ROBUST_CANTOR_RIB_WIDTHS_NM: tuple[float, ...] = (165.0, 97.5, 97.5, 135.0, 135.0, 97.5, 97.5, 165.0)
+H3_ROBUST_KNIFE_EDGE_TRACK_COUNT: int = 19
+H3_ROBUST_NOMINAL_OP_Z_UM: float = 0.058
+H3_ROBUST_ENGAGED_PAD_GAP_UM: float = 0.027
+H3_ROBUST_PAD_THICKNESS_UM: float = 0.120
+H3_ROBUST_GOLD_YOUNGS_MODULUS_PA: float = 79.0e9
+H3_ROBUST_MIN_SURVIVING_FEATURE_UM: float = 0.004
+H3_ROBUST_MIN_UNSHORTED_GAP_UM: float = 0.002
+
+# Cleanroom fabrication & environmental 1-sigma priors for grounded Monte Carlo chip yield.
+H3_ROBUST_CLEANROOM_NOMINAL_Z_UM: float = 0.075
+H3_ROBUST_CLEANROOM_SIGMA_DZ_NM: float = 22.0
+H3_ROBUST_CLEANROOM_SIGMA_DW_NM: float = 8.0
+H3_ROBUST_CLEANROOM_SIGMA_DR_NM: float = 5.0
+H3_ROBUST_CLEANROOM_SIGMA_DTHETA_DEG: float = 0.45
+H3_ROBUST_CLEANROOM_REDGE_MIN_NM: float = 2.0
+H3_ROBUST_CLEANROOM_REDGE_MAX_NM: float = 8.0
+H3_ROBUST_CLEANROOM_PATCH_RAYLEIGH_MV: float = 15.0
 
 
 def tooth_center_angle_deg(

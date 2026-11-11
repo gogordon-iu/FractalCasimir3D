@@ -378,3 +378,7 @@
 ### [BUG-261110-06] 2026-11-10 | `execution/run_n3_unified_3d_fractal_factorial_study.py`, `Papers/FCE_Nature_ver01/fce_nature_ver07.tex`, `Papers/FCE_Nature_ver01/tables/table_unified_3d_fractal_factorial.tex` | scope=eval
 - **Bug**: Factorial controls had 0.3049 vs 0.3104 um^2 area mismatch, omitted 3D perimeter/sidewall/clearance modeling, 3-way contrast, and phase permutations.
 - **Solution**: Added exact 0.3049 um^2 matched runs, 4-feature 3D geometric OLS model, full 2^3 contrast table, (theta,z) phase permutations, and M1-M4 controls.
+
+### [BUG-261111-01] 2026-11-11 | execution/build_unified_fractal_robustness_blender.py | scope=ui
+- **Bug**: Blender serializer drew 360-deg stator rings across [36,90] attractive zones and scaled outer chip rim height by per-design min_z.
+- **Solution**: Restricted stator ribs to [0,36] quarter-apertures over open [36,90] landing-pad slabs and unified all 6 wafer rims to [-0.64,0.0] um.
