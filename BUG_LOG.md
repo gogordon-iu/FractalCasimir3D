@@ -382,3 +382,7 @@
 ### [BUG-261111-01] 2026-11-11 | execution/build_unified_fractal_robustness_blender.py | scope=ui
 - **Bug**: Blender serializer drew 360-deg stator rings across [36,90] attractive zones and scaled outer chip rim height by per-design min_z.
 - **Solution**: Restricted stator ribs to [0,36] quarter-apertures over open [36,90] landing-pad slabs and unified all 6 wafer rims to [-0.64,0.0] um.
+
+### [BUG-261111-02] 2026-11-11 | execution/run_clutch_log_periodicity_probe.py | scope=infra
+- **Bug**: BigRed 200 job 8973863 failed with ImportError for compare_multiband_spacing_models because modified run_clutch_log_periodicity_probe.py was unstaged.
+- **Solution**: Committed updated run_clutch_log_periodicity_probe.py and verified clean git-archive HEAD imports and micro-probe execution.

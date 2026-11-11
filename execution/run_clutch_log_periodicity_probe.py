@@ -161,8 +161,10 @@ def evaluate_spectral_trace_by_level(
     track_levels: Sequence[tuple[float, float, int, float, float]],
     device: str,
 ) -> list[dict[str, Any]]:
-    """Evaluate 3D Vector-Dyadic BEM force integrand f_z(kappa) and per-generation radial-wall cross-coupling trace."""
-    backend = DenseBackend(device)
+    """Vectorized 3D Vector-Dyadic BEM force integrand f_z(kappa) and per-generation radial-wall cross-coupling trace."""
+    import torch
+
+    _ = device
     material = MaterialModel.from_parameters(mesh.parameters)
     rotor = mesh.sector_arrays("rotor")
     stator = mesh.sector_arrays("stator")
@@ -170,12 +172,10 @@ def evaluate_spectral_trace_by_level(
     nr = dofs_per_panel * rotor.count
     ns = dofs_per_panel * stator.count
 
-    # Use exact cylindrical vertex radii (free of chord-sag r*cos(dphi/2) distortion)
     rot_r_min = np.array([min(math.hypot(v[0], v[1]) for v in pan.vertices) for pan in mesh.rotor])
     rot_r_max = np.array([max(math.hypot(v[0], v[1]) for v in pan.vertices) for pan in mesh.rotor])
     stat_r_min = np.array([min(math.hypot(v[0], v[1]) for v in pan.vertices) for pan in mesh.stator])
 
-    # Initialize to 0 (unassigned) so non-tooth panels are never misattributed to generation 1
     panel_levels = np.zeros(rotor.count, dtype=np.int64)
     for idx in range(rotor.count):
         for r_t_in, r_t_out, lvl, _, _ in track_levels:
@@ -199,68 +199,175 @@ def evaluate_spectral_trace_by_level(
     char_gap_um = math.inf
     for sector in range(4):
         source_positions = stator.centroids @ cbs._rotation(sector).T
-        for centroid in rotor.centroids:
-            sep = float(np.min(np.linalg.norm(source_positions - centroid, axis=1)))
-            char_gap_um = min(char_gap_um, sep)
+        dists = np.linalg.norm(rotor.centroids[:, None, :] - source_positions[None, :, :], axis=2)
+        char_gap_um = min(char_gap_um, float(np.min(dists)))
     k_eff = 1.0 / max(char_gap_um, 0.020)
-    phases = np.exp(2j * math.pi * np.arange(4)[:, None] * np.arange(4)[None, :] / 4.0)
 
+    kappas_arr = np.asarray(kappas, dtype=np.float64)
+    K = len(kappas_arr)
+    n_sectors = 4
+
+    def same_sec_blocks(body: Any) -> torch.Tensor:
+        N = body.count
+        M = N * N
+        sub_var = torch.from_numpy((body.areas[:, None] + body.areas[None, :]) / (32.0 * math.pi)).reshape(1, M)
+        area_scale = torch.from_numpy(np.sqrt(body.areas[:, None]) * np.sqrt(body.areas[None, :]) / (4.0 * math.pi)).reshape(1, M)
+        qw = torch.from_numpy(body.quad_weights[:, None] * body.quad_weights[None, :]).reshape(16, 1)
+        tgt_q = torch.from_numpy(body.quad_points.transpose(1, 0, 2)[:, :, None, :])
+        sec_blocks = torch.empty((K, n_sectors, 2 * N, 2 * N), dtype=torch.float64)
+        for sec in (0, 1, 2):
+            rot = cbs._rotation(sec)
+            src_pts = body.quad_points @ rot.T
+            src_tan = np.einsum("ab,jmb->jma", rot, body.tangents)
+            t_dot_t = torch.from_numpy(np.einsum("ima,jna->ijmn", body.tangents, src_tan, optimize=True))
+            src_q = torch.from_numpy(src_pts.transpose(1, 0, 2)[None, :, :, :])
+            delta = (tgt_q[:, None, :, :, :] - src_q[:, :, None, :, :]).reshape(16, M, 3)
+            eff_d = torch.sqrt(torch.sum(delta**2, dim=2) + sub_var)
+            scale_q = (area_scale * qw) / eff_d
+            ker_sum = torch.empty((K, N, N), dtype=torch.float64)
+            for qk in range(K):
+                ker_sum[qk] = torch.sum(torch.exp(-float(kappas_arr[qk]) * eff_d) * scale_q, dim=0).reshape(N, N)
+            single = ker_sum[:, :, :, None, None] * t_dot_t[None, :, :, :, :]
+            if sec == 0:
+                idx = np.arange(N)
+                eye2 = torch.eye(2, dtype=torch.float64)
+                for q, kap in enumerate(kappas_arr):
+                    diag = torch.from_numpy(cbs._disk_self_term(body.areas, float(kap)))
+                    single[q, idx, idx] = diag[:, None, None] * eye2
+            sec_blocks[:, sec] = single.permute(0, 1, 3, 2, 4).reshape(K, 2 * N, 2 * N)
+        sec_blocks[:, 3] = sec_blocks[:, 1].transpose(1, 2)
+        return sec_blocks
+
+    def cross_sec_blocks(target: Any, source: Any) -> tuple[torch.Tensor, torch.Tensor]:
+        Nt, Ns = target.count, source.count
+        M = Nt * Ns
+        sub_var = torch.from_numpy((target.areas[:, None] + source.areas[None, :]) / (32.0 * math.pi))
+        area_scale = torch.from_numpy(np.sqrt(target.areas[:, None]) * np.sqrt(source.areas[None, :]) / (4.0 * math.pi))
+        qw = torch.from_numpy(target.quad_weights[:, None] * source.quad_weights[None, :]).reshape(16)
+        rs_sec = torch.empty((K, n_sectors, 2 * Nt, 2 * Ns), dtype=torch.float64)
+        dz_sec = torch.empty((K, n_sectors, 2 * Nt, 2 * Ns), dtype=torch.float64)
+        u_z = torch.from_numpy(target.tangents[:, :, 2][:, None, :, None])
+        tgt_q = torch.from_numpy(target.quad_points.transpose(1, 0, 2)[:, :, None, :])
+        tgt_tan_t = torch.from_numpy(target.tangents)
+        for sec in range(n_sectors):
+            rot = cbs._rotation(sec)
+            src_pts = source.quad_points @ rot.T
+            src_tan = np.einsum("ab,jmb->jma", rot, source.tangents)
+            src_tan_t = torch.from_numpy(src_tan)
+            t_dot_t = torch.from_numpy(np.einsum("ima,jna->ijmn", target.tangents, src_tan, optimize=True))
+            v_z = src_tan_t[:, :, 2][None, :, None, :]
+            src_q = torch.from_numpy(src_pts.transpose(1, 0, 2)[None, :, :, :])
+            delta = (tgt_q[:, None, :, :, :] - src_q[:, :, None, :, :]).reshape(16, Nt, Ns, 3)
+            eff_d = torch.sqrt(torch.sum(delta**2, dim=3) + sub_var[None, :, :])
+            inv_d = 1.0 / eff_d
+            scale = (area_scale[None, :, :] * qw[:, None, None]) * inv_d
+            dz_over_d = delta[:, :, :, 2] * inv_d
+            u_R = torch.einsum("ima,qija->qijm", tgt_tan_t, delta)
+            v_R = torch.einsum("jna,qija->qijn", src_tan_t, delta)
+            R_inv2 = (inv_d**2)[:, :, :, None, None]
+            Z = delta[:, :, :, 2][:, :, :, None, None]
+            D_m = (u_R[:, :, :, :, None] * v_R[:, :, :, None, :] * R_inv2).reshape(16, M, 4).permute(1, 2, 0).contiguous()
+            dD_m = (
+                (u_z[None] * v_R[:, :, :, None, :] + u_R[:, :, :, :, None] * v_z[None]) * R_inv2
+                - 2.0 * Z * (u_R[:, :, :, :, None] * v_R[:, :, :, None, :] * R_inv2) * R_inv2
+            ).reshape(16, M, 4).permute(1, 2, 0).contiguous()
+            eff_d_f = eff_d.reshape(16, M)
+            inv_d_f = inv_d.reshape(16, M)
+            scale_f = scale.reshape(16, M)
+            dz_d_f = dz_over_d.reshape(16, M)
+
+            W_D = torch.empty((K, 16, M), dtype=torch.float64)
+            W_dz_D = torch.empty((K, 16, M), dtype=torch.float64)
+            s_t_all = torch.empty((K, Nt, Ns, 1, 1), dtype=torch.float64)
+            dz_t_all = torch.empty((K, Nt, Ns, 1, 1), dtype=torch.float64)
+            for qk, kap_val in enumerate(kappas_arr):
+                kap = float(kap_val)
+                x = kap * eff_d_f
+                ker = torch.exp(-x) * scale_f
+                rad_deriv = -ker * (kap + inv_d_f)
+                sc_dz = rad_deriv * dz_d_f
+                inv = 1.0 / (1.0 + x)
+                denom = 1.0 - inv + inv**2
+                c_dir = (1.0 + inv + inv**2) / denom
+                dc_dir_dx = -2.0 * inv**2 * (1.0 - inv**2) / denom**2
+                s_t_all[qk] = (0.5 * torch.sum(ker, dim=0)).reshape(Nt, Ns, 1, 1)
+                dz_t_all[qk] = (0.5 * torch.sum(sc_dz, dim=0)).reshape(Nt, Ns, 1, 1)
+                W_D[qk] = -0.25 * ker * c_dir
+                W_dz_D[qk] = -0.25 * sc_dz * c_dir - 0.25 * ker * dc_dir_dx * kap * dz_d_f
+
+            W_D_m = W_D.permute(2, 1, 0).contiguous()
+            W_dz_m = W_dz_D.permute(2, 1, 0).contiguous()
+            s_D_all = torch.bmm(D_m, W_D_m).permute(2, 0, 1).reshape(K, Nt, Ns, 2, 2)
+            dz_D_all = (torch.bmm(D_m, W_dz_m) + torch.bmm(dD_m, W_D_m)).permute(2, 0, 1).reshape(K, Nt, Ns, 2, 2)
+            single_all = s_t_all * t_dot_t[None] + s_D_all
+            dz_all = dz_t_all * t_dot_t[None] + dz_D_all
+            rs_sec[:, sec] = single_all.permute(0, 1, 3, 2, 4).reshape(K, 2 * Nt, 2 * Ns)
+            dz_sec[:, sec] = dz_all.permute(0, 1, 3, 2, 4).reshape(K, 2 * Nt, 2 * Ns)
+        return rs_sec, dz_sec
+
+    rr_sec = same_sec_blocks(rotor)
+    ss_sec = same_sec_blocks(stator)
+    rs_sec, dz_sec = cross_sec_blocks(rotor, stator)
+
+    eye_r = torch.eye(nr, dtype=torch.float64)
+    eye_c = torch.eye(nr, dtype=torch.complex128)
+    si_scale_pn_um = MEEP_FORCE_TO_SI * 1.0e12
     spectral_rows: list[dict[str, Any]] = []
-    for kappa in kappas:
-        tm, te, eps_val = material.channel_weights(float(kappa), k_eff=k_eff)
-        rr_modes = [np.zeros((nr, nr), dtype=np.complex128) for _ in range(4)]
-        ss_modes = [np.zeros((ns, ns), dtype=np.complex128) for _ in range(4)]
-        rs_modes = [np.zeros((nr, ns), dtype=np.complex128) for _ in range(4)]
-        dz_modes = [np.zeros((nr, ns), dtype=np.complex128) for _ in range(4)]
 
-        for sector in range(4):
-            for target, source, modes, label, same in (
-                (rotor, rotor, rr_modes, "rotor", True),
-                (stator, stator, ss_modes, "stator", True),
-                (rotor, stator, rs_modes, "cross", False),
-            ):
-                block = _vector_dyadic_blocks(target, source, sector, float(kappa), same_body=same)
-                for mode in range(4):
-                    modes[mode] += phases[mode, sector] * block.single_layer
-                    if label == "cross":
-                        dz_modes[mode] += phases[mode, sector] * block.dz_target
-
+    for q in range(K):
+        kappa = float(kappas_arr[q])
+        tm, te, eps_val = material.channel_weights(kappa, k_eff=k_eff)
+        rr_q, ss_q, rs_q, dz_q = rr_sec[q], ss_sec[q], rs_sec[q], dz_sec[q]
         dof_diag_sum = np.zeros(nr, dtype=np.float64)
         total_logdet = 0.0
-        for mode in range(4):
-            mr = backend.array(rr_modes[mode])
-            ms = backend.array(ss_modes[mode])
-            g = backend.array(rs_modes[mode])
-            dg = backend.array(dz_modes[mode])
-            sr = backend.adjoint(g)
-            dsr = backend.adjoint(dg)
+        g0 = (rs_q[0] + rs_q[1] + rs_q[2] + rs_q[3]).numpy()
 
-            n_col = g.shape[1]
-            x_all, _, _ = backend.factor_and_solve(mr, backend.concat_cols((g, dg)))
-            x, dx = x_all[:, :n_col], x_all[:, n_col:]
+        for mode, mult in ((0, 1.0), (2, 1.0), (1, 2.0)):
+            if mode == 0:
+                mr = rr_q[0] + rr_q[1] + rr_q[2] + rr_q[3]
+                ms = ss_q[0] + ss_q[1] + ss_q[2] + ss_q[3]
+                g = rs_q[0] + rs_q[1] + rs_q[2] + rs_q[3]
+                dg = dz_q[0] + dz_q[1] + dz_q[2] + dz_q[3]
+                sr, dsr = g.T.contiguous(), dg.T.contiguous()
+                eye = eye_r
+                is_complex = False
+            elif mode == 2:
+                mr = rr_q[0] - rr_q[1] + rr_q[2] - rr_q[3]
+                ms = ss_q[0] - ss_q[1] + ss_q[2] - ss_q[3]
+                g = rs_q[0] - rs_q[1] + rs_q[2] - rs_q[3]
+                dg = dz_q[0] - dz_q[1] + dz_q[2] - dz_q[3]
+                sr, dsr = g.T.contiguous(), dg.T.contiguous()
+                eye = eye_r
+                is_complex = False
+            else:
+                mr = torch.complex(rr_q[0] - rr_q[2], rr_q[1] - rr_q[3])
+                ms = torch.complex(ss_q[0] - ss_q[2], ss_q[1] - ss_q[3])
+                g = torch.complex(rs_q[0] - rs_q[2], rs_q[1] - rs_q[3])
+                dg = torch.complex(dz_q[0] - dz_q[2], dz_q[1] - dz_q[3])
+                sr, dsr = g.conj().T.contiguous(), dg.conj().T.contiguous()
+                eye = eye_c
+                is_complex = True
 
-            n_col_s = sr.shape[1]
-            z_all, _, _ = backend.factor_and_solve(ms, backend.concat_cols((sr, dsr)))
-            z, dz = z_all[:, :n_col_s], z_all[:, n_col_s:]
+            lu_r, piv_r = torch.linalg.lu_factor(mr)
+            x_all = torch.linalg.lu_solve(lu_r, piv_r, torch.cat((g, dg), dim=1))
+            x, dx = x_all[:, :ns], x_all[:, ns:]
+
+            lu_s, piv_s = torch.linalg.lu_factor(ms)
+            z_all = torch.linalg.lu_solve(lu_s, piv_s, torch.cat((sr, dsr), dim=1))
+            z, dz = z_all[:, :nr], z_all[:, nr:]
 
             coupling = x @ z
             dcoupling = dx @ z + x @ dz
+            for ch_w in (tm, te):
+                pw = ch_w**2
+                y = eye - pw * coupling
+                lu_y, piv_y = torch.linalg.lu_factor(y)
+                deriv_mat = torch.linalg.lu_solve(lu_y, piv_y, dcoupling)
+                diag_vals = torch.real(torch.diagonal(deriv_mat)).numpy() if is_complex else torch.diagonal(deriv_mat).numpy()
+                dof_diag_sum += mult * (pw / (2.0 * math.pi)) * diag_vals
+                _, logabsdet = torch.linalg.slogdet(y)
+                total_logdet += mult * float(logabsdet.item())
 
-            for _, weight in (("TM", tm), ("TE", te)):
-                pw = weight**2
-                y = backend.eye(nr) - pw * coupling
-                deriv_mat, _, ch_logdet = backend.factor_and_solve(
-                    y, dcoupling, need_logdet=True
-                )
-                if backend.torch is not None and isinstance(deriv_mat, backend.torch.Tensor):
-                    diag_vals = backend.torch.real(backend.torch.diagonal(deriv_mat)).detach().cpu().numpy()
-                else:
-                    diag_vals = np.real(np.diag(deriv_mat))
-                dof_diag_sum += (pw / (2.0 * math.pi)) * diag_vals
-                assert ch_logdet is not None
-                total_logdet += float(np.real(ch_logdet))
-
-        si_scale_pn_um = MEEP_FORCE_TO_SI * 1.0e12
         f_tot = float(np.sum(dof_diag_sum)) * si_scale_pn_um
         f_unassigned = float(np.sum(dof_diag_sum[dof_levels == 0])) * si_scale_pn_um
         f_l1_all = float(np.sum(dof_diag_sum[dof_levels == 1])) * si_scale_pn_um
@@ -281,9 +388,7 @@ def evaluate_spectral_trace_by_level(
         k6_f_l2 = (float(kappa) ** 6) * f_l2_all
         k6_f_l3 = (float(kappa) ** 6) * f_l3_all
 
-        g0 = rs_modes[0]
         k6 = (float(kappa) ** 6) * 0.5 * (tm**2 + te**2)
-        # Non-negative Frobenius cross-coupling spectral density >= 0 for each generation m
         w_l1 = float(k6 * np.sum(np.abs(g0[pair_level_mask[1]]) ** 2))
         w_l2 = float(k6 * np.sum(np.abs(g0[pair_level_mask[2]]) ** 2))
         w_l3 = float(k6 * np.sum(np.abs(g0[pair_level_mask[3]]) ** 2))
@@ -304,6 +409,189 @@ def evaluate_spectral_trace_by_level(
             "energy_integrand_hbar_c": total_logdet / (2.0 * math.pi),
         })
     return spectral_rows
+
+
+def refine_band_peak_and_uncertainty(
+    ln_k: np.ndarray,
+    y_vals: np.ndarray,
+    local_lnk: np.ndarray | None = None,
+    local_y: np.ndarray | None = None,
+) -> dict[str, float]:
+    """Fit a local quadratic in ln(kappa) around the top 5 points of a dense/locally-refined grid
+    and quantify peak-location uncertainty from both local grid resolution and 99.9%-of-peak curvature width.
+    """
+    ln_k_arr = np.asarray(ln_k, dtype=np.float64).ravel()
+    y_vals_arr = np.asarray(y_vals, dtype=np.float64).ravel()
+    if ln_k_arr.size < 5 or ln_k_arr.size != y_vals_arr.size:
+        raise ValueError("ln_k and y_vals must be equal-length 1D arrays with at least 5 elements.")
+    if not (np.all(np.isfinite(ln_k_arr)) and np.all(np.isfinite(y_vals_arr))):
+        raise ValueError("ln_k and y_vals must contain only finite values.")
+    idx0 = int(np.argmax(y_vals_arr))
+    lnk0 = float(ln_k_arr[idx0])
+    if local_lnk is None or local_y is None:
+        loc_x = ln_k_arr
+        loc_y = y_vals_arr
+    else:
+        loc_x = np.asarray(local_lnk, dtype=np.float64).ravel()
+        loc_y = np.asarray(local_y, dtype=np.float64).ravel()
+        if loc_x.size < 5 or loc_x.size != loc_y.size:
+            raise ValueError("local_lnk and local_y must be equal-length 1D arrays with at least 5 elements.")
+        if not (np.all(np.isfinite(loc_x)) and np.all(np.isfinite(loc_y))):
+            raise ValueError("local_lnk and local_y must contain only finite values.")
+    if np.unique(loc_x).size < 5:
+        raise ValueError("local_lnk must contain at least 5 distinct points for quadratic peak fitting.")
+    idx_loc = int(np.argmax(loc_y))
+    i_start = max(0, min(len(loc_x) - 5, idx_loc - 2))
+    sub_x = loc_x[i_start : i_start + 5]
+    sub_y = loc_y[i_start : i_start + 5]
+    if np.unique(sub_x).size < 3:
+        raise ValueError("Selected 5-point window around peak must contain at least 3 distinct x values.")
+    poly, cov = np.polyfit(sub_x, sub_y, deg=2, cov=True)
+    a2, a1, _ = float(poly[0]), float(poly[1]), float(poly[2])
+    d_loc = float(np.median(np.abs(np.diff(sub_x))))
+    sigma_grid = d_loc / math.sqrt(12.0)
+    if a2 < -1e-12 and np.all(np.isfinite(cov[:2, :2])):
+        lnk_hat = float(np.clip(-a1 / (2.0 * a2), float(np.min(sub_x)), float(np.max(sub_x))))
+        y_hat = float(np.polyval(poly, lnk_hat))
+        grad = np.array([a1 / (2.0 * a2 * a2), -1.0 / (2.0 * a2)], dtype=np.float64)
+        var_fit = float(grad @ cov[:2, :2] @ grad)
+        se_fit = math.sqrt(max(var_fit, 0.0))
+        sigma_lnk = float(math.hypot(sigma_grid, se_fit))
+    else:
+        lnk_hat = float(loc_x[idx_loc])
+        y_hat = float(loc_y[idx_loc])
+        sigma_lnk = d_loc
+    k_hat = math.exp(lnk_hat)
+    sigma_k = k_hat * sigma_lnk
+    return {
+        "kappa_peak_um_inv": k_hat,
+        "kappa_peak_sigma_um_inv": sigma_k,
+        "ln_kappa_peak": lnk_hat,
+        "ln_kappa_peak_sigma": sigma_lnk,
+        "peak_value": y_hat,
+        "coarse_kappa_peak_um_inv": float(math.exp(lnk0)),
+        "local_grid_step_ln_kappa": d_loc,
+    }
+
+
+def compare_multiband_spacing_models(
+    ln_k: np.ndarray,
+    bands_norm: Sequence[np.ndarray],
+    peaks_info: Sequence[Mapping[str, float]],
+) -> dict[str, Any]:
+    """Compare three multiband models across the 3 generation spectra (3 * N points total):
+      1. Exact-spacing log-periodic model: mu_m = mu_1 + (m - 1) * ln(3)  (1 location parameter: mu_1)
+      2. Compressed-spacing periodic model: mu_m = mu_1 + (m - 1) * d_comp (2 location parameters: mu_1, d_comp)
+      3. Unrestricted generation-resolved multiband model: mu_1, mu_2, mu_3 free (3 location parameters)
+    """
+    from scipy.optimize import least_squares
+
+    Y_all = np.concatenate(bands_norm)
+    N_tot = len(Y_all)
+    tss = float(np.sum((Y_all - np.mean(Y_all)) ** 2))
+    ln3 = math.log(3.0)
+    mu_init = [float(p["ln_kappa_peak"]) for p in peaks_info]
+
+    def eval_three_bands(mus: Sequence[float], params_9: np.ndarray) -> np.ndarray:
+        preds = []
+        for m_idx in range(3):
+            amp = params_9[3 * m_idx + 0]
+            s_l = max(abs(params_9[3 * m_idx + 1]), 0.05)
+            s_r = max(abs(params_9[3 * m_idx + 2]), 0.05)
+            mu = mus[m_idx]
+            dx = ln_k - mu
+            sig = np.where(dx < 0.0, s_l, s_r)
+            preds.append(amp * np.exp(-0.5 * (dx / sig) ** 2))
+        return np.concatenate(preds)
+
+    p9_init = np.array([1.0, 0.7, 0.7, 1.0, 0.7, 0.7, 1.0, 0.7, 0.7], dtype=np.float64)
+
+    p0_exact = np.concatenate([[mu_init[1] - ln3], p9_init])
+    res_exact = least_squares(lambda p: eval_three_bands([p[0], p[0] + ln3, p[0] + 2.0 * ln3], p[1:]) - Y_all, p0_exact, max_nfev=3000)
+    rss_exact = float(np.sum(res_exact.fun ** 2))
+    k_exact = 10
+    aic_exact = N_tot * math.log(max(rss_exact / N_tot, 1e-18)) + 2.0 * k_exact
+    bic_exact = N_tot * math.log(max(rss_exact / N_tot, 1e-18)) + k_exact * math.log(N_tot)
+
+    d_init = 0.5 * (mu_init[2] - mu_init[0])
+    p0_comp = np.concatenate([[mu_init[0], d_init], p9_init])
+    res_comp = least_squares(lambda p: eval_three_bands([p[0], p[0] + p[1], p[0] + 2.0 * p[1]], p[2:]) - Y_all, p0_comp, max_nfev=3000)
+    rss_comp = float(np.sum(res_comp.fun ** 2))
+    k_comp = 11
+    aic_comp = N_tot * math.log(max(rss_comp / N_tot, 1e-18)) + 2.0 * k_comp
+    bic_comp = N_tot * math.log(max(rss_comp / N_tot, 1e-18)) + k_comp * math.log(N_tot)
+
+    p0_unres = np.concatenate([mu_init, p9_init])
+    res_unres = least_squares(lambda p: eval_three_bands([p[0], p[1], p[2]], p[3:]) - Y_all, p0_unres, max_nfev=3000)
+    rss_unres = float(np.sum(res_unres.fun ** 2))
+    k_unres = 12
+    aic_unres = N_tot * math.log(max(rss_unres / N_tot, 1e-18)) + 2.0 * k_unres
+    bic_unres = N_tot * math.log(max(rss_unres / N_tot, 1e-18)) + k_unres * math.log(N_tot)
+
+    x_obs = np.array([float(p["ln_kappa_peak"]) for p in peaks_info], dtype=np.float64)
+    s_obs = np.array([float(p["ln_kappa_peak_sigma"]) for p in peaks_info], dtype=np.float64)
+    w_obs = 1.0 / np.maximum(s_obs ** 2, 1e-12)
+    m_idx_arr = np.array([0.0, 1.0, 2.0])
+    mu1_exact_pk = float(np.sum(w_obs * (x_obs - m_idx_arr * ln3)) / np.sum(w_obs))
+    chi2_pk_exact = float(np.sum(w_obs * (x_obs - (mu1_exact_pk + m_idx_arr * ln3)) ** 2))
+    X_lin = np.column_stack([np.ones(3), m_idx_arr])
+    W_mat = np.diag(w_obs)
+    beta_comp = np.linalg.solve(X_lin.T @ W_mat @ X_lin, X_lin.T @ W_mat @ x_obs)
+    chi2_pk_comp = float(np.sum(w_obs * (x_obs - (X_lin @ beta_comp)) ** 2))
+
+    d_lnk_21 = float(x_obs[1] - x_obs[0])
+    d_lnk_32 = float(x_obs[2] - x_obs[1])
+    d_lnk_21_sigma = float(math.hypot(s_obs[0], s_obs[1]))
+    d_lnk_32_sigma = float(math.hypot(s_obs[1], s_obs[2]))
+
+    return {
+        "n_total_samples": N_tot,
+        "delta_ln_kappa_21": d_lnk_21,
+        "delta_ln_kappa_21_sigma": d_lnk_21_sigma,
+        "delta_ln_kappa_32": d_lnk_32,
+        "delta_ln_kappa_32_sigma": d_lnk_32_sigma,
+        "ratio_k2_over_k1": float(math.exp(d_lnk_21)),
+        "ratio_k3_over_k2": float(math.exp(d_lnk_32)),
+        "exact_ln3_model": {
+            "mu1": float(res_exact.x[0]),
+            "spacing_ln_kappa": ln3,
+            "effective_scale_b": 3.0,
+            "rss": rss_exact,
+            "r2": 1.0 - rss_exact / max(tss, 1e-18),
+            "aic": aic_exact,
+            "bic": bic_exact,
+            "peak_location_chi2": chi2_pk_exact,
+        },
+        "compressed_periodic_model": {
+            "mu1": float(res_comp.x[0]),
+            "spacing_ln_kappa": float(res_comp.x[1]),
+            "effective_scale_b": float(math.exp(res_comp.x[1])),
+            "rss": rss_comp,
+            "r2": 1.0 - rss_comp / max(tss, 1e-18),
+            "aic": aic_comp,
+            "bic": bic_comp,
+            "delta_aic_vs_exact_ln3": aic_comp - aic_exact,
+            "delta_bic_vs_exact_ln3": bic_comp - bic_exact,
+            "peak_location_chi2": chi2_pk_comp,
+            "peak_linear_spacing_ln_kappa": float(beta_comp[1]),
+            "peak_linear_effective_b": float(math.exp(beta_comp[1])),
+        },
+        "unrestricted_multiband_model": {
+            "mu1": float(res_unres.x[0]),
+            "mu2": float(res_unres.x[1]),
+            "mu3": float(res_unres.x[2]),
+            "spacing_21_ln_kappa": float(res_unres.x[1] - res_unres.x[0]),
+            "spacing_32_ln_kappa": float(res_unres.x[2] - res_unres.x[1]),
+            "rss": rss_unres,
+            "r2": 1.0 - rss_unres / max(tss, 1e-18),
+            "aic": aic_unres,
+            "bic": bic_unres,
+            "delta_aic_vs_exact_ln3": aic_unres - aic_exact,
+            "delta_bic_vs_exact_ln3": bic_unres - bic_exact,
+            "delta_aic_vs_compressed": aic_unres - aic_comp,
+            "delta_bic_vs_compressed": bic_unres - bic_comp,
+        },
+    }
 
 
 def build_stepped_stator_clutch_mesh(
@@ -855,29 +1143,54 @@ def render_figure(report: Mapping[str, Any], out_png: Path, out_pdf: Path) -> No
     kf_peak_val = max(float(np.max(np.abs(kf_active_signed))), 1e-12)
     kf_active_norm = kf_active_signed / kf_peak_val
 
+    uf_json = ROOT / "results" / "n3_unified_3d_fractal_factorial_study.json"
+    f3_lnk = None
+    f3_kf_norm = None
+    f3_peak_val = 0.0
+    if uf_json.is_file():
+        import json as _json
+        uf_data = _json.loads(uf_json.read_text(encoding="utf-8"))
+        for rec_u in uf_data.get("records", []):
+            if rec_u.get("code") == "F3_111":
+                k_u = np.asarray(rec_u["kappas_um_inv"], dtype=np.float64)
+                fk_u = np.asarray(rec_u["f_kappa_pN_um"], dtype=np.float64)
+                kf_u = k_u * fk_u
+                f3_peak_val = max(float(np.max(np.abs(kf_u))), 1e-12)
+                f3_lnk = np.log(k_u)
+                f3_kf_norm = kf_u / f3_peak_val
+                break
+
+    mev = max(1, len(ln_k) // 18)
     ax0.fill_between(ln_k, 0.0, kf_active_norm, color="#7f3c8d", alpha=0.14, lw=0.0)
-    ax0.plot(ln_k, w1_norm, "-o", color="#1f77b4", lw=1.15, ms=2.2, label=r"Gen $m = 1$ ($g_{r,1} = 135\,$nm)")
-    ax0.plot(ln_k, w2_norm, "-s", color="#ff7f0e", lw=1.15, ms=2.2, label=r"Gen $m = 2$ ($g_{r,2} = 45\,$nm)")
-    ax0.plot(ln_k, w3_norm, "-^", color="#2ca02c", lw=1.15, ms=2.2, label=r"Gen $m = 3$ ($g_{r,3} = 15\,$nm)")
+    ax0.plot(ln_k, w1_norm, "-o", color="#1f77b4", lw=1.15, ms=2.1, markevery=mev, label=r"Gen $m = 1$ ($g_{r,1} = 135\,$nm)")
+    ax0.plot(ln_k, w2_norm, "-s", color="#ff7f0e", lw=1.15, ms=2.1, markevery=mev, label=r"Gen $m = 2$ ($g_{r,2} = 45\,$nm)")
+    ax0.plot(ln_k, w3_norm, "-^", color="#2ca02c", lw=1.15, ms=2.1, markevery=mev, label=r"Gen $m = 3$ ($g_{r,3} = 15\,$nm)")
     ax0.plot(ln_k, w_active_norm, "--", color="#111111", lw=1.25, label=r"Active Cantor $N = 3$ envelope")
     ax0.plot(ln_k, w_unif_norm, ":", color="#d62728", lw=1.25, label=r"Uniform 3-track control")
     ax0.plot(
         ln_k, kf_active_norm, "-.", color="#7f3c8d", lw=1.25,
-        label=rf"Signed $\sum_{{m=1}}^3 \kappa f_{{z,m}}(\kappa)/\mathrm{{max}}$ (peak ${kf_peak_val:+.2f}\,$pN)",
+        label=rf"1D $N=3$ $\sum_{{m=1}}^3 \kappa f_{{z,m}}/\mathrm{{max}}$ (${kf_peak_val:+.2f}\,$pN)",
     )
+    if f3_lnk is not None and f3_kf_norm is not None:
+        gain_vs_1d = f3_peak_val / max(kf_peak_val, 1e-12)
+        mev_f3 = max(1, len(f3_lnk) // 14)
+        ax0.plot(
+            f3_lnk, f3_kf_norm, "-D", color="#b91c1c", lw=1.35, ms=2.1, markevery=mev_f3,
+            label=rf"Unified 3D $F_{{3\_111}}$ $\kappa f_z/\mathrm{{max}}$ (${f3_peak_val:+.2f}\,$pN, ${gain_vs_1d:.1f}\times$)",
+        )
 
     for g_um, col in ((0.135, "#1f77b4"), (0.045, "#ff7f0e"), (0.015, "#2ca02c")):
         ax0.axvline(math.log(1.0 / g_um), color=col, ls="--", alpha=0.40, lw=0.8)
     ax0.set_xlim(0.2, 5.2)
-    ax0.set_ylim(-0.05, 1.65)
+    ax0.set_ylim(-0.05, 1.76)
     ax0.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
     ax0.set_xlabel(r"Logarithmic imaginary wavenumber $\ln(\kappa \cdot 1\,\mu\mathrm{m})$", fontsize=6.5)
     ax0.set_ylabel(r"Normalized spectral density ($w_m, \kappa f_{z,m}$) / max", fontsize=6.3)
-    ax0.text(-0.15, 1.035, r"3D BEM spectral sub-band partition ($\Delta\ln\kappa \approx \ln 3$)", transform=ax0.transAxes, fontsize=7.0, fontweight="bold", va="bottom", ha="left")
+    ax0.text(-0.12, 1.035, r"Generation-resolved wavenumber bands", transform=ax0.transAxes, fontsize=6.9, fontweight="bold", va="bottom", ha="left")
     ax0.text(-0.23, 1.035, "a", transform=ax0.transAxes, fontsize=8.0, fontweight="bold", va="bottom", ha="left")
     ax0.legend(
         frameon=True, facecolor="#FFFFFF", framealpha=0.92, edgecolor="#CCCCCC",
-        fontsize=4.35, loc="upper left", handlelength=1.35, handletextpad=0.32, borderpad=0.20, labelspacing=0.14,
+        fontsize=4.05, loc="upper left", handlelength=1.30, handletextpad=0.30, borderpad=0.18, labelspacing=0.11,
     )
     ax0.grid(True, alpha=0.22, lw=0.5)
     ax0.tick_params(labelsize=6.0)
@@ -1118,6 +1431,89 @@ def _sync_paper_figure_copies(out_png: Path, out_pdf: Path) -> None:
             shutil.copy2(macros_src, paper_dir / "macros_results.tex")
 
 
+def _evaluate_dense_exp1_with_refinement(device: str, n_kappas: int = 91) -> dict[str, Any]:
+    design_n3 = build_n3_cantor_design()
+    design_unif = build_uniform_3track_design()
+    mesh_n3 = build_study_clutch_mesh(design_n3, theta_deg=12.0, n_r=1, n_phi_tooth=2, n_phi_bridge=2, n_z=2)
+    mesh_unif = build_study_clutch_mesh(design_unif, theta_deg=12.0, n_r=1, n_phi_tooth=2, n_phi_bridge=2, n_z=2)
+    kappas = np.geomspace(1.5, 150.0, n_kappas)
+    lnk_arr = np.log(kappas)
+    n3_track_levels = [(t.r_tooth_in, t.r_tooth_out, t.level, t.r_inner, t.r_outer) for t in design_n3.tracks]
+    unif_track_levels = [(t.r_tooth_in, t.r_tooth_out, t.level, t.r_inner, t.r_outer) for t in design_unif.tracks]
+
+    print(f"[Exp 1] Evaluating 3D BEM wavenumber spectrum across {n_kappas} log-spaced kappas on {device}...", flush=True)
+    spec_n3 = evaluate_spectral_trace_by_level(mesh_n3, kappas.tolist(), n3_track_levels, device)
+    spec_unif = evaluate_spectral_trace_by_level(mesh_unif, kappas.tolist(), unif_track_levels, device)
+
+    w_bands = [
+        np.array([r[f"level{m_lvl}_kappa_weighted_pN"] for r in spec_n3], dtype=np.float64)
+        for m_lvl in (1, 2, 3)
+    ]
+    w_bands_norm = [b / max(float(np.max(np.abs(b))), 1e-30) for b in w_bands]
+    kf_bands = [
+        np.array([r[f"level{m_lvl}_signed_kappa_f_pN"] for r in spec_n3], dtype=np.float64)
+        for m_lvl in (1, 2, 3)
+    ]
+    kf_bands_norm = [b / max(float(np.max(np.abs(b))), 1e-30) for b in kf_bands]
+
+    if n_kappas >= 21:
+        d_lnk = float(np.median(np.diff(lnk_arr)))
+        local_ks_list = []
+        for b in w_bands + kf_bands:
+            lnk0 = float(lnk_arr[int(np.argmax(b))])
+            local_ks_list.append(np.exp(np.linspace(max(lnk_arr[0], lnk0 - 1.5 * d_lnk), min(lnk_arr[-1], lnk0 + 1.5 * d_lnk), 21)))
+        all_local_ks = np.unique(np.concatenate(local_ks_list))
+        rows_loc = evaluate_spectral_trace_by_level(mesh_n3, all_local_ks.tolist(), n3_track_levels, device)
+
+        w_peaks = []
+        for m_idx, m_lvl in enumerate((1, 2, 3)):
+            ks_sub = local_ks_list[m_idx]
+            mask_sub = np.isin(all_local_ks, ks_sub)
+            y_sub = np.array([r[f"level{m_lvl}_kappa_weighted_pN"] for r, m_flag in zip(rows_loc, mask_sub) if m_flag], dtype=np.float64)
+            pk = refine_band_peak_and_uncertainty(lnk_arr, w_bands[m_idx], np.log(ks_sub), y_sub)
+            w_peaks.append(pk)
+        w_models = compare_multiband_spacing_models(lnk_arr, w_bands_norm, w_peaks)
+
+        kf_peaks = []
+        for m_idx, m_lvl in enumerate((1, 2, 3)):
+            ks_sub = local_ks_list[3 + m_idx]
+            mask_sub = np.isin(all_local_ks, ks_sub)
+            y_sub = np.array([r[f"level{m_lvl}_signed_kappa_f_pN"] for r, m_flag in zip(rows_loc, mask_sub) if m_flag], dtype=np.float64)
+            pk = refine_band_peak_and_uncertainty(lnk_arr, kf_bands[m_idx], np.log(ks_sub), y_sub)
+            kf_peaks.append(pk)
+        kf_models = compare_multiband_spacing_models(lnk_arr, kf_bands_norm, kf_peaks)
+    else:
+        w_peaks = [refine_band_peak_and_uncertainty(lnk_arr, b) for b in w_bands]
+        w_models = {}
+        kf_peaks = [refine_band_peak_and_uncertainty(lnk_arr, b) for b in kf_bands]
+        kf_models = {}
+
+    k_peak_l1 = float(w_peaks[0]["kappa_peak_um_inv"])
+    k_peak_l2 = float(w_peaks[1]["kappa_peak_um_inv"])
+    k_peak_l3 = float(w_peaks[2]["kappa_peak_um_inv"])
+
+    return {
+        "b_scale_n3": 3.0,
+        "ln_b_n3": float(math.log(3.0)),
+        "n_kappas_global": int(n_kappas),
+        "n_kappas_local_refinement": 21 if n_kappas >= 21 else 0,
+        "kappa_peak_level1_um_inv": k_peak_l1,
+        "kappa_peak_level1_sigma_um_inv": float(w_peaks[0]["kappa_peak_sigma_um_inv"]),
+        "kappa_peak_level2_um_inv": k_peak_l2,
+        "kappa_peak_level2_sigma_um_inv": float(w_peaks[1]["kappa_peak_sigma_um_inv"]),
+        "kappa_peak_level3_um_inv": k_peak_l3,
+        "kappa_peak_level3_sigma_um_inv": float(w_peaks[2]["kappa_peak_sigma_um_inv"]),
+        "observed_ratio_k2_over_k1": k_peak_l2 / max(k_peak_l1, 1e-12),
+        "observed_ratio_k3_over_k2": k_peak_l3 / max(k_peak_l2, 1e-12),
+        "w_peaks_refined": w_peaks,
+        "w_multiband_spacing_models": w_models,
+        "kf_peaks_refined": kf_peaks,
+        "kf_multiband_spacing_models": kf_models,
+        "cantor_n3_spectrum": spec_n3,
+        "uniform_3track_spectrum": spec_unif,
+    }
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     started = time.monotonic()
@@ -1132,6 +1528,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         if not out_json.is_file():
             raise FileNotFoundError(f"Cannot run --plot-only; report not found: {out_json}")
         report = json.loads(out_json.read_text(encoding="utf-8"))
+        exp1_prev = report.get("experiment1_spectral_wavenumber", {})
+        if not is_micro and (
+            len(exp1_prev.get("cantor_n3_spectrum", [])) < 91
+            or "w_multiband_spacing_models" not in exp1_prev
+        ):
+            report["experiment1_spectral_wavenumber"] = _evaluate_dense_exp1_with_refinement("cpu", n_kappas=91)
         step_res_cached = report["experiment2_stepped_rz_stroke"]
         b_scale_cached = float(step_res_cached["b_scale"])
         x_ln_cached = np.array([r["ln_z_over_lstar"] for r in step_res_cached["cantor_stepped_rz"]], dtype=np.float64)
@@ -1176,6 +1578,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             assert max_signed_kf_l1_c > 0.0 and max_signed_kf_l2_c > 0.0 and max_signed_kf_l3_c > 0.0 and max_signed_kf_c > 0.0
             amp_ratio_c = float(mod_c_cached["amplitude_fundamental"] / max(mod_u_cached["amplitude_fundamental"], 1e-12))
             amp_ratio_lin_c = float(mod_c_cached["amplitude_fundamental"] / max(mod_l_cached["amplitude_fundamental"], 1e-12))
+            w_pks_c = exp1_c.get("w_peaks_refined", [])
+            w_mod_c = exp1_c.get("w_multiband_spacing_models", {})
+            kf_pks_c = exp1_c.get("kf_peaks_refined", [])
             metrics_to_log_c = {
                 "logper_k_peak_l1_um_inv": k_peak_l1_c,
                 "logper_k_peak_l2_um_inv": k_peak_l2_c,
@@ -1247,6 +1652,61 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "logper_free_r2_peak_uniform": float(free_u_cached["r2_peak_1h"]),
                 "logper_free_r2_at_omega1_uniform": float(free_u_cached["r2_at_design_1h"]),
             }
+            if len(w_pks_c) == 3 and w_mod_c:
+                metrics_to_log_c.update({
+                    "logper_k_peak_l1_sigma_um_inv": float(w_pks_c[0]["kappa_peak_sigma_um_inv"]),
+                    "logper_k_peak_l2_sigma_um_inv": float(w_pks_c[1]["kappa_peak_sigma_um_inv"]),
+                    "logper_k_peak_l3_sigma_um_inv": float(w_pks_c[2]["kappa_peak_sigma_um_inv"]),
+                    "logper_ln_k_peak_l1_sigma": float(w_pks_c[0]["ln_kappa_peak_sigma"]),
+                    "logper_ln_k_peak_l2_sigma": float(w_pks_c[1]["ln_kappa_peak_sigma"]),
+                    "logper_ln_k_peak_l3_sigma": float(w_pks_c[2]["ln_kappa_peak_sigma"]),
+                    "logper_dlnk_21": float(w_mod_c["delta_ln_kappa_21"]),
+                    "logper_dlnk_21_sigma": float(w_mod_c["delta_ln_kappa_21_sigma"]),
+                    "logper_dlnk_32": float(w_mod_c["delta_ln_kappa_32"]),
+                    "logper_dlnk_32_sigma": float(w_mod_c["delta_ln_kappa_32_sigma"]),
+                    "logper_model_exact_ln3_r2": float(w_mod_c["exact_ln3_model"]["r2"]),
+                    "logper_model_exact_ln3_pk_chi2": float(w_mod_c["exact_ln3_model"]["peak_location_chi2"]),
+                    "logper_model_comp_b_eff": float(w_mod_c["compressed_periodic_model"]["effective_scale_b"]),
+                    "logper_model_comp_dlnk": float(w_mod_c["compressed_periodic_model"]["spacing_ln_kappa"]),
+                    "logper_model_comp_r2": float(w_mod_c["compressed_periodic_model"]["r2"]),
+                    "logper_model_comp_daic_vs_ln3": float(w_mod_c["compressed_periodic_model"]["delta_aic_vs_exact_ln3"]),
+                    "logper_model_comp_pk_chi2": float(w_mod_c["compressed_periodic_model"]["peak_location_chi2"]),
+                    "logper_model_unres_r2": float(w_mod_c["unrestricted_multiband_model"]["r2"]),
+                    "logper_model_unres_daic_vs_ln3": float(w_mod_c["unrestricted_multiband_model"]["delta_aic_vs_exact_ln3"]),
+                    "logper_model_unres_daic_vs_comp": float(w_mod_c["unrestricted_multiband_model"]["delta_aic_vs_compressed"]),
+                })
+            if len(kf_pks_c) == 3:
+                metrics_to_log_c.update({
+                    "logper_kf_k_peak_l1_um_inv": float(kf_pks_c[0]["kappa_peak_um_inv"]),
+                    "logper_kf_k_peak_l1_sigma_um_inv": float(kf_pks_c[0]["kappa_peak_sigma_um_inv"]),
+                    "logper_kf_k_peak_l2_um_inv": float(kf_pks_c[1]["kappa_peak_um_inv"]),
+                    "logper_kf_k_peak_l2_sigma_um_inv": float(kf_pks_c[1]["kappa_peak_sigma_um_inv"]),
+                    "logper_kf_k_peak_l3_um_inv": float(kf_pks_c[2]["kappa_peak_um_inv"]),
+                    "logper_kf_k_peak_l3_sigma_um_inv": float(kf_pks_c[2]["kappa_peak_sigma_um_inv"]),
+                })
+            uf_json_c = ROOT / "results" / "n3_unified_3d_fractal_factorial_study.json"
+            if uf_json_c.is_file():
+                uf_data_c = json.loads(uf_json_c.read_text(encoding="utf-8"))
+                if isinstance(uf_data_c, Mapping):
+                    for rec_u_c in uf_data_c.get("records", []):
+                        if isinstance(rec_u_c, Mapping) and rec_u_c.get("code") == "F3_111":
+                            k_u_c = np.asarray(rec_u_c.get("kappas_um_inv", []), dtype=np.float64)
+                            fk_u_c = np.asarray(rec_u_c.get("f_kappa_pN_um", []), dtype=np.float64)
+                            if k_u_c.ndim == 1 and k_u_c.shape == fk_u_c.shape and k_u_c.size > 0 and max_signed_kf_c > 0.0:
+                                kf_u_c = k_u_c * fk_u_c
+                                valid_mask_c = np.isfinite(k_u_c) & np.isfinite(kf_u_c) & (k_u_c > 0.0)
+                                if np.any(valid_mask_c):
+                                    k_val_c = k_u_c[valid_mask_c]
+                                    kf_val_c = kf_u_c[valid_mask_c]
+                                    idx_pk_c = int(np.argmax(kf_val_c))
+                                    f3_pk_c = float(kf_val_c[idx_pk_c])
+                                    f3_k_pk_c = float(k_val_c[idx_pk_c])
+                                    if f3_pk_c > 0.0:
+                                        metrics_to_log_c["logper_f3_111_kf_peak_pn"] = f3_pk_c
+                                        metrics_to_log_c["logper_f3_111_k_peak_um_inv"] = f3_k_pk_c
+                                        metrics_to_log_c["logper_f3_111_ln_k_peak"] = float(math.log(f3_k_pk_c))
+                                        metrics_to_log_c["logper_f3_111_gain_vs_1d"] = float(f3_pk_c / max_signed_kf_c)
+                            break
             prov_path_c = ROOT / "results" / "provenance_metrics.json"
             existing_m_c = (
                 json.loads(prov_path_c.read_text(encoding="utf-8")).get("metrics", {})
@@ -1276,27 +1736,15 @@ def main(argv: Sequence[str] | None = None) -> int:
             device = "cpu"
 
     is_micro = 0 < args.max_steps <= 10
-    n_kappas = 5 if is_micro else 21
+    n_kappas = 5 if is_micro else 91
     n_z_pts = 5 if is_micro else 36
     n_xi_sweep = 6 if is_micro else 12
 
-    design_n3 = build_n3_cantor_design()
-    design_unif = build_uniform_3track_design()
-    mesh_n3 = build_study_clutch_mesh(design_n3, theta_deg=12.0, n_r=1, n_phi_tooth=2, n_phi_bridge=2, n_z=2)
-    mesh_unif = build_study_clutch_mesh(design_unif, theta_deg=12.0, n_r=1, n_phi_tooth=2, n_phi_bridge=2, n_z=2)
-    kappas = np.geomspace(1.5, 150.0, n_kappas)
-    n3_track_levels = [(t.r_tooth_in, t.r_tooth_out, t.level, t.r_inner, t.r_outer) for t in design_n3.tracks]
-    unif_track_levels = [(t.r_tooth_in, t.r_tooth_out, t.level, t.r_inner, t.r_outer) for t in design_unif.tracks]
-
-    print(f"[Exp 1] Evaluating 3D BEM wavenumber spectrum across {n_kappas} log-spaced kappas on {device}...", flush=True)
-    spec_n3 = evaluate_spectral_trace_by_level(mesh_n3, kappas.tolist(), n3_track_levels, device)
-    spec_unif = evaluate_spectral_trace_by_level(mesh_unif, kappas.tolist(), unif_track_levels, device)
-
-    k_arr = np.array([r["kappa_um_inv"] for r in spec_n3])
-    # Select peak wavenumber by maximum non-negative spectral magnitude |w_l{m}(kappa)|
-    k_peak_l1 = float(k_arr[int(np.argmax(np.abs([r["level1_kappa_weighted_pN"] for r in spec_n3])))])
-    k_peak_l2 = float(k_arr[int(np.argmax(np.abs([r["level2_kappa_weighted_pN"] for r in spec_n3])))])
-    k_peak_l3 = float(k_arr[int(np.argmax(np.abs([r["level3_kappa_weighted_pN"] for r in spec_n3])))])
+    exp1_res = _evaluate_dense_exp1_with_refinement(device, n_kappas=n_kappas)
+    spec_n3 = exp1_res["cantor_n3_spectrum"]
+    k_peak_l1 = float(exp1_res["kappa_peak_level1_um_inv"])
+    k_peak_l2 = float(exp1_res["kappa_peak_level2_um_inv"])
+    k_peak_l3 = float(exp1_res["kappa_peak_level3_um_inv"])
 
     b_scale = 2.5
     z_shifts = np.geomspace(0.025, 0.450, n_z_pts)
@@ -1329,13 +1777,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "model": "BEM_LogPeriodicity_Clutch_Bridge", "dataset": "clutch_log_periodicity_probe",
         "status": "completed", "execution_status": "micro_probe_complete" if is_micro else "complete",
         "executed_at": now_iso, "device": device, "elapsed_seconds": time.monotonic() - started,
-        "experiment1_spectral_wavenumber": {
-            "b_scale_n3": 3.0, "ln_b_n3": float(math.log(3.0)),
-            "kappa_peak_level1_um_inv": k_peak_l1, "kappa_peak_level2_um_inv": k_peak_l2, "kappa_peak_level3_um_inv": k_peak_l3,
-            "observed_ratio_k2_over_k1": k_peak_l2 / max(k_peak_l1, 1e-12),
-            "observed_ratio_k3_over_k2": k_peak_l3 / max(k_peak_l2, 1e-12),
-            "cantor_n3_spectrum": spec_n3, "uniform_3track_spectrum": spec_unif,
-        },
+        "experiment1_spectral_wavenumber": exp1_res,
         "experiment2_stepped_rz_stroke": step_res,
         "experiment2_log_periodic_fit": {
             "cantor_modulation": mod_c,
@@ -1376,6 +1818,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         max_signed_kf_l3 = max(float(r.get("level3_signed_kappa_f_pN", float(r["kappa_um_inv"]) * float(r["level3_integrand_pN_um"]))) for r in spec_n3)
         assert max_decomp_res < 1e-12, f"Trace decomposition residual {max_decomp_res} >= 1e-12"
         assert max_signed_kf_l1 > 0.0 and max_signed_kf_l2 > 0.0 and max_signed_kf_l3 > 0.0 and max_signed_kf > 0.0
+        w_pks = exp1_res.get("w_peaks_refined", [])
+        w_mod = exp1_res.get("w_multiband_spacing_models", {})
+        kf_pks = exp1_res.get("kf_peaks_refined", [])
         metrics_to_log = {
             "logper_k_peak_l1_um_inv": k_peak_l1,
             "logper_k_peak_l2_um_inv": k_peak_l2,
@@ -1447,6 +1892,38 @@ def main(argv: Sequence[str] | None = None) -> int:
             "logper_free_r2_peak_uniform": float(free_u["r2_peak_1h"]),
             "logper_free_r2_at_omega1_uniform": float(free_u["r2_at_design_1h"]),
         }
+        if len(w_pks) == 3 and w_mod:
+            metrics_to_log.update({
+                "logper_k_peak_l1_sigma_um_inv": float(w_pks[0]["kappa_peak_sigma_um_inv"]),
+                "logper_k_peak_l2_sigma_um_inv": float(w_pks[1]["kappa_peak_sigma_um_inv"]),
+                "logper_k_peak_l3_sigma_um_inv": float(w_pks[2]["kappa_peak_sigma_um_inv"]),
+                "logper_ln_k_peak_l1_sigma": float(w_pks[0]["ln_kappa_peak_sigma"]),
+                "logper_ln_k_peak_l2_sigma": float(w_pks[1]["ln_kappa_peak_sigma"]),
+                "logper_ln_k_peak_l3_sigma": float(w_pks[2]["ln_kappa_peak_sigma"]),
+                "logper_dlnk_21": float(w_mod["delta_ln_kappa_21"]),
+                "logper_dlnk_21_sigma": float(w_mod["delta_ln_kappa_21_sigma"]),
+                "logper_dlnk_32": float(w_mod["delta_ln_kappa_32"]),
+                "logper_dlnk_32_sigma": float(w_mod["delta_ln_kappa_32_sigma"]),
+                "logper_model_exact_ln3_r2": float(w_mod["exact_ln3_model"]["r2"]),
+                "logper_model_exact_ln3_pk_chi2": float(w_mod["exact_ln3_model"]["peak_location_chi2"]),
+                "logper_model_comp_b_eff": float(w_mod["compressed_periodic_model"]["effective_scale_b"]),
+                "logper_model_comp_dlnk": float(w_mod["compressed_periodic_model"]["spacing_ln_kappa"]),
+                "logper_model_comp_r2": float(w_mod["compressed_periodic_model"]["r2"]),
+                "logper_model_comp_daic_vs_ln3": float(w_mod["compressed_periodic_model"]["delta_aic_vs_exact_ln3"]),
+                "logper_model_comp_pk_chi2": float(w_mod["compressed_periodic_model"]["peak_location_chi2"]),
+                "logper_model_unres_r2": float(w_mod["unrestricted_multiband_model"]["r2"]),
+                "logper_model_unres_daic_vs_ln3": float(w_mod["unrestricted_multiband_model"]["delta_aic_vs_exact_ln3"]),
+                "logper_model_unres_daic_vs_comp": float(w_mod["unrestricted_multiband_model"]["delta_aic_vs_compressed"]),
+            })
+        if len(kf_pks) == 3:
+            metrics_to_log.update({
+                "logper_kf_k_peak_l1_um_inv": float(kf_pks[0]["kappa_peak_um_inv"]),
+                "logper_kf_k_peak_l1_sigma_um_inv": float(kf_pks[0]["kappa_peak_sigma_um_inv"]),
+                "logper_kf_k_peak_l2_um_inv": float(kf_pks[1]["kappa_peak_um_inv"]),
+                "logper_kf_k_peak_l2_sigma_um_inv": float(kf_pks[1]["kappa_peak_sigma_um_inv"]),
+                "logper_kf_k_peak_l3_um_inv": float(kf_pks[2]["kappa_peak_um_inv"]),
+                "logper_kf_k_peak_l3_sigma_um_inv": float(kf_pks[2]["kappa_peak_sigma_um_inv"]),
+            })
         for m_key, m_val in metrics_to_log.items():
             log_metric(m_key, m_val, step_id="clutch_log_periodicity_probe", solver_name="bem")
         export_macros(str(ROOT / "results" / "provenance_metrics.json"), str(ROOT / "results" / "macros_results.tex"))
