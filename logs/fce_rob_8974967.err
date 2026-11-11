@@ -1,0 +1,11 @@
+[W1111 15:52:09.365725600 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 2397044736 bytes (free: 1639251968, total: 42405855232).
+[W1111 15:52:09.115196255 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 2397044736 bytes (free: 2339700736, total: 42405855232).
+Traceback (most recent call last):
+  File "/N/project/gorengor_werewolf/FractalCasimir3D/execution/run_unified_fractal_robustness_study.py", line 1345, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/N/project/gorengor_werewolf/FractalCasimir3D/execution/run_unified_fractal_robustness_study.py", line 1318, in main
+    _render_summary_figure(full_summary, DEFAULT_FIGURE_PDF, DEFAULT_FIGURE_PNG, code_hash)
+  File "/N/project/gorengor_werewolf/FractalCasimir3D/execution/run_unified_fractal_robustness_study.py", line 969, in _render_summary_figure
+    save_plot_provenance(pdf_path, prov_meta)
+TypeError: save_plot_provenance() missing 1 required positional argument: 'columns_used'
