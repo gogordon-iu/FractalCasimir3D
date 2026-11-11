@@ -352,6 +352,24 @@ def _build_bem_task_list(designs: Sequence[RobustClutchDesign3D]) -> list[dict[s
     return tasks
 
 
+def _checkpoint_matches_task(cached: Mapping[str, Any], task: Mapping[str, Any]) -> bool:
+    """Verify a cached BEM task record matches all task physical & mesh parameters before reuse."""
+    try:
+        if str(cached.get("design_code")) != str(task["design_code"]):
+            return False
+        if str(cached.get("material")) != str(task["material"]):
+            return False
+        for key in ("z_shift_um", "theta_deg", "delta_w_um", "delta_r_um", "r_edge_um", "temperature_K"):
+            if not math.isclose(float(cached[key]), float(task[key]), rel_tol=1e-9, abs_tol=1e-12):
+                return False
+        if not bool(cached.get("shorted", False)) and not bool(cached.get("all_teeth_etched_away", False)):
+            if bool(task.get("spectral_91", False)) and len(cached.get("kappas_um_inv", ())) != len(SPECTRAL_KAPPA_GRID_UM_INV):
+                return False
+        return True
+    except (KeyError, TypeError, ValueError):
+        return False
+
+
 def _execute_single_task(
     task: Mapping[str, Any],
     by_code: Mapping[str, RobustClutchDesign3D],
@@ -953,21 +971,30 @@ def _render_summary_figure(
     fig.savefig(png_path, dpi=220)
     plt.close(fig)
 
-    prov_meta = {
-        "source_json": str(DEFAULT_OUTPUT_JSON),
-        "code_hash": code_hash,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "panels": [
-            "a: 36-point 3D BEM axial stroke basin",
-            "b: Open-window rotational torque ripple R_tau",
-            "c: 32-element Hermite FEM stator rib safety SF_rib",
-            "d: Cleanroom etch-bias sweep and N=2000 BEM-interpolated chip yield",
-            "e: 91-point wavenumber sub-band decomposition",
-            "f: Unconstrained Lomb-Scargle log-frequency spectrum",
-        ],
-    }
-    save_plot_provenance(pdf_path, prov_meta)
-    save_plot_provenance(png_path, prov_meta)
+    columns_used = [
+        "designs.*.benchmark_1_axial_stroke.stroke_points",
+        "designs.*.benchmark_2_angular_lateral.torque_ripple_R_tau",
+        "designs.*.benchmark_3_rib_and_vcrit.rib_elastostatics.SF_rib",
+        "designs.*.benchmark_4_cleanroom_yield.etch_bias_curve",
+        "designs.*.benchmark_4_cleanroom_yield.cleanroom_yield_Y_lab_pct",
+        "benchmark_5_ln3_scale_covering.wavenumber_subbands.H3_Cantor_Robust_Gold300K",
+        "benchmark_5_ln3_scale_covering.stroke_log_periodicity",
+    ]
+    prov_solver_params = {"code_hash": code_hash}
+    save_plot_provenance(
+        str(pdf_path),
+        str(DEFAULT_OUTPUT_JSON),
+        columns_used,
+        solver_name="vector_dyadic_bem_3d_plus_hermite_fem",
+        solver_parameters=prov_solver_params,
+    )
+    save_plot_provenance(
+        str(png_path),
+        str(DEFAULT_OUTPUT_JSON),
+        columns_used,
+        solver_name="vector_dyadic_bem_3d_plus_hermite_fem",
+        solver_parameters=prov_solver_params,
+    )
 
 
 def _write_latex_summary_table(summary: Mapping[str, Any], out_tex: Path) -> None:
@@ -1052,7 +1079,7 @@ def _log_grounded_provenance_metrics(summary: Mapping[str, Any], solver_params: 
         "h3_gold_dlnk_32": sp_gold["spacing_comparison"]["delta_ln_kappa_32"],
     }
     for key, val in metrics_map.items():
-        log_metric(key, float(val), step_id=step_id, defer_save=True)
+        log_metric(key, float(val), step_id=step_id, defer_save=False)
     export_macros()
 
 
@@ -1182,8 +1209,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     for idx, tsk in enumerate(all_tasks, start=1):
         t_key = str(tsk["task_key"])
         ckpt_file = ckpt_dir / f"{t_key}.json"
+        loaded_ckpt: dict[str, Any] | None = None
         if not args.no_cache_ckpt and ckpt_file.is_file():
-            task_results[t_key] = json.loads(ckpt_file.read_text(encoding="utf-8"))
+            candidate_ckpt = json.loads(ckpt_file.read_text(encoding="utf-8"))
+            if _checkpoint_matches_task(candidate_ckpt, tsk):
+                loaded_ckpt = candidate_ckpt
+        if loaded_ckpt is not None:
+            task_results[t_key] = loaded_ckpt
         else:
             res = _execute_single_task(tsk, by_code, n_xi=args.n_xi, device=args.device)
             task_results[t_key] = res

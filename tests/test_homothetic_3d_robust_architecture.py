@@ -288,3 +288,107 @@ def test_blender_audit_and_visual_inspector(tmp_path: Path) -> None:
     assert any("clipped" in msg for msg in chk_clip["issues"])
 
 
+def test_postprocessing_provenance_figure_and_table_end_to_end(tmp_path: Path) -> None:
+    """Verify _render_summary_figure, save_plot_provenance, _write_latex_summary_table, and Blender live-metric stamping."""
+    from execution.build_unified_fractal_robustness_blender import (
+        audit_robust_design_for_blender,
+        compose_six_design_atlas_figure,
+        inspect_rendered_png_quality,
+    )
+    from execution.run_unified_fractal_robustness_study import (
+        _compute_combined_code_hash,
+        _render_summary_figure,
+        _write_latex_summary_table,
+    )
+
+    code_hash = _compute_combined_code_hash()
+    assert len(code_hash) == 16
+
+    designs = build_all_robustness_study_designs()
+    designs_dict = {}
+    for idx, d in enumerate(designs):
+        designs_dict[d.code] = {
+            "benchmark_1_axial_stroke": {
+                "F_z_op_pN": 12.0 - idx,
+                "log_stroke_basin_Bz": 2.15 - 0.1 * idx,
+                "min_Fz_working_window_45_360nm_pN": 1.2 - 0.3 * idx,
+                "sign_safe_span_nm": 410.0,
+                "escape_work_kBT_300K": 25.0,
+                "stroke_points": [{"z_d_nm": z, "F_z_pN": 5.0 - 0.01 * z} for z in (30.0, 56.0, 120.0, 360.0)],
+            },
+            "benchmark_2_angular_lateral": {
+                "F_z_engaged_48deg_pN": -38.5,
+                "torque_ripple_R_tau": 0.02 + 0.01 * idx,
+            },
+            "benchmark_3_rib_and_vcrit": {
+                "rib_elastostatics": {"SF_rib": 5000.0 / (idx + 1)},
+                "laplace_electrostatics": {"V_crit_mV": 85.0},
+            },
+            "benchmark_4_cleanroom_yield": {
+                "cleanroom_yield_Y_lab_pct": 94.5 - 8.0 * idx,
+                "etch_bias_curve": [{"delta_w_nm": dw, "F_z_zop_pN": 8.0 - 0.05 * abs(dw)} for dw in (-15.0, 0.0, 15.0)],
+            },
+        }
+
+    kappas = [0.5, 2.0, 6.0, 18.0, 54.0]
+    mock_subband = {
+        "kappas_um_inv": kappas,
+        "band_gen1_norm": [0.2, 1.0, 0.5, 0.2, 0.1],
+        "band_gen2_norm": [0.1, 0.4, 1.0, 0.4, 0.1],
+        "band_gen3_norm": [0.05, 0.2, 0.5, 1.0, 0.3],
+        "peaks_by_generation": {
+            "1": {"kappa_peak_um_inv": 2.0},
+            "2": {"kappa_peak_um_inv": 6.0},
+            "3": {"kappa_peak_um_inv": 18.0},
+        },
+        "spacing_comparison": {"delta_ln_kappa_21": 1.0986, "delta_ln_kappa_32": 1.0986},
+    }
+    mock_lomb = {
+        "free_frequency_lomb_scargle": {
+            "underdetermined": False,
+            "omega_grid": [3.0, 5.72, 9.0],
+            "r2_1h_spectrum": [0.15, 0.82, 0.21],
+        }
+    }
+    mock_summary = {
+        "executed_at": "2026-11-11T21:00:00Z",
+        "designs": designs_dict,
+        "benchmark_5_ln3_scale_covering": {
+            "wavenumber_subbands": {
+                "H3_Cantor_Robust_PEC": mock_subband,
+                "H3_Cantor_Robust_Gold300K": mock_subband,
+            },
+            "stroke_log_periodicity": {
+                "H3_Cantor_Robust_PEC": mock_lomb,
+                "H3_Cantor_Robust_Gold300K": mock_lomb,
+                "Ctrl_Lin_3Stage_Gold300K": mock_lomb,
+                "Ctrl_KnifeEdge_g27_Gold300K": mock_lomb,
+            },
+        },
+    }
+
+    out_pdf = tmp_path / "fig_summary.pdf"
+    out_png = tmp_path / "fig_summary.png"
+    out_tex = tmp_path / "table_summary.tex"
+    _render_summary_figure(mock_summary, out_pdf, out_png, code_hash)
+    assert out_pdf.is_file() and out_png.is_file()
+    assert Path(f"{out_pdf}.provenance.json").is_file()
+    assert Path(f"{out_png}.provenance.json").is_file()
+
+    fig_chk = inspect_rendered_png_quality(out_png, min_fg_fraction=0.04, max_fg_fraction=0.96)
+    assert fig_chk["status"] == "PASS", fig_chk
+
+    _write_latex_summary_table(mock_summary, out_tex)
+    assert "H3-Cantor-Robust" in out_tex.read_text(encoding="utf-8")
+
+    # Also verify Blender atlas live BEM metric annotation path
+    audits = [audit_robust_design_for_blender(d) for d in designs]
+    atlas_png = tmp_path / "atlas_stamped.png"
+    atlas_pdf = tmp_path / "atlas_stamped.pdf"
+    render_dir = Path(__file__).resolve().parents[1] / "results" / "unified_fractal_robustness_blender"
+    compose_six_design_atlas_figure(designs, audits, designs_dict, render_dir, atlas_png, atlas_pdf)
+    atlas_chk = inspect_rendered_png_quality(atlas_png, min_fg_fraction=0.10)
+    assert atlas_chk["status"] == "PASS", atlas_chk
+
+
+

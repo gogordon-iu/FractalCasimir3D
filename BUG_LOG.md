@@ -386,3 +386,7 @@
 ### [BUG-261111-02] 2026-11-11 | execution/run_clutch_log_periodicity_probe.py | scope=infra
 - **Bug**: BigRed 200 job 8973863 failed with ImportError for compare_multiband_spacing_models because modified run_clutch_log_periodicity_probe.py was unstaged.
 - **Solution**: Committed updated run_clutch_log_periodicity_probe.py and verified clean git-archive HEAD imports and micro-probe execution.
+
+### [BUG-261111-03] 2026-11-11 | execution/run_unified_fractal_robustness_study.py | scope=infra
+- **Bug**: Post-processing failed after 497/497 BEM tasks with TypeError because save_plot_provenance lacked required columns_used argument.
+- **Solution**: Passed data_source and columns_used to save_plot_provenance, enabled immediate log_metric saving, and preserved code_hash 9c65828d1361e664.

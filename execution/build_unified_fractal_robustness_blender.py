@@ -1078,7 +1078,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "h3_blender_min_clearance_nm": float(min(a["g_min_nm"] for a in audits)),
         }
         for k, v in metrics_to_log.items():
-            log_metric(k, v, step_id="unified_fractal_robustness_blender", solver_name="blender_visual_audit", defer_save=True)
+            log_metric(k, v, step_id="unified_fractal_robustness_blender", solver_name="blender_visual_audit", defer_save=False)
         export_macros(prov_json_path, str(ROOT / "results" / "macros_results.tex"))
         for fig_p in (atlas_png, atlas_pdf, hero_png, hero_pdf):
             save_plot_provenance(str(fig_p), prov_json_path, list(metrics_to_log.keys()))
