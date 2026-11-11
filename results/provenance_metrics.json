@@ -1,6 +1,6 @@
 {
   "dataset": "fractal_casimir_3d",
-  "executed_at": "2026-11-11T03:12:25.074048+00:00",
+  "executed_at": "2026-11-11T22:04:10.012653+00:00",
   "intermediate_steps": {
     "0": {
       "data_summary": {
@@ -98244,6 +98244,49 @@
         "z_pad_top_um": -0.115,
         "code_version_hash": "729dbe73d54ab69e",
         "executed_at": "2026-11-11T01:39:36.912444+00:00"
+      }
+    },
+    "unified_fractal_robustness_3d_study": {
+      "timestamp": "2026-11-11T22:03:39.143086+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 389,
+      "data_summary": {
+        "status": "completed",
+        "executed_at": "2026-11-11T22:03:38.215611+00:00",
+        "h3_Fz_op_pN": 2.4655019980064776,
+        "h3_Bz": 2.2840430874594575,
+        "h3_Y_lab_pct": 85.9,
+        "knife_edge_Y_lab_pct": 41.5
+      },
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "unified_fractal_robustness_blender": {
+      "timestamp": "2026-11-11T22:04:06.808180+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 389,
+      "data_summary": {
+        "status": "completed",
+        "n_configurations": 6,
+        "all_visual_inspections_passed": true
+      },
+      "solver": "blender_visual_audit",
+      "solver_parameters": {
+        "benchmark": "unified_fractal_robustness_blender",
+        "n_configurations": 6,
+        "executed_at": "2026-11-11T22:04:06.185003+00:00"
       }
     }
   },
@@ -304303,21 +304346,448 @@
         "code_version_hash": "729dbe73d54ab69e",
         "executed_at": "2026-11-11T01:39:36.912444+00:00"
       }
+    },
+    "h3_robust_Fz_op_pN": {
+      "value": 2.4655019980064776,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:39.921446+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "h3_robust_Fz_engaged_pN": {
+      "value": -1.792445130644283,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:40.556835+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "h3_robust_stroke_span_nm": {
+      "value": 355.14251710662586,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:41.187863+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "h3_robust_stroke_basin_Bz": {
+      "value": 2.2840430874594575,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:41.815546+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "h3_robust_min_stroke_Fz_pN": {
+      "value": 0.299657303168253,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:42.442043+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "h3_robust_escape_work_kBT": {
+      "value": 83.08833499034134,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:43.060445+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "h3_robust_torque_ripple": {
+      "value": 1.8349900225240527,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:43.708617+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "h3_robust_SF_rib": {
+      "value": 19621293.907847263,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:44.356788+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "h3_robust_V_crit_mV": {
+      "value": 403.65309602882735,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:44.986391+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "h3_robust_yield_pct": {
+      "value": 85.9,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:45.623618+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "ctrl_knife_Fz_op_pN": {
+      "value": 2.2003014428508307,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:46.248684+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "ctrl_knife_SF_rib": {
+      "value": 49.61463643317788,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:46.882497+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "ctrl_knife_V_crit_mV": {
+      "value": 39.10025823219076,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:47.564833+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "ctrl_knife_yield_pct": {
+      "value": 41.5,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:48.172672+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "h3_pec_dlnk_21": {
+      "value": 1.2638536713988575,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:48.826301+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "h3_pec_dlnk_32": {
+      "value": 1.092748974425651,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:49.449620+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "h3_gold_dlnk_21": {
+      "value": 1.0177674730639712,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:50.076456+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "h3_gold_dlnk_32": {
+      "value": 0.1539972738802622,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_3d_study",
+      "recorded_at": "2026-11-11T22:03:50.783706+00:00",
+      "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+      "solver_parameters": {
+        "formulation": "vector_dyadic",
+        "symmetry": "C4_Bloch_4_sectors",
+        "material_primary": "Gold_Drude_Lorentz_300K",
+        "material_reference": "PEC_0K",
+        "n_xi_tail": 20,
+        "fem_beam_elements": 32,
+        "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+        "monte_carlo_samples_per_design": 2000,
+        "code_hash": "9c65828d1361e664"
+      }
+    },
+    "h3_blender_total_configs": {
+      "value": 6.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_blender",
+      "recorded_at": "2026-11-11T22:04:07.420269+00:00",
+      "solver": "blender_visual_audit",
+      "solver_parameters": {
+        "benchmark": "unified_fractal_robustness_blender",
+        "n_configurations": 6,
+        "executed_at": "2026-11-11T22:04:06.185003+00:00"
+      }
+    },
+    "h3_blender_passed_audits": {
+      "value": 6.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_blender",
+      "recorded_at": "2026-11-11T22:04:08.102529+00:00",
+      "solver": "blender_visual_audit",
+      "solver_parameters": {
+        "benchmark": "unified_fractal_robustness_blender",
+        "n_configurations": 6,
+        "executed_at": "2026-11-11T22:04:06.185003+00:00"
+      }
+    },
+    "h3_blender_passed_visuals": {
+      "value": 10.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_blender",
+      "recorded_at": "2026-11-11T22:04:08.755892+00:00",
+      "solver": "blender_visual_audit",
+      "solver_parameters": {
+        "benchmark": "unified_fractal_robustness_blender",
+        "n_configurations": 6,
+        "executed_at": "2026-11-11T22:04:06.185003+00:00"
+      }
+    },
+    "h3_blender_max_area_err_um2": {
+      "value": 0.007629546,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_blender",
+      "recorded_at": "2026-11-11T22:04:09.365678+00:00",
+      "solver": "blender_visual_audit",
+      "solver_parameters": {
+        "benchmark": "unified_fractal_robustness_blender",
+        "n_configurations": 6,
+        "executed_at": "2026-11-11T22:04:06.185003+00:00"
+      }
+    },
+    "h3_blender_min_clearance_nm": {
+      "value": 27.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "unified_fractal_robustness_blender",
+      "recorded_at": "2026-11-11T22:04:10.012622+00:00",
+      "solver": "blender_visual_audit",
+      "solver_parameters": {
+        "benchmark": "unified_fractal_robustness_blender",
+        "n_configurations": 6,
+        "executed_at": "2026-11-11T22:04:06.185003+00:00"
+      }
     }
   },
-  "model": "bem",
+  "model": "blender_visual_audit",
   "run_metadata": {
     "created_at": "2026-10-15T18:15:22.084634+00:00",
     "entry_point": "execution/casimir_bem_solver.py",
     "environment": "Windows",
-    "solver": "bem",
+    "solver": "blender_visual_audit",
     "solver_parameters": {
-      "benchmark": "n3_unified_3d_fractal_factorial_study",
-      "n_xi": 24,
-      "n_designs": 19,
-      "z_pad_top_um": -0.115,
-      "code_version_hash": "729dbe73d54ab69e",
-      "executed_at": "2026-11-11T01:39:36.912444+00:00"
+      "benchmark": "unified_fractal_robustness_blender",
+      "n_configurations": 6,
+      "executed_at": "2026-11-11T22:04:06.185003+00:00"
     },
     "solver_runs": [
       {
@@ -313633,9 +314103,33 @@
           "executed_at": "2026-11-11T01:39:36.912444+00:00"
         },
         "timestamp": "2026-11-11T01:39:38.612017+00:00"
+      },
+      {
+        "solver": "vector_dyadic_bem_3d_plus_hermite_fem",
+        "solver_parameters": {
+          "formulation": "vector_dyadic",
+          "symmetry": "C4_Bloch_4_sectors",
+          "material_primary": "Gold_Drude_Lorentz_300K",
+          "material_reference": "PEC_0K",
+          "n_xi_tail": 20,
+          "fem_beam_elements": 32,
+          "fem_element_type": "Hermite_cubic_Euler_Bernoulli_clamped_clamped",
+          "monte_carlo_samples_per_design": 2000,
+          "code_hash": "9c65828d1361e664"
+        },
+        "timestamp": "2026-11-11T22:03:38.455039+00:00"
+      },
+      {
+        "solver": "blender_visual_audit",
+        "solver_parameters": {
+          "benchmark": "unified_fractal_robustness_blender",
+          "n_configurations": 6,
+          "executed_at": "2026-11-11T22:04:06.185003+00:00"
+        },
+        "timestamp": "2026-11-11T22:04:06.202232+00:00"
       }
     ],
-    "updated_at": "2026-11-11T03:12:25.074006+00:00"
+    "updated_at": "2026-11-11T22:04:10.012629+00:00"
   },
   "status": "completed"
 }
