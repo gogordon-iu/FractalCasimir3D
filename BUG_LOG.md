@@ -394,3 +394,23 @@
 ### [BUG-261111-04] 2026-11-11 | execution/homothetic_3d_robust_architecture.py | scope=model model=H3_Cantor_Sym_2x2x2
 - **Bug**: 2x2x2 BEM mesh with n_phi_collar=3 produced 59:1 collar strips (min LU pivot 1.1e-5) and >40 GB unbatched kappas VRAM.
 - **Solution**: Set bem_n_phi_collar=9 on H3_Cantor_Sym_2x2x2 (min pivot 1.3e-3) and cap GPU LU cache to 2 with max_k_batch=28 (<18 GB).
+
+### [BUG-261112-01] 2026-11-12 | fractal_casimir_engine/geometries.py | scope=model model=BEM_EngineCycle_3D dataset=fractal_casimir_engine_cycle
+- **Bug**: Coarse 6-panel stator arcs and saturated 0.50*w_slot horn pads caused collocation torque ripple in Stroke III at theta=64 deg.
+- **Solution**: Set stator arc subdivisions to n_phi_arc=max(3*n_phi_bridge,9) and scaled horn expansion across [0.16,0.62]*w_tooth.
+
+### [BUG-261112-02] 2026-11-12 | fractal_casimir_engine/geometries.py,fractal_casimir_engine/bem_cycle_solver.py | scope=model model=BEM_EngineCycle_3D dataset=fractal_casimir_engine_cycle
+- **Bug**: certify_intra_body_disjointness used max() on 90-deg wrap offsets and PreparedEngineBemModel bypassed DenseBackend CUDA solves.
+- **Solution**: Computed cyclic angular gaps via min over k in (-1,0,1) with self-wrap guard and routed LU/logdet solves through DenseBackend.
+
+### [BUG-261112-03] 2026-11-12 | utils/metrics_logger.py,fractal_casimir_engine/run_engine_cycle_mapping.py | scope=eval model=BEM_EngineCycle_3D dataset=fractal_casimir_engine_cycle
+- **Bug**: generate_manuscript_map omitted the Engine macro prefix and pad_release_engine missed the 90-to-0 deg pad-exit seam wrap.
+- **Solution**: Added Engine to results_metric_prefixes, wrapped the pad-exit gate across 90/0 deg, and bound sidecars to immutable report JSON.
+
+### [BUG-261112-04] 2026-11-12 | fractal_casimir_engine/run_engine_cycle_mapping.py | scope=model model=BEM_EngineCycle_3D dataset=fractal_casimir_engine_cycle
+- **Bug**: Overdamped bearing constants (gamma_th=1.4e-21 N*m*s/rad, Q<0.01) capped 0.8 pg NEMS rotor velocity at 0.3 krad/s.
+- **Solution**: Calibrated high-vacuum NEMS damping to gamma_z=2.5e-12 N*s/m and gamma_th=6.0e-25 N*m*s/rad (Q~10^2-10^3).
+
+### [BUG-261112-05] 2026-11-12 | fractal_casimir_engine/run_engine_cycle_mapping.py | scope=eval model=BEM_EngineCycle_3D dataset=fractal_casimir_engine_cycle
+- **Bug**: Independent bilinear interpolation of F_z and tau_theta on the 5-deg grid broke curl-free loop closure and omitted TDC collar-exit gating on Configs.
+- **Solution**: Replaced independent linear interpolators with C1 conservative PeriodicHermitePotential2D matching (E_C, -F_z.

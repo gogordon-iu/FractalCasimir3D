@@ -797,6 +797,7 @@ def generate_manuscript_map(
         "ClutchPilot",
         "SolverComparison",
         "BemVal",
+        "Engine",
     )
 
     for macro_name, (metric_key, record) in sorted(unique_macro_records.items()):
