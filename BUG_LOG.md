@@ -402,3 +402,7 @@
 ### [BUG-261112-02] 2026-11-12T07:13:05Z | fractal_casimir_gravity/simulations/sim4_nec_sec_raychaudhuri_qei.py | scope=eval
 - **Bug**: Sim 4 and Sim 5 read unsubtracted t_total_ren instead of 4-pass t_mutual and sampled QEI beyond the half-gap causal horizon.
 - **Solution**: Switched Sim 4 and Sim 5 to 4-pass t_mutual and evaluated Ford-Roman QEI on the causal sub-reflection window tau_eff.
+
+### [BUG-261112-03] 2026-11-12 | fractal_casimir_gravity/slurm/submit_fcg_all.slurm | scope=harness
+- **Bug**: Generated Slurm scripts invoked bare SLES15 python3 without loading python/gpu/3.10.10 or repo .venv and units_and_identities imported sympy eagerly.
+- **Solution**: Added BigRed 200 CUDA Python discovery across python/gpu/3.10.10 and .venv to all 4 Slurm scripts and lazy-imported sympy inside.

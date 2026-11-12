@@ -6,7 +6,6 @@ import math
 from typing import Dict
 
 import numpy as np
-import sympy as sp
 
 HBAR_SI: float = 1.054571817e-34
 C_SI: float = 299792458.0
@@ -64,6 +63,8 @@ def minkowski_trace(t_cov: np.ndarray) -> float | np.ndarray:
 
 def verify_symbolic_identities() -> Dict[str, bool]:
     """Run exact SymPy verification of the manuscript's foundational analytical theorems."""
+    import sympy as sp
+
     d, ell_s, b = sp.symbols("d ell_s b", positive=True)
     rho_c = -sp.pi**2 / (720 * d**4)
     t_bm_mixed_trace = -rho_c + (-rho_c) + (-rho_c) + (3 * rho_c)
