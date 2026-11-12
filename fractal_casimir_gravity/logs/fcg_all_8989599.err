@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/N/project/gorengor_werewolf/FractalCasimirGravity/fractal_casimir_gravity/simulations/run_bigred_routed_suite.py", line 50, in <module>
+    main()
+  File "/N/project/gorengor_werewolf/FractalCasimirGravity/fractal_casimir_gravity/simulations/run_bigred_routed_suite.py", line 38, in main
+    sim4_nec_sec_raychaudhuri_qei.run_simulation(max_steps=args.max_steps, results_dir=args.results_dir)
+  File "/N/project/gorengor_werewolf/FractalCasimirGravity/fractal_casimir_gravity/simulations/sim4_nec_sec_raychaudhuri_qei.py", line 99, in run_simulation
+    ray_em = integrate_raychaudhuri_geodesics(t_em, z_ray)
+  File "/N/project/gorengor_werewolf/FractalCasimirGravity/fractal_casimir_gravity/solvers/linearized_gravity.py", line 453, in integrate_raychaudhuri_geodesics
+    delta_theta_null = float(np.trapezoid(dtheta_null_rate, z_nodes))
+  File "/N/soft/sles15sp6/deeplearning/gpu/Python-3.10.10/lib/python3.10/site-packages/numpy/__init__.py", line 311, in __getattr__
+    raise AttributeError("module {!r} has no attribute "
+AttributeError: module 'numpy' has no attribute 'trapezoid'
