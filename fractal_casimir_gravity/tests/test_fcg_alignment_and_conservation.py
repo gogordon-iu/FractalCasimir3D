@@ -27,6 +27,7 @@ from fractal_casimir_gravity.solvers.cpsc_geometry import (
     verify_rigid_quadrupole_moment,
 )
 from fractal_casimir_gravity.solvers.linearized_gravity import (
+    compute_scalaron_monopole_waveform,
     construct_covariant_virial_and_quadrupole,
     evaluate_ford_roman_worldline_qei,
     fit_log_periodic_metric_comb,
@@ -60,16 +61,16 @@ def test_manuscript_code_macro_and_figure_bijection() -> None:
         if m not in STANDARD_LATEX_COMMANDS
     }
     defined_macros = set(re.findall(r"\\newcommand\{\\([A-Z][a-zA-Z]+)\}", macros_text))
-    assert len(defined_macros) == 30
+    assert len(defined_macros) == 38
     assert used_upper == defined_macros, (
         f"Mismatch between .tex usage and macros_gravity.tex:\n"
         f"  Only in .tex: {used_upper - defined_macros}\n"
         f"  Only in macros_gravity.tex: {defined_macros - used_upper}"
     )
 
-    # 2. AST-scan sim1..sim5 for log_metric keys and check exact 1-to-1 bijection
+    # 2. AST-scan sim1..sim6 for log_metric keys and check exact 1-to-1 bijection
     sim_files = sorted((CODE_DIR / "simulations").glob("sim*.py"))
-    assert len(sim_files) == 5
+    assert len(sim_files) == 6
     logged_keys = []
     for sf in sim_files:
         tree = ast.parse(sf.read_text(encoding="utf-8"), filename=str(sf))
@@ -78,8 +79,8 @@ def test_manuscript_code_macro_and_figure_bijection() -> None:
                 assert isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str)
                 logged_keys.append(node.args[0].value)
 
-    assert len(logged_keys) == 30, f"Expected 30 logged metrics, found {len(logged_keys)}"
-    assert len(set(logged_keys)) == 30, "Duplicate metric keys detected across sim1..sim5"
+    assert len(logged_keys) == 38, f"Expected 38 logged metrics, found {len(logged_keys)}"
+    assert len(set(logged_keys)) == 38, "Duplicate metric keys detected across sim1..sim6"
     sanitized_from_code = {_sanitize_macro_name(k) for k in logged_keys}
     assert sanitized_from_code == defined_macros, (
         f"Macro bijection mismatch:\n"
@@ -87,12 +88,19 @@ def test_manuscript_code_macro_and_figure_bijection() -> None:
         f"  Paper - Code: {defined_macros - sanitized_from_code}"
     )
 
-    # 3. Check all 6 figure stems match between manuscript and figure generator
+    # 3. Check all 7 figure stems match between manuscript and figure generator
     tex_figs = set(re.findall(r"figures/(fig[0-9]_[a-z0-9_]+)\.pdf", tex_text))
     gen_text = (CODE_DIR / "simulations" / "generate_all_figures_and_tables.py").read_text(encoding="utf-8")
     code_figs = set(re.findall(r'"(fig[0-9]_[a-z0-9_]+)"', gen_text))
-    assert len(tex_figs) == 6
+    assert len(tex_figs) == 7
     assert tex_figs == code_figs
+
+    # 4. PRD compliance checks: longbibliography, Data Availability, and no "effective trace anomaly" conflation
+    assert "longbibliography" in tex_text
+    assert r"\bibliographystyle" not in tex_text
+    assert "Data Availability" in tex_text
+    assert "effective trace anomaly" not in tex_text.lower()
+    assert "effective trace anomalies" not in tex_text.lower()
 
     # 4. Verify macros_gravity.tex holds all \pendingval pre-run, or zero \pendingval post-sync
     map_path = CODE_DIR / "results" / "manuscript_provenance_map.json"
@@ -251,3 +259,10 @@ def test_poisson_virial_qei_and_dsi_comb_recovery() -> None:
     assert abs(float(fit["omega_hat"]) - w_true) < 0.05
     assert abs(float(fit["b_hat"]) - 3.0) < 0.03
     assert float(fit["r_squared"]) > 0.98
+
+    # 5. Starobinsky f(R) = R + alpha R^2 (alpha > 0) Yukawa mass-cutoff screening check
+    t_grid = np.linspace(0.0, 2.0 * math.pi / 0.4, 64, endpoint=False)
+    src_osc = np.cos(0.4 * t_grid)
+    wf_massless = compute_scalaron_monopole_waveform(src_osc, t_grid, r_obs_tilde=10.0, m_phi_tilde=0.0)
+    wf_heavy = compute_scalaron_monopole_waveform(src_osc, t_grid, r_obs_tilde=10.0, m_phi_tilde=0.8)
+    assert float(np.max(np.abs(wf_heavy))) < 1.0e-2 * float(np.max(np.abs(wf_massless)))

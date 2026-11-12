@@ -1,7 +1,7 @@
 {
   "model": "FractalCasimirGravity_Suite",
   "dataset": "CPSC_3D_QFT",
-  "updated_at": "2026-11-12T18:24:57.333559+00:00",
+  "updated_at": "2026-11-12T21:59:40.075343+00:00",
   "metrics": {
     "fcg_ec_nec_z_min_facing_phase": {
       "value": -579.8950254759884,
@@ -242,6 +242,70 @@
       "line_number": 225,
       "step_id": "sim3_dsi",
       "recorded_at": "2026-11-12T18:24:57.333559+00:00"
+    },
+    "fcg_conv_gen_rel_delta_n_three_to_four": {
+      "value": 0.06648244469901769,
+      "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 225,
+      "step_id": "sim6_gen_convergence",
+      "recorded_at": "2026-11-12T21:59:40.006146+00:00"
+    },
+    "fcg_conv_theta_zero_deg_gen_four": {
+      "value": 25.752848001067097,
+      "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 225,
+      "step_id": "sim6_gen_convergence",
+      "recorded_at": "2026-11-12T21:59:40.016233+00:00"
+    },
+    "fcg_conv_theta_zero_shift_deg_three_to_four": {
+      "value": 0.4229775565198608,
+      "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 225,
+      "step_id": "sim6_gen_convergence",
+      "recorded_at": "2026-11-12T21:59:40.025587+00:00"
+    },
+    "fcg_conv_kappa_quad_rel_err_n_fourteen": {
+      "value": 3.023104941933132e-05,
+      "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 225,
+      "step_id": "sim6_bem_discretization",
+      "recorded_at": "2026-11-12T21:59:40.035005+00:00"
+    },
+    "fcg_conv_bem_panel_rel_uncertainty": {
+      "value": 0.053300342671579515,
+      "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 225,
+      "step_id": "sim6_bem_discretization",
+      "recorded_at": "2026-11-12T21:59:40.045393+00:00"
+    },
+    "fcg_conv_interior_em_trace_null_residual": {
+      "value": 2.490185958021145e-16,
+      "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 225,
+      "step_id": "sim6_local_trace_check",
+      "recorded_at": "2026-11-12T21:59:40.055216+00:00"
+    },
+    "fcg_conv_poisson_voxel_rel_uncertainty": {
+      "value": 0.052940647884898,
+      "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 225,
+      "step_id": "sim6_voxel_convergence",
+      "recorded_at": "2026-11-12T21:59:40.065010+00:00"
+    },
+    "fcg_conv_scalaron_yukawa_suppression_heavy": {
+      "value": 0.000979792944121697,
+      "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 225,
+      "step_id": "sim6_scalaron_dispersion",
+      "recorded_at": "2026-11-12T21:59:40.075343+00:00"
     }
   },
   "intermediate_steps": {
@@ -302,11 +366,22 @@
         "scale_b": 3.0,
         "theoretical_omega_1": 5.7192017347602535
       }
+    },
+    "sim6_init_convergence_suite": {
+      "timestamp": "2026-11-12T21:45:56.098108+00:00",
+      "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 199,
+      "data_summary": {
+        "device": "cpu",
+        "fast_mode": false,
+        "n_kappa_base": 14
+      }
     }
   },
   "run_metadata": {
     "created_at": "2026-11-12T07:14:06.892074+00:00",
-    "updated_at": "2026-11-12T18:24:57.333559+00:00",
+    "updated_at": "2026-11-12T21:59:40.075343+00:00",
     "environment": "Windows",
     "entry_point": "fractal_casimir_gravity/simulations/sim4_nec_sec_raychaudhuri_qei.py"
   }

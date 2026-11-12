@@ -17,6 +17,7 @@ from fractal_casimir_gravity.simulations import (  # noqa: E402
     sim3_log_periodic_metric_comb,
     sim4_nec_sec_raychaudhuri_qei,
     sim5_gravitomagnetic_frame_dragging,
+    sim6_convergence_and_error_bounds,
 )
 
 
@@ -37,6 +38,7 @@ def main() -> None:
     if args.include_local:
         sim4_nec_sec_raychaudhuri_qei.run_simulation(max_steps=args.max_steps, results_dir=args.results_dir)
         sim5_gravitomagnetic_frame_dragging.run_simulation(max_steps=args.max_steps, results_dir=args.results_dir)
+        sim6_convergence_and_error_bounds.run_simulation(max_steps=args.max_steps, results_dir=args.results_dir)
 
     if args.generate_figures or args.sync_paper:
         generate_all_figures_and_tables.generate_all(

@@ -41,6 +41,7 @@ REQUIRED_JSONS = [
     "sim3_log_periodic_metric_comb.json",
     "sim4_nec_sec_raychaudhuri_qei.json",
     "sim5_gravitomagnetic_frame_dragging.json",
+    "sim6_convergence_and_error_bounds.json",
 ]
 
 
@@ -97,6 +98,13 @@ def generate_all(
     sim3 = json.loads((res_path / "sim3_log_periodic_metric_comb.json").read_text(encoding="utf-8"))
     sim4 = json.loads((res_path / "sim4_nec_sec_raychaudhuri_qei.json").read_text(encoding="utf-8"))
     sim5 = json.loads((res_path / "sim5_gravitomagnetic_frame_dragging.json").read_text(encoding="utf-8"))
+    sim6 = json.loads((res_path / "sim6_convergence_and_error_bounds.json").read_text(encoding="utf-8"))
+
+    bem_rel_sigma = math.hypot(
+        float(sim6["panel_rel_errors"][min(1, len(sim6["panel_rel_errors"]) - 1)]),
+        float(sim6["kappa_rel_errors"][min(2, len(sim6["kappa_rel_errors"]) - 1)]),
+    )
+    vox_rel_sigma = float(sim6["voxel_rel_errors"][-2 if len(sim6["voxel_rel_errors"]) >= 2 else 0])
 
     paper_path = Path(paper_dir)
     fig_dirs = [Path(figures_dir)]
@@ -185,20 +193,28 @@ def generate_all(
 
     # Fig 3: Force-Free Curvature & Tolman-Komar Mass
     fig, axes = plt.subplots(2, 2, figsize=(10.5, 6.2))
-    th_deg = sim2["theta_deg_scan"]
-    axes[0, 0].plot(th_deg, sim2["forces_z_tilde"], lw=1.8, color="#1d4ed8")
+    th_deg = np.asarray(sim2["theta_deg_scan"], dtype=np.float64)
+    fz_arr = np.asarray(sim2["forces_z_tilde"], dtype=np.float64)
+    ricci_arr = np.asarray(sim2["ricci_eff_tilde"], dtype=np.float64)
+    fz_band = np.maximum(np.abs(fz_arr) * bem_rel_sigma, 0.015 * np.max(np.abs(fz_arr)) * bem_rel_sigma)
+    ricci_band = np.maximum(np.abs(ricci_arr) * bem_rel_sigma, 0.015 * np.max(np.abs(ricci_arr)) * bem_rel_sigma)
+
+    axes[0, 0].plot(th_deg, fz_arr, lw=1.8, color="#1d4ed8", label=r"BEM $\tilde{F}_z(\theta)$")
+    axes[0, 0].fill_between(th_deg, fz_arr - fz_band, fz_arr + fz_band, color="#93c5fd", alpha=0.35, label=r"$\pm\sigma_{\mathrm{BEM}}$ band")
     axes[0, 0].axhline(0.0, color="k", lw=0.8, ls="--")
     axes[0, 0].axvline(sim2["theta_zero_deg"], color="#dc2626", ls=":", label=rf"$\theta_0={sim2['theta_zero_deg']:.2f}^\circ$")
     axes[0, 0].set_xlabel(r"Rotor angle $\theta$ (deg)")
     axes[0, 0].set_ylabel(r"Axial Casimir force $\tilde{F}_z$")
     axes[0, 0].set_title("(a) Repulsive-to-Attractive Force Crossover")
-    axes[0, 0].legend()
+    axes[0, 0].legend(fontsize=7)
 
-    axes[0, 1].plot(th_deg, sim2["ricci_eff_tilde"], lw=1.8, color="#0f766e")
-    axes[0, 1].axvline(sim2["theta_zero_deg"], color="#dc2626", ls=":")
+    axes[0, 1].plot(th_deg, ricci_arr, lw=1.8, color="#0f766e", label=r"BEM $\tilde{R}_{\mathrm{eff}}(\theta)$")
+    axes[0, 1].fill_between(th_deg, ricci_arr - ricci_band, ricci_arr + ricci_band, color="#5eead4", alpha=0.35, label=r"$\pm\sigma_{\mathrm{BEM}}$ band")
+    axes[0, 1].axvline(sim2["theta_zero_deg"], color="#dc2626", ls=":", label=r"$\tilde{F}_z(\theta_0)=0$")
     axes[0, 1].set_xlabel(r"Rotor angle $\theta$ (deg)")
     axes[0, 1].set_ylabel(r"Effective Ricci scalar $\tilde{R}_{\mathrm{eff}}$")
     axes[0, 1].set_title(r"(b) Finite Curvature at Zero Axial Force ($\tilde{F}_z=0$)")
+    axes[0, 1].legend(fontsize=7)
 
     axes[1, 0].plot(th_deg, sim2["scale_ratios_dlnzC_over_C"], lw=1.6, color="#b45309")
     axes[1, 0].axhline(3.0, color="#dc2626", ls="--", label=r"Exact lock $\partial_{\ln|\tilde{z}|}\mathcal{C}/\mathcal{C}=3$")
@@ -352,18 +368,92 @@ def generate_all(
     lt_can = np.asarray(sim5["omega_lt_xy_midplane_cantor"], dtype=np.float64)
     iy_c = len(xs5) // 2
     pos_m = np.asarray(xs5) >= 0.25
-    axes[1, 1].plot(np.asarray(xs5)[pos_m], lt_can[pos_m, iy_c], "o-", ms=3, label="Prefractal CPSC ($N=3$)")
-    axes[1, 1].plot(np.asarray(xs5)[pos_m], lt_per[pos_m, iy_c], "s--", ms=3, label="Periodic Grating Control")
+    r_pos = np.asarray(xs5)[pos_m]
+    lt_can_pos = lt_can[pos_m, iy_c]
+    lt_band = np.abs(lt_can_pos) * vox_rel_sigma
+    axes[1, 1].plot(r_pos, lt_can_pos, "o-", ms=3, color="#1d4ed8", label="Prefractal CPSC ($N=3$)")
+    axes[1, 1].fill_between(r_pos, lt_can_pos - lt_band, lt_can_pos + lt_band, color="#93c5fd", alpha=0.35, label=r"$\pm\sigma_{\mathrm{vox}}$ band")
+    axes[1, 1].plot(r_pos, lt_per[pos_m, iy_c], "s--", ms=3, color="#ea580c", label="Periodic Grating Control")
     axes[1, 1].axhline(0.0, color="k", lw=0.8, ls=":")
     axes[1, 1].set_xlabel(r"Radius $\tilde{r}$")
     axes[1, 1].set_ylabel(r"$\tilde{\Omega}_{\mathrm{LT},z}^{\mathrm{vac}}/\tilde{\Omega}$")
     axes[1, 1].set_title("(d) Cantor-Stratified Vorticity Reversals")
-    axes[1, 1].legend()
+    axes[1, 1].legend(fontsize=7)
     fig.tight_layout()
     _save_fig_with_provenance(
         fig, "fig6_gravitomagnetic_lense_thirring", fig_dirs,
         res_path / "sim5_gravitomagnetic_frame_dragging.json",
         ["r_prof", "w_phi_prof_n3", "omega_lt_xy_midplane_cantor", "omega_lt_xy_midplane_periodic"],
+    )
+
+    # Fig 7: Prefractal Generation Convergence, Discretization Error & f(R) Scalaron Dispersion
+    fig, axes = plt.subplots(2, 2, figsize=(10.5, 6.2))
+    gens = np.asarray(sim6["generations"], dtype=np.int32)
+    e_face_abs = np.abs(np.asarray(sim6["gen_e_face"], dtype=np.float64))
+    e_open_abs = np.abs(np.asarray(sim6["gen_e_open"], dtype=np.float64))
+    th0_gens = np.asarray(sim6["gen_theta_zero_deg"], dtype=np.float64)
+
+    axes[0, 0].plot(gens, e_face_abs, "o-", lw=1.7, color="#1d4ed8", label=r"$|\tilde{E}_C(\theta_{\mathrm{face}})|$")
+    axes[0, 0].plot(gens, e_open_abs, "s--", lw=1.5, color="#0f766e", label=r"$|\tilde{E}_C(\theta_{\mathrm{open}})|$")
+    ax0_twin = axes[0, 0].twinx()
+    ax0_twin.plot(gens, th0_gens, "^:", lw=1.5, color="#dc2626", label=r"Crossover $\theta_0(N)$")
+    ax0_twin.set_ylabel(r"Force-free angle $\theta_0$ (deg)", color="#dc2626")
+    ax0_twin.tick_params(axis="y", labelcolor="#dc2626")
+    axes[0, 0].set_xticks(gens)
+    axes[0, 0].set_xlabel(r"Prefractal generation $N$")
+    axes[0, 0].set_ylabel(r"Dimensionless Casimir energy $|\tilde{E}_C|$")
+    axes[0, 0].set_title(r"(a) Prefractal Convergence Across $N$")
+    h1, l1 = axes[0, 0].get_legend_handles_labels()
+    h2, l2 = ax0_twin.get_legend_handles_labels()
+    axes[0, 0].legend(h1 + h2, l1 + l2, loc="center right", fontsize=7)
+
+    gen_steps = gens[1:]
+    cauchy_face = np.maximum(np.asarray(sim6["gen_cauchy_rel_e_face"], dtype=np.float64), 1.0e-15)
+    cauchy_open = np.maximum(np.asarray(sim6["gen_cauchy_rel_e_open"], dtype=np.float64), 1.0e-15)
+    axes[0, 1].semilogy(gen_steps, cauchy_face, "o-", lw=1.7, color="#1d4ed8", label=r"Facing $|\Delta\tilde{E}_C|/|\tilde{E}_C|$")
+    axes[0, 1].semilogy(gen_steps, cauchy_open, "s--", lw=1.5, color="#0f766e", label=r"Open $|\Delta\tilde{E}_C|/|\tilde{E}_C|$")
+    b_ref = 3.0 ** (-(gen_steps - gen_steps[0])) * cauchy_face[0]
+    axes[0, 1].semilogy(gen_steps, b_ref, ":", lw=1.3, color="#dc2626", label=r"$b^{-(N-2)}$ scaling guide")
+    axes[0, 1].set_xticks(gen_steps)
+    axes[0, 1].set_xlabel(r"Generation transition $N-1 \to N$")
+    axes[0, 1].set_ylabel("Relative Cauchy increment")
+    axes[0, 1].set_title(r"(b) Geometric Decay of Prefractal Increments")
+    axes[0, 1].legend(fontsize=7)
+
+    k_ord = np.asarray(sim6["kappa_orders"][:-1], dtype=np.int32)
+    k_err = np.maximum(np.asarray(sim6["kappa_rel_errors"][:-1], dtype=np.float64), 1.0e-16)
+    p_dofs = np.asarray(sim6["panel_dofs"][:-1], dtype=np.int32)
+    p_err = np.maximum(np.asarray(sim6["panel_rel_errors"][:-1], dtype=np.float64), 1.0e-16)
+    v_cnt = np.asarray(sim6["voxel_counts"][:-1], dtype=np.int32)
+    v_err = np.maximum(np.asarray(sim6["voxel_rel_errors"][:-1], dtype=np.float64), 1.0e-16)
+
+    axes[1, 0].semilogy(np.arange(len(k_ord)), k_err, "o-", lw=1.6, color="#7c3aed", label=r"Wick quadrature ($N_\kappa$)")
+    axes[1, 0].semilogy(np.arange(len(p_dofs)), p_err, "s--", lw=1.6, color="#1d4ed8", label="BEM surface panels")
+    axes[1, 0].semilogy(np.arange(len(v_cnt)), v_err, "^-.", lw=1.6, color="#ea580c", label="3D FFT Poisson voxels")
+    max_levels = max(len(k_ord), len(p_dofs), len(v_cnt))
+    axes[1, 0].set_xticks(np.arange(max_levels))
+    axes[1, 0].set_xticklabels([f"L{i+1}" for i in range(max_levels)])
+    axes[1, 0].set_xlabel("Refinement level (coarse to production)")
+    axes[1, 0].set_ylabel("Relative discretization error vs finest ref.")
+    axes[1, 0].set_title("(c) Quadrature, Panel & Voxel Truncation Errors")
+    axes[1, 0].legend(fontsize=7)
+
+    m_phi = np.asarray(sim6["m_phi_grid"], dtype=np.float64)
+    wb = float(sim6["omega_b_fundamental"])
+    sc_amps = np.asarray(sim6["scalaron_amps"], dtype=np.float64)
+    sc_fund = np.asarray(sim6.get("scalaron_amps_fundamental", sc_amps), dtype=np.float64)
+    axes[1, 1].semilogy(m_phi / wb, np.maximum(sc_amps, 1.0e-5), "o-", ms=3.2, lw=1.6, color="#7c3aed", label=r"Full sector comb $|\tilde{\varphi}_{\mathrm{tot}}|$")
+    axes[1, 1].semilogy(m_phi / wb, np.maximum(sc_fund, 1.0e-5), "s--", ms=3.0, lw=1.5, color="#0f766e", label=r"Fundamental $4\tilde{\Omega}$ mode $|\tilde{\varphi}_{4\Omega}|$")
+    axes[1, 1].axvline(1.0, color="#dc2626", ls=":", lw=1.2, label=r"$\tilde{m}_\varphi = 4\tilde{\Omega}$ ($n=1$ cutoff)")
+    axes[1, 1].set_xlabel(r"Normalized scalaron mass $\tilde{m}_\varphi / (4\tilde{\Omega})$")
+    axes[1, 1].set_ylabel(r"Far-zone scalaron amplitude $|\tilde{\varphi}|$")
+    axes[1, 1].set_title(r"(d) Starobinsky $R+\alpha R^2$ Dispersion & Yukawa Cutoff")
+    axes[1, 1].legend(fontsize=6.8)
+    fig.tight_layout()
+    _save_fig_with_provenance(
+        fig, "fig7_convergence_and_error_analysis", fig_dirs,
+        res_path / "sim6_convergence_and_error_bounds.json",
+        ["generations", "gen_e_face", "gen_theta_zero_deg", "kappa_rel_errors", "panel_rel_errors", "scalaron_amps"],
     )
 
     metrics_file = str(res_path / "provenance_metrics.json")
@@ -379,7 +469,7 @@ def generate_all(
         metrics_path=metrics_file,
         figures_dir=fig_dir_for_audit,
     )
-    print(f"[FIGURES] Generated 6 figures + sidecars. Manuscript audit status: {ledger['audit_status']}")
+    print(f"[FIGURES] Generated 7 figures + sidecars. Manuscript audit status: {ledger['audit_status']}")
     if ledger["audit_status"] != "PASS":
         raise RuntimeError(f"Manuscript provenance audit FAILED: {json.dumps(ledger, indent=2)}")
     return ledger

@@ -414,3 +414,11 @@
 ### [BUG-261112-05] 2026-11-12T18:20:18Z | fractal_casimir_gravity/simulations/sim3_log_periodic_metric_comb.py | scope=eval model=Sim3_LogPeriodicMetricComb
 - **Bug**: Sim 3 swept positive +z away from negative homothetic stages -Z_1*b^{-(m-1)} at fixed x=0.625 with unscaled Yukawa bounds.
 - **Solution**: Sampled collision-free homothetic slot-center ray (-1.044*z_abs) with scaled Yukawa bounds, sinh-graded phi panels, and log-modulus DSI fit.
+
+### [BUG-261112-06] 2026-11-12T21:44:00Z | fractal_casimir_gravity/simulations/sim6_convergence_and_error_bounds.py | scope=infra
+- **Bug**: Simulation VI called save_simulation_json with 2 arguments instead of (out_path, model_name, dataset_name, payload).
+- **Solution**: Passed explicit path, model name, dataset name, and payload arguments matching metrics_logger.save_simulation_json.
+
+### [BUG-261112-07] 2026-11-12T21:44:00Z | fractal_casimir_gravity/simulations/sim6_convergence_and_error_bounds.py | scope=eval model=Sim6_Convergence_ErrorBounds dataset=CPSC_Convergence_N1_to_N4
+- **Bug**: Coarse 5-deg root scan skipped the primary 25.3-deg crossover, and moving z-slice masks inflated voxel convergence variance.
+- **Solution**: Bracketed [15, 30] deg at 1.5-deg spacing and evaluated isotropic BEM and smooth multi-slot 3D GEM grids.
