@@ -1,7 +1,7 @@
 {
   "model": "FractalCasimirGravity_ManuscriptAudit",
   "dataset": "CPSC_3D_QFT",
-  "executed_at": "2026-11-12T22:03:35.500101+00:00",
+  "executed_at": "2026-11-12T23:42:48.295709+00:00",
   "macros": {
     "\\FcgConvBemPanelRelUncertainty": {
       "value": 0.053300342671579515,
@@ -9,6 +9,14 @@
       "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
       "source_function": "log_metric",
       "intermediate_step_id": "sim6_bem_discretization",
+      "provenance_artifact": "fractal_casimir_gravity/results/provenance_metrics.json"
+    },
+    "\\FcgConvCprimeRelDeltaNThreeToFour": {
+      "value": 0.07198094440779272,
+      "source_metric_key": "fcg_conv_cprime_rel_delta_n_three_to_four",
+      "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "intermediate_step_id": "sim6_gen_convergence",
       "provenance_artifact": "fractal_casimir_gravity/results/provenance_metrics.json"
     },
     "\\FcgConvGenRelDeltaNThreeToFour": {
@@ -20,8 +28,16 @@
       "provenance_artifact": "fractal_casimir_gravity/results/provenance_metrics.json"
     },
     "\\FcgConvInteriorEmTraceNullResidual": {
-      "value": 2.490185958021145e-16,
+      "value": 1.2450970998704062e-16,
       "source_metric_key": "fcg_conv_interior_em_trace_null_residual",
+      "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "intermediate_step_id": "sim6_local_trace_check",
+      "provenance_artifact": "fractal_casimir_gravity/results/provenance_metrics.json"
+    },
+    "\\FcgConvInteriorScalarMinTraceRatio": {
+      "value": 3.89476012904015,
+      "source_metric_key": "fcg_conv_interior_scalar_min_trace_ratio",
       "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
       "source_function": "log_metric",
       "intermediate_step_id": "sim6_local_trace_check",
@@ -62,6 +78,14 @@
     "\\FcgConvThetaZeroShiftDegThreeToFour": {
       "value": 0.4229775565198608,
       "source_metric_key": "fcg_conv_theta_zero_shift_deg_three_to_four",
+      "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "intermediate_step_id": "sim6_gen_convergence",
+      "provenance_artifact": "fractal_casimir_gravity/results/provenance_metrics.json"
+    },
+    "\\FcgConvTraceEffRelDeltaNThreeToFour": {
+      "value": 0.0881426936866439,
+      "source_metric_key": "fcg_conv_trace_eff_rel_delta_n_three_to_four",
       "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
       "source_function": "log_metric",
       "intermediate_step_id": "sim6_gen_convergence",
@@ -355,7 +379,7 @@
       "figure_file": "fractal_casimir_gravity/figures/fig7_convergence_and_error_analysis.pdf",
       "sidecar_artifact": "Papers/Fractal_Casimir_Gravity/figures/fig7_convergence_and_error_analysis.provenance.json",
       "source_data": "fractal_casimir_gravity/results/sim6_convergence_and_error_bounds.json",
-      "source_sha256": "02d00fc2b6c9a4d6f5732c344158f86f045dab443094efcb7d3a82bb39468e2d",
+      "source_sha256": "83093c8495f098693d1616ca02a2382a4c489aea274bb4254e4008e990979bd4",
       "generating_function": "save_plot_provenance"
     }
   },

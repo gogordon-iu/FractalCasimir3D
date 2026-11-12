@@ -61,7 +61,7 @@ def test_manuscript_code_macro_and_figure_bijection() -> None:
         if m not in STANDARD_LATEX_COMMANDS
     }
     defined_macros = set(re.findall(r"\\newcommand\{\\([A-Z][a-zA-Z]+)\}", macros_text))
-    assert len(defined_macros) == 38
+    assert len(defined_macros) == 41
     assert used_upper == defined_macros, (
         f"Mismatch between .tex usage and macros_gravity.tex:\n"
         f"  Only in .tex: {used_upper - defined_macros}\n"
@@ -79,8 +79,8 @@ def test_manuscript_code_macro_and_figure_bijection() -> None:
                 assert isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str)
                 logged_keys.append(node.args[0].value)
 
-    assert len(logged_keys) == 38, f"Expected 38 logged metrics, found {len(logged_keys)}"
-    assert len(set(logged_keys)) == 38, "Duplicate metric keys detected across sim1..sim6"
+    assert len(logged_keys) == 41, f"Expected 41 logged metrics, found {len(logged_keys)}"
+    assert len(set(logged_keys)) == 41, "Duplicate metric keys detected across sim1..sim6"
     sanitized_from_code = {_sanitize_macro_name(k) for k in logged_keys}
     assert sanitized_from_code == defined_macros, (
         f"Macro bijection mismatch:\n"
@@ -95,10 +95,11 @@ def test_manuscript_code_macro_and_figure_bijection() -> None:
     assert len(tex_figs) == 7
     assert tex_figs == code_figs
 
-    # 4. PRD compliance checks: longbibliography, Data Availability, and no "effective trace anomaly" conflation
+    # 4. PRD compliance checks: longbibliography, Data Availability, Contact author, and no "effective trace anomaly"
     assert "longbibliography" in tex_text
     assert r"\bibliographystyle" not in tex_text
     assert "Data Availability" in tex_text
+    assert "Contact author:" in tex_text
     assert "effective trace anomaly" not in tex_text.lower()
     assert "effective trace anomalies" not in tex_text.lower()
 

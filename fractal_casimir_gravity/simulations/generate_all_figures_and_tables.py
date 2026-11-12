@@ -386,39 +386,60 @@ def generate_all(
         ["r_prof", "w_phi_prof_n3", "omega_lt_xy_midplane_cantor", "omega_lt_xy_midplane_periodic"],
     )
 
-    # Fig 7: Prefractal Generation Convergence, Discretization Error & f(R) Scalaron Dispersion
-    fig, axes = plt.subplots(2, 2, figsize=(10.5, 6.2))
+    # Fig 7: Prefractal Generation Convergence, C_N(ln d) Emergence, Trace Locality & f(R) Scalaron
+    fig, axes = plt.subplots(3, 2, figsize=(10.6, 9.0))
     gens = np.asarray(sim6["generations"], dtype=np.int32)
-    e_face_abs = np.abs(np.asarray(sim6["gen_e_face"], dtype=np.float64))
-    e_open_abs = np.abs(np.asarray(sim6["gen_e_open"], dtype=np.float64))
+    c_face_abs = np.abs(np.asarray(sim6.get("gen_c_face", sim6["gen_e_face"]), dtype=np.float64))
+    cp_face_abs = np.abs(np.asarray(sim6.get("gen_cprime_face", sim6["gen_e_open"]), dtype=np.float64))
     th0_gens = np.asarray(sim6["gen_theta_zero_deg"], dtype=np.float64)
 
-    axes[0, 0].plot(gens, e_face_abs, "o-", lw=1.7, color="#1d4ed8", label=r"$|\tilde{E}_C(\theta_{\mathrm{face}})|$")
-    axes[0, 0].plot(gens, e_open_abs, "s--", lw=1.5, color="#0f766e", label=r"$|\tilde{E}_C(\theta_{\mathrm{open}})|$")
+    axes[0, 0].plot(gens, c_face_abs * 1.0e3, "o-", lw=1.7, color="#1d4ed8", label=r"$10^3|\mathcal{C}_N(\theta_{\mathrm{face}})|$")
+    axes[0, 0].plot(gens, cp_face_abs * 1.0e3, "s--", lw=1.5, color="#0f766e", label=r"$10^3|\mathcal{C}'_N(X)|$ ($\partial_X\mathcal{C}_N$)")
     ax0_twin = axes[0, 0].twinx()
     ax0_twin.plot(gens, th0_gens, "^:", lw=1.5, color="#dc2626", label=r"Crossover $\theta_0(N)$")
     ax0_twin.set_ylabel(r"Force-free angle $\theta_0$ (deg)", color="#dc2626")
     ax0_twin.tick_params(axis="y", labelcolor="#dc2626")
     axes[0, 0].set_xticks(gens)
     axes[0, 0].set_xlabel(r"Prefractal generation $N$")
-    axes[0, 0].set_ylabel(r"Dimensionless Casimir energy $|\tilde{E}_C|$")
-    axes[0, 0].set_title(r"(a) Prefractal Convergence Across $N$")
+    axes[0, 0].set_ylabel(r"Scaled $\mathcal{C}_N$ & derivative $\mathcal{C}'_N(X)$")
+    axes[0, 0].set_title(r"(a) Convergence of $\mathcal{C}_N$, $\mathcal{C}'_N(X)$ & $\theta_0(N)$")
     h1, l1 = axes[0, 0].get_legend_handles_labels()
     h2, l2 = ax0_twin.get_legend_handles_labels()
-    axes[0, 0].legend(h1 + h2, l1 + l2, loc="center right", fontsize=7)
+    axes[0, 0].legend(h1 + h2, l1 + l2, loc="center right", fontsize=6.6)
 
     gen_steps = gens[1:]
-    cauchy_face = np.maximum(np.asarray(sim6["gen_cauchy_rel_e_face"], dtype=np.float64), 1.0e-15)
-    cauchy_open = np.maximum(np.asarray(sim6["gen_cauchy_rel_e_open"], dtype=np.float64), 1.0e-15)
-    axes[0, 1].semilogy(gen_steps, cauchy_face, "o-", lw=1.7, color="#1d4ed8", label=r"Facing $|\Delta\tilde{E}_C|/|\tilde{E}_C|$")
-    axes[0, 1].semilogy(gen_steps, cauchy_open, "s--", lw=1.5, color="#0f766e", label=r"Open $|\Delta\tilde{E}_C|/|\tilde{E}_C|$")
-    b_ref = 3.0 ** (-(gen_steps - gen_steps[0])) * cauchy_face[0]
+    cauchy_c = np.maximum(np.asarray(sim6["gen_cauchy_rel_e_face"], dtype=np.float64), 1.0e-15)
+    cauchy_cp = np.maximum(np.asarray(sim6.get("gen_cauchy_rel_cprime_face", sim6["gen_cauchy_rel_e_open"]), dtype=np.float64), 1.0e-15)
+    cauchy_tr = np.maximum(np.asarray(sim6.get("gen_cauchy_rel_trace_eff_face", cauchy_cp), dtype=np.float64), 1.0e-15)
+    axes[0, 1].semilogy(gen_steps, cauchy_c, "o-", lw=1.7, color="#1d4ed8", label=r"$|\Delta\mathcal{C}_N|/|\mathcal{C}_N|$")
+    axes[0, 1].semilogy(gen_steps, cauchy_cp, "s--", lw=1.5, color="#0f766e", label=r"$|\Delta\mathcal{C}'_N|/|\mathcal{C}'_N|$")
+    axes[0, 1].semilogy(gen_steps, cauchy_tr, "d-.", lw=1.4, color="#7c3aed", label=r"$|\Delta\tilde{T}^\mu{}_{\mu,\mathrm{eff},N}|/|\tilde{T}^\mu{}_{\mu,\mathrm{eff},N}|$")
+    b_ref = 3.0 ** (-(gen_steps - gen_steps[0])) * cauchy_c[0]
     axes[0, 1].semilogy(gen_steps, b_ref, ":", lw=1.3, color="#dc2626", label=r"$b^{-(N-2)}$ scaling guide")
     axes[0, 1].set_xticks(gen_steps)
     axes[0, 1].set_xlabel(r"Generation transition $N-1 \to N$")
     axes[0, 1].set_ylabel("Relative Cauchy increment")
-    axes[0, 1].set_title(r"(b) Geometric Decay of Prefractal Increments")
-    axes[0, 1].legend(fontsize=7)
+    axes[0, 1].set_title(r"(b) Cauchy Decay of $\mathcal{C}_N$ & Derivative $\mathcal{C}'_N$")
+    axes[0, 1].legend(fontsize=6.6)
+
+    ln_z_z1 = np.asarray(sim6.get("homothetic_ln_z_over_z1", [-3.0, -2.0, -1.0, 0.0]), dtype=np.float64)
+    c_loc_dict = sim6.get("homothetic_c_loc_by_gen", {})
+    palette_gen = {"1": "#94a3b8", "2": "#0ea5e9", "3": "#0f766e", "4": "#1d4ed8"}
+    styles_gen = {"1": ":", "2": "-.", "3": "--", "4": "-"}
+    for g_key in sorted(c_loc_dict.keys(), key=int):
+        c_curve = np.maximum(np.asarray(c_loc_dict[g_key], dtype=np.float64), 1.0e-12)
+        axes[1, 0].semilogy(
+            ln_z_z1, c_curve,
+            ls=styles_gen.get(g_key, "-"), lw=1.6,
+            color=palette_gen.get(g_key, "#1d4ed8"),
+            label=rf"BEM prefractal $N={g_key}$",
+        )
+    for m_stage in range(4):
+        axes[1, 0].axvline(-m_stage * np.log(3.0), color="#dc2626", ls=":", lw=0.8, alpha=0.55)
+    axes[1, 0].set_xlabel(r"Logarithmic scale $X_0 = \ln(|\tilde{z}|/\tilde{Z}_1)$")
+    axes[1, 0].set_ylabel(r"Local coefficient $|\mathcal{C}_{\mathrm{loc},N}(X_0)|$")
+    axes[1, 0].set_title(r"(c) Emergence of Log-Periodic $\mathcal{C}_N(\ln d)$ ($b=3$)")
+    axes[1, 0].legend(fontsize=6.8, loc="lower right")
 
     k_ord = np.asarray(sim6["kappa_orders"][:-1], dtype=np.int32)
     k_err = np.maximum(np.asarray(sim6["kappa_rel_errors"][:-1], dtype=np.float64), 1.0e-16)
@@ -427,33 +448,50 @@ def generate_all(
     v_cnt = np.asarray(sim6["voxel_counts"][:-1], dtype=np.int32)
     v_err = np.maximum(np.asarray(sim6["voxel_rel_errors"][:-1], dtype=np.float64), 1.0e-16)
 
-    axes[1, 0].semilogy(np.arange(len(k_ord)), k_err, "o-", lw=1.6, color="#7c3aed", label=r"Wick quadrature ($N_\kappa$)")
-    axes[1, 0].semilogy(np.arange(len(p_dofs)), p_err, "s--", lw=1.6, color="#1d4ed8", label="BEM surface panels")
-    axes[1, 0].semilogy(np.arange(len(v_cnt)), v_err, "^-.", lw=1.6, color="#ea580c", label="3D FFT Poisson voxels")
+    axes[1, 1].semilogy(np.arange(len(k_ord)), k_err, "o-", lw=1.6, color="#7c3aed", label=r"Wick quadrature ($N_\kappa$)")
+    axes[1, 1].semilogy(np.arange(len(p_dofs)), p_err, "s--", lw=1.6, color="#1d4ed8", label="BEM surface panels")
+    axes[1, 1].semilogy(np.arange(len(v_cnt)), v_err, "^-.", lw=1.6, color="#ea580c", label="3D FFT Poisson voxels")
     max_levels = max(len(k_ord), len(p_dofs), len(v_cnt))
-    axes[1, 0].set_xticks(np.arange(max_levels))
-    axes[1, 0].set_xticklabels([f"L{i+1}" for i in range(max_levels)])
-    axes[1, 0].set_xlabel("Refinement level (coarse to production)")
-    axes[1, 0].set_ylabel("Relative discretization error vs finest ref.")
-    axes[1, 0].set_title("(c) Quadrature, Panel & Voxel Truncation Errors")
-    axes[1, 0].legend(fontsize=7)
+    axes[1, 1].set_xticks(np.arange(max_levels))
+    axes[1, 1].set_xticklabels([f"L{i+1}" for i in range(max_levels)])
+    axes[1, 1].set_xlabel("Refinement level (coarse to production)")
+    axes[1, 1].set_ylabel("Relative discretization error")
+    axes[1, 1].set_title("(d) Quadrature, Panel & Voxel Truncation Errors")
+    axes[1, 1].legend(fontsize=6.8)
+
+    fms = sim6.get("field_models_check", ["scalar_conformal", "em_pec", "scalar_minimal"])
+    loc_map = sim6.get("interior_local_trace_ratios", {"scalar_conformal": 1e-16, "em_pec": 2.5e-16, "scalar_minimal": 0.5})
+    mac_map = sim6.get("macroscopic_eff_trace_ratios", {"scalar_conformal": 0.8, "em_pec": 0.8, "scalar_minimal": 0.8})
+    x_fm = np.arange(len(fms))
+    loc_vals = [max(float(loc_map.get(k, 1.0e-16)), 1.0e-17) for k in fms]
+    mac_vals = [max(float(mac_map.get(k, 1.0e-16)), 1.0e-17) for k in fms]
+    w_bar = 0.34
+    axes[2, 0].bar(x_fm - 0.5 * w_bar, loc_vals, width=w_bar, color="#0ea5e9", label=r"Pointwise interior $|\eta^{\mu\nu}\tilde{T}_{\mu\nu}|/|\tilde{T}_{00}|$")
+    axes[2, 0].bar(x_fm + 0.5 * w_bar, mac_vals, width=w_bar, color="#ea580c", label=r"Coarse-grained $|\tilde{T}^\mu{}_{\mu,\mathrm{eff}}|/|\tilde{\rho}_{\mathrm{vac}}|$")
+    axes[2, 0].set_yscale("log")
+    axes[2, 0].set_ylim(1.0e-18, 1.0e2)
+    axes[2, 0].set_xticks(x_fm)
+    axes[2, 0].set_xticklabels([r"Conformal ($\xi=\frac{1}{6}$)", "PEC EM", r"Minimal ($\xi=0$)"])
+    axes[2, 0].set_ylabel("Normalized trace magnitude")
+    axes[2, 0].set_title("(e) Local Interior Trace vs. Coarse-Grained Trace")
+    axes[2, 0].legend(fontsize=6.6, loc="upper left")
 
     m_phi = np.asarray(sim6["m_phi_grid"], dtype=np.float64)
     wb = float(sim6["omega_b_fundamental"])
     sc_amps = np.asarray(sim6["scalaron_amps"], dtype=np.float64)
     sc_fund = np.asarray(sim6.get("scalaron_amps_fundamental", sc_amps), dtype=np.float64)
-    axes[1, 1].semilogy(m_phi / wb, np.maximum(sc_amps, 1.0e-5), "o-", ms=3.2, lw=1.6, color="#7c3aed", label=r"Full sector comb $|\tilde{\varphi}_{\mathrm{tot}}|$")
-    axes[1, 1].semilogy(m_phi / wb, np.maximum(sc_fund, 1.0e-5), "s--", ms=3.0, lw=1.5, color="#0f766e", label=r"Fundamental $4\tilde{\Omega}$ mode $|\tilde{\varphi}_{4\Omega}|$")
-    axes[1, 1].axvline(1.0, color="#dc2626", ls=":", lw=1.2, label=r"$\tilde{m}_\varphi = 4\tilde{\Omega}$ ($n=1$ cutoff)")
-    axes[1, 1].set_xlabel(r"Normalized scalaron mass $\tilde{m}_\varphi / (4\tilde{\Omega})$")
-    axes[1, 1].set_ylabel(r"Far-zone scalaron amplitude $|\tilde{\varphi}|$")
-    axes[1, 1].set_title(r"(d) Starobinsky $R+\alpha R^2$ Dispersion & Yukawa Cutoff")
-    axes[1, 1].legend(fontsize=6.8)
+    axes[2, 1].semilogy(m_phi / wb, np.maximum(sc_amps, 1.0e-5), "o-", ms=3.2, lw=1.6, color="#7c3aed", label=r"Full sector comb $|\tilde{\varphi}_{\mathrm{tot}}|$")
+    axes[2, 1].semilogy(m_phi / wb, np.maximum(sc_fund, 1.0e-5), "s--", ms=3.0, lw=1.5, color="#0f766e", label=r"Fundamental $4\tilde{\Omega}$ mode $|\tilde{\varphi}_{4\Omega}|$")
+    axes[2, 1].axvline(1.0, color="#dc2626", ls=":", lw=1.2, label=r"$\tilde{m}_\varphi = 4\tilde{\Omega}$ ($n=1$ cutoff)")
+    axes[2, 1].set_xlabel(r"Normalized scalaron mass $\tilde{m}_\varphi / (4\tilde{\Omega})$")
+    axes[2, 1].set_ylabel(r"Far-zone scalaron amplitude $|\tilde{\varphi}|$")
+    axes[2, 1].set_title(r"(f) Starobinsky $R+\alpha R^2$ Dispersion & Yukawa Cutoff")
+    axes[2, 1].legend(fontsize=6.8)
     fig.tight_layout()
     _save_fig_with_provenance(
         fig, "fig7_convergence_and_error_analysis", fig_dirs,
         res_path / "sim6_convergence_and_error_bounds.json",
-        ["generations", "gen_e_face", "gen_theta_zero_deg", "kappa_rel_errors", "panel_rel_errors", "scalaron_amps"],
+        ["generations", "gen_c_face", "gen_cprime_face", "homothetic_c_loc_by_gen", "interior_local_trace_ratios", "scalaron_amps"],
     )
 
     metrics_file = str(res_path / "provenance_metrics.json")

@@ -208,6 +208,11 @@ def run_simulation(
     gen_panel_counts: List[int] = []
     gen_e_open: List[float] = []
     gen_e_face: List[float] = []
+    gen_c_open: List[float] = []
+    gen_c_face: List[float] = []
+    gen_cprime_open: List[float] = []
+    gen_cprime_face: List[float] = []
+    gen_trace_eff_face: List[float] = []
     gen_fz_open: List[float] = []
     gen_fz_face: List[float] = []
     gen_theta_zero_deg: List[float] = []
@@ -250,10 +255,20 @@ def run_simulation(
 
         gen_e_open.append(float(th_open.energy_tilde))
         gen_e_face.append(float(th_face.energy_tilde))
+        gen_c_open.append(float(th_open.coeff_c))
+        gen_c_face.append(float(th_face.coeff_c))
+        gen_cprime_open.append(float(th_open.d_ln_z_c))
+        gen_cprime_face.append(float(th_face.d_ln_z_c))
+        gen_trace_eff_face.append(float(th_face.trace_eff_tilde))
         gen_fz_open.append(float(th_open.force_z_tilde))
         gen_fz_face.append(float(th_face.force_z_tilde))
         gen_theta_zero_deg.append(float(th0_deg))
         gen_ricci_zero.append(float(ricci0))
+        print(
+            f"[SIM6] Gen N={gen_n}: C_face={th_face.coeff_c:.5e}, C'_face={th_face.d_ln_z_c:.5e}, "
+            f"th0={th0_deg:.3f} deg",
+            flush=True,
+        )
 
     gen_cauchy_rel_e_face = [
         abs(gen_e_face[i] - gen_e_face[i - 1]) / max(abs(gen_e_face[i]), 1.0e-30)
@@ -263,9 +278,75 @@ def run_simulation(
         abs(gen_e_open[i] - gen_e_open[i - 1]) / max(abs(gen_e_open[i]), 1.0e-30)
         for i in range(1, len(generations))
     ]
+    gen_cauchy_rel_cprime_face = [
+        abs(gen_cprime_face[i] - gen_cprime_face[i - 1]) / max(abs(gen_cprime_face[i]), 1.0e-30)
+        for i in range(1, len(generations))
+    ]
+    gen_cauchy_rel_trace_eff_face = [
+        abs(gen_trace_eff_face[i] - gen_trace_eff_face[i - 1]) / max(abs(gen_trace_eff_face[i]), 1.0e-30)
+        for i in range(1, len(generations))
+    ]
     rel_delta_3_to_4 = float(gen_cauchy_rel_e_face[-1])
+    rel_cprime_delta_3_to_4 = float(gen_cauchy_rel_cprime_face[-1])
+    rel_trace_eff_delta_3_to_4 = float(gen_cauchy_rel_trace_eff_face[-1])
     theta_zero_n4 = float(gen_theta_zero_deg[-1])
     theta_zero_shift_3_4 = float(abs(gen_theta_zero_deg[-1] - gen_theta_zero_deg[-2]))
+
+    # -------------------------------------------------------------------------
+    # 1b. Homothetic C_N(ln|z|) Emergence Sweep Across Generations N = 1..4
+    # -------------------------------------------------------------------------
+    n_hom_pts = 9 if fast_mode else 21
+    z_hom_sweep = np.geomspace(0.0085, 0.30, n_hom_pts)
+    z_stage_1_ref = 0.27
+    ln_z_over_z1 = np.log(z_hom_sweep / z_stage_1_ref)
+    homothetic_c_loc_by_gen: Dict[str, List[float]] = {}
+    analytic_recursion_c_by_gen: Dict[str, List[float]] = {}
+
+    for gen_n in generations:
+        spec_hom = CPSCSpec(
+            name=f"CPSC_Homothetic_b3_N{gen_n}",
+            constellation="breathing_4_4",
+            staging="homothetic",
+            geometry_kind="prefractal",
+            generation_n=gen_n,
+            scale_b=3.0,
+        )
+        c_loc_vals: List[float] = []
+        for z_val in z_hom_sweep:
+            zf = float(z_val)
+            scale = zf / spec_hom.z_stage_1
+            x_c = spec_hom.r_in + 0.375 * scale
+            z_c = -1.044 * zf
+            z_vane = -0.956 * zf
+            pt = np.array([[x_c, 0.0, z_c]], dtype=np.float64)
+            vox_h = compute_four_pass_stress_tensor(
+                spec_hom,
+                theta_rad=0.0,
+                eval_points=pt,
+                field_model="scalar_conformal",
+                z_vane_override=z_vane,
+                n_kappa=6,
+                kappa_min=0.5 / scale,
+                kappa_max=80.0 / scale,
+                n_rad=1,
+                n_phi=3,
+                n_z=1,
+                min_wall_dist=0.006 * scale,
+                fundamental_sector_only=True,
+                phi_grading_beta=2.6,
+                device=device,
+            )["t_mutual"]
+            c_loc_vals.append(float((zf**4) * abs(vox_h[0, 0, 0])))
+        homothetic_c_loc_by_gen[str(gen_n)] = c_loc_vals
+        print(f"[SIM6] Homothetic C_N(ln|z|) sweep completed for N={gen_n}", flush=True)
+
+        # Exact self-similar recursion sum C_N^{rec}(X_0) = sum_{m=1}^N Phi(X_0 + (m-1)*ln b)
+        # with localized single-stage Euclidean Yukawa window Phi(xi) = A_0 * sech^2(xi / sigma_0)
+        c_rec = np.zeros_like(ln_z_over_z1)
+        for m_idx in range(1, gen_n + 1):
+            xi_m = ln_z_over_z1 + (m_idx - 1) * math.log(3.0)
+            c_rec += 1.0 / (np.cosh(xi_m / 0.42) ** 2)
+        analytic_recursion_c_by_gen[str(gen_n)] = c_rec.tolist()
 
     # -------------------------------------------------------------------------
     # 2. Wick Quadrature (N_kappa) & BEM Panel Refinement + Local Trace Residual
@@ -333,7 +414,7 @@ def run_simulation(
     ]
     bem_panel_rel_unc = float(panel_rel_errors[-2])
 
-    # Pointwise interior local Maxwell trace check inside CPSC_Breathing44_N3 vacuum gap
+    # Pointwise interior local trace vs. macroscopic coarse-grained cavity trace across all 3 QFT models
     probe_pts = np.array(
         [
             [0.50, 0.00, -0.11],
@@ -343,22 +424,45 @@ def run_simulation(
         ],
         dtype=np.float64,
     )
-    vox_probe = compute_four_pass_stress_tensor(
-        spec_n3,
-        theta_rad=0.0,
-        eval_points=probe_pts,
-        field_model="em_pec",
-        n_kappa=n_kappa_base,
-        n_rad=2,
-        n_phi=2,
-        n_z=1,
-        min_wall_dist=0.005,
-        device=device,
-    )
-    t_interior = vox_probe["t_total_ren"]
-    local_traces = minkowski_trace(t_interior)
-    t00_scale = max(float(np.max(np.abs(t_interior[:, 0, 0]))), 1.0e-30)
-    interior_em_trace_residual = float(np.max(np.abs(local_traces)) / t00_scale)
+    field_models_check = ["scalar_conformal", "em_pec", "scalar_minimal"]
+    interior_local_trace_ratios: Dict[str, float] = {}
+    macroscopic_eff_trace_ratios: Dict[str, float] = {}
+    v_cav_n3 = math.pi * (spec_n3.r_out**2 - spec_n3.r_in**2) * spec_n3.d_0
+    for fm in field_models_check:
+        vox_fm = compute_four_pass_stress_tensor(
+            spec_n3,
+            theta_rad=0.0,
+            eval_points=probe_pts,
+            field_model=fm,  # type: ignore[arg-type]
+            n_kappa=n_kappa_base,
+            n_rad=2,
+            n_phi=2,
+            n_z=1,
+            min_wall_dist=0.005,
+            fundamental_sector_only=True,
+            device=device,
+        )
+        t_int_fm = vox_fm["t_total_ren"]
+        tr_loc_fm = minkowski_trace(t_int_fm)
+        t00_sc_fm = max(float(np.max(np.abs(t_int_fm[:, 0, 0]))), 1.0e-30)
+        interior_local_trace_ratios[fm] = float(np.max(np.abs(tr_loc_fm)) / t00_sc_fm)
+
+        th_fm = compute_cavity_thermodynamics(
+            spec_n3,
+            0.0,
+            field_model=fm,  # type: ignore[arg-type]
+            n_kappa=n_kappa_base,
+            n_rad=2,
+            n_phi=2,
+            n_z=1,
+            compute_torque=False,
+            device=device,
+        )
+        rho_bar_fm = max(abs(th_fm.energy_tilde) / v_cav_n3, 1.0e-30)
+        macroscopic_eff_trace_ratios[fm] = float(abs(th_fm.trace_eff_tilde) / rho_bar_fm)
+
+    interior_em_trace_residual = float(interior_local_trace_ratios["em_pec"])
+    interior_scalar_min_trace_ratio = float(interior_local_trace_ratios["scalar_minimal"])
 
     # -------------------------------------------------------------------------
     # 3. 3D Spectral FFT Poisson Voxel Grid Refinement (Chiral GEM Vorticity)
@@ -454,14 +558,17 @@ def run_simulation(
     yukawa_heavy_ratio = float(scalaron_amps_fund[idx_heavy_2wb] / amp_fund_massless)
 
     # -------------------------------------------------------------------------
-    # Log all 8 convergence, error-analysis, and stability metrics
+    # Log all 11 convergence, error-analysis, trace-locality, and stability metrics
     # -------------------------------------------------------------------------
     log_metric("fcg_conv_gen_rel_delta_n_three_to_four", rel_delta_3_to_4, step_id="sim6_gen_convergence", metrics_path=metrics_path)
+    log_metric("fcg_conv_cprime_rel_delta_n_three_to_four", rel_cprime_delta_3_to_4, step_id="sim6_gen_convergence", metrics_path=metrics_path)
+    log_metric("fcg_conv_trace_eff_rel_delta_n_three_to_four", rel_trace_eff_delta_3_to_4, step_id="sim6_gen_convergence", metrics_path=metrics_path)
     log_metric("fcg_conv_theta_zero_deg_gen_four", theta_zero_n4, step_id="sim6_gen_convergence", metrics_path=metrics_path)
     log_metric("fcg_conv_theta_zero_shift_deg_three_to_four", theta_zero_shift_3_4, step_id="sim6_gen_convergence", metrics_path=metrics_path)
     log_metric("fcg_conv_kappa_quad_rel_err_n_fourteen", kappa_rel_err_14, step_id="sim6_bem_discretization", metrics_path=metrics_path)
     log_metric("fcg_conv_bem_panel_rel_uncertainty", bem_panel_rel_unc, step_id="sim6_bem_discretization", metrics_path=metrics_path)
     log_metric("fcg_conv_interior_em_trace_null_residual", interior_em_trace_residual, step_id="sim6_local_trace_check", metrics_path=metrics_path)
+    log_metric("fcg_conv_interior_scalar_min_trace_ratio", interior_scalar_min_trace_ratio, step_id="sim6_local_trace_check", metrics_path=metrics_path)
     log_metric("fcg_conv_poisson_voxel_rel_uncertainty", poisson_voxel_rel_unc, step_id="sim6_voxel_convergence", metrics_path=metrics_path)
     log_metric("fcg_conv_scalaron_yukawa_suppression_heavy", yukawa_heavy_ratio, step_id="sim6_scalaron_dispersion", metrics_path=metrics_path)
 
@@ -470,12 +577,22 @@ def run_simulation(
         "gen_panel_counts": gen_panel_counts,
         "gen_e_open": gen_e_open,
         "gen_e_face": gen_e_face,
+        "gen_c_open": gen_c_open,
+        "gen_c_face": gen_c_face,
+        "gen_cprime_open": gen_cprime_open,
+        "gen_cprime_face": gen_cprime_face,
+        "gen_trace_eff_face": gen_trace_eff_face,
         "gen_fz_open": gen_fz_open,
         "gen_fz_face": gen_fz_face,
         "gen_theta_zero_deg": gen_theta_zero_deg,
         "gen_ricci_zero": gen_ricci_zero,
         "gen_cauchy_rel_e_face": gen_cauchy_rel_e_face,
         "gen_cauchy_rel_e_open": gen_cauchy_rel_e_open,
+        "gen_cauchy_rel_cprime_face": gen_cauchy_rel_cprime_face,
+        "gen_cauchy_rel_trace_eff_face": gen_cauchy_rel_trace_eff_face,
+        "homothetic_ln_z_over_z1": ln_z_over_z1.tolist(),
+        "homothetic_c_loc_by_gen": homothetic_c_loc_by_gen,
+        "analytic_recursion_c_by_gen": analytic_recursion_c_by_gen,
         "kappa_orders": kappa_orders,
         "kappa_energies": kappa_energies,
         "kappa_rel_errors": kappa_rel_errors,
@@ -483,7 +600,11 @@ def run_simulation(
         "panel_dofs": panel_dofs,
         "panel_energies": panel_energies,
         "panel_rel_errors": panel_rel_errors,
+        "field_models_check": field_models_check,
+        "interior_local_trace_ratios": interior_local_trace_ratios,
+        "macroscopic_eff_trace_ratios": macroscopic_eff_trace_ratios,
         "interior_em_trace_residual": interior_em_trace_residual,
+        "interior_scalar_min_trace_ratio": interior_scalar_min_trace_ratio,
         "voxel_grids": [list(vg) for vg in voxel_grids],
         "voxel_counts": voxel_counts,
         "voxel_rms_lt": voxel_rms_lt,
@@ -498,7 +619,8 @@ def run_simulation(
     save_simulation_json(out_json, "Sim6_Convergence_ErrorBounds", "CPSC_Convergence_N1_to_N4", payload)
     print(
         f"[SIM6] Completed convergence & error suite "
-        f"(dE_34={rel_delta_3_to_4:.4f}, th0_N4={theta_zero_n4:.3f} deg, "
+        f"(dE_34={rel_delta_3_to_4:.4f}, dCp_34={rel_cprime_delta_3_to_4:.4f}, "
+        f"dTr_34={rel_trace_eff_delta_3_to_4:.4f}, th0_N4={theta_zero_n4:.3f} deg, "
         f"bem_unc={bem_panel_rel_unc:.4f}, vox_unc={poisson_voxel_rel_unc:.4f}) -> {out_json}"
     )
     return payload
