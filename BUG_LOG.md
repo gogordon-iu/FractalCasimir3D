@@ -414,3 +414,19 @@
 ### [BUG-261112-05] 2026-11-12 | fractal_casimir_engine/run_engine_cycle_mapping.py | scope=eval model=BEM_EngineCycle_3D dataset=fractal_casimir_engine_cycle
 - **Bug**: Independent bilinear interpolation of F_z and tau_theta on the 5-deg grid broke curl-free loop closure and omitted TDC collar-exit gating on Configs.
 - **Solution**: Replaced independent linear interpolators with C1 conservative PeriodicHermitePotential2D matching (E_C, -F_z.
+
+### [BUG-261112-06] 2026-11-12 | fractal_casimir_engine/run_ultrafine_active_switching.py | scope=eval model=ActiveSwitchingUF3 dataset=ultrafine_active_switching
+- **Bug**: net_em_work_into_rotor_aj negated sum_delta_e_switch_aj even though H already includes E_Cas, inverting net EM work sign.
+- **Solution**: Set net_em_work_into_rotor_aj = sum_delta_e_switch_aj matching First-Law balance (H_final - H_init) + Q_diss.
+
+### [BUG-261112-07] 2026-11-12 | fractal_casimir_engine/run_ultrafine_meep_verification.py | scope=infra
+- **Bug**: MPI ranks independently checked walltime, wrote shard_000.json concurrently, and reused un-namespaced done markers.
+- **Solution**: Broadcast merged cache, walltime stop, and exit code via MPI root 0 and namespace shard done markers by SLURM_JOB_ID.
+
+### [BUG-261112-08] 2026-11-12 | fractal_casimir_engine/run_ultrafine_active_switching.py | scope=eval model=ActiveSwitchingUF3 dataset=ultrafine_active_switching
+- **Bug**: Clamping z_um inside PeriodicHermitePotential2D left nonzero fz_cas outside [z_min, z_max], adding ~3e-3 aJ First-Law drift.
+- **Solution**: Zeroed fz_cas when z_um is outside [ENGINE_Z_TIP_MIN_UM, ENGINE_Z_TIP_MAX_UM] so F = -grad E holds everywhere.
+
+### [BUG-261112-09] 2026-11-12 | fractal_casimir_engine/aggregate_ultrafine_campaigns.py,fractal_casimir_engine/slurm | scope=infra
+- **Bug**: save_plot_provenance/generate_manuscript_map kwargs mismatched metrics_logger, and afterok/walltime/git lacked flock guards.
+- **Solution**: Aligned provenance signatures, added cluster-safe aggregation, flock git lock, explicit walltime sbatch args, and uf2a trigger.

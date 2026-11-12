@@ -129,6 +129,7 @@ class CurvilinearPrism:
     n_r: int = 2
     n_phi: int = 3
     n_z: int = 2
+    r_edge_nm: float = 0.0
 
     def bounds_cyl(self) -> tuple[float, float, float, float, float, float]:
         r_min = min(self.r0_v0, self.r0_v1)
@@ -140,20 +141,49 @@ class CurvilinearPrism:
         return r_min, r_max, p_min, p_max, z_min, z_max
 
     def point(self, u: float, v: float, w: float) -> np.ndarray:
-        r0 = (1.0 - v) * self.r0_v0 + v * self.r0_v1
-        r1 = (1.0 - v) * self.r1_v0 + v * self.r1_v1
+        """Map (u, v, w) in [0, 1]^3 with 2D EBL planform vertical-corner filleting (r_edge_nm > 0)."""
+        u_eff = float(u)
+        v_eff = float(v)
+        if self.r_edge_nm > 0.0:
+            r_edge_um = 1.0e-3 * float(self.r_edge_nm)
+            dr_mid = 0.5 * ((self.r1_v0 - self.r0_v0) + (self.r1_v1 - self.r0_v1))
+            r_ave = 0.25 * (self.r0_v0 + self.r1_v0 + self.r0_v1 + self.r1_v1)
+            dphi_mid_rad = math.radians(
+                0.5 * ((self.phi1_w0_deg - self.phi0_w0_deg) + (self.phi1_w1_deg - self.phi0_w1_deg))
+            )
+            ds_mid = r_ave * dphi_mid_rad
+            half_a = 0.5 * dr_mid
+            half_b = 0.5 * ds_mid
+            rho = min(r_edge_um, 0.88 * half_a, 0.88 * half_b)
+            if rho > 1.0e-9:
+                xi0 = (2.0 * u_eff - 1.0) * half_a
+                eta0 = (2.0 * v_eff - 1.0) * half_b
+                c_xi = min(max(xi0, -(half_a - rho)), half_a - rho)
+                c_eta = min(max(eta0, -(half_b - rho)), half_b - rho)
+                d_xi = xi0 - c_xi
+                d_eta = eta0 - c_eta
+                if d_xi != 0.0 and d_eta != 0.0:
+                    X = max(-1.0, min(1.0, d_xi / rho))
+                    Y = max(-1.0, min(1.0, d_eta / rho))
+                    xi_new = c_xi + rho * X * math.sqrt(max(0.0, 1.0 - 0.5 * Y * Y))
+                    eta_new = c_eta + rho * Y * math.sqrt(max(0.0, 1.0 - 0.5 * X * X))
+                    u_eff = 0.5 * (xi_new / half_a + 1.0)
+                    v_eff = 0.5 * (eta_new / half_b + 1.0)
+
+        r0 = (1.0 - v_eff) * self.r0_v0 + v_eff * self.r0_v1
+        r1 = (1.0 - v_eff) * self.r1_v0 + v_eff * self.r1_v1
         if r1 <= r0 or r0 <= 0.0:
             raise ValueError(f"Invalid radial interval [{r0}, {r1}] in {self.role}.")
-        r = (1.0 - u) * r0 + u * r1
+        r = (1.0 - u_eff) * r0 + u_eff * r1
 
         phi0 = (1.0 - w) * self.phi0_w0_deg + w * self.phi0_w1_deg
         phi1 = (1.0 - w) * self.phi1_w0_deg + w * self.phi1_w1_deg
         if phi1 <= phi0:
             raise ValueError(f"Invalid angular interval [{phi0}, {phi1}] in {self.role}.")
-        phi_rad = math.radians((1.0 - v) * phi0 + v * phi1)
+        phi_rad = math.radians((1.0 - v_eff) * phi0 + v_eff * phi1)
 
-        z0 = (1.0 - v) * self.z0_v0 + v * self.z0_v1
-        z1 = (1.0 - v) * self.z1_v0 + v * self.z1_v1
+        z0 = (1.0 - v_eff) * self.z0_v0 + v_eff * self.z0_v1
+        z1 = (1.0 - v_eff) * self.z1_v0 + v_eff * self.z1_v1
         if z1 <= z0:
             raise ValueError(f"Invalid axial interval [{z0}, {z1}] in {self.role}.")
         z = (1.0 - w) * z0 + w * z1
@@ -191,12 +221,26 @@ def canonical_cantor_n2_tracks(*, vernier: bool = False) -> tuple[CantorTrackSpe
     return tuple(tracks)
 
 
+def _corner_graded_nodes(count: int) -> np.ndarray:
+    t = np.linspace(0.0, 1.0, count + 1, dtype=np.float64)
+    return 0.5 * t + 0.25 * (1.0 - np.cos(math.pi * t))
+
+
 def _prism_to_panels(prism: CurvilinearPrism) -> list[SurfacePanel]:
     """Discretize all 6 boundary faces of a curvilinear prism with local outward normals."""
     panels: list[SurfacePanel] = []
-    us = np.linspace(0.0, 1.0, prism.n_r + 1)
-    vs = np.linspace(0.0, 1.0, prism.n_phi + 1)
-    ws = np.linspace(0.0, 1.0, prism.n_z + 1)
+    if prism.r_edge_nm > 0.0:
+        nr_eff = max(int(prism.n_r), 4)
+        nphi_eff = max(int(prism.n_phi), 6)
+        us = _corner_graded_nodes(nr_eff)
+        vs = _corner_graded_nodes(nphi_eff)
+    else:
+        nr_eff = int(prism.n_r)
+        nphi_eff = int(prism.n_phi)
+        us = np.linspace(0.0, 1.0, nr_eff + 1)
+        vs = np.linspace(0.0, 1.0, nphi_eff + 1)
+    nz_eff = int(prism.n_z)
+    ws = np.linspace(0.0, 1.0, nz_eff + 1)
 
     def emit(pts: list[np.ndarray], interior_pt: np.ndarray, kind: PanelType) -> None:
         face_mid = 0.25 * (pts[0] + pts[1] + pts[2] + pts[3])
@@ -212,8 +256,8 @@ def _prism_to_panels(prism: CurvilinearPrism) -> list[SurfacePanel]:
     t_rad: PanelType = "rotor_radial_wall" if b_prefix == "rotor" else "stator_radial_wall"
     t_azi: PanelType = "rotor_azimuthal_wall" if b_prefix == "rotor" else "stator_azimuthal_wall"
 
-    for i in range(prism.n_r):
-        for j in range(prism.n_phi):
+    for i in range(nr_eff):
+        for j in range(nphi_eff):
             u0, u1 = float(us[i]), float(us[i + 1])
             v0, v1 = float(vs[j]), float(vs[j + 1])
             um, vm = 0.5 * (u0 + u1), 0.5 * (v0 + v1)
@@ -229,8 +273,8 @@ def _prism_to_panels(prism: CurvilinearPrism) -> list[SurfacePanel]:
                 t_top,
             )
 
-    for j in range(prism.n_phi):
-        for k in range(prism.n_z):
+    for j in range(nphi_eff):
+        for k in range(nz_eff):
             v0, v1 = float(vs[j]), float(vs[j + 1])
             w0, w1 = float(ws[k]), float(ws[k + 1])
             vm, wm = 0.5 * (v0 + v1), 0.5 * (w0 + w1)
@@ -246,8 +290,8 @@ def _prism_to_panels(prism: CurvilinearPrism) -> list[SurfacePanel]:
                 t_rad,
             )
 
-    for i in range(prism.n_r):
-        for k in range(prism.n_z):
+    for i in range(nr_eff):
+        for k in range(nz_eff):
             u0, u1 = float(us[i]), float(us[i + 1])
             w0, w1 = float(ws[k]), float(ws[k + 1])
             um, wm = 0.5 * (u0 + u1), 0.5 * (w0 + w1)
@@ -306,15 +350,23 @@ def build_engine_prisms(
     n_phi_tooth: int = BEM_TIER_STANDARD.n_phi_tooth,
     n_phi_bridge: int = BEM_TIER_STANDARD.n_phi_bridge,
     n_z: int = BEM_TIER_STANDARD.n_z,
+    n_phi_arc_override: int | None = None,
+    r_edge_nm: float = 0.0,
 ) -> tuple[list[CurvilinearPrism], list[CurvilinearPrism], tuple[CantorTrackSpec, ...], float]:
     """Construct sector-0 rotor and stator curvilinear prisms for a given design."""
     if not math.isfinite(z_tip_um) or not math.isfinite(theta_deg):
         raise ValueError("z_tip_um and theta_deg must be finite.")
+    if not math.isfinite(r_edge_nm) or r_edge_nm < 0.0:
+        raise ValueError("r_edge_nm must be finite and nonnegative.")
 
     use_vernier = design_name in ("Config_B_Manhattan_Vernier", "Config_D_DualStator_PushPull")
     tracks = canonical_cantor_n2_tracks(vernier=use_vernier)
     h_teeth = ENGINE_H_TEETH_DUAL_UM if design_name == "Config_D_DualStator_PushPull" else ENGINE_H_TEETH_STD_UM
-    n_phi_arc = max(int(n_phi_bridge) * 3, 9)
+    n_phi_arc = (
+        int(n_phi_arc_override)
+        if n_phi_arc_override is not None
+        else max(int(n_phi_bridge) * 3, 9)
+    )
 
     rotor_prisms: list[CurvilinearPrism] = []
     stator_prisms: list[CurvilinearPrism] = []
@@ -776,6 +828,11 @@ def build_engine_prisms(
     else:
         raise ValueError(f"Unknown engine design {design_name!r}.")
 
+    if r_edge_nm > 0.0:
+        r_val = float(r_edge_nm)
+        rotor_prisms = [dataclasses.replace(p, r_edge_nm=r_val) for p in rotor_prisms]
+        stator_prisms = [dataclasses.replace(p, r_edge_nm=r_val) for p in stator_prisms]
+
     certify_intra_body_disjointness(rotor_prisms)
     certify_intra_body_disjointness(stator_prisms)
     return rotor_prisms, stator_prisms, tracks, h_teeth
@@ -826,6 +883,8 @@ def build_engine_surface_mesh(
     n_phi_tooth: int = BEM_TIER_STANDARD.n_phi_tooth,
     n_phi_bridge: int = BEM_TIER_STANDARD.n_phi_bridge,
     n_z: int = BEM_TIER_STANDARD.n_z,
+    n_phi_arc_override: int | None = None,
+    r_edge_nm: float = 0.0,
     min_clearance_um: float = 0.010,
 ) -> ClutchSurfaceMesh:
     """Build a validated ClutchSurfaceMesh for any Fractal Casimir Engine design."""
@@ -837,6 +896,8 @@ def build_engine_surface_mesh(
         n_phi_tooth=n_phi_tooth,
         n_phi_bridge=n_phi_bridge,
         n_z=n_z,
+        n_phi_arc_override=n_phi_arc_override,
+        r_edge_nm=r_edge_nm,
     )
     rotor_panels: list[SurfacePanel] = []
     for prism in rotor_prisms:
@@ -871,6 +932,7 @@ def build_engine_surface_mesh(
         "theta_deg": theta_deg,
         "tooth_arc_deg": ENGINE_TOOTH_ARC_DEG,
         "aperture_arc_deg": ENGINE_APERTURE_ARC_DEG,
+        "r_edge_nm": float(r_edge_nm),
         "elements": [dataclasses.asdict(t.to_track_element()) for t in tracks],
     }
     resolution = {
@@ -890,3 +952,71 @@ def build_engine_surface_mesh(
     min_gap = certify_minimum_clearance_um(mesh, min_allowed_um=min_clearance_um)
     mesh.parameters["certified_min_clearance_um"] = min_gap
     return mesh
+
+
+def prism_to_meep_subwedges(
+    prism: CurvilinearPrism,
+    *,
+    rot_deg: float = 0.0,
+    n_v: int = 24,
+    n_w_helical: int = 8,
+) -> list[dict[str, Any]]:
+    """Decompose a CurvilinearPrism into exact vertical right-quadrilateral sub-prisms for Meep C++.
+
+    Each returned dict contains ``vertices_xy`` (4 CCW ``(x, y)`` tuples in um),
+    ``z_min`` (um), ``z_max`` (um), ``body``, and ``role``.
+    """
+    has_twist_or_tilt = (
+        abs(prism.phi0_w1_deg - prism.phi0_w0_deg) > 1.0e-9
+        or abs(prism.phi1_w1_deg - prism.phi1_w0_deg) > 1.0e-9
+        or abs(prism.z0_v1 - prism.z0_v0) > 1.0e-9
+        or abs(prism.z1_v1 - prism.z1_v0) > 1.0e-9
+    )
+    nw = max(1, int(n_w_helical)) if has_twist_or_tilt else 1
+    nv = max(2, int(n_v))
+    vs = np.linspace(0.0, 1.0, nv + 1)
+    ws = np.linspace(0.0, 1.0, nw + 1)
+
+    rot_rad = math.radians(float(rot_deg))
+    cr = math.cos(rot_rad)
+    sr = math.sin(rot_rad)
+
+    def rot_xy(pt3: np.ndarray) -> tuple[float, float]:
+        x, y = float(pt3[0]), float(pt3[1])
+        return (cr * x - sr * y, sr * x + cr * y)
+
+    wedges: list[dict[str, Any]] = []
+    for kw in range(nw):
+        w0 = float(ws[kw])
+        w1 = float(ws[kw + 1])
+        wm = 0.5 * (w0 + w1)
+        for jv in range(nv):
+            v0 = float(vs[jv])
+            v1 = float(vs[jv + 1])
+            vm = 0.5 * (v0 + v1)
+            p00 = prism.point(0.0, v0, wm)
+            p10 = prism.point(1.0, v0, wm)
+            p11 = prism.point(1.0, v1, wm)
+            p01 = prism.point(0.0, v1, wm)
+            zb = float(prism.point(0.5, vm, w0)[2])
+            zt = float(prism.point(0.5, vm, w1)[2])
+            if zt <= zb:
+                raise ValueError(f"Degenerate axial sub-wedge [{zb}, {zt}] in {prism.role}.")
+            verts_xy = [rot_xy(p00), rot_xy(p10), rot_xy(p11), rot_xy(p01)]
+            # Ensure positive CCW 2D polygon area
+            area2 = sum(
+                verts_xy[m][0] * verts_xy[(m + 1) % 4][1] - verts_xy[(m + 1) % 4][0] * verts_xy[m][1]
+                for m in range(4)
+            )
+            if area2 < 0.0:
+                verts_xy.reverse()
+            wedges.append(
+                {
+                    "body": prism.body,
+                    "role": prism.role,
+                    "vertices_xy": verts_xy,
+                    "z_min": zb,
+                    "z_max": zt,
+                }
+            )
+    return wedges
