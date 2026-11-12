@@ -2,15 +2,16 @@
   "model": "Quant_FDTD_N2_BigRed200",
   "dataset": "cantor_n2_hybridrz_vs_uniform_r5nm",
   "study": "quant_fdtd_n2_bigred200_validation",
-  "executed_at": "2026-11-11T22:35:48.908332+00:00",
-  "generated_at": "2026-11-11T22:35:48.908332+00:00",
+  "executed_at": "2026-11-12T23:14:34.306650+00:00",
+  "generated_at": "2026-11-12T23:14:34.306650+00:00",
   "total_configured_tasks": 8,
-  "completed_tasks_count": 4,
+  "completed_tasks_count": 5,
   "completed_task_ids": [
     1,
     2,
     3,
-    4
+    4,
+    7
   ],
   "bem_r5nm_reference_pN": {
     "Cantor_N2_HybridRZ": {
@@ -226,19 +227,19 @@
       "pml_thickness_um": 0.2,
       "cell_buffer_um": 0.15,
       "T_run": 3.0,
-      "status": "missing",
-      "executed_at": null,
-      "result_file": null,
-      "completed_moments": 0,
-      "total_4pass_moments": 3072,
-      "elapsed_seconds": null,
-      "f_net_pN": null,
-      "f_2pass_pN": null,
-      "f_stator_only_pN": null,
+      "status": "complete",
+      "executed_at": "2026-11-12T23:14:29.221980+00:00",
+      "result_file": "/N/project/gorengor_werewolf/FractalCasimir3D/results/quant_fdtd_n2/task_7_meep.json",
+      "completed_moments": 3888,
+      "total_4pass_moments": 3888,
+      "elapsed_seconds": 4350.338934196159,
+      "f_net_pN": 9.783083079031694,
+      "f_2pass_pN": 14.294849620604467,
+      "f_stator_only_pN": 4.5117665415727695,
       "bem_r5nm_std_pN": 1.2671722931523985,
       "bem_r5nm_ultra_pN": 1.4040651153746457,
-      "rel_diff_vs_bem_std_pct": null,
-      "rel_diff_vs_bem_ultra_pct": null
+      "rel_diff_vs_bem_std_pct": 672.0404819374563,
+      "rel_diff_vs_bem_ultra_pct": 596.7684740476784
     },
     {
       "task_id": 8,
@@ -303,6 +304,11 @@
       "f_fine_pN": 4.275468613023934,
       "rel_drift_pct": 17.949560869626517,
       "richardson_extrap_pN": 3.6615263400987272
+    },
+    "cantor_R150_nmax2_to_nmax3": {
+      "f_nmax2_pN": 4.747209406002474,
+      "f_nmax3_pN": 9.783083079031694,
+      "rel_drift_pct": 106.08071484400399
     }
   }
 }
