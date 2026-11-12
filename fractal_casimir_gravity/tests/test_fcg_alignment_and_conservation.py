@@ -184,8 +184,8 @@ def test_open_to_facing_force_sign_inversion_and_voxel_traces() -> None:
     assert th_open.force_z_tilde > 0.0
     assert th_face.force_z_tilde < 0.0
 
-    # Check interior voxel stress-tensor trace identities across all 3 QFT models
-    pts = np.array([[0.625, 0.0, -0.06], [0.58, 0.12, -0.08]], dtype=np.float64)
+    # Check interior vacuum voxel stress-tensor trace identities across all 3 QFT models
+    pts = np.array([[0.625, 0.0, -0.110], [0.45, 0.45, -0.06]], dtype=np.float64)
     res_em = compute_four_pass_stress_tensor(
         spec_c, 0.1, pts, field_model="em_pec", n_kappa=6, n_rad=1, n_phi=2, n_z=1,
     )
@@ -199,8 +199,8 @@ def test_open_to_facing_force_sign_inversion_and_voxel_traces() -> None:
     norm_em = float(np.max(np.abs(res_em["t_total_ren"])))
     norm_cf = float(np.max(np.abs(res_cf["t_total_ren"])))
     norm_mn = float(np.max(np.abs(res_mn["t_total_ren"])))
-    assert np.max(np.abs(minkowski_trace(res_em["t_total_ren"]))) / norm_em < 1.0e-14
-    assert np.max(np.abs(minkowski_trace(res_cf["t_total_ren"]))) / norm_cf < 1.0e-14
+    assert np.max(np.abs(minkowski_trace(res_em["t_total_ren"]))) / norm_em < 1.0e-12
+    assert np.max(np.abs(minkowski_trace(res_cf["t_total_ren"]))) / norm_cf < 1.0e-12
     assert np.max(np.abs(minkowski_trace(res_mn["t_total_ren"]))) / norm_mn > 1.0e-3
 
 

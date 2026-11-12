@@ -448,3 +448,81 @@ def verify_rigid_quadrupole_moment(
     norm_u = max(float(np.sum(full_mesh.areas[mask_u] * (x[mask_u] ** 2 + y[mask_u] ** 2))), 1.0e-15)
     norm_l = max(float(np.sum(full_mesh.areas[mask_l] * (x[mask_l] ** 2 + y[mask_l] ** 2))), 1.0e-15)
     return float(np.abs(np.sum(q_complex[mask_u])) / norm_u), float(np.abs(np.sum(q_complex[mask_l])) / norm_l)
+
+
+def _periodic_angular_distance(phi: np.ndarray, center: float, period: float) -> np.ndarray:
+    """Minimal angular distance modulo azimuthal sector period."""
+    half = 0.5 * period
+    return np.abs(((phi - center + half) % period) - half)
+
+
+def is_inside_cpsc_conductor(
+    spec: CPSCSpec,
+    theta_rad: float,
+    points: np.ndarray,
+    z_vane_override: float | None = None,
+    margin: float = 0.0,
+) -> np.ndarray:
+    """Return boolean mask (N,) True where 3D points fall inside solid PEC conductor bulk."""
+    pts = np.asarray(points, dtype=np.float64)
+    r = np.hypot(pts[:, 0], pts[:, 1])
+    phi = np.arctan2(pts[:, 1], pts[:, 0])
+    z = pts[:, 2]
+    inside = np.zeros(len(pts), dtype=bool)
+    tracks = build_radial_tracks(spec, z_vane_override=z_vane_override)
+
+    if spec.geometry_kind == "flat_annulus":
+        trk = tracks[0]
+        in_u = (
+            (r >= trk.r_vane_in - margin)
+            & (r <= trk.r_vane_out + margin)
+            & (z >= trk.z_vane_bot - margin)
+            & (z <= trk.z_vane_top + margin)
+        )
+        in_l = (
+            (r >= trk.r_slot_in - margin)
+            & (r <= trk.r_slot_out + margin)
+            & (z >= trk.z_face_top - spec.tau_0 - margin)
+            & (z <= trk.z_face_top + margin)
+        )
+        return in_u | in_l
+
+    dphi_up = 2.0 * math.pi / spec.m_up
+    half_vane = 0.5 * 0.28 * dphi_up
+    dphi_low = 2.0 * math.pi / spec.m_low
+    half_open = 0.5 * 0.52 * dphi_low
+    half_face = 0.5 * (dphi_low - 0.52 * dphi_low)
+
+    ang_u = _periodic_angular_distance(phi, theta_rad, dphi_up) <= (half_vane + margin / np.maximum(r, 0.05))
+    ang_f = _periodic_angular_distance(phi, 0.5 * dphi_low, dphi_low) <= (half_face + margin / np.maximum(r, 0.05))
+
+    for trk in tracks:
+        in_vane = (
+            ang_u
+            & (r >= trk.r_vane_in - margin)
+            & (r <= trk.r_vane_out + margin)
+            & (z >= trk.z_vane_bot - margin)
+            & (z <= trk.z_vane_top + margin)
+        )
+        in_face = (
+            ang_f
+            & (r >= trk.r_slot_in - margin)
+            & (r <= trk.r_slot_out + margin)
+            & (z >= trk.z_face_top - spec.tau_0 - margin)
+            & (z <= trk.z_face_top + margin)
+        )
+        skew = spec.chiral_skew_rad * ((-1.0) ** trk.generation)
+        ang_o = _periodic_angular_distance(phi, skew, dphi_low) <= (half_open + margin / np.maximum(r, 0.05))
+        rim_w = 0.22 * trk.slot_width
+        in_rim = (
+            ang_o
+            & (z >= trk.z_rim_bot - margin)
+            & (z <= trk.z_rim_top + margin)
+            & (
+                ((r >= max(0.05, trk.r_slot_in - rim_w) - margin) & (r <= trk.r_slot_in + margin))
+                | ((r >= trk.r_slot_out - margin) & (r <= trk.r_slot_out + rim_w + margin))
+            )
+        )
+        inside |= in_vane | in_face | in_rim
+
+    return inside

@@ -20,6 +20,7 @@ from fractal_casimir_gravity.solvers.cpsc_geometry import (
     CPSCSpec,
     PanelBatch3D,
     build_cpsc_mesh,
+    is_inside_cpsc_conductor,
 )
 
 FieldModel = Literal["scalar_conformal", "scalar_minimal", "em_pec"]
@@ -579,7 +580,12 @@ def compute_four_pass_stress_tensor(
     mesh_l = _subset(mask_l)
 
     kappas, weights = gauss_legendre_kappa_grid(n_kappa, kappa_min=kappa_min, kappa_max=kappa_max)
-    pts_t = torch.as_tensor(eval_points, dtype=torch.float64, device=dev)
+    pts_np = np.asarray(eval_points, dtype=np.float64)
+    inside_bulk_np = is_inside_cpsc_conductor(
+        spec, theta_rad=theta_rad, points=pts_np, z_vane_override=z_vane_override, margin=min_wall_dist,
+    )
+    outside_t = torch.as_tensor(~inside_bulk_np, dtype=torch.bool, device=dev)
+    pts_t = torch.as_tensor(pts_np, dtype=torch.float64, device=dev)
 
     # Pass 1: U + L coupled cavity
     t_ul, valid_ul = _evaluate_single_pass_stress_voxels(full_mesh, pts_t, field_model, kappas, weights, min_wall_dist)
@@ -590,7 +596,7 @@ def compute_four_pass_stress_tensor(
     # Pass 4: Free Minkowski vacuum reference (analytically subtracted via G_full - G_0 = 0)
     t_vac = torch.zeros_like(t_ul)
 
-    valid = valid_ul & valid_u & valid_l
+    valid = valid_ul & valid_u & valid_l & outside_t
     t_mut = (t_ul - t_u - t_l + t_vac) * valid[:, None, None].to(torch.float64)
     t_ren = (t_ul - t_vac) * valid[:, None, None].to(torch.float64)
 

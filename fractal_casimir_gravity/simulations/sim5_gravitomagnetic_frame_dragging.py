@@ -108,13 +108,13 @@ def run_simulation(
             spec_chiral_n3, theta_op, pts_slice, field_model="em_pec",
             n_kappa=8, n_rad=1, n_phi=2, n_z=1, min_wall_dist=0.005, device=device,
         )
-        t_cantor_3d[:, :, iz, :, :] = res_c["t_total_ren"].reshape((nx_grid, nx_grid, 4, 4))
+        t_cantor_3d[:, :, iz, :, :] = res_c["t_mutual"].reshape((nx_grid, nx_grid, 4, 4))
 
         res_p = compute_four_pass_stress_tensor(
             spec_periodic, theta_op, pts_slice, field_model="em_pec",
             n_kappa=8, n_rad=1, n_phi=2, n_z=1, min_wall_dist=0.005, device=device,
         )
-        t_per_3d[:, :, iz, :, :] = res_p["t_total_ren"].reshape((nx_grid, nx_grid, 4, 4))
+        t_per_3d[:, :, iz, :, :] = res_p["t_mutual"].reshape((nx_grid, nx_grid, 4, 4))
 
     # Normalized unit angular velocity omega_tilde = 1.0 yields |Omega_LT,z| / omega_tilde directly
     gem_cantor = solve_gem_lense_thirring(t_cantor_3d, coords_3d, spacings, omega_tilde=1.0, device=device)
@@ -127,7 +127,7 @@ def run_simulation(
     t_prof_n3 = compute_four_pass_stress_tensor(
         spec_chiral_n3, theta_op, pts_prof, field_model="em_pec",
         n_kappa=10, n_rad=1, n_phi=2, n_z=1, min_wall_dist=0.004, device=device,
-    )["t_total_ren"]
+    )["t_mutual"]
     w_phi_prof_n3 = t_prof_n3[:, 0, 0] + t_prof_n3[:, 2, 2]  # at y=0 (phi=0), e_phi = +y
 
     # Extract midplane Lense-Thirring precession Omega_{LT,z} / omega_tilde

@@ -58,18 +58,23 @@ def run_simulation(
         generation_n=3,
     )
     tracks = build_radial_tracks(spec_n3)
-    # Central generation-1 slot clearance channel for axial geodesic lensing
+    # Central generation-1 facing-sector gap channel at phi = pi / M_low = pi / 4
     central_trk = next((t for t in tracks if t.generation == 1), tracks[len(tracks) // 2])
-    r_ray = 0.5 * (central_trk.r_slot_in + central_trk.r_vane_in)
-    z_ray = np.linspace(-0.114, -0.006, 20)
-    pts_ray = np.column_stack([np.full_like(z_ray, r_ray), np.zeros_like(z_ray), z_ray])
+    phi_face_meridian = math.pi / spec_n3.m_low
+    r_ray = central_trk.r_center
+    z_ray = np.linspace(-0.116, -0.104, 16)
+    pts_ray = np.column_stack([
+        np.full_like(z_ray, r_ray * math.cos(phi_face_meridian)),
+        np.full_like(z_ray, r_ray * math.sin(phi_face_meridian)),
+        z_ray,
+    ])
 
     theta_face = math.pi / spec_n3.m_low
     theta_scan = np.linspace(0.0, theta_face, n_steps)
 
     log_step(
         "sim4_init_raychaudhuri_qei",
-        {"device": str(device), "n_steps": n_steps, "r_ray": r_ray},
+        {"device": str(device), "n_steps": n_steps, "r_ray": r_ray, "phi_meridian": phi_face_meridian},
         metrics_path=metrics_path,
     )
 
@@ -85,48 +90,55 @@ def run_simulation(
         th_f = float(th)
         t_em = compute_four_pass_stress_tensor(
             spec_n3, th_f, pts_ray, field_model="em_pec",
-            n_kappa=10, n_rad=1, n_phi=2, n_z=1, min_wall_dist=0.004, device=device,
-        )["t_total_ren"]
+            n_kappa=10, n_rad=1, n_phi=2, n_z=1, min_wall_dist=0.005, device=device,
+        )["t_mutual"]
         ray_em = integrate_raychaudhuri_geodesics(t_em, z_ray)
         null_em[idx] = float(ray_em["delta_theta_null"])
         time_em[idx] = float(ray_em["delta_theta_time"])
 
         t_cf = compute_four_pass_stress_tensor(
             spec_n3, th_f, pts_ray, field_model="scalar_conformal",
-            n_kappa=10, n_rad=1, n_phi=2, n_z=1, min_wall_dist=0.004, device=device,
-        )["t_total_ren"]
+            n_kappa=10, n_rad=1, n_phi=2, n_z=1, min_wall_dist=0.005, device=device,
+        )["t_mutual"]
         ray_cf = integrate_raychaudhuri_geodesics(t_cf, z_ray)
         null_conf[idx] = float(ray_cf["delta_theta_null"])
         time_conf[idx] = float(ray_cf["delta_theta_time"])
 
         t_mn = compute_four_pass_stress_tensor(
             spec_n3, th_f, pts_ray, field_model="scalar_minimal",
-            n_kappa=10, n_rad=1, n_phi=2, n_z=1, min_wall_dist=0.004, device=device,
-        )["t_total_ren"]
+            n_kappa=10, n_rad=1, n_phi=2, n_z=1, min_wall_dist=0.005, device=device,
+        )["t_mutual"]
         ray_mn = integrate_raychaudhuri_geodesics(t_mn, z_ray)
         null_min[idx] = float(ray_mn["delta_theta_null"])
         time_min[idx] = float(ray_mn["delta_theta_time"])
         time_min_trace_part[idx] = float(ray_mn["delta_theta_time_trace_part"])
 
-    # 2D (r, z) cross-section maps at phi = 0 for open-aperture (theta=0) vs facing-sector (theta=pi/4)
+    # 2D (r, z) cross-section maps:
+    #   - Open-aperture meridian (phi = 0) at theta_open = 0
+    #   - Facing-sector meridian (phi = pi/4) at theta_face = pi/4
     nr_map = 24
-    nz_map = 14
+    nz_map = 18
     r_vals = np.linspace(spec_n3.r_in + 0.02, spec_n3.r_out - 0.02, nr_map)
     z_vals = np.linspace(-0.114, -0.006, nz_map)
     gr, gz = np.meshgrid(r_vals, z_vals, indexing="ij")
-    pts_rz = np.column_stack([gr.ravel(), np.zeros(gr.size), gz.ravel()])
+    pts_rz_open = np.column_stack([gr.ravel(), np.zeros(gr.size), gz.ravel()])
+    pts_rz_face = np.column_stack([
+        gr.ravel() * math.cos(phi_face_meridian),
+        gr.ravel() * math.sin(phi_face_meridian),
+        gz.ravel(),
+    ])
 
     res_rz_open = compute_four_pass_stress_tensor(
-        spec_n3, 0.0, pts_rz, field_model="em_pec",
-        n_kappa=10, n_rad=1, n_phi=2, n_z=1, min_wall_dist=0.004, device=device,
+        spec_n3, 0.0, pts_rz_open, field_model="em_pec",
+        n_kappa=10, n_rad=1, n_phi=2, n_z=1, min_wall_dist=0.006, device=device,
     )
     res_rz_face = compute_four_pass_stress_tensor(
-        spec_n3, theta_face, pts_rz, field_model="em_pec",
-        n_kappa=10, n_rad=1, n_phi=2, n_z=1, min_wall_dist=0.004, device=device,
+        spec_n3, theta_face, pts_rz_face, field_model="em_pec",
+        n_kappa=10, n_rad=1, n_phi=2, n_z=1, min_wall_dist=0.006, device=device,
     )
 
-    t_open = res_rz_open["t_total_ren"].reshape((nr_map, nz_map, 4, 4))
-    t_face = res_rz_face["t_total_ren"].reshape((nr_map, nz_map, 4, 4))
+    t_open = res_rz_open["t_mutual"].reshape((nr_map, nz_map, 4, 4))
+    t_face = res_rz_face["t_mutual"].reshape((nr_map, nz_map, 4, 4))
     valid_open = res_rz_open["valid_mask"].reshape((nr_map, nz_map))
     valid_face = res_rz_face["valid_mask"].reshape((nr_map, nz_map))
 
@@ -150,6 +162,8 @@ def run_simulation(
     )
 
     # Worldline Ford-Roman QEI along azimuthal ring inside facing gap (z_0 = -0.110, r_0 = central_trk.r_center)
+    # Within a static boundary gap of wall clearance d_wall = d_0 / 2, causal sub-reflection worldline
+    # sampling holds for effective width tau_eff = (tau_Omega^{-2} + d_wall^{-2})^{-1/2}.
     n_phi_qei = 48
     phi_ring = np.linspace(0.0, 2.0 * math.pi / spec_n3.m_gcd, n_phi_qei, endpoint=False)
     pts_qei = np.column_stack([
@@ -159,15 +173,17 @@ def run_simulation(
     ])
     t_qei_ring = compute_four_pass_stress_tensor(
         spec_n3, theta_face, pts_qei, field_model="em_pec",
-        n_kappa=10, n_rad=1, n_phi=2, n_z=1, min_wall_dist=0.004, device=device,
-    )["t_total_ren"][:, 0, 0]
+        n_kappa=10, n_rad=1, n_phi=2, n_z=1, min_wall_dist=0.006, device=device,
+    )["t_mutual"][:, 0, 0]
 
-    omega_list = np.geomspace(0.02, 0.85, 18)
+    omega_list = np.geomspace(0.05, 8.0, 18)
     dphi_vane = 0.28 * (2.0 * math.pi / spec_n3.m_up)
+    tau_causal = 0.5 * spec_n3.d_0
     qei_saturations = []
     for om in omega_list:
         tau_pass = dphi_vane / (spec_n3.m_up * float(om))
-        qei_res = evaluate_ford_roman_worldline_qei(t_qei_ring, phi_ring, float(om), tau_pass, field_model="em_pec")
+        tau_eff = 1.0 / math.hypot(1.0 / tau_pass, 1.0 / tau_causal)
+        qei_res = evaluate_ford_roman_worldline_qei(t_qei_ring, phi_ring, float(om), tau_eff, field_model="em_pec")
         qei_saturations.append(float(qei_res["saturation_ratio"]))
     max_qei_sat = float(np.max(qei_saturations))
 
