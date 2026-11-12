@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/N/project/gorengor_werewolf/FractalCasimirGravity/execution/run_unified_fractal_robustness_study.py", line 1499, in <module>
+    raise SystemExit(main())
+  File "/N/project/gorengor_werewolf/FractalCasimirGravity/execution/run_unified_fractal_robustness_study.py", line 1323, in main
+    res = _execute_single_task(tsk, by_code, n_xi=args.n_xi, device=args.device)
+  File "/N/project/gorengor_werewolf/FractalCasimirGravity/execution/run_unified_fractal_robustness_study.py", line 418, in _execute_single_task
+    return evaluate_homothetic_3d_bem(
+  File "/N/project/gorengor_werewolf/FractalCasimirGravity/execution/homothetic_3d_robust_architecture.py", line 1524, in evaluate_homothetic_3d_bem
+    W_D = torch.empty((Kb, 16, M), dtype=torch.float64, device=dev)
+torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 3.28 GiB (GPU 0; 39.49 GiB total capacity; 34.13 GiB already allocated; 1.67 GiB free; 36.91 GiB reserved in total by PyTorch) If reserved memory is >> allocated memory try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
