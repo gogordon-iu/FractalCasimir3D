@@ -545,6 +545,8 @@ def compute_four_pass_stress_tensor(
     n_phi: int = 2,
     n_z: int = 1,
     min_wall_dist: float = 0.008,
+    fundamental_sector_only: bool = False,
+    phi_grading_beta: float = 0.0,
     device: torch.device | None = None,
 ) -> Dict[str, np.ndarray]:
     """Execute the exact four-pass inclusion-exclusion correlator Eq. (13):
@@ -559,7 +561,8 @@ def compute_four_pass_stress_tensor(
         n_rad=n_rad,
         n_phi=n_phi,
         n_z=n_z,
-        fundamental_sector_only=False,
+        fundamental_sector_only=fundamental_sector_only,
+        phi_grading_beta=phi_grading_beta,
     )
     mask_u = full_mesh.body_id == 0
     mask_l = full_mesh.body_id == 1

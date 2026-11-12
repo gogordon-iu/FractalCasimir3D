@@ -94,10 +94,16 @@ def test_manuscript_code_macro_and_figure_bijection() -> None:
     assert len(tex_figs) == 6
     assert tex_figs == code_figs
 
-    # 4. Verify macros_gravity.tex currently holds ONLY \pendingval placeholders (no premature results)
-    for line in macros_text.splitlines():
-        if line.strip().startswith(r"\newcommand"):
-            assert r"{\pendingval}" in line, f"Premature numerical result found in macros_gravity.tex: {line}"
+    # 4. Verify macros_gravity.tex holds all \pendingval pre-run, or zero \pendingval post-sync
+    map_path = CODE_DIR / "results" / "manuscript_provenance_map.json"
+    if map_path.exists():
+        for line in macros_text.splitlines():
+            if line.strip().startswith(r"\newcommand"):
+                assert r"{\pendingval}" not in line, f"Unresolved placeholder in macros_gravity.tex: {line}"
+    else:
+        for line in macros_text.splitlines():
+            if line.strip().startswith(r"\newcommand"):
+                assert r"{\pendingval}" in line, f"Premature numerical result found in macros_gravity.tex: {line}"
 
 
 def test_disentanglement_firewall() -> None:

@@ -106,13 +106,20 @@ def generate_all(
     # Fig 1: CPSC Architecture and Effective Trace Running
     fig, axes = plt.subplots(1, 3, figsize=(11.5, 3.3))
     spec_n3 = CPSCSpec("CPSC_N3", "vernier_6_4", "coplanar", "prefractal", 3)
-    for trk in build_radial_tracks(spec_n3):
-        axes[0].axvspan(trk.r_slot_in, trk.r_slot_out, color="#cbd5e1", alpha=0.6)
-        axes[0].axvspan(trk.r_vane_in, trk.r_vane_out, ymin=0.45, ymax=0.85, color="#1d4ed8", alpha=0.8)
+    for idx_t, trk in enumerate(build_radial_tracks(spec_n3)):
+        axes[0].axvspan(
+            trk.r_slot_in, trk.r_slot_out, color="#cbd5e1", alpha=0.6,
+            label="Lower Cantor slot" if idx_t == 0 else None,
+        )
+        axes[0].axvspan(
+            trk.r_vane_in, trk.r_vane_out, ymin=0.45, ymax=0.85, color="#1d4ed8", alpha=0.8,
+            label="Upper movable vane" if idx_t == 0 else None,
+        )
     axes[0].set_xlim(0.22, 1.03)
     axes[0].set_xlabel(r"Dimensionless radius $\tilde{r}$")
     axes[0].set_ylabel("Normalized elevation")
     axes[0].set_title(r"(a) Radial Cantor Hierarchy $\mathcal{C}_{3,3}$")
+    axes[0].legend(loc="lower right", fontsize=7)
 
     phi_ring = np.linspace(0.0, 2.0 * math.pi, 360)
     up_pat = np.cos(6.0 * phi_ring)
@@ -219,10 +226,13 @@ def generate_all(
     # Fig 4: DSI Log-Periodic Metric Comb
     fig, axes = plt.subplots(2, 2, figsize=(10.5, 6.2))
     lnz = sim3["ln_z_over_ell"]
-    axes[0, 0].plot(lnz, sim3["scaled_h00_open_cantor"], "o-", ms=3, label=r"Homothetic Cantor ($b=3$)")
-    axes[0, 0].plot(lnz, sim3["scaled_h00_open_periodic"], "s--", ms=3, label="Periodic Grating Control")
+    abs_cantor = np.maximum(np.abs(np.asarray(sim3["scaled_h00_open_cantor"], dtype=np.float64)), 1.0e-12)
+    abs_periodic = np.maximum(np.abs(np.asarray(sim3["scaled_h00_open_periodic"], dtype=np.float64)), 1.0e-12)
+    abs_tidal = np.maximum(np.abs(np.asarray(sim3["scaled_r0z0z_open_cantor"], dtype=np.float64)), 1.0e-12)
+    axes[0, 0].semilogy(lnz, abs_cantor, "o-", ms=3.5, label=r"Homothetic Cantor ($b=3$)")
+    axes[0, 0].semilogy(lnz, abs_periodic, "s--", ms=3.0, label="Periodic Grating Control")
     axes[0, 0].set_xlabel(r"Logarithmic stroke $\ln(|\tilde{z}|/\tilde{\ell}_*)$")
-    axes[0, 0].set_ylabel(r"$|\tilde{z}|^2 \tilde{h}_{00}$")
+    axes[0, 0].set_ylabel(r"$|\tilde{z}|^2 |\tilde{h}_{00}|$")
     axes[0, 0].set_title("(a) Scale-Compensated Newtonian Potential")
     axes[0, 0].legend()
 
@@ -234,18 +244,22 @@ def generate_all(
     axes[0, 1].set_title("(b) Mellin / Harmonic DSI Spectrum")
     axes[0, 1].legend()
 
-    axes[1, 0].plot(lnz, sim3["scaled_r0z0z_open_cantor"], "o-", ms=3, color="#7c3aed")
+    axes[1, 0].semilogy(lnz, abs_tidal, "o-", ms=3.5, color="#7c3aed")
     axes[1, 0].set_xlabel(r"$\ln(|\tilde{z}|/\tilde{\ell}_*)$")
-    axes[1, 0].set_ylabel(r"$|\tilde{z}|^4 \tilde{R}_{0z0z}$")
+    axes[1, 0].set_ylabel(r"$|\tilde{z}|^4 |\tilde{R}_{0z0z}|$")
     axes[1, 0].set_title("(c) Axial Tidal Riemann Curvature Comb")
 
     axes[1, 1].plot(lnz, sim3["detrended_cantor"], label=r"Open phase $\theta_{\mathrm{open}}$", lw=1.6)
-    face_arr = np.asarray(sim3["scaled_h00_face_cantor"], dtype=np.float64)
-    x_arr = np.asarray(lnz, dtype=np.float64)
-    b_f, _, _, _ = np.linalg.lstsq(np.column_stack([np.ones_like(x_arr), x_arr]), face_arr, rcond=None)
-    axes[1, 1].plot(lnz, face_arr - (b_f[0] + b_f[1] * x_arr), "--", label=r"Facing phase $\theta_{\mathrm{face}}$", lw=1.4)
+    if "detrended_face_cantor" in sim3:
+        det_face = np.asarray(sim3["detrended_face_cantor"], dtype=np.float64)
+    else:
+        face_arr = np.log(np.maximum(np.abs(np.asarray(sim3["scaled_h00_face_cantor"], dtype=np.float64)), 1.0e-12))
+        x_arr = np.asarray(lnz, dtype=np.float64)
+        b_f, _, _, _ = np.linalg.lstsq(np.column_stack([np.ones_like(x_arr), x_arr]), face_arr, rcond=None)
+        det_face = face_arr - (b_f[0] + b_f[1] * x_arr)
+    axes[1, 1].plot(lnz, det_face, "--", label=r"Facing phase $\theta_{\mathrm{face}}$", lw=1.4)
     axes[1, 1].set_xlabel(r"$\ln(|\tilde{z}|/\tilde{\ell}_*)$")
-    axes[1, 1].set_ylabel(r"Detrended $\delta(|\tilde{z}|^2\tilde{h}_{00})$")
+    axes[1, 1].set_ylabel(r"Detrended $\delta\ln(|\tilde{z}|^2|\tilde{h}_{00}|)$")
     axes[1, 1].set_title("(d) Rotary Switching of Metric Log-Periodicity")
     axes[1, 1].legend()
     fig.tight_layout()
@@ -284,6 +298,7 @@ def generate_all(
     axes[1, 0].plot(th4, sim4["delta_theta_time_conf"], "--", label=r"Timelike ($\xi=1/6$)", lw=1.4)
     axes[1, 0].plot(th4, sim4["delta_theta_time_min"], ":", label=r"Timelike ($\xi=0$)", lw=1.5)
     axes[1, 0].axhline(0.0, color="k", lw=0.8, ls="--")
+    axes[1, 0].set_yscale("symlog", linthresh=15.0)
     axes[1, 0].set_xlabel(r"Rotor angle $\theta$ (deg)")
     axes[1, 0].set_ylabel(r"Raychaudhuri expansion shift $\Delta\tilde{\Theta}$")
     axes[1, 0].set_title("(c) Rotary Geodesic Focusing/Defocusing Switch")

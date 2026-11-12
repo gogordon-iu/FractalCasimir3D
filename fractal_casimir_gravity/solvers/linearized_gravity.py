@@ -450,9 +450,10 @@ def integrate_raychaudhuri_geodesics(
     dtheta_time_rate = -4.0 * math.pi * sec_scalar
     dtheta_time_notrace_rate = -8.0 * math.pi * t00
 
-    delta_theta_null = float(np.trapezoid(dtheta_null_rate, z_nodes))
-    delta_theta_time = float(np.trapezoid(dtheta_time_rate, z_nodes))
-    delta_theta_time_trace_part = float(np.trapezoid(-4.0 * math.pi * tr_t, z_nodes))
+    _trapz = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
+    delta_theta_null = float(_trapz(dtheta_null_rate, z_nodes))
+    delta_theta_time = float(_trapz(dtheta_time_rate, z_nodes))
+    delta_theta_time_trace_part = float(_trapz(-4.0 * math.pi * tr_t, z_nodes))
 
     return {
         "nec_z": nec_z,
@@ -461,7 +462,7 @@ def integrate_raychaudhuri_geodesics(
         "delta_theta_null": delta_theta_null,
         "delta_theta_time": delta_theta_time,
         "delta_theta_time_trace_part": delta_theta_time_trace_part,
-        "delta_theta_time_notrace": float(np.trapezoid(dtheta_time_notrace_rate, z_nodes)),
+        "delta_theta_time_notrace": float(_trapz(dtheta_time_notrace_rate, z_nodes)),
     }
 
 

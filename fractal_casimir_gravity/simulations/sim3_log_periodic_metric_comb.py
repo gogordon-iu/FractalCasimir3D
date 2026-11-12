@@ -45,20 +45,26 @@ def _eval_homothetic_metric_point(
     spec: CPSCSpec,
     theta_rad: float,
     z_abs: float,
+    z_stage_ref: float,
     nx: int,
+    ny: int,
     nz: int,
     device,
 ) -> tuple[float, float]:
     """Evaluate local 3D linearized Einstein metric h_00 and tidal Riemann R_{0z0z}
-    at scale-covariant cavity probe coordinate x_probe(z_abs) for homothetic elevation z_abs.
+    along the collision-free homothetic slot-center ray x_probe(z_abs) for elevation z_abs.
     """
-    # Scale-covariant box tracking z_abs so grid resolution stays uniform across Cantor decades
-    half_xy = 1.15
-    z_bot = -0.35 * max(z_abs / 0.27, 0.12)
-    z_top = z_abs + 0.20 * max(z_abs, 0.03)
-    xs = np.linspace(-half_xy, half_xy, nx)
-    ys = np.linspace(-half_xy, half_xy, nx)
-    zs = np.linspace(z_bot, z_top, nz)
+    scale = z_abs / z_stage_ref
+    x_c = (spec.r_in + 0.375 * scale) if spec.staging == "homothetic" else 0.625
+    z_c = -1.044 * z_abs
+    z_vane = -0.956 * z_abs
+
+    hw_x = 0.025 * scale
+    hw_y = 0.035 * scale
+    hw_z = 0.014 * z_abs
+    xs = np.linspace(x_c - hw_x, x_c + hw_x, nx)
+    ys = np.linspace(-hw_y, hw_y, ny)
+    zs = np.linspace(z_c - hw_z, z_c + hw_z, nz)
     spacings = (float(xs[1] - xs[0]), float(ys[1] - ys[0]), float(zs[1] - zs[0]))
     gx, gy, gz = np.meshgrid(xs, ys, zs, indexing="ij")
     pts = np.stack([gx, gy, gz], axis=-1).reshape(-1, 3)
@@ -68,20 +74,23 @@ def _eval_homothetic_metric_point(
         theta_rad=theta_rad,
         eval_points=pts,
         field_model="em_pec",
-        z_vane_override=+z_abs,
-        n_kappa=8,
+        z_vane_override=z_vane,
+        n_kappa=6,
+        kappa_min=0.5 / scale,
+        kappa_max=80.0 / scale,
         n_rad=1,
-        n_phi=2,
+        n_phi=3,
         n_z=1,
-        min_wall_dist=0.003 * max(z_abs / 0.10, 0.25),
+        min_wall_dist=0.006 * scale,
+        fundamental_sector_only=True,
+        phi_grading_beta=2.6,
         device=device,
-    )["t_mutual"].reshape((nx, nx, nz, 4, 4))
+    )["t_mutual"].reshape((nx, ny, nz, 4, 4))
 
     grav = solve_linearized_einstein_static(vox, spacings, device=device)
-    # Sample along central cavity annulus mid-radius (x = 0.625, y = 0, z = 0.5 * z_abs)
-    ix = int(np.argmin(np.abs(xs - 0.625)))
-    iy = nx // 2
-    iz = int(np.argmin(np.abs(zs - 0.35 * z_abs)))
+    ix = nx // 2
+    iy = ny // 2
+    iz = nz // 2
     h00_val = float(grav["h_00"][ix, iy, iz])
     r0z0z_val = float(grav["r_0z0z"][ix, iy, iz])
     return h00_val, r0z0z_val
@@ -89,7 +98,7 @@ def _eval_homothetic_metric_point(
 
 def run_simulation(
     max_steps: int | None = None,
-    planned_steps: int = 36,
+    planned_steps: int = 28,
     results_dir: str = "fractal_casimir_gravity/results",
 ) -> Dict[str, object]:
     """Execute Phenomenon III logarithmic stroke sweep and Mellin/harmonic comb analysis."""
@@ -101,7 +110,7 @@ def run_simulation(
     n_steps = min(max_steps, planned_steps) if max_steps is not None else planned_steps
     n_steps = max(n_steps, 5)
 
-    # Use N=4 homothetic stages across 3 Cantor decades z_abs in [0.012, 0.32] so > 3 log-periods are sampled
+    # Use N=4 homothetic stages across >3 Cantor log-periods z_abs in [0.0085, 0.30]
     spec_cantor_b3 = CPSCSpec(
         name="CPSC_Homothetic_b3_N4",
         constellation="breathing_4_4",
@@ -119,11 +128,12 @@ def run_simulation(
         scale_b=3.0,
     )
 
-    z_sweep = np.geomspace(0.012, 0.32, n_steps)
+    z_sweep = np.geomspace(0.0085, 0.30, n_steps)
     ln_z_over_ell = np.log(z_sweep / spec_cantor_b3.ell_star)
 
-    nx_grid = 12
-    nz_grid = 10
+    nx_grid = 5
+    ny_grid = 5
+    nz_grid = 5
 
     log_step(
         "sim3_init_homothetic_sweep",
@@ -142,11 +152,18 @@ def run_simulation(
     h00_open_periodic = np.zeros(n_steps, dtype=np.float64)
 
     theta_face = math.pi / spec_cantor_b3.m_low
+    z_ref = spec_cantor_b3.z_stage_1
     for idx, z_val in enumerate(z_sweep):
         zf = float(z_val)
-        h_o, r_o = _eval_homothetic_metric_point(spec_cantor_b3, 0.0, zf, nx_grid, nz_grid, device)
-        h_f, _ = _eval_homothetic_metric_point(spec_cantor_b3, theta_face, zf, nx_grid, nz_grid, device)
-        h_p, _ = _eval_homothetic_metric_point(spec_periodic, 0.0, zf, nx_grid, nz_grid, device)
+        h_o, r_o = _eval_homothetic_metric_point(
+            spec_cantor_b3, 0.0, zf, z_ref, nx_grid, ny_grid, nz_grid, device
+        )
+        h_f, _ = _eval_homothetic_metric_point(
+            spec_cantor_b3, theta_face, zf, z_ref, nx_grid, ny_grid, nz_grid, device
+        )
+        h_p, _ = _eval_homothetic_metric_point(
+            spec_periodic, 0.0, zf, z_ref, nx_grid, ny_grid, nz_grid, device
+        )
         h00_open_cantor[idx] = h_o
         r0z0z_open_cantor[idx] = r_o
         h00_face_cantor[idx] = h_f
@@ -157,9 +174,15 @@ def run_simulation(
     scaled_open_periodic = (z_sweep**2) * h00_open_periodic
     scaled_tidal_open = (z_sweep**4) * r0z0z_open_cantor
 
-    fit_cantor = fit_log_periodic_metric_comb(ln_z_over_ell, scaled_open_cantor, omega_min=3.5, omega_max=9.0)
-    fit_face = fit_log_periodic_metric_comb(ln_z_over_ell, scaled_face_cantor, omega_min=3.5, omega_max=9.0)
-    fit_periodic = fit_log_periodic_metric_comb(ln_z_over_ell, scaled_open_periodic, omega_min=3.5, omega_max=9.0)
+    # Dimensionless log-modulus observable across homothetic multi-stage resonance pulses
+    eps_floor = 1.0e-12
+    log_mod_cantor = np.log(np.abs(scaled_open_cantor) + eps_floor)
+    log_mod_face = np.log(np.abs(scaled_face_cantor) + eps_floor)
+    log_mod_periodic = np.log(np.abs(scaled_open_periodic) + eps_floor)
+
+    fit_cantor = fit_log_periodic_metric_comb(ln_z_over_ell, log_mod_cantor, omega_min=3.5, omega_max=9.0)
+    fit_face = fit_log_periodic_metric_comb(ln_z_over_ell, log_mod_face, omega_min=3.5, omega_max=9.0)
+    fit_periodic = fit_log_periodic_metric_comb(ln_z_over_ell, log_mod_periodic, omega_min=3.5, omega_max=9.0)
 
     omega_hat = float(fit_cantor["omega_hat"])
     b_hat = float(fit_cantor["b_hat"])
@@ -182,7 +205,11 @@ def run_simulation(
         "scaled_h00_face_cantor": scaled_face_cantor.tolist(),
         "scaled_h00_open_periodic": scaled_open_periodic.tolist(),
         "scaled_r0z0z_open_cantor": scaled_tidal_open.tolist(),
+        "log_mod_open_cantor": log_mod_cantor.tolist(),
+        "log_mod_face_cantor": log_mod_face.tolist(),
+        "log_mod_open_periodic": log_mod_periodic.tolist(),
         "detrended_cantor": fit_cantor["detrended"].tolist(),  # type: ignore[union-attr]
+        "detrended_face_cantor": fit_face["detrended"].tolist(),  # type: ignore[union-attr]
         "omega_grid": fit_cantor["omega_grid"].tolist(),  # type: ignore[union-attr]
         "r2_spectrum_cantor": fit_cantor["r2_spectrum"].tolist(),  # type: ignore[union-attr]
         "r2_spectrum_periodic": fit_periodic["r2_spectrum"].tolist(),  # type: ignore[union-attr]
@@ -200,7 +227,7 @@ def run_simulation(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Phenomenon III: DSI Log-Periodic Spacetime Metric Comb")
     parser.add_argument("--max-steps", type=int, default=None, help="Limit step count for profiling/testing")
-    parser.add_argument("--planned-steps", type=int, default=36, help="Full logarithmic stroke sweep steps")
+    parser.add_argument("--planned-steps", type=int, default=28, help="Full logarithmic stroke sweep steps")
     parser.add_argument("--results-dir", default="fractal_casimir_gravity/results", help="Output directory for JSON and provenance")
     args = parser.parse_args()
     run_simulation(max_steps=args.max_steps, planned_steps=args.planned_steps, results_dir=args.results_dir)

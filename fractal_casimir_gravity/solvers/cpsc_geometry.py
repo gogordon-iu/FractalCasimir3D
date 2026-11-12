@@ -230,6 +230,15 @@ def build_radial_tracks(
     return tracks
 
 
+def _graded_phi_edges(phi_a: float, phi_b: float, n_sub: int, beta: float = 0.0) -> np.ndarray:
+    """Subdivide [phi_a, phi_b] uniformly (beta=0) or with symmetric sinh grading around midpoint."""
+    if n_sub <= 2 or beta <= 0.0:
+        return np.linspace(phi_a, phi_b, n_sub + 1)
+    u = np.linspace(-1.0, 1.0, n_sub + 1)
+    s = np.sinh(beta * u) / math.sinh(beta)
+    return 0.5 * (phi_a + phi_b) + 0.5 * (phi_b - phi_a) * s
+
+
 def _append_cyl_patch(
     panels: List[Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, float, int, int]],
     kind: str,
@@ -241,14 +250,16 @@ def _append_cyl_patch(
     n_2: int,
     body: int,
     gen: int,
+    phi_grading_beta: float = 0.0,
 ) -> None:
     """Append discretized cylindrical-polar surface patches (horizontalz, radial-wall, or phi-wall)."""
     phi_a, phi_b = phi_bounds
+    beta_eff = phi_grading_beta if gen >= 2 else 0.0
     if kind == "horiz":
         r_a, r_b = r_val_or_bounds  # type: ignore[misc]
         z_0 = float(z_val_or_bounds)  # type: ignore[arg-type]
         r_edges = np.linspace(r_a, r_b, n_1 + 1)
-        p_edges = np.linspace(phi_a, phi_b, n_2 + 1)
+        p_edges = _graded_phi_edges(phi_a, phi_b, n_2, beta_eff)
         for i in range(n_1):
             rm = 0.5 * (r_edges[i] + r_edges[i + 1])
             dr = r_edges[i + 1] - r_edges[i]
@@ -264,7 +275,7 @@ def _append_cyl_patch(
     elif kind == "radial":
         r_0 = float(r_val_or_bounds)  # type: ignore[arg-type]
         z_a, z_b = z_val_or_bounds  # type: ignore[misc]
-        p_edges = np.linspace(phi_a, phi_b, n_1 + 1)
+        p_edges = _graded_phi_edges(phi_a, phi_b, n_1, beta_eff)
         z_edges = np.linspace(z_a, z_b, n_2 + 1)
         for i in range(n_1):
             pm = 0.5 * (p_edges[i] + p_edges[i + 1])
@@ -308,6 +319,7 @@ def build_cpsc_mesh(
     n_phi: int = 3,
     n_z: int = 2,
     fundamental_sector_only: bool = True,
+    phi_grading_beta: float = 0.0,
 ) -> PanelBatch3D:
     """Build surface-panel discretization for CPSC (fundamental gcd sector or full 2*pi ring)."""
     tracks = build_radial_tracks(
@@ -327,11 +339,11 @@ def build_cpsc_mesh(
         phi_span = 2.0 * math.pi / m_gcd
         _append_cyl_patch(
             panels, "horiz", (trk.r_vane_in, trk.r_vane_out), (0.0, phi_span),
-            trk.z_vane_bot, -1.0, n_rad * 3, n_phi * 4, body=0, gen=0,
+            trk.z_vane_bot, -1.0, n_rad * 3, n_phi * 4, body=0, gen=0, phi_grading_beta=phi_grading_beta,
         )
         _append_cyl_patch(
             panels, "horiz", (trk.r_slot_in, trk.r_slot_out), (0.0, phi_span),
-            trk.z_face_top, +1.0, n_rad * 3, n_phi * 4, body=1, gen=0,
+            trk.z_face_top, +1.0, n_rad * 3, n_phi * 4, body=1, gen=0, phi_grading_beta=phi_grading_beta,
         )
     else:
         dphi_up_period = 2.0 * math.pi / spec.m_up
@@ -348,27 +360,27 @@ def build_cpsc_mesh(
                 pb = p_center + 0.5 * vane_arc
                 _append_cyl_patch(
                     panels, "horiz", (trk.r_vane_in, trk.r_vane_out), (pa, pb),
-                    trk.z_vane_bot, -1.0, n_rad, n_phi, body=0, gen=trk.generation,
+                    trk.z_vane_bot, -1.0, n_rad, n_phi, body=0, gen=trk.generation, phi_grading_beta=phi_grading_beta,
                 )
                 _append_cyl_patch(
                     panels, "horiz", (trk.r_vane_in, trk.r_vane_out), (pa, pb),
-                    trk.z_vane_top, +1.0, n_rad, n_phi, body=0, gen=trk.generation,
+                    trk.z_vane_top, +1.0, n_rad, n_phi, body=0, gen=trk.generation, phi_grading_beta=phi_grading_beta,
                 )
                 _append_cyl_patch(
                     panels, "radial", trk.r_vane_in, (pa, pb),
-                    (trk.z_vane_bot, trk.z_vane_top), -1.0, n_phi, n_z, body=0, gen=trk.generation,
+                    (trk.z_vane_bot, trk.z_vane_top), -1.0, n_phi, n_z, body=0, gen=trk.generation, phi_grading_beta=phi_grading_beta,
                 )
                 _append_cyl_patch(
                     panels, "radial", trk.r_vane_out, (pa, pb),
-                    (trk.z_vane_bot, trk.z_vane_top), +1.0, n_phi, n_z, body=0, gen=trk.generation,
+                    (trk.z_vane_bot, trk.z_vane_top), +1.0, n_phi, n_z, body=0, gen=trk.generation, phi_grading_beta=phi_grading_beta,
                 )
                 _append_cyl_patch(
                     panels, "azimuthal", (trk.r_vane_in, trk.r_vane_out), (pa, pa),
-                    (trk.z_vane_bot, trk.z_vane_top), -1.0, n_rad, n_z, body=0, gen=trk.generation,
+                    (trk.z_vane_bot, trk.z_vane_top), -1.0, n_rad, n_z, body=0, gen=trk.generation, phi_grading_beta=phi_grading_beta,
                 )
                 _append_cyl_patch(
                     panels, "azimuthal", (trk.r_vane_in, trk.r_vane_out), (pb, pb),
-                    (trk.z_vane_bot, trk.z_vane_top), +1.0, n_rad, n_z, body=0, gen=trk.generation,
+                    (trk.z_vane_bot, trk.z_vane_top), +1.0, n_rad, n_z, body=0, gen=trk.generation, phi_grading_beta=phi_grading_beta,
                 )
 
         # Lower stationary aperture sidewalls + facing sectors
@@ -381,30 +393,30 @@ def build_cpsc_mesh(
                 # Aperture radial sidewalls facing inward toward the open slot
                 _append_cyl_patch(
                     panels, "radial", trk.r_slot_in, (p_oa, p_ob),
-                    (trk.z_rim_bot, trk.z_rim_top), +1.0, n_phi, max(1, n_z - 1), body=1, gen=trk.generation,
+                    (trk.z_rim_bot, trk.z_rim_top), +1.0, n_phi, max(1, n_z - 1), body=1, gen=trk.generation, phi_grading_beta=phi_grading_beta,
                 )
                 _append_cyl_patch(
                     panels, "radial", trk.r_slot_out, (p_oa, p_ob),
-                    (trk.z_rim_bot, trk.z_rim_top), -1.0, n_phi, max(1, n_z - 1), body=1, gen=trk.generation,
+                    (trk.z_rim_bot, trk.z_rim_top), -1.0, n_phi, max(1, n_z - 1), body=1, gen=trk.generation, phi_grading_beta=phi_grading_beta,
                 )
                 # Rim top/bottom collars flanking the open slot
                 rim_w = 0.22 * trk.slot_width
                 _append_cyl_patch(
                     panels, "horiz", (max(0.05, trk.r_slot_in - rim_w), trk.r_slot_in), (p_oa, p_ob),
-                    trk.z_rim_top, +1.0, 1, n_phi, body=1, gen=trk.generation,
+                    trk.z_rim_top, +1.0, 1, n_phi, body=1, gen=trk.generation, phi_grading_beta=phi_grading_beta,
                 )
                 _append_cyl_patch(
                     panels, "horiz", (trk.r_slot_out, trk.r_slot_out + rim_w), (p_oa, p_ob),
-                    trk.z_rim_top, +1.0, 1, n_phi, body=1, gen=trk.generation,
+                    trk.z_rim_top, +1.0, 1, n_phi, body=1, gen=trk.generation, phi_grading_beta=phi_grading_beta,
                 )
                 # Azimuthal aperture end-walls (chiral bevel shifts asymmetry when chiral_skew_rad != 0)
                 _append_cyl_patch(
                     panels, "azimuthal", (trk.r_slot_in, trk.r_slot_out), (p_oa, p_oa),
-                    (trk.z_rim_bot, trk.z_rim_top), +1.0, n_rad, 1, body=1, gen=trk.generation,
+                    (trk.z_rim_bot, trk.z_rim_top), +1.0, n_rad, 1, body=1, gen=trk.generation, phi_grading_beta=phi_grading_beta,
                 )
                 _append_cyl_patch(
                     panels, "azimuthal", (trk.r_slot_in, trk.r_slot_out), (p_ob, p_ob),
-                    (trk.z_rim_bot, trk.z_rim_top), -1.0, n_rad, 1, body=1, gen=trk.generation,
+                    (trk.z_rim_bot, trk.z_rim_top), -1.0, n_rad, 1, body=1, gen=trk.generation, phi_grading_beta=phi_grading_beta,
                 )
                 # Lower facing sector centered at (s + 0.5) * dphi_low_period
                 p_face_c = (s + 0.5) * dphi_low_period
@@ -412,7 +424,7 @@ def build_cpsc_mesh(
                 p_fb = p_face_c + 0.5 * face_arc
                 _append_cyl_patch(
                     panels, "horiz", (trk.r_slot_in, trk.r_slot_out), (p_fa, p_fb),
-                    trk.z_face_top, +1.0, n_rad, n_phi, body=1, gen=trk.generation,
+                    trk.z_face_top, +1.0, n_rad, n_phi, body=1, gen=trk.generation, phi_grading_beta=phi_grading_beta,
                 )
 
     centroids = np.array([p[0] for p in panels], dtype=np.float64)

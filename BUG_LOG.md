@@ -406,3 +406,11 @@
 ### [BUG-261112-03] 2026-11-12 | fractal_casimir_gravity/slurm/submit_fcg_all.slurm | scope=harness
 - **Bug**: Generated Slurm scripts invoked bare SLES15 python3 without loading python/gpu/3.10.10 or repo .venv and units_and_identities imported sympy eagerly.
 - **Solution**: Added BigRed 200 CUDA Python discovery across python/gpu/3.10.10 and .venv to all 4 Slurm scripts and lazy-imported sympy inside.
+
+### [BUG-261112-04] 2026-11-12 | fractal_casimir_gravity/solvers/linearized_gravity.py | scope=infra
+- **Bug**: integrate_raychaudhuri_geodesics called np.trapezoid directly, raising AttributeError under NumPy 1.x on BigRed 200 python/gpu/3.10.10.
+- **Solution**: Selected np.trapezoid when available and fell back to np.trapz via hasattr check for NumPy 1.x and 2.x compatibility.
+
+### [BUG-261112-05] 2026-11-12T18:20:18Z | fractal_casimir_gravity/simulations/sim3_log_periodic_metric_comb.py | scope=eval model=Sim3_LogPeriodicMetricComb
+- **Bug**: Sim 3 swept positive +z away from negative homothetic stages -Z_1*b^{-(m-1)} at fixed x=0.625 with unscaled Yukawa bounds.
+- **Solution**: Sampled collision-free homothetic slot-center ray (-1.044*z_abs) with scaled Yukawa bounds, sinh-graded phi panels, and log-modulus DSI fit.
