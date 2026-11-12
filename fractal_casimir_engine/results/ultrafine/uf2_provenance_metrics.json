@@ -1,0 +1,125 @@
+{
+  "run_metadata": {
+    "created_at": "2026-11-12T21:22:10.552702+00:00",
+    "updated_at": "2026-11-12T21:22:11.263890+00:00",
+    "environment": "Linux",
+    "entry_point": "fractal_casimir_engine/run_ultrafine_meep_verification.py",
+    "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+    "solver_parameters": {
+      "resolution": 100,
+      "dx_nm": 10.0,
+      "nmax": 2
+    },
+    "solver_runs": [
+      {
+        "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+        "solver_parameters": {
+          "resolution": 100,
+          "dx_nm": 10.0,
+          "nmax": 2
+        },
+        "timestamp": "2026-11-12T21:22:11.021592+00:00"
+      }
+    ]
+  },
+  "intermediate_steps": {
+    "uf2_meep_fdtd_verification": {
+      "timestamp": "2026-11-12T21:22:11.052533+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 389,
+      "data_summary": {
+        "fz_sign_matches": 8,
+        "total_states": 8,
+        "chiral_forward_torque_matches": 5,
+        "chiral_states": 6,
+        "config_d_stroke1_meep_tau_pN_um": 0.3654483252018816,
+        "config_d_stroke3_meep_tau_pN_um": 0.37467743153453276,
+        "config_d_stroke1_meep_fz_pN": 7.819498502968682,
+        "config_d_stroke3_meep_fz_pN": -11.925152355210706
+      },
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    }
+  },
+  "metrics": {
+    "engine_uf2_resolution": {
+      "value": 100,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf2_meep_fdtd_verification",
+      "recorded_at": "2026-11-12T21:22:11.100037+00:00",
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "engine_uf2_fz_sign_matches": {
+      "value": 8,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf2_meep_fdtd_verification",
+      "recorded_at": "2026-11-12T21:22:11.135834+00:00",
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "engine_uf2_chiral_tau_matches": {
+      "value": 5,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf2_meep_fdtd_verification",
+      "recorded_at": "2026-11-12T21:22:11.159615+00:00",
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "engine_uf2_config_d_stroke1_tau": {
+      "value": 0.365,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf2_meep_fdtd_verification",
+      "recorded_at": "2026-11-12T21:22:11.178945+00:00",
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "engine_uf2_config_d_stroke3_tau": {
+      "value": 0.375,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf2_meep_fdtd_verification",
+      "recorded_at": "2026-11-12T21:22:11.263884+00:00",
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    }
+  },
+  "model": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+  "dataset": "fractal_casimir_3d",
+  "status": "completed",
+  "executed_at": "2026-11-12T21:22:11.263914+00:00"
+}
