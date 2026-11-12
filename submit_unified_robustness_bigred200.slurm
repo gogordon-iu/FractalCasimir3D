@@ -1155,6 +1155,7 @@ run_user_job() (
     fi
     export XALT_EXECUTABLE_TRACKING=no
     export PYTHONUNBUFFERED=1
+    export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
     export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-16}"
     export PYTHONPATH="${SLURM_SUBMIT_DIR:-$PWD}:${PYTHONPATH:-}"
 
@@ -1201,6 +1202,11 @@ run_user_job() (
     echo "Python binary: $PYTHON_BIN"
     "$PYTHON_BIN" -c "import torch; print('CUDA available:', torch.cuda.is_available())" || true
 
+    MACROS_WAS_CLEAN=0
+    TABLE_WAS_CLEAN=0
+    git diff --quiet -- "Papers/FCE_Nature_ver01/macros_results.tex" 2>/dev/null && MACROS_WAS_CLEAN=1 || true
+    git diff --quiet -- "Papers/FCE_Nature_ver01/tables/table_unified_fractal_robustness.tex" 2>/dev/null && TABLE_WAS_CLEAN=1 || true
+
     "$PYTHON_BIN" -u execution/run_unified_fractal_robustness_study.py \
         --device auto \
         --checkpoint-dir "$CHECKPOINT_DIR"
@@ -1208,6 +1214,15 @@ run_user_job() (
     if [[ -f "Papers/FCE_Nature_ver01/tables/table_unified_fractal_robustness.tex" ]]; then
         cp -f -- "Papers/FCE_Nature_ver01/tables/table_unified_fractal_robustness.tex" \
             "results/table_unified_fractal_robustness.tex"
+        if [[ "$TABLE_WAS_CLEAN" == "1" ]]; then
+            git checkout -- "Papers/FCE_Nature_ver01/tables/table_unified_fractal_robustness.tex" 2>/dev/null || true
+        fi
+    fi
+    if [[ -f "Papers/FCE_Nature_ver01/macros_results.tex" ]]; then
+        cp -f -- "Papers/FCE_Nature_ver01/macros_results.tex" "results/macros_results.tex"
+        if [[ "$MACROS_WAS_CLEAN" == "1" ]]; then
+            git checkout -- "Papers/FCE_Nature_ver01/macros_results.tex" 2>/dev/null || true
+        fi
     fi
 )
 set -m

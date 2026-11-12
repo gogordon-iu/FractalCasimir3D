@@ -1224,12 +1224,19 @@ def build_kappa_quadrature_rule(
 
 _STATOR_LU_CACHE: dict[tuple[Any, ...], dict[tuple[int, int], tuple[torch.Tensor, torch.Tensor]]] = {}
 _ROTOR_LU_CACHE: dict[tuple[Any, ...], dict[tuple[int, int], tuple[torch.Tensor, torch.Tensor]]] = {}
+_ACTIVE_LARGE_STATOR_GEOM: tuple[Any, ...] | None = None
+_ACTIVE_LARGE_ROTOR_GEOM: tuple[Any, ...] | None = None
 
 
 def clear_bem_lu_caches() -> None:
     """Clear cached rotor and stator self-interaction LU factorizations."""
+    global _ACTIVE_LARGE_STATOR_GEOM, _ACTIVE_LARGE_ROTOR_GEOM
     _STATOR_LU_CACHE.clear()
     _ROTOR_LU_CACHE.clear()
+    _ACTIVE_LARGE_STATOR_GEOM = None
+    _ACTIVE_LARGE_ROTOR_GEOM = None
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
 
 def _same_body_lu_factors(
@@ -1266,11 +1273,14 @@ def _same_body_lu_factors(
         src_q = torch.as_tensor(src_pts.transpose(1, 0, 2)[None, :, :, :], dtype=torch.float64, device=dev)
         delta = (tgt_q[:, None, :, :, :] - src_q[:, :, None, :, :]).reshape(16, M, 3)
         eff_d = torch.sqrt(torch.sum(delta**2, dim=2) + sub_var)
+        del src_q, delta
         scale_q = (area_scale * qw) / eff_d
         ker_sum = torch.empty((K, N, N), dtype=torch.float64, device=dev)
         for qk in range(K):
             ker_sum[qk] = torch.sum(torch.exp(-float(kappas[qk]) * eff_d) * scale_q, dim=0).reshape(N, N)
+        del eff_d, scale_q
         single = ker_sum[:, :, :, None, None] * t_dot_t[None, :, :, :, :]
+        del ker_sum, t_dot_t
         if sec == 0:
             idx = np.arange(N)
             eye2 = torch.eye(2, dtype=torch.float64, device=dev)
@@ -1279,7 +1289,9 @@ def _same_body_lu_factors(
                 diag = torch.as_tensor(_disk_self_term(eff_areas, float(kap)), dtype=torch.float64, device=dev)
                 single[qk, idx, idx] = diag[:, None, None] * eye2
         sec_blocks[:, sec] = single.permute(0, 1, 3, 2, 4).reshape(K, 2 * N, 2 * N)
+        del single
     sec_blocks[:, 3] = sec_blocks[:, 1].transpose(1, 2)
+    del sub_var, area_scale, qw, tgt_q
 
     lu_map: dict[tuple[int, int], tuple[torch.Tensor, torch.Tensor]] = {}
     for qk in range(K):
@@ -1290,6 +1302,8 @@ def _same_body_lu_factors(
         lu_map[(qk, 0)] = torch.linalg.lu_factor(m0)
         lu_map[(qk, 2)] = torch.linalg.lu_factor(m2)
         lu_map[(qk, 1)] = torch.linalg.lu_factor(m1)
+        del m0, m2, m1
+    del sec_blocks
     return lu_map
 
 
@@ -1428,11 +1442,50 @@ def evaluate_homothetic_3d_bem(
     f_kappa_by_gen = {1: np.zeros(K, dtype=np.float64), 2: np.zeros(K, dtype=np.float64), 3: np.zeros(K, dtype=np.float64)}
     energy_total_hbar_c_per_um = 0.0
 
+    global _ACTIVE_LARGE_STATOR_GEOM, _ACTIVE_LARGE_ROTOR_GEOM
     d_hash = compute_design_fingerprint(design)
     is_large_mesh = max(Nt, Ns) > 500
-    max_cache_entries = 2 if is_large_mesh else 16
-    max_k_batch = 28
-    cache_ok = bool(use_lu_cache and K <= max_k_batch)
+    max_k_batch = 6 if is_large_mesh else 28
+    cache_ok = bool(use_lu_cache and K <= 32)
+    max_cache_entries = max(6, math.ceil(K / max_k_batch)) if is_large_mesh else 16
+
+    stator_geom_key = (
+        d_hash,
+        round(float(delta_w_um), 9),
+        round(float(r_edge_um), 9),
+        eff_n_phi,
+        eff_n_z,
+        eff_n_col,
+        str(dev),
+    )
+    rotor_geom_key = (
+        d_hash,
+        round(float(theta_deg), 9),
+        round(float(delta_w_um), 9),
+        round(float(delta_r_um), 9),
+        round(float(r_edge_um), 9),
+        eff_n_r,
+        eff_n_phi,
+        eff_n_z,
+        str(dev),
+    )
+    if is_large_mesh:
+        if not cache_ok:
+            clear_bem_lu_caches()
+        else:
+            evicted = False
+            if _ACTIVE_LARGE_STATOR_GEOM != stator_geom_key:
+                _STATOR_LU_CACHE.clear()
+                _ACTIVE_LARGE_STATOR_GEOM = stator_geom_key
+                evicted = True
+            if _ACTIVE_LARGE_ROTOR_GEOM != rotor_geom_key:
+                _ROTOR_LU_CACHE.clear()
+                _ACTIVE_LARGE_ROTOR_GEOM = rotor_geom_key
+                evicted = True
+            if evicted and dev.type == "cuda":
+                torch.cuda.empty_cache()
+    elif _ACTIVE_LARGE_STATOR_GEOM is not None or _ACTIVE_LARGE_ROTOR_GEOM is not None:
+        clear_bem_lu_caches()
 
     for q_start in range(0, K, max_k_batch):
         q_end = min(K, q_start + max_k_batch)
@@ -1441,36 +1494,16 @@ def evaluate_homothetic_3d_bem(
         Kb = len(k_batch)
         kap_sig = tuple(round(float(k), 10) for k in k_batch)
 
-        stator_key = (
-            d_hash,
-            round(float(delta_w_um), 9),
-            round(float(r_edge_um), 9),
-            eff_n_phi,
-            eff_n_z,
-            eff_n_col,
-            str(dev),
-            kap_sig,
-        )
+        stator_key = (*stator_geom_key, kap_sig)
         # Rotor self-interaction is strictly invariant under rigid z_shift_um!
-        rotor_key = (
-            d_hash,
-            round(float(theta_deg), 9),
-            round(float(delta_w_um), 9),
-            round(float(delta_r_um), 9),
-            round(float(r_edge_um), 9),
-            eff_n_r,
-            eff_n_phi,
-            eff_n_z,
-            str(dev),
-            kap_sig,
-        )
+        rotor_key = (*rotor_geom_key, kap_sig)
 
         if cache_ok and stator_key in _STATOR_LU_CACHE:
             lu_s_map = _STATOR_LU_CACHE[stator_key]
         else:
             lu_s_map = _same_body_lu_factors(stator, k_batch, built.corner_self_area_um2, dev)
             if cache_ok:
-                if len(_STATOR_LU_CACHE) >= max_cache_entries:
+                if not is_large_mesh and len(_STATOR_LU_CACHE) >= max_cache_entries:
                     _STATOR_LU_CACHE.clear()
                     if dev.type == "cuda":
                         torch.cuda.empty_cache()
@@ -1481,7 +1514,7 @@ def evaluate_homothetic_3d_bem(
         else:
             lu_r_map = _same_body_lu_factors(rotor, k_batch, built.corner_self_area_um2, dev)
             if cache_ok:
-                if len(_ROTOR_LU_CACHE) >= max_cache_entries:
+                if not is_large_mesh and len(_ROTOR_LU_CACHE) >= max_cache_entries:
                     _ROTOR_LU_CACHE.clear()
                     if dev.type == "cuda":
                         torch.cuda.empty_cache()
@@ -1515,6 +1548,7 @@ def evaluate_homothetic_3d_bem(
                 (u_z[None] * v_R[:, :, :, None, :] + u_R[:, :, :, :, None] * v_z[None]) * R_inv2
                 - 2.0 * Z * D_raw * R_inv2
             ).reshape(16, M, 4).permute(1, 2, 0).contiguous()
+            del src_tan_t, v_z, src_q, delta, u_R, v_R, R_inv2, Z, D_raw
 
             eff_d_f = eff_d.reshape(16, M)
             inv_d_f = inv_d.reshape(16, M)
@@ -1540,15 +1574,22 @@ def evaluate_homothetic_3d_bem(
                 dz_t_all[qk] = (0.5 * torch.sum(sc_dz, dim=0)).reshape(Nt, Ns, 1, 1)
                 W_D[qk] = -0.25 * ker * c_dir
                 W_dz_D[qk] = -0.25 * sc_dz * c_dir - 0.25 * ker * dc_dir_dx * kap * dz_d_f
+                del x, ker, rad_deriv, sc_dz, inv, denom, c_dir, dc_dir_dx
 
+            del eff_d, inv_d, scale, dz_over_d, eff_d_f, inv_d_f, scale_f, dz_d_f
             W_D_m = W_D.permute(2, 1, 0).contiguous()
+            del W_D
             W_dz_m = W_dz_D.permute(2, 1, 0).contiguous()
+            del W_dz_D
             s_D_all = torch.bmm(D_m, W_D_m).permute(2, 0, 1).reshape(Kb, Nt, Ns, 2, 2)
             dz_D_all = (torch.bmm(D_m, W_dz_m) + torch.bmm(dD_m, W_D_m)).permute(2, 0, 1).reshape(Kb, Nt, Ns, 2, 2)
+            del D_m, dD_m, W_D_m, W_dz_m
             single_all = s_t_all * t_dot_t[None] + s_D_all
             dz_all = dz_t_all * t_dot_t[None] + dz_D_all
+            del t_dot_t, s_t_all, dz_t_all, s_D_all, dz_D_all
             rs_sec[:, sec] = single_all.permute(0, 1, 3, 2, 4).reshape(Kb, 2 * Nt, 2 * Ns)
             dz_sec[:, sec] = dz_all.permute(0, 1, 3, 2, 4).reshape(Kb, 2 * Nt, 2 * Ns)
+            del single_all, dz_all
 
         for qk in range(Kb):
             q_global = q_start + qk
