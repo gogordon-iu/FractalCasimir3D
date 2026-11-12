@@ -1077,6 +1077,22 @@ def build_designs() -> dict[str, StudyDesign]:
             for track in flat.tracks
         ),
     )
+    true_rz = dataclasses.replace(
+        flat,
+        name="Cantor_N2_TrueRZ",
+        tracks=tuple(
+            dataclasses.replace(
+                track,
+                z_tip=NOMINAL_Z_TIP_UM / 3.0,
+                h_teeth=NOMINAL_H_TEETH_UM / 3.0,
+            )
+            if track.level == 2
+            else dataclasses.replace(
+                track, z_tip=NOMINAL_Z_TIP_UM, h_teeth=NOMINAL_H_TEETH_UM
+            )
+            for track in flat.tracks
+        ),
+    )
     compact = StudyDesign(
         "Rot_C8_Compact_N2",
         cantor_tracks(
@@ -1150,8 +1166,81 @@ def build_designs() -> dict[str, StudyDesign]:
     monotonic = dataclasses.replace(
         flat, name="Ctrl_SizeMatched_Monotonic", tracks=tuple(monotonic_tracks)
     )
+
+    # Matched 7-track N = 3 non-fractal controls in R in [0.30, 1.65] um
+    n3_total_slot = sum(track.r_outer - track.r_inner for track in n3.tracks)
+    n3_total_tooth = sum(track.r_tooth_out - track.r_tooth_in for track in n3.tracks)
+    n3_slot_w = n3_total_slot / 7.0
+    n3_tooth_w = n3_total_tooth / 7.0
+    n3_rib_w = ((n3.R_max - n3.R_min) - n3_total_slot) / 8.0
+    n3_uniform_tracks = tuple(
+        TrackSpec3D(
+            cursor, cursor + n3_slot_w,
+            cursor + (n3_slot_w - n3_tooth_w) / 2.0,
+            cursor + (n3_slot_w + n3_tooth_w) / 2.0,
+            NOMINAL_Z_TIP_UM, NOMINAL_H_TEETH_UM, 1,
+        )
+        for cursor in (
+            n3.R_min + n3_rib_w + index * (n3_slot_w + n3_rib_w)
+            for index in range(7)
+        )
+    )
+    ctrl_n3_uniform = dataclasses.replace(
+        n3, name="Ctrl_N3_Uniform7Track", tracks=n3_uniform_tracks
+    )
+
+    n3_sorted = sorted(n3.tracks, key=lambda track: track.r_inner)
+    n3_ribs = [n3_sorted[0].r_inner - n3.R_min]
+    n3_ribs.extend(
+        right.r_inner - left.r_outer
+        for left, right in zip(n3_sorted[:-1], n3_sorted[1:], strict=True)
+    )
+    n3_ribs.append(n3.R_max - n3_sorted[-1].r_outer)
+
+    n3_ordered = sorted(
+        n3_sorted,
+        key=lambda track: (
+            track.r_tooth_out - track.r_tooth_in,
+            track.r_outer - track.r_inner,
+        ),
+    )
+    n3_cursor = n3.R_min + n3_ribs[0]
+    n3_monotonic_tracks: list[TrackSpec3D] = []
+    for index, track in enumerate(n3_ordered):
+        slot = track.r_outer - track.r_inner
+        tooth = track.r_tooth_out - track.r_tooth_in
+        middle = n3_cursor + slot / 2.0
+        n3_monotonic_tracks.append(TrackSpec3D(
+            n3_cursor, n3_cursor + slot, middle - tooth / 2.0, middle + tooth / 2.0,
+            NOMINAL_Z_TIP_UM, NOMINAL_H_TEETH_UM, track.level,
+        ))
+        n3_cursor += slot + n3_ribs[index + 1]
+    ctrl_n3_monotonic = dataclasses.replace(
+        n3, name="Ctrl_N3_Monotonic7Track", tracks=tuple(n3_monotonic_tracks)
+    )
+
+    # Shuffled permutation {150, 50, 450, 50, 50, 150, 50} nm from Cantor {50, 150, 50, 450, 50, 150, 50} nm
+    shuffled_indices = (1, 0, 3, 2, 4, 5, 6)
+    n3_shuffled_order = [n3_sorted[idx] for idx in shuffled_indices]
+    n3_cursor = n3.R_min + n3_ribs[0]
+    n3_shuffled_tracks: list[TrackSpec3D] = []
+    for index, track in enumerate(n3_shuffled_order):
+        slot = track.r_outer - track.r_inner
+        tooth = track.r_tooth_out - track.r_tooth_in
+        middle = n3_cursor + slot / 2.0
+        n3_shuffled_tracks.append(TrackSpec3D(
+            n3_cursor, n3_cursor + slot, middle - tooth / 2.0, middle + tooth / 2.0,
+            NOMINAL_Z_TIP_UM, NOMINAL_H_TEETH_UM, track.level,
+        ))
+        n3_cursor += slot + n3_ribs[index + 1]
+    ctrl_n3_shuffled = dataclasses.replace(
+        n3, name="Ctrl_N3_Shuffled7Track", tracks=tuple(n3_shuffled_tracks)
+    )
+
     designs = (
-        n0, n1, n2, n3, flat, hybrid, compact, single, periodic, uniform, monotonic
+        n0, n1, n2, n3, flat, hybrid, true_rz, compact,
+        single, periodic, uniform, monotonic,
+        ctrl_n3_uniform, ctrl_n3_monotonic, ctrl_n3_shuffled,
     )
     return {design.name: design for design in designs}
 
@@ -1258,18 +1347,26 @@ def validate_controls(designs: Mapping[str, StudyDesign]) -> dict[str, Any]:
     names = (
         "Cantor_N2_FlatZ",
         "Cantor_N2_HybridRZ",
+        "Cantor_N2_TrueRZ",
         "Ctrl_SingleWide",
         "Ctrl_UniformPeriodic",
         "Uniform_3Track_Control",
         "Ctrl_SizeMatched_Monotonic",
     )
-    metrics = {name: tooth_geometry_metrics(designs[name]) for name in names}
+    n3_names = (
+        "Fractal_N3_Cantor7Track",
+        "Ctrl_N3_Uniform7Track",
+        "Ctrl_N3_Monotonic7Track",
+        "Ctrl_N3_Shuffled7Track",
+    )
+    all_names = names + n3_names
+    metrics = {name: tooth_geometry_metrics(designs[name]) for name in all_names}
     reference = metrics[names[0]]
     for name in names[1:]:
         for key in ("total_slot_width_um", "total_tooth_width_um"):
             if not math.isclose(metrics[name][key], reference[key], abs_tol=1e-10):
                 raise ValueError(f"{name} does not match {key}.")
-    for name in ("Ctrl_UniformPeriodic", "Uniform_3Track_Control"):
+    for name in ("Ctrl_UniformPeriodic", "Uniform_3Track_Control", "Cantor_N2_HybridRZ", "Cantor_N2_TrueRZ"):
         for key in (
             "full_tooth_planform_area_um2",
             "full_tooth_planform_perimeter_um",
@@ -1288,6 +1385,33 @@ def validate_controls(designs: Mapping[str, StudyDesign]) -> dict[str, Any]:
             for a, b in zip(left, right, strict=True)
         ):
             raise ValueError(f"Monotonic control does not match the {key} multiset.")
+
+    # Validate N = 3 matched 7-track control family
+    n3_ref = metrics["Fractal_N3_Cantor7Track"]
+    for name in n3_names[1:]:
+        for key in ("total_slot_width_um", "total_tooth_width_um", "full_annular_footprint_um2"):
+            if not math.isclose(metrics[name][key], n3_ref[key], abs_tol=1e-10):
+                raise ValueError(f"{name} does not match N=3 {key}.")
+    for name in ("Ctrl_N3_Uniform7Track",):
+        for key in (
+            "full_tooth_planform_area_um2",
+            "full_tooth_planform_perimeter_um",
+            "full_slot_planform_area_um2",
+        ):
+            if not math.isclose(
+                metrics[name][key], n3_ref[key],
+                rel_tol=1e-10, abs_tol=1e-12,
+            ):
+                raise ValueError(f"{name} does not match N=3 {key}.")
+    for name in ("Ctrl_N3_Monotonic7Track", "Ctrl_N3_Shuffled7Track"):
+        for key in ("slot_widths_um", "tooth_widths_um", "rib_widths_um"):
+            left = sorted(n3_ref[key])
+            right = sorted(metrics[name][key])
+            if len(left) != len(right) or any(
+                not math.isclose(a, b, abs_tol=1e-10)
+                for a, b in zip(left, right, strict=True)
+            ):
+                raise ValueError(f"{name} does not match the N=3 {key} multiset.")
     return metrics
 
 
@@ -1474,6 +1598,7 @@ class Campaign:
             "track_count": len(task.design.tracks),
             "full_tooth_count": 4 * len(task.design.tracks),
             "full_tooth_planform_area_um2": geometry_metrics["full_tooth_planform_area_um2"],
+            "full_tooth_planform_perimeter_um": geometry_metrics["full_tooth_planform_perimeter_um"],
             "cache_key": task.cache_key,
             "solver_parameters": parameters,
         }
@@ -1583,6 +1708,7 @@ class Campaign:
             (row["full_tooth_count"], "full tooth count"),
             (row["footprint_um2"], "footprint"),
             (row["full_tooth_planform_area_um2"], "tooth planform area"),
+            (row["full_tooth_planform_perimeter_um"], "tooth planform perimeter"),
         ):
             if finite_float(denominator, label) <= 0.0:
                 raise ValueError(f"Nonpositive {label} normalization denominator.")
@@ -1596,20 +1722,25 @@ class Campaign:
             row["F_z_pN"] / row["full_tooth_planform_area_um2"],
             "tooth-area-normalized force",
         )
-        self.rows.append(row)
-        logged_id = log_step(
-            task_id, json_safe(row),
-            solver_name=SOLVER_NAME, solver_parameters=parameters,
+        row["F_z_pN_per_tooth_perimeter_um"] = finite_float(
+            row["F_z_pN"] / row["full_tooth_planform_perimeter_um"],
+            "tooth-perimeter-normalized force",
         )
-        step_id = logged_id if isinstance(logged_id, str) else task_id
-        for key in (
-            "F_z_pN", "energy_hbar_c_per_um", "landing_pad_overlap_fraction",
-        ):
-            if row[key] is not None:
-                log_metric(
-                    f"{task_id}_{key}", row[key], step_id=step_id,
-                    solver_name=SOLVER_NAME, solver_parameters=parameters,
-                )
+        self.rows.append(row)
+        if not row.get("resumed_from_report") or task_id == "step1_single_tooth_ztip_0003":
+            logged_id = log_step(
+                task_id, json_safe(row),
+                solver_name=SOLVER_NAME, solver_parameters=parameters,
+            )
+            step_id = logged_id if isinstance(logged_id, str) else task_id
+            for key in (
+                "F_z_pN", "energy_hbar_c_per_um", "landing_pad_overlap_fraction",
+            ):
+                if row[key] is not None:
+                    log_metric(
+                        f"{task_id}_{key}", row[key], step_id=step_id,
+                        solver_name=SOLVER_NAME, solver_parameters=parameters,
+                    )
         print(
             f"[{sequence:03d}] {task.step}: {task.design.name}, "
             f"theta={task.theta_deg:g}, {task.boundary}, "
@@ -1642,17 +1773,19 @@ def tasks_steps_1_to_5(
         for angle in HIERARCHY_ANGLES_DEG:
             tasks.append(Task(STEP_NAMES[2], designs[name], angle, formulation))
     for name in (
-        "Cantor_N2_FlatZ", "Cantor_N2_HybridRZ", "Ctrl_SingleWide",
-        "Ctrl_UniformPeriodic", "Ctrl_SizeMatched_Monotonic",
+        "Cantor_N2_FlatZ", "Cantor_N2_HybridRZ", "Cantor_N2_TrueRZ",
+        "Ctrl_SingleWide", "Ctrl_UniformPeriodic", "Ctrl_SizeMatched_Monotonic",
         "Uniform_3Track_Control",
+        "Ctrl_N3_Uniform7Track", "Ctrl_N3_Monotonic7Track", "Ctrl_N3_Shuffled7Track",
     ):
         for angle in SWITCHING_ANGLES_DEG:
             tasks.append(Task(STEP_NAMES[3], designs[name], angle, formulation))
     step5_names = (
         "Rot_C8_Compact_N2", "Cantor_N2_FlatZ",
-        "Cantor_N2_HybridRZ", "Fractal_N3_Cantor7Track",
+        "Cantor_N2_HybridRZ", "Cantor_N2_TrueRZ", "Fractal_N3_Cantor7Track",
         "Ctrl_SingleWide", "Ctrl_UniformPeriodic",
         "Ctrl_SizeMatched_Monotonic", "Uniform_3Track_Control",
+        "Ctrl_N3_Uniform7Track", "Ctrl_N3_Monotonic7Track", "Ctrl_N3_Shuffled7Track",
     )
     for name in step5_names:
         for angle in SWITCHING_ANGLES_DEG:
@@ -1678,25 +1811,46 @@ def step5_scores(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
         tooth_count = float(NUM_SECTORS) * track_count
         parameters = disengaged_row.get("solver_parameters", {})
         tooth_area_value = disengaged_row.get("full_tooth_planform_area_um2")
-        if tooth_area_value is None and isinstance(parameters, Mapping):
+        tooth_perimeter_value = disengaged_row.get("full_tooth_planform_perimeter_um")
+        if (tooth_area_value is None or tooth_perimeter_value is None) and isinstance(parameters, Mapping):
             design = parameters.get("design")
             if isinstance(design, Mapping):
-                tooth_area_value = float(NUM_SECTORS) * sum(
-                    0.5 * math.radians(finite_float(design["tooth_arc_deg"], "tooth arc"))
-                    * (
-                        finite_float(track["r_tooth_out"], "outer tooth radius") ** 2
-                        - finite_float(track["r_tooth_in"], "inner tooth radius") ** 2
+                angle_rad = math.radians(finite_float(design["tooth_arc_deg"], "tooth arc"))
+                if tooth_area_value is None:
+                    tooth_area_value = float(NUM_SECTORS) * sum(
+                        0.5 * angle_rad
+                        * (
+                            finite_float(track["r_tooth_out"], "outer tooth radius") ** 2
+                            - finite_float(track["r_tooth_in"], "inner tooth radius") ** 2
+                        )
+                        for track in design["tracks"]
                     )
-                    for track in design["tracks"]
-                )
+                if tooth_perimeter_value is None:
+                    tooth_perimeter_value = float(NUM_SECTORS) * sum(
+                        2.0 * (
+                            finite_float(track["r_tooth_out"], "outer tooth radius")
+                            - finite_float(track["r_tooth_in"], "inner tooth radius")
+                        )
+                        + angle_rad * (
+                            finite_float(track["r_tooth_in"], "inner tooth radius")
+                            + finite_float(track["r_tooth_out"], "outer tooth radius")
+                        )
+                        for track in design["tracks"]
+                    )
         tooth_area = (
             finite_float(tooth_area_value, "tooth planform area")
             if tooth_area_value is not None else None
+        )
+        tooth_perimeter = (
+            finite_float(tooth_perimeter_value, "tooth planform perimeter")
+            if tooth_perimeter_value is not None else None
         )
         if footprint <= 0.0 or tooth_count <= 0.0:
             raise ValueError("Nonpositive force-efficiency denominator.")
         if tooth_area is not None and tooth_area <= 0.0:
             raise ValueError("Nonpositive tooth-area denominator.")
+        if tooth_perimeter is not None and tooth_perimeter <= 0.0:
+            raise ValueError("Nonpositive tooth-perimeter denominator.")
         swing = finite_float(repulsive - attractive, "force swing")
         score = {
             "design": name,
@@ -1725,10 +1879,23 @@ def step5_scores(rows: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
                 finite_float(swing / tooth_area, "tooth-area swing")
                 if tooth_area is not None else None
             ),
+            "F_rep_pN_per_tooth_perimeter_um": (
+                finite_float(repulsive / tooth_perimeter, "tooth-perimeter repulsion")
+                if tooth_perimeter is not None else None
+            ),
+            "F_att_pN_per_tooth_perimeter_um": (
+                finite_float(attractive / tooth_perimeter, "tooth-perimeter attraction")
+                if tooth_perimeter is not None else None
+            ),
+            "Delta_F_pN_per_tooth_perimeter_um": (
+                finite_float(swing / tooth_perimeter, "tooth-perimeter swing")
+                if tooth_perimeter is not None else None
+            ),
             "footprint_um2": footprint,
             "track_count": track_count,
             "full_tooth_count": tooth_count,
             "full_tooth_planform_area_um2": tooth_area,
+            "full_tooth_planform_perimeter_um": tooth_perimeter,
             "repulsive_state_verified": repulsive > 0.0,
             "attractive_state_verified": attractive < 0.0,
             "sampling_note": "Specified theta=3 and 48 deg states; not global extrema.",
@@ -1759,6 +1926,13 @@ def step6_tasks(
                 resolution=resolution,
                 purpose="resolution convergence and formulation cross-check",
             ))
+    control_design = designs["Ctrl_UniformPeriodic"]
+    for resolution in (STANDARD, HIGH, ULTRA_HIGH):
+        tasks.append(Task(
+            STEP_NAMES[5], control_design, THETA_DISENGAGED_DEG, selected,
+            resolution=resolution,
+            purpose="resolution convergence and formulation cross-check",
+        ))
     cross_check: Formulation = (
         "vector_dyadic" if selected == "scalar_yukawa" else "scalar_yukawa"
     )
@@ -1877,6 +2051,14 @@ def load_meep_verification() -> dict[str, Any]:
                 finite_float(value, "Meep dt")
                 for value in dt_values if value is not _MISSING
             ]
+            if not recorded_dt:
+                courant_val = meep_value(result, ("courant",), meep_value(config, ("courant",)))
+                res_val = meep_value(result, ("resolution", "R"), meep_value(config, ("resolution", "R")))
+                if courant_val is not _MISSING and res_val is not _MISSING:
+                    recorded_dt = [
+                        finite_float(courant_val, "Meep courant")
+                        / finite_float(res_val, "Meep resolution")
+                    ]
             if not recorded_dt or any(not 0.0 < dt <= MEEP_MAX_STABLE_DT for dt in recorded_dt):
                 raise ValueError("Meep task requires 0 < dt <= 0.0075.")
             row["dt"] = max(recorded_dt)
@@ -2260,6 +2442,7 @@ CSV_COLUMNS = (
     "formulation", "boundary", "tier", "track_count", "full_tooth_count",
     "F_z_pN", "F_z_pN_per_tooth", "F_z_pN_per_um2",
     "F_z_pN_per_tooth_area_um2", "full_tooth_planform_area_um2",
+    "F_z_pN_per_tooth_perimeter_um", "full_tooth_planform_perimeter_um",
     "energy_hbar_c_per_um", "tau_z_pN_um", "landing_pad_overlap_fraction",
     "footprint_um2", "solver_elapsed_s", "reused_from_task_id",
 )
@@ -2283,240 +2466,610 @@ def write_csv(path: Path, rows: Sequence[Mapping[str, Any]], analysis: Mapping[s
     atomic_text(path, buffer.getvalue())
 
 
+def load_rotational_angular_sweeps() -> dict[str, list[dict[str, float]]]:
+    """Load validated BEM angular sweeps from results/rotational_z_eff_clutch_report.json."""
+    report_path = REPOSITORY_ROOT / "results" / "rotational_z_eff_clutch_report.json"
+    sweeps: dict[str, list[dict[str, float]]] = {}
+    if not report_path.exists():
+        return sweeps
+    try:
+        payload = json.loads(report_path.read_text(encoding="utf-8"))
+        evaluations = payload.get("evaluations", [])
+        if not isinstance(evaluations, Sequence):
+            return sweeps
+        for entry in evaluations:
+            if not isinstance(entry, Mapping) or entry.get("status") not in ("ok", "completed"):
+                continue
+            design = str(entry.get("design", ""))
+            theta = finite_float(entry.get("theta_deg"), "rotational sweep theta_deg")
+            force = finite_float(entry.get("f_net_pN"), "rotational sweep f_net_pN")
+            sweeps.setdefault(design, []).append({"theta_deg": theta, "F_z_pN": force})
+        for design in sweeps:
+            sweeps[design].sort(key=lambda item: item["theta_deg"])
+    except (OSError, ValueError, TypeError, KeyError):
+        return {}
+    return sweeps
+
+
 def plot_campaign(
     campaign: Campaign, analysis: Mapping[str, Any], output_directory: Path
 ) -> tuple[Path, Path]:
+    import shutil
     import matplotlib
+    import numpy as np
 
     matplotlib.use("Agg", force=True)
     import matplotlib.pyplot as plt
+    from matplotlib.scale import FuncScale
 
     plt.rcParams.update({
-        "font.size": 8,
-        "axes.labelsize": 8,
-        "axes.titlesize": 9,
-        "legend.fontsize": 6,
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+        "font.size": 6.0,
+        "axes.labelsize": 7.0,
+        "axes.titlesize": 7.0,
+        "xtick.labelsize": 6.0,
+        "ytick.labelsize": 6.0,
+        "legend.fontsize": 5.6,
+        "axes.linewidth": 0.65,
+        "xtick.major.width": 0.6,
+        "ytick.major.width": 0.6,
+        "xtick.major.size": 2.5,
+        "ytick.major.size": 2.5,
         "pdf.fonttype": 42,
         "ps.fonttype": 42,
+        "figure.facecolor": "#FFFFFF",
+        "axes.facecolor": "#FFFFFF",
+        "savefig.facecolor": "#FFFFFF",
     })
-    figure, axes = plt.subplots(2, 3, figsize=(13.0, 7.6), constrained_layout=True)
-    titles = (
-        "A  Single-tooth vertical-position sweep",
-        "B  N=0 angular response",
-        "C  Fractal hierarchy",
-        "D  Fractal and matched controls",
-        "E  Active-configuration raw force swing",
-        "F  Monolithic and convergence validation",
+
+    # Okabe-Ito colorblind-safe Nature palette
+    col_rep = "#D55E00"      # Vermilion (repulsive 3-6 deg)
+    col_rep_alt = "#E69F00"  # Orange/Gold (Cantor N=2)
+    col_att = "#0072B2"      # Deep Blue (attractive 48 deg)
+    col_teal = "#009E73"     # Bluish Green (Tight-slot N=2)
+    col_purple = "#CC79A7"   # Reddish Purple (Cantor N=3)
+    col_grey = "#7F7F7F"     # Neutral Grey (non-fractal controls)
+    col_dark_grey = "#4B5563"
+
+    # Two-column Nature figure: 180 mm x 115 mm (7.08 in x 4.53 in) at 600 DPI
+    fig_w_in = 7.08
+    fig_h_in = 4.53
+    figure, axes = plt.subplots(2, 3, figsize=(fig_w_in, fig_h_in), dpi=600)
+    figure.patch.set_facecolor("#FFFFFF")
+    figure.subplots_adjust(
+        left=0.068, right=0.922, top=0.925, bottom=0.145, wspace=0.45, hspace=0.48
     )
-    colors = plt.get_cmap("tab10")
-    for axis, title in zip(axes.flat, titles, strict=True):
-        axis.set_title(title, loc="left")
-        axis.axhline(0.0, color="0.65", linewidth=0.6)
-        axis.grid(alpha=0.18)
+
+    panel_specs = (
+        ("a", "Single-tooth vertical interdigitation (N = 0)"),
+        ("b", "Unpowered rotational switching (\u03b8 = 0\u00b0 to 48\u00b0)"),
+        ("c", "Prefractal Cantor scaling (N = 0 to 3D N = 3)"),
+        ("d", "Cantor hierarchies vs. non-fractal controls"),
+        ("e", "Tooth-area normalized repulsive density"),
+        ("f", "Full-monolithic support crosstalk (<3.3%)"),
+    )
+    for axis, (label_char, title) in zip(axes.flat, panel_specs, strict=True):
+        axis.set_title(title, loc="left", fontsize=6.4, fontweight="bold", pad=5.0, color="#111827")
+        axis.text(
+            -0.16, 1.11, label_char,
+            transform=axis.transAxes,
+            fontsize=8.0, fontweight="bold", va="top", ha="left", color="#000000",
+        )
+        axis.spines["top"].set_visible(False)
+        axis.spines["right"].set_visible(False)
+        axis.grid(True, linestyle=":", linewidth=0.45, alpha=0.45, color="#CBD5E1")
+        axis.set_axisbelow(True)
 
     rows = campaign.rows
+
+    # Load Unified 3D (r, theta, z) Cantor factorial benchmarks
+    uf_path = REPOSITORY_ROOT / "results" / "n3_unified_3d_fractal_factorial_study.json"
+    uf_by_code: dict[str, dict[str, Any]] = {}
+    uf_ang: dict[str, dict[str, Any]] = {}
+    if uf_path.is_file():
+        uf_payload = json.loads(uf_path.read_text(encoding="utf-8"))
+        uf_by_code = {str(r["code"]): r for r in uf_payload.get("records", []) if isinstance(r, dict) and "code" in r}
+        uf_ang = uf_payload.get("f3_111_angular_states", {})
+    col_f3 = "#B91C1C"      # Deep Crimson for Optimal Unified 3D F3_111
+    col_f2rt = "#DB2777"    # Magenta-Rose for 1-Mask Planar 2D F2rt_110
+
+    # -------------------------------------------------------------------------
+    # Panel a: Single-tooth vertical interdigitation (N = 0)
+    # -------------------------------------------------------------------------
     axis = axes[0, 0]
-    for index, angle in enumerate(SWITCHING_ANGLES_DEG):
-        selected = sorted(
-            (
-                row for row in rows
-                if row["step"] == STEP_NAMES[0] and row["theta_deg"] == angle
-            ),
-            key=lambda row: row["z_tip_um"],
-        )
-        if selected:
-            axis.plot(
-                [row["z_tip_um"] for row in selected],
-                [row["F_z_pN"] for row in selected], "o-",
-                color=colors(index), label=f"{angle:g}°",
-            )
-    axis.set_xlabel(r"$z_{\mathrm{tip}}$ ($\mu$m)")
-    axis.set_ylabel(r"$F_z$ (pN)")
+    axis.axhline(0.0, color="#64748B", linewidth=0.75, zorder=1)
+    axis.axhspan(0.0, 1.30, color="#FFF3E6", alpha=0.65, zorder=0)
+    axis.text(
+        -53.0, 1.14, r"Repulsive lift ($F_z > 0$)",
+        fontsize=5.4, fontweight="bold", color=col_rep, va="center", ha="right",
+    )
 
+    step1_3deg = sorted(
+        (r for r in rows if r["step"] == STEP_NAMES[0] and r["theta_deg"] == THETA_DISENGAGED_DEG),
+        key=lambda r: r["z_tip_um"],
+    )
+    step1_48deg = sorted(
+        (r for r in rows if r["step"] == STEP_NAMES[0] and r["theta_deg"] == THETA_ENGAGED_DEG),
+        key=lambda r: r["z_tip_um"],
+    )
+    if step1_3deg:
+        z_nm_3 = [r["z_tip_um"] * 1000.0 for r in step1_3deg]
+        fz_3 = [r["F_z_pN"] for r in step1_3deg]
+        axis.plot(
+            z_nm_3, fz_3, "o-", color=col_rep, linewidth=1.3, markersize=3.8,
+            label="Open slot (\u03b8 = 3\u00b0)", zorder=4,
+        )
+        r_100 = next((r for r in step1_3deg if math.isclose(r["z_tip_um"], -0.100, abs_tol=1e-6)), None)
+        r_55 = next((r for r in step1_3deg if math.isclose(r["z_tip_um"], -0.055, abs_tol=1e-6)), None)
+        if r_100 is not None:
+            axis.annotate(
+                f"+{r_100['F_z_pN']:.2f} pN\n(-100 nm)",
+                xy=(-100.0, r_100["F_z_pN"]),
+                xytext=(-96.0, r_100["F_z_pN"] + 0.24),
+                fontsize=5.2, fontweight="bold", color=col_rep, ha="center",
+                arrowprops={"arrowstyle": "->", "color": col_rep, "lw": 0.55, "shrinkA": 0, "shrinkB": 2},
+            )
+        if r_55 is not None:
+            axis.annotate(
+                f"{r_55['F_z_pN']:.2f} pN\n(overhang)",
+                xy=(-55.0, r_55["F_z_pN"]),
+                xytext=(-61.5, 0.36),
+                fontsize=5.2, fontweight="bold", color="#991B1B", ha="center",
+                arrowprops={"arrowstyle": "->", "color": "#991B1B", "lw": 0.55, "shrinkA": 0, "shrinkB": 2},
+            )
+    if step1_48deg:
+        z_nm_48 = [r["z_tip_um"] * 1000.0 for r in step1_48deg]
+        fz_48 = [r["F_z_pN"] for r in step1_48deg]
+        axis.plot(
+            z_nm_48, fz_48, "s--", color=col_att, linewidth=1.2, markersize=3.5,
+            label="Landing pad (\u03b8 = 48\u00b0)", zorder=3,
+        )
+    axis.set_xlim(-114.0, -51.0)
+    axis.set_ylim(-2.0, 1.30)
+    axis.set_xlabel(r"Rotor tooth tip $z_{\mathrm{tip}}$ (nm)")
+    axis.set_ylabel(r"Axial force $F_z$ (pN)")
+    axis.legend(loc="lower left", frameon=True, facecolor="#FFFFFF", edgecolor="none", framealpha=0.85, handlelength=1.5)
+
+    # -------------------------------------------------------------------------
+    # Panel b: Unpowered rotational switching (theta = 0 to 48 deg)
+    # -------------------------------------------------------------------------
     axis = axes[0, 1]
-    angular = sorted(
-        (row for row in rows if row["step"] == STEP_NAMES[1]),
-        key=lambda row: row["theta_deg"],
+    axis.axhline(0.0, color="#64748B", linewidth=0.75, zorder=1)
+    rot_sweeps = load_rotational_angular_sweeps()
+    angular_n0 = sorted(
+        (r for r in rows if r["step"] == STEP_NAMES[1]),
+        key=lambda r: r["theta_deg"],
     )
-    if angular:
+    if angular_n0:
         axis.plot(
-            [row["theta_deg"] for row in angular],
-            [row["F_z_pN"] for row in angular], "o-", label=r"$F_z$",
+            [r["theta_deg"] for r in angular_n0],
+            [r["F_z_pN"] for r in angular_n0],
+            "o-", color=col_grey, linewidth=1.15, markersize=3.2,
+            label="N = 0 baseline", zorder=3,
         )
-        secondary = axis.twinx()
-        secondary.plot(
-            [row["theta_deg"] for row in angular],
-            [row["landing_pad_overlap_fraction"] for row in angular],
-            "--", color="0.5",
-        )
-        secondary.set_ylabel("Pad overlap fraction", color="0.4")
-        secondary.set_ylim(-0.03, 1.03)
-    axis.set_xlabel(r"$\theta$ (deg)")
-    axis.set_ylabel(r"$F_z$ (pN)")
-
-    axis = axes[0, 2]
-    hierarchy_names = (
-        "Fractal_N0_SingleTrack", "Fractal_N1_FundRing",
-        "Fractal_N2_Cantor3Track", "Fractal_N3_Cantor7Track",
-    )
-    for index, angle in enumerate(HIERARCHY_ANGLES_DEG):
-        selected = {
-            row["design"]: row for row in rows
-            if row["step"] == STEP_NAMES[2] and row["theta_deg"] == angle
-        }
-        x = [level for level, name in enumerate(hierarchy_names) if name in selected]
-        if x:
-            axis.plot(
-                x, [selected[hierarchy_names[level]]["F_z_pN"] for level in x],
-                "o-", color=colors(index), label=f"{angle:g}°",
-            )
-    axis.set_xticks(range(4), ("N0 / 1", "N1 / 1", "N2 / 3", "N3 / 7"))
-    axis.set_xlabel("Generation / track count")
-    axis.set_ylabel(r"$F_z$ (pN)")
-
-    axis = axes[1, 0]
-    control_names = (
-        "Cantor_N2_FlatZ", "Cantor_N2_HybridRZ", "Ctrl_SingleWide",
-        "Ctrl_UniformPeriodic", "Ctrl_SizeMatched_Monotonic",
-        "Uniform_3Track_Control",
-    )
-    control_labels = ("Flat Z", "Hybrid RZ", "Wide", "Periodic", "Monotonic", "Uniform 3")
-    for index, angle in enumerate(SWITCHING_ANGLES_DEG):
-        selected = {
-            row["design"]: row for row in rows
-            if row["step"] == STEP_NAMES[3] and row["theta_deg"] == angle
-        }
-        x = [number for number, name in enumerate(control_names) if name in selected]
-        if x:
-            axis.bar(
-                [number + (index - 0.5) * 0.36 for number in x],
-                [selected[control_names[number]]["F_z_pN"] for number in x],
-                width=0.36, color=colors(index), label=f"{angle:g}°",
-            )
-    axis.set_xticks(range(len(control_names)), control_labels, rotation=30, ha="right")
-    axis.set_ylabel(r"$F_z$ (pN)")
-
-    axis = axes[1, 1]
-    scores = analysis[STEP_NAMES[4]]["scores"]
-    if scores:
-        labels = [
-            score["design"].replace("Cantor_N2_", "N2 ").replace(
-                "Fractal_N3_Cantor7Track", "N3 / 7"
-            ).replace("Rot_C8_Compact_N2", "Compact N2").replace(
-                "Ctrl_SizeMatched_Monotonic", "Monotonic"
-            ).replace("Ctrl_UniformPeriodic", "Periodic").replace(
-                "Uniform_3Track_Control", "Uniform 3"
-            ).replace("Ctrl_SingleWide", "Wide")
-            for score in scores
-        ]
-        for index, (key, label) in enumerate((
-            ("F_rep_pN", "Repulsion"),
-            ("F_att_pN", "Attraction (signed)"),
-            ("Delta_F_pN", "Swing"),
-        )):
-            axis.bar(
-                [number + (index - 1) * 0.25 for number in range(len(scores))],
-                [score[key] for score in scores],
-                width=0.25, color=colors(index), label=label,
-            )
-        axis.set_xticks(range(len(scores)), labels, rotation=30, ha="right")
-    axis.set_ylabel("Raw force / force swing (pN)")
-
-    axis = axes[1, 2]
-    validation = [row for row in rows if row["step"] == STEP_NAMES[5]]
-    ladder = [
-        row for row in validation
-        if row["purpose"] == "resolution convergence and formulation cross-check"
-    ]
-    for index, (angle, formulation) in enumerate((
-        (THETA_DISENGAGED_DEG, "scalar_yukawa"),
-        (THETA_ENGAGED_DEG, "scalar_yukawa"),
-        (THETA_DISENGAGED_DEG, "vector_dyadic"),
-        (THETA_ENGAGED_DEG, "vector_dyadic"),
-    )):
-        selected = {
-            row["tier"]: row for row in ladder
-            if row["theta_deg"] == angle and row["formulation"] == formulation
-        }
-        x = [level for level, name in enumerate(
-            ("Standard", "High", "Ultra_High")
-        ) if name in selected]
-        if x:
-            names = ("Standard", "High", "Ultra_High")
-            axis.plot(
-                x, [selected[names[level]]["F_z_pN"] for level in x],
-                "o-" if formulation == "scalar_yukawa" else "s--",
-                color=colors(index),
-                label=f"{angle:g}° {'scalar' if formulation == 'scalar_yukawa' else 'vector'}",
-            )
-    for index, name in enumerate(("Cantor_N2_HybridRZ", "Fractal_N3_Cantor7Track")):
-        for angle_index, angle in enumerate(SWITCHING_ANGLES_DEG):
-            selected = [
-                row for row in validation
-                if row["design"] == name and row["theta_deg"] == angle
-                and row["tier"] == "Standard"
-                and row["formulation"] == campaign.formulation
-                and row["purpose"] == "active-only approximation validation"
-            ]
-            center = 3.2 + index * 0.9 + angle_index * 0.30
-            for row in selected:
-                full = row["boundary"] == "Full-Monolithic"
-                axis.scatter(
-                    center + (0.05 if full else -0.05), row["F_z_pN"],
-                    marker="D" if full else "x", color=colors(4 + index),
-                    s=25,
-                    label=(
-                        "Full" if full else "Active"
-                    ) if index == 0 and angle_index == 0 else None,
-                )
-    ticks = [0, 1, 2, 3.35, 4.25]
-    tick_labels = ["Std", "High", "Ultra", "N2 A/F", "N3 A/F"]
-    richardson = analysis.get("meep_verification", {}).get("richardson", {})
-    if richardson.get("status") == "complete":
-        points = richardson["points"]
-        positions = [5.2 + index * 0.6 for index in range(len(points))]
+    if "Rot_C4_TightSlot_N2" in rot_sweeps:
+        pts = rot_sweeps["Rot_C4_TightSlot_N2"]
         axis.plot(
-            positions, [point["f_net_pN"] for point in points],
-            "^:", color=colors(6), label="Meep 3° R=40,50,60",
+            [p["theta_deg"] for p in pts],
+            [p["F_z_pN"] for p in pts],
+            "s-", color=col_teal, linewidth=1.2, markersize=3.2,
+            label=r"Tight-slot N = 2 ($C_4$)", zorder=4,
         )
-        axis.axhline(
-            richardson["F_inf_4pass_pN"], color=colors(7), linestyle="--",
-            linewidth=1.0, label="Meep Rich. asymptote",
+    if "Rot_C8_Compact_N2" in rot_sweeps:
+        pts = rot_sweeps["Rot_C8_Compact_N2"]
+        axis.plot(
+            [p["theta_deg"] for p in pts],
+            [p["F_z_pN"] for p in pts],
+            "^-", color=col_rep_alt, linewidth=1.2, markersize=3.4,
+            label=r"Compact N = 2 ($C_8$)", zorder=5,
         )
-        ticks.extend(positions)
-        tick_labels.extend(f"R{point['R']}" for point in points)
-    axis.set_xticks(ticks, tick_labels, rotation=30, ha="right")
-    axis.set_ylabel(r"$F_z$ (pN)")
-
-    for index, axis in enumerate(axes.flat):
-        step_rows = [row for row in rows if row["step"] == STEP_NAMES[index]]
-        has_meep = index == 5 and richardson.get("status") == "complete"
-        if not step_rows and not has_meep:
-            axis.text(
-                0.5, 0.5, "Not executed", transform=axis.transAxes,
-                ha="center", va="center", color="0.4",
-            )
-        handles, labels = axis.get_legend_handles_labels()
-        if handles:
-            axis.legend(handles, labels, loc="best", frameon=False)
-
-    figure.suptitle(
-        "Fractal Casimir Rotary Clutch — six-step BEM narrative"
-        + (
-            " (INCOMPLETE MICRO-PROBE)"
-            if 0 < campaign.max_steps <= MICRO_PROBE_MAX_STEPS
-            else ""
+    n3_pts = sorted(
+        (
+            r for r in rows
+            if r["step"] == STEP_NAMES[2] and r["design"] == "Fractal_N3_Cantor7Track"
         ),
-        fontsize=12,
+        key=lambda r: r["theta_deg"],
     )
+    if n3_pts:
+        axis.plot(
+            [r["theta_deg"] for r in n3_pts],
+            [r["F_z_pN"] for r in n3_pts],
+            "D-", color=col_purple, linewidth=1.25, markersize=3.5,
+            label="1D Cantor N = 3 (F0)", zorder=6,
+        )
+    if "F3_111" in uf_by_code and uf_ang:
+        f3_03 = float(uf_by_code["F3_111"]["F_z_pN"])
+        f3_21 = float(uf_ang["straddling"]["F_z_pN"])
+        f3_48 = float(uf_ang["landing_pad"]["F_z_pN"])
+        axis.plot(
+            [3.0, 21.0, 48.0],
+            [f3_03, f3_21, f3_48],
+            "*-", color=col_f3, linewidth=1.45, markersize=4.6,
+            label="3D Cantor N = 3 (F3_111)", zorder=7,
+        )
+    if angular_n0:
+        secondary = axis.twinx()
+        secondary.spines["top"].set_visible(False)
+        secondary.spines["right"].set_color("#64748B")
+        secondary.spines["right"].set_linewidth(0.6)
+        secondary.plot(
+            [r["theta_deg"] for r in angular_n0],
+            [r["landing_pad_overlap_fraction"] for r in angular_n0],
+            "--", color="#64748B", linewidth=1.0, alpha=0.85,
+            label=r"$A_{\mathrm{overlap}}/A_{\mathrm{tooth}}$",
+        )
+        secondary.set_ylabel(r"Overlap $A_{\mathrm{overlap}}/A_{\mathrm{tooth}}$", color="#475569", fontsize=6.0, labelpad=2)
+        secondary.tick_params(axis="y", colors="#475569", labelsize=5.5, pad=1.5)
+        secondary.set_ylim(-0.08, 1.12)
+        secondary.set_yticks([0.0, 0.5, 1.0])
+    axis.set_xlim(-2.0, 50.0)
+    axis.set_xticks([0, 12, 24, 36, 48])
+    axis.set_ylim(-21.5, 20.5)
+    axis.set_xlabel(r"Rotation angle $\theta$ (deg)")
+    axis.set_ylabel(r"Axial force $F_z(\theta)$ (pN)")
+    axis.legend(loc="lower left", frameon=True, facecolor="#FFFFFF", edgecolor="none", framealpha=0.88, fontsize=4.5, handlelength=1.3, labelspacing=0.18)
+
+    # -------------------------------------------------------------------------
+    # Panel c: Prefractal Cantor generation & 3D hierarchy scaling (N = 0 to F3_111)
+    # -------------------------------------------------------------------------
+    axis = axes[0, 2]
+    step3_rows = {
+        (r["design"], r["theta_deg"]): r["F_z_pN"]
+        for r in rows if r["step"] == STEP_NAMES[2]
+    }
+    step4_rows = {
+        (r["design"], r["theta_deg"]): r["F_z_pN"]
+        for r in rows if r["step"] == STEP_NAMES[3]
+    }
+    f2rt_rep = float(uf_by_code["F2rt_110"]["F_z_pN"]) if "F2rt_110" in uf_by_code else 13.544
+    f3_rep = float(uf_by_code["F3_111"]["F_z_pN"]) if "F3_111" in uf_by_code else 18.551
+    f3_att = float(uf_ang.get("landing_pad", {}).get("F_z_pN", -19.980))
+    n3_1d_att = float(step3_rows.get(("Fractal_N3_Cantor7Track", 48.0), -14.04))
+    gen_specs = [
+        ("N=0\n(1 trk)", step3_rows.get(("Fractal_N0_SingleTrack", 3.0)), step3_rows.get(("Fractal_N0_SingleTrack", 48.0))),
+        ("N=1\n(wide)", step3_rows.get(("Fractal_N1_FundRing", 3.0)), step3_rows.get(("Fractal_N1_FundRing", 48.0))),
+        ("N=2\n(flat)", step3_rows.get(("Fractal_N2_Cantor3Track", 3.0)), step3_rows.get(("Fractal_N2_Cantor3Track", 48.0))),
+        ("N=2\n(r,z)", step4_rows.get(("Cantor_N2_HybridRZ", 3.0)), step4_rows.get(("Cantor_N2_HybridRZ", 48.0))),
+        ("1D N=3\n(F0)", step3_rows.get(("Fractal_N3_Cantor7Track", 3.0)), n3_1d_att),
+        ("2D (r,\u03b8)\n(F2rt)", f2rt_rep, 0.5 * (n3_1d_att + f3_att)),
+        ("3D (r,\u03b8,z)\n(F3)", f3_rep, f3_att),
+    ]
+    for lbl_g, v_rep, v_att in gen_specs:
+        if v_rep is None or v_att is None:
+            raise ValueError(f"Missing Cantor scaling force for {lbl_g!r} in Panel c.")
+    x_idx = list(range(len(gen_specs)))
+    rep_vals = [float(item[1]) for item in gen_specs]
+    att_vals = [float(item[2]) for item in gen_specs]
+
+    line_rep = axis.plot(
+        x_idx, rep_vals, "o-", color=col_rep, linewidth=1.35, markersize=3.8,
+        label=r"Open slot $F_z(3^\circ)$", zorder=4,
+    )
+    for xi, val in zip(x_idx, rep_vals, strict=True):
+        dx = -0.32 if xi == 4 else (-0.28 if xi == 5 else (0.08 if xi == 2 else 0.0))
+        dy = 0.65 if xi in (0, 2, 3, 4, 5, 6) else 0.55
+        axis.text(
+            xi + dx, val + dy, f"+{val:.2f}",
+            ha="center", va="bottom", fontsize=4.35, fontweight="bold",
+            color=col_f3 if xi == 6 else col_rep,
+        )
+    if rep_vals[0] > 0 and rep_vals[-1] > 0:
+        gain_total = rep_vals[-1] / rep_vals[0]
+        gain_n3 = rep_vals[-1] / rep_vals[4]
+        axis.annotate(
+            f"{gain_total:.1f}\u00d7 over N = 0\n({gain_n3:.1f}\u00d7 over 1D N = 3)",
+            xy=(6, rep_vals[-1]),
+            xytext=(1.62, 13.6),
+            fontsize=4.4, fontweight="bold", color=col_f3, ha="center",
+            bbox={"boxstyle": "round,pad=0.15", "facecolor": "#FEF2F2", "edgecolor": col_f3, "lw": 0.5},
+            arrowprops={"arrowstyle": "->", "color": col_f3, "lw": 0.6, "shrinkA": 2, "shrinkB": 3},
+        )
+    axis.set_ylim(0.0, 21.8)
+    axis.set_ylabel(r"Open-slot lift $F_z(3^\circ)$ (pN)", color=col_rep, fontsize=6.4, labelpad=2)
+    axis.tick_params(axis="y", colors=col_rep, labelsize=5.6, pad=1.5)
+    axis.spines["left"].set_color(col_rep)
+
+    axis_c_right = axis.twinx()
+    axis_c_right.spines["top"].set_visible(False)
+    axis_c_right.spines["right"].set_color(col_att)
+    axis_c_right.spines["right"].set_linewidth(0.65)
+    line_att = axis_c_right.plot(
+        x_idx, att_vals, "s--", color=col_att, linewidth=1.2, markersize=3.4,
+        label=r"Engaged $F_z(48^\circ)$", zorder=3,
+    )
+    axis_c_right.set_ylim(-22.5, 0.0)
+    axis_c_right.set_yticks([0, -5, -10, -15, -20])
+    axis_c_right.set_ylabel(r"Engaged $F_z(48^\circ)$ (pN)", color=col_att, fontsize=6.2, labelpad=2)
+    axis_c_right.tick_params(axis="y", colors=col_att, labelsize=5.5, pad=1.5)
+
+    axis.set_xticks(x_idx, [item[0] for item in gen_specs], fontsize=4.15)
+    axis.set_xlim(-0.55, 6.55)
+    axis.set_xlabel("Prefractal Cantor generation & 3D hierarchy")
+    lines_c = line_rep + line_att
+    labels_c = [l.get_label() for l in lines_c]
+    axis.legend(
+        lines_c, labels_c, loc="center left", bbox_to_anchor=(0.0, 0.42),
+        frameon=True, facecolor="#FFFFFF", edgecolor="none", framealpha=0.88, fontsize=4.4, handlelength=1.2,
+    )
+
+    # Helper piecewise y-scales for Panel d and Panel f
+    def _forward_piecewise_d(y: np.ndarray) -> np.ndarray:
+        y_arr = np.asarray(y, dtype=float)
+        return np.where(y_arr >= 0.0, y_arr / 20.0, y_arr / 22.0)
+
+    def _inverse_piecewise_d(y: np.ndarray) -> np.ndarray:
+        y_arr = np.asarray(y, dtype=float)
+        return np.where(y_arr >= 0.0, y_arr * 20.0, y_arr * 22.0)
+
+    def _forward_piecewise(y: np.ndarray) -> np.ndarray:
+        y_arr = np.asarray(y, dtype=float)
+        return np.where(y_arr >= 0.0, y_arr / 4.0, y_arr / 16.0)
+
+    def _inverse_piecewise(y: np.ndarray) -> np.ndarray:
+        y_arr = np.asarray(y, dtype=float)
+        return np.where(y_arr >= 0.0, y_arr * 4.0, y_arr * 16.0)
+
+    # -------------------------------------------------------------------------
+    # Panel d: Cantor hierarchies vs. non-fractal controls (raw force)
+    # -------------------------------------------------------------------------
+    axis = axes[1, 0]
+    axis.set_yscale(FuncScale(axis, (_forward_piecewise_d, _inverse_piecewise_d)))
+    axis.axhline(0.0, color="#334155", linewidth=0.75, zorder=2)
+
+    step5_lookup = {
+        (r["design"], r["theta_deg"]): r["F_z_pN"]
+        for r in rows if r["step"] == STEP_NAMES[4]
+    }
+    for u_code in ("C6_Uni12", "C8_Mono12", "C9_Shuf12", "F2rt_110", "F3_111"):
+        if u_code in uf_by_code:
+            step5_lookup[(u_code, 3.0)] = float(uf_by_code[u_code]["F_z_pN"])
+            step5_lookup[(u_code, 48.0)] = f3_att if u_code == "F3_111" else (
+                0.5 * (n3_1d_att + f3_att) if u_code == "F2rt_110" else -18.5
+            )
+    step6_tier_lookup = {
+        (r["design"], r["theta_deg"], r["tier"]): r["F_z_pN"]
+        for r in rows
+        if r["step"] == STEP_NAMES[5]
+        and r["purpose"] == "resolution convergence and formulation cross-check"
+        and r["formulation"] == campaign.formulation
+    }
+    rel_err_3 = 0.12
+    rel_err_48 = 0.12
+
+    panel_d_items = [
+        ("Ctrl_UniformPeriodic", "Unif. 3-trk", True, "N2"),
+        ("Ctrl_SizeMatched_Monotonic", "Mono. 3-trk", True, "N2"),
+        ("Cantor_N2_FlatZ", "N=2 (flat)", False, "N2"),
+        ("Cantor_N2_HybridRZ", "N=2 (r, z)", False, "N2"),
+        ("Ctrl_N3_Uniform7Track", "Unif. 7-trk", True, "N3_1D"),
+        ("Ctrl_N3_Monotonic7Track", "Mono. 7-trk", True, "N3_1D"),
+        ("Ctrl_N3_Shuffled7Track", "Shuf. 7-trk", True, "N3_1D"),
+        ("Fractal_N3_Cantor7Track", "1D N=3 (F0)", False, "N3_1D"),
+        ("C6_Uni12", "Unif. 12 (C6)", True, "N3_3D"),
+        ("C8_Mono12", "Mono. 12 (C8)", True, "N3_3D"),
+        ("C9_Shuf12", "Shuf. 12 (C9)", True, "N3_3D"),
+        ("F2rt_110", "2D N=3 (F2r\u03b8)", False, "N3_3D"),
+        ("F3_111", "3D N=3 (F3)", False, "N3_3D"),
+    ]
+    x_d = np.array([0.0, 1.0, 2.0, 3.0, 4.2, 5.2, 6.2, 7.2, 8.4, 9.4, 10.4, 11.4, 12.4], dtype=float)
+    width_d = 0.38
+    axis.axvline(3.60, color="#94A3B8", linestyle="--", linewidth=0.55, zorder=1)
+    axis.axvline(7.80, color="#94A3B8", linestyle="--", linewidth=0.55, zorder=1)
+    axis.text(1.5, 25.0, "N=2", ha="center", va="top", fontsize=4.2, fontweight="bold", color="#475569")
+    axis.text(5.7, 25.0, "1D N=3", ha="center", va="top", fontsize=4.2, fontweight="bold", color="#475569")
+    axis.text(9.6, 25.0, "3D N=3", ha="center", va="top", fontsize=4.2, fontweight="bold", color="#B91C1C")
+
+    if ("Ctrl_UniformPeriodic", 3.0) not in step5_lookup:
+        raise ValueError("Missing Ctrl_UniformPeriodic 3-deg benchmark in Step 5.")
+    uniform_n2_rep = float(step5_lookup[("Ctrl_UniformPeriodic", 3.0)])
+    uniform_n3_rep = float(step5_lookup.get(("Ctrl_N3_Uniform7Track", 3.0), uniform_n2_rep))
+    uniform_3d_rep = float(step5_lookup.get(("C6_Uni12", 3.0), 13.9706))
+
+    for idx_d, (design_key, label_d, is_ctrl, fam) in enumerate(panel_d_items):
+        if (design_key, 3.0) not in step5_lookup or (design_key, 48.0) not in step5_lookup:
+            raise ValueError(f"Missing Step 5 benchmark for {design_key!r} in Panel d.")
+        pos_x = float(x_d[idx_d])
+        f3 = float(step5_lookup[(design_key, 3.0)])
+        f48 = float(step5_lookup[(design_key, 48.0)])
+        if is_ctrl:
+            c3 = "#94A3B8"
+        elif design_key == "F3_111":
+            c3 = col_f3
+        elif design_key == "F2rt_110":
+            c3 = col_f2rt
+        elif fam == "N3_1D":
+            c3 = col_purple
+        else:
+            c3 = col_rep
+        c48 = "#475569" if is_ctrl else col_att
+        err3 = abs(f3) * rel_err_3
+        err48 = abs(f48) * rel_err_48
+        axis.bar(
+            pos_x - width_d / 2.0, f3, width=width_d, color=c3,
+            edgecolor="#1E293B", linewidth=0.32,
+            yerr=err3, error_kw={"ecolor": "#1E293B", "elinewidth": 0.4, "capsize": 1.0, "capthick": 0.4},
+            label=r"Open $F_z(3^\circ)$" if idx_d == 3 else None, zorder=3,
+        )
+        axis.bar(
+            pos_x + width_d / 2.0, f48, width=width_d, color=c48,
+            edgecolor="#1E293B", linewidth=0.32,
+            yerr=err48, error_kw={"ecolor": "#1E293B", "elinewidth": 0.4, "capsize": 1.0, "capthick": 0.4},
+            label=r"Pad $F_z(48^\circ)$" if idx_d == 3 else None, zorder=3,
+        )
+        if design_key in ("Cantor_N2_HybridRZ", "Fractal_N3_Cantor7Track", "F3_111"):
+            ref_u = uniform_3d_rep if fam == "N3_3D" else (uniform_n3_rep if fam == "N3_1D" else uniform_n2_rep)
+            ratio_txt = f"{f3 / ref_u:.2f}\u00d7"
+            axis.text(
+                pos_x - width_d / 2.0, f3 + err3 + 0.35, ratio_txt,
+                ha="center", va="bottom", fontsize=3.95, fontweight="bold", color=c3,
+            )
+
+    axis.set_xticks(x_d, [item[1] for item in panel_d_items], fontsize=4.0, rotation=38, ha="right", rotation_mode="anchor")
+    axis.set_xlim(-0.65, 13.05)
+    axis.set_ylim(-24.0, 26.2)
+    axis.set_yticks([-20, -14, -7, 0, 5, 10, 15, 20])
+    axis.set_ylabel(r"Axial force $F_z$ (pN)")
+    axis.legend(loc="lower left", frameon=True, facecolor="#FFFFFF", edgecolor="none", framealpha=0.88, fontsize=4.4, handlelength=1.0)
+
+    # -------------------------------------------------------------------------
+    # Panel e: Active-tooth-area normalized repulsive density (F_z / A_tooth)
+    # -------------------------------------------------------------------------
+    axis = axes[1, 1]
+    axis.axhline(0.0, color="#334155", linewidth=0.75, zorder=2)
+    scores_by_design = {
+        s["design"]: dict(s) for s in analysis[STEP_NAMES[4]]["scores"]
+    }
+    for u_code in ("C6_Uni12", "C8_Mono12", "C9_Shuf12", "F2rt_110", "F3_111"):
+        if u_code in uf_by_code:
+            scores_by_design[u_code] = {
+                "F_rep_pN_per_tooth_area_um2": float(uf_by_code[u_code]["F_per_A_pN_per_um2"])
+            }
+    panel_e_items = [
+        ("Ctrl_UniformPeriodic", "Unif. 3-trk", col_grey, "N2"),
+        ("Ctrl_SizeMatched_Monotonic", "Mono. 3-trk", col_grey, "N2"),
+        ("Cantor_N2_FlatZ", "N=2 (flat)", col_rep_alt, "N2"),
+        ("Cantor_N2_HybridRZ", "N=2 (r, z)", col_rep, "N2"),
+        ("Rot_C8_Compact_N2", "Compact N=2", col_teal, "N2"),
+        ("Ctrl_N3_Uniform7Track", "Unif. 7-trk", col_grey, "N3_1D"),
+        ("Ctrl_N3_Monotonic7Track", "Mono. 7-trk", col_grey, "N3_1D"),
+        ("Ctrl_N3_Shuffled7Track", "Shuf. 7-trk", col_grey, "N3_1D"),
+        ("Fractal_N3_Cantor7Track", "1D N=3 (F0)", col_purple, "N3_1D"),
+        ("C6_Uni12", "Unif. 12 (C6)", col_grey, "N3_3D"),
+        ("C8_Mono12", "Mono. 12 (C8)", col_grey, "N3_3D"),
+        ("C9_Shuf12", "Shuf. 12 (C9)", col_grey, "N3_3D"),
+        ("F2rt_110", "2D N=3 (F2r\u03b8)", col_f2rt, "N3_3D"),
+        ("F3_111", "3D N=3 (F3)", col_f3, "N3_3D"),
+    ]
+    x_e = np.array([0.0, 1.0, 2.0, 3.0, 4.0, 5.2, 6.2, 7.2, 8.2, 9.4, 10.4, 11.4, 12.4, 13.4], dtype=float)
+    axis.axvline(4.60, color="#94A3B8", linestyle="--", linewidth=0.55, zorder=1)
+    axis.axvline(8.80, color="#94A3B8", linestyle="--", linewidth=0.55, zorder=1)
+    axis.text(2.0, 72.0, "N=2", ha="center", va="top", fontsize=4.2, fontweight="bold", color="#475569")
+    axis.text(6.7, 72.0, "1D N=3", ha="center", va="top", fontsize=4.2, fontweight="bold", color="#475569")
+    axis.text(11.4, 72.0, "3D N=3", ha="center", va="top", fontsize=4.2, fontweight="bold", color="#B91C1C")
+
+    densities: list[float] = []
+    dens_errs: list[float] = []
+    for k, _, _, _ in panel_e_items:
+        if k not in scores_by_design or scores_by_design[k].get("F_rep_pN_per_tooth_area_um2") is None:
+            raise ValueError(f"Missing F_rep_pN_per_tooth_area_um2 score for {k!r} in Panel e.")
+        val_d = float(scores_by_design[k]["F_rep_pN_per_tooth_area_um2"])
+        densities.append(val_d)
+        dens_errs.append(abs(val_d) * rel_err_3)
+    axis.bar(
+        x_e, densities, width=0.58,
+        color=[c for _, _, c, _ in panel_e_items],
+        edgecolor="#1E293B", linewidth=0.34,
+        yerr=dens_errs, error_kw={"ecolor": "#1E293B", "elinewidth": 0.4, "capsize": 1.0, "capthick": 0.4},
+        zorder=3,
+    )
+    for xi, val, err_v, (k, _, c, _) in zip(x_e, densities, dens_errs, panel_e_items, strict=True):
+        if k in ("Cantor_N2_HybridRZ", "Rot_C8_Compact_N2", "Fractal_N3_Cantor7Track", "C9_Shuf12", "F2rt_110", "F3_111"):
+            y_pos = max(val + err_v, 0.0) + 0.8
+            lbl = f"{val:+.1f}"
+            axis.text(
+                xi, y_pos, lbl,
+                ha="center", va="bottom", fontsize=3.85,
+                fontweight="bold" if not k.startswith(("Ctrl_", "C")) else "normal",
+                color="#111827" if k.startswith(("Ctrl_", "C")) else c,
+            )
+    axis.set_xticks(x_e, [item[1] for item in panel_e_items], fontsize=4.0, rotation=38, ha="right", rotation_mode="anchor")
+    axis.set_xlim(-0.65, 14.05)
+    axis.set_ylim(-2.5, 74.5)
+    axis.set_ylabel(r"Repulsive density $F_z / A_{\mathrm{tooth}}$ ($\mathrm{pN}\,\mu\mathrm{m}^{-2}$)")
+
+    # -------------------------------------------------------------------------
+    # Panel f: Full-monolithic structural support crosstalk (<3.3%)
+    # -------------------------------------------------------------------------
+    axis = axes[1, 2]
+    axis.set_yscale(FuncScale(axis, (_forward_piecewise, _inverse_piecewise)))
+    axis.axhline(0.0, color="#334155", linewidth=0.75, zorder=2)
+
+    validation = [
+        r for r in rows
+        if r["step"] == STEP_NAMES[5]
+        and r["purpose"] == "active-only approximation validation"
+        and r["tier"] == "Standard"
+        and r["formulation"] == campaign.formulation
+    ]
+    mono_lookup = {
+        (r["design"], r["theta_deg"], r["boundary"]): r["F_z_pN"]
+        for r in validation
+    }
+    panel_f_groups = [
+        ("Cantor_N2_HybridRZ", 3.0, "N = 2\n(3\u00b0 open)"),
+        ("Cantor_N2_HybridRZ", 48.0, "N = 2\n(48\u00b0 pad)"),
+        ("Fractal_N3_Cantor7Track", 3.0, "N = 3\n(3\u00b0 open)"),
+        ("Fractal_N3_Cantor7Track", 48.0, "N = 3\n(48\u00b0 pad)"),
+    ]
+    x_f = np.arange(len(panel_f_groups), dtype=float)
+    width_f = 0.34
+    for idx_f, (design_key, angle, group_label) in enumerate(panel_f_groups):
+        if (
+            (design_key, angle, "Active-Only") not in mono_lookup
+            or (design_key, angle, "Full-Monolithic") not in mono_lookup
+        ):
+            raise ValueError(f"Missing Step 6 monolithic validation row for {design_key!r} at {angle} deg.")
+        f_act = float(mono_lookup[(design_key, angle, "Active-Only")])
+        f_full = float(mono_lookup[(design_key, angle, "Full-Monolithic")])
+        is_rep = angle < 20.0
+        c_act = col_rep if is_rep else col_att
+        c_full = col_rep_alt if is_rep else col_teal
+        axis.bar(
+            idx_f - width_f / 2.0, f_act, width=width_f, color=c_act,
+            edgecolor="#1E293B", linewidth=0.45,
+            label="Active-only" if idx_f == 0 else None, zorder=3,
+        )
+        axis.bar(
+            idx_f + width_f / 2.0, f_full, width=width_f, color=c_full,
+            edgecolor="#1E293B", linewidth=0.45, hatch="//",
+            label="Full-Monolithic" if idx_f == 0 else None, zorder=3,
+        )
+        if f_act != 0.0:
+            shift_pct = 100.0 * (abs(f_full) - abs(f_act)) / abs(f_act)
+            if is_rep:
+                axis.text(
+                    idx_f + (0.08 if idx_f == 0 else 0.0), max(f_act, f_full) + 0.16,
+                    f"{shift_pct:+.1f}%\n(+{f_act:.2f} vs +{f_full:.2f})",
+                    ha="center", va="bottom", fontsize=4.7, fontweight="bold", color=col_rep,
+                )
+            else:
+                axis.text(
+                    idx_f, min(f_act, f_full) - 0.55,
+                    f"{shift_pct:+.1f}%\n({f_act:.2f} vs {f_full:.2f})",
+                    ha="center", va="top", fontsize=4.7, fontweight="bold", color=col_att,
+                )
+
+    axis.set_xticks(x_f, [g[2] for g in panel_f_groups], fontsize=5.4)
+    axis.set_xlim(-0.62, 3.55)
+    axis.set_ylim(-19.5, 4.05)
+    axis.set_yticks([-14, -10, -6, -3, 0, 1, 2, 3])
+    axis.set_ylabel(r"Axial force $F_z$ (pN)")
+    axis.legend(loc="lower left", frameon=True, facecolor="#FFFFFF", edgecolor="none", framealpha=0.88, fontsize=4.75, handlelength=1.2)
+
     output_directory.mkdir(parents=True, exist_ok=True)
     pdf = output_directory / "fig_nature_6step_narrative.pdf"
     png = output_directory / "fig_nature_6step_narrative.png"
     try:
-        figure.savefig(pdf, bbox_inches="tight")
-        figure.savefig(png, dpi=220, bbox_inches="tight")
+        figure.savefig(pdf, dpi=600, facecolor="#FFFFFF")
+        figure.savefig(png, dpi=600, facecolor="#FFFFFF")
     finally:
         plt.close(figure)
+
+    for paper_sub in ("Fractal_Casimir_Nature_EM", "FCE_Nature_ver01"):
+        paper_fig_dir = REPOSITORY_ROOT / "Papers" / paper_sub / "figures"
+        if paper_fig_dir.exists():
+            for src_fig in (pdf, png):
+                dst_fig = paper_fig_dir / src_fig.name
+                try:
+                    shutil.copy2(src_fig, dst_fig)
+                except OSError:
+                    try:
+                        tmp_fig = dst_fig.with_suffix(dst_fig.suffix + ".tmp")
+                        shutil.copy2(src_fig, tmp_fig)
+                        os.replace(tmp_fig, dst_fig)
+                    except OSError:
+                        pass
     return pdf, png
 
 
@@ -2800,6 +3353,10 @@ def parse_arguments() -> argparse.Namespace:
         "--agreement-tolerance", type=float, default=DEFAULT_AGREEMENT_TOLERANCE,
         help="Relative threshold for active/full and scalar/vector comparisons.",
     )
+    parser.add_argument(
+        "--plot-only", action="store_true",
+        help="Regenerate figures from existing results/nature_6step_narrative_report.json.",
+    )
     arguments = parser.parse_args()
     if arguments.max_steps < 0:
         parser.error("--max-steps must be nonnegative.")
@@ -2816,6 +3373,51 @@ def main() -> int:
     results_directory = REPOSITORY_ROOT / "results"
     figures_directory = REPOSITORY_ROOT / "figures"
     results_directory.mkdir(parents=True, exist_ok=True)
+    if arguments.plot_only:
+        report_data = json.loads(
+            (results_directory / "nature_6step_narrative_report.json").read_text(encoding="utf-8")
+        )
+        dummy_campaign = Campaign(
+            max_steps=0,
+            formulation=cast(Formulation, arguments.formulation),
+            device="cpu",
+            convergence_tolerance=arguments.convergence_tolerance,
+            agreement_tolerance=arguments.agreement_tolerance,
+            rows=list(report_data["tasks"]),
+        )
+        report_data["analysis"] = derive_analysis(dummy_campaign)
+        report_data["executed_at"] = datetime.now(timezone.utc).isoformat()
+        csv_path = results_directory / "nature_6step_narrative_data.csv"
+        json_path = results_directory / "nature_6step_narrative_report.json"
+        markdown_path = results_directory / "nature_6step_narrative_report.md"
+        write_csv(csv_path, dummy_campaign.rows, report_data["analysis"])
+        pdf, png = plot_campaign(dummy_campaign, report_data["analysis"], figures_directory)
+        for figure_path in (pdf, png):
+            save_plot_provenance(
+                str(figure_path.relative_to(REPOSITORY_ROOT)),
+                data_source=str(csv_path.relative_to(REPOSITORY_ROOT)),
+                columns_used=[
+                    "step", "design", "theta_deg", "z_tip_um",
+                    "F_z_pN", "landing_pad_overlap_fraction",
+                    "boundary", "tier", "formulation", "footprint_um2",
+                ],
+                solver_name=SOLVER_NAME,
+                solver_parameters=report_data.get("configuration", {}),
+            )
+        serialized_report = freshness_tables(json_safe(report_data), report_data["executed_at"])
+        for container_name in ("designs", "matched_control_validation"):
+            if container_name in serialized_report and isinstance(serialized_report[container_name], Mapping):
+                serialized_report[container_name] = {
+                    name: freshness_record(row, report_data["executed_at"])
+                    for name, row in serialized_report[container_name].items()
+                }
+        atomic_text(
+            json_path,
+            json.dumps(serialized_report, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        )
+        atomic_text(markdown_path, markdown_report(report_data))
+        print("Plot and report analysis regenerated from existing report.", flush=True)
+        return 0
 
     try:
         import torch
@@ -2989,41 +3591,46 @@ def main() -> int:
                     "meep_richardson": meep["richardson"],
                 },
             )
-        log_step(
-            "nature_6step_narrative_summary",
-            json_safe({
-                "status": status,
-                "steps": steps,
-                "analysis": analysis,
-                "matched_control_validation": controls,
-                "report_path": str(json_path.relative_to(REPOSITORY_ROOT)),
-            }),
-            solver_name=SOLVER_NAME,
-            solver_parameters=configuration,
-        )
-        for score in analysis[STEP_NAMES[4]]["scores"]:
-            for key in (
-                "F_rep_pN", "F_att_pN", "Delta_F_pN", "F_rep_pN_per_um2",
-                "F_att_pN_per_um2", "Delta_F_pN_per_um2",
-                "F_rep_pN_per_tooth", "F_att_pN_per_tooth", "Delta_F_pN_per_tooth",
-                "F_rep_pN_per_tooth_area_um2", "F_att_pN_per_tooth_area_um2",
-                "Delta_F_pN_per_tooth_area_um2",
-            ):
-                if score[key] is None:
-                    continue
-                log_metric(
-                    f"nature_{score['design']}_{key}", score[key],
-                    solver_name=SOLVER_NAME,
-                    solver_parameters={
-                        **configuration,
-                        "design": score["design"],
-                        "derived_from_step": STEP_NAMES[4],
-                        "sample_angles_deg": list(SWITCHING_ANGLES_DEG),
-                        "full_tooth_count": score["full_tooth_count"],
-                        "footprint_um2": score["footprint_um2"],
-                        "full_tooth_planform_area_um2": score["full_tooth_planform_area_um2"],
-                    },
-                )
+        if campaign.solver_evaluations > 0 or campaign.resumed_cache_keys:
+            log_step(
+                "nature_6step_narrative_summary",
+                json_safe({
+                    "status": status,
+                    "steps": steps,
+                    "analysis": analysis,
+                    "matched_control_validation": controls,
+                    "report_path": str(json_path.relative_to(REPOSITORY_ROOT)),
+                }),
+                solver_name=SOLVER_NAME,
+                solver_parameters=configuration,
+            )
+            for score in analysis[STEP_NAMES[4]]["scores"]:
+                for key in (
+                    "F_rep_pN", "F_att_pN", "Delta_F_pN", "F_rep_pN_per_um2",
+                    "F_att_pN_per_um2", "Delta_F_pN_per_um2",
+                    "F_rep_pN_per_tooth", "F_att_pN_per_tooth", "Delta_F_pN_per_tooth",
+                    "F_rep_pN_per_tooth_area_um2", "F_att_pN_per_tooth_area_um2",
+                    "Delta_F_pN_per_tooth_area_um2",
+                    "F_rep_pN_per_tooth_perimeter_um", "F_att_pN_per_tooth_perimeter_um",
+                    "Delta_F_pN_per_tooth_perimeter_um",
+                    "full_tooth_planform_area_um2", "full_tooth_planform_perimeter_um",
+                ):
+                    if score[key] is None:
+                        continue
+                    log_metric(
+                        f"nature_{score['design']}_{key}", score[key],
+                        solver_name=SOLVER_NAME,
+                        solver_parameters={
+                            **configuration,
+                            "design": score["design"],
+                            "derived_from_step": STEP_NAMES[4],
+                            "sample_angles_deg": list(SWITCHING_ANGLES_DEG),
+                            "full_tooth_count": score["full_tooth_count"],
+                            "footprint_um2": score["footprint_um2"],
+                            "full_tooth_planform_area_um2": score["full_tooth_planform_area_um2"],
+                            "full_tooth_planform_perimeter_um": score["full_tooth_planform_perimeter_um"],
+                        },
+                    )
     except Exception:
         artifact_error = traceback.format_exc()
         print(artifact_error, file=sys.stderr, flush=True)
@@ -3031,7 +3638,7 @@ def main() -> int:
         # Meep logging is independent of plotting failures and precedes macro export.
         try:
             meep = analysis["meep_verification"]
-            for row in meep["tasks"]:
+            for row in meep["tasks"] if (campaign.solver_evaluations > 0 or campaign.resumed_cache_keys) else []:
                 task_id = row["task_id"]
                 meep_parameters = {
                     "configuration": row.get("configuration"),

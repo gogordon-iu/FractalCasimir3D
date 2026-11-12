@@ -1,6 +1,6 @@
 # Unified 3D Conformal-Recursive Polar Cantor Fractal: $2^3$ Factorial & Matched Controls Study
 
-- **Generated (UTC)**: `2026-11-07T01:40:15.073326+00:00`
+- **Generated (UTC)**: `2026-11-11T01:39:36.912444+00:00`
 - **Quadrature Order**: `n_xi = 24`
 - **Invariant Stator Pad Top**: `z_pad_top = -0.115 um` (strictly fixed across all designs)
 

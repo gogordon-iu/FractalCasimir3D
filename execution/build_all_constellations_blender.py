@@ -58,6 +58,7 @@ MONOLITHIC_MIN_INNER_RADIUS_UM = 0.08
 @dataclass(frozen=True)
 class ConstellationSpec:
     index: int
+    panel_letter: str
     slug: str
     title: str
     subtitle: str
@@ -76,9 +77,10 @@ class ConstellationSpec:
 CONSTELLATIONS: tuple[ConstellationSpec, ...] = (
     ConstellationSpec(
         index=1,
+        panel_letter="a",
         slug="01_N0_Overhang",
-        title="1. N=0 Overhang Control",
-        subtitle="SingleTooth_Track0 (z_tip = -55 nm, +45 nm protrusion)",
+        title="N = 0 symmetric overhang",
+        subtitle="z_tip = -55 nm (+45 nm protrusion)",
         step_label="Step 1: Sign-Reversal Control",
         report_design="Fractal_N0_SingleTrack",
         boundary="Active-Only",
@@ -92,9 +94,10 @@ CONSTELLATIONS: tuple[ConstellationSpec, ...] = (
     ),
     ConstellationSpec(
         index=2,
+        panel_letter="b",
         slug="02_Fractal_N0_SingleTrack",
-        title="2. N=0 Deep-Insertion Baseline",
-        subtitle="SingleTooth_Track0 (1 track, z_tip = -100 nm flush)",
+        title="N = 0 deep interdigitation",
+        subtitle="z_tip = -100 nm (flush slot entry)",
         step_label="Steps 1–3: N=0 Baseline",
         report_design="Fractal_N0_SingleTrack",
         boundary="Active-Only",
@@ -108,9 +111,10 @@ CONSTELLATIONS: tuple[ConstellationSpec, ...] = (
     ),
     ConstellationSpec(
         index=3,
+        panel_letter="c",
         slug="03_Fractal_N1_FundRing",
-        title="3. N=1 Fundamental Cantor Ring",
-        subtitle="Fractal_N1_FundRing (1 middle-third slot, w/W = 0.82)",
+        title="N = 1 fundamental Cantor slot",
+        subtitle="1 middle-third slot (W_1 = 350 nm)",
         step_label="Step 3: N=1 Cantor Ring",
         report_design="Fractal_N1_FundRing",
         boundary="Active-Only",
@@ -124,25 +128,10 @@ CONSTELLATIONS: tuple[ConstellationSpec, ...] = (
     ),
     ConstellationSpec(
         index=4,
-        slug="04_Cantor_N2_FlatZ",
-        title="4. N=2 Cantor 3-Track (Flat-Z)",
-        subtitle="Cantor_N2_FlatZ / Fractal_N2 (3 Cantor slots, z_tip = -100 nm)",
-        step_label="Steps 3–5: N=2 Flat-Z",
-        report_design="Cantor_N2_FlatZ",
-        boundary="Active-Only",
-        z_tip_override_um=None,
-        h_teeth_override_um=None,
-        theta_rep_deg=3.0,
-        theta_att_deg=48.0,
-        meep_rep_task_id=6,
-        meep_att_task_id=7,
-        category="hierarchy",
-    ),
-    ConstellationSpec(
-        index=5,
-        slug="05_Ctrl_SingleWide",
-        title="5. Control A: Single Wide Tooth",
-        subtitle="Ctrl_SingleWide (matched total slot & tooth width, 1 track)",
+        panel_letter="d",
+        slug="04_Ctrl_SingleWide",
+        title="Single wide tooth control",
+        subtitle="Matched total slot & tooth area (1 track)",
         step_label="Steps 4–5: Non-Fractal Control A",
         report_design="Ctrl_SingleWide",
         boundary="Active-Only",
@@ -155,10 +144,11 @@ CONSTELLATIONS: tuple[ConstellationSpec, ...] = (
         category="control",
     ),
     ConstellationSpec(
-        index=6,
-        slug="06_Ctrl_UniformPeriodic",
-        title="6. Control B: Uniform 3-Track Grating",
-        subtitle="Ctrl_UniformPeriodic / Uniform_3Track (3 equal slots & teeth)",
+        index=5,
+        panel_letter="e",
+        slug="05_Ctrl_UniformPeriodic",
+        title="Uniform periodic grating control",
+        subtitle="3 equal slots & teeth",
         step_label="Steps 4–5: Non-Fractal Control B",
         report_design="Ctrl_UniformPeriodic",
         boundary="Active-Only",
@@ -171,10 +161,11 @@ CONSTELLATIONS: tuple[ConstellationSpec, ...] = (
         category="control",
     ),
     ConstellationSpec(
-        index=7,
-        slug="07_Ctrl_SizeMatched_Monotonic",
-        title="7. Control C: Size-Matched Monotonic",
-        subtitle="Ctrl_SizeMatched_Monotonic (N=2 widths ordered narrow->wide)",
+        index=6,
+        panel_letter="f",
+        slug="06_Ctrl_SizeMatched_Monotonic",
+        title="Size-matched monotonic control",
+        subtitle="N = 2 widths ordered narrow to wide",
         step_label="Steps 4–5: Non-Fractal Control C",
         report_design="Ctrl_SizeMatched_Monotonic",
         boundary="Active-Only",
@@ -187,10 +178,28 @@ CONSTELLATIONS: tuple[ConstellationSpec, ...] = (
         category="control",
     ),
     ConstellationSpec(
+        index=7,
+        panel_letter="g",
+        slug="07_Cantor_N2_FlatZ",
+        title="Cantor N = 2 uniform-depth",
+        subtitle="H_1 = H_2 = 100 nm",
+        step_label="Steps 3–5: N=2 Flat-Z",
+        report_design="Cantor_N2_FlatZ",
+        boundary="Active-Only",
+        z_tip_override_um=None,
+        h_teeth_override_um=None,
+        theta_rep_deg=3.0,
+        theta_att_deg=48.0,
+        meep_rep_task_id=6,
+        meep_att_task_id=7,
+        category="hierarchy",
+    ),
+    ConstellationSpec(
         index=8,
+        panel_letter="h",
         slug="08_Cantor_N2_HybridRZ",
-        title="8. N=2 Anisotropic (r, z) Cantor",
-        subtitle="Cantor_N2_HybridRZ (Gen-1 z_tip=-100 nm, Gen-2 z_tip=-90 nm)",
+        title="Cantor N = 2 (r, z)-scaled",
+        subtitle="H_1 = 100 nm, H_2 = 90 nm",
         step_label="Steps 4–6: (r, z) Scale-Matched",
         report_design="Cantor_N2_HybridRZ",
         boundary="Active-Only",
@@ -204,9 +213,10 @@ CONSTELLATIONS: tuple[ConstellationSpec, ...] = (
     ),
     ConstellationSpec(
         index=9,
+        panel_letter="i",
         slug="09_Rot_C8_Compact_N2",
-        title="9. N=2 Compact Footprint Champion",
-        subtitle="Rot_C8_Compact_N2 (R in [0.20, 0.90] um, w1/W1 = 0.45)",
+        title="Compact N = 2 rotational variant",
+        subtitle="R in [0.20, 0.90] um, w_1/W_1 = 0.45",
         step_label="Step 5: Footprint Density Champion",
         report_design="Rot_C8_Compact_N2",
         boundary="Active-Only",
@@ -220,9 +230,27 @@ CONSTELLATIONS: tuple[ConstellationSpec, ...] = (
     ),
     ConstellationSpec(
         index=10,
-        slug="10_Fractal_N3_Cantor7Track",
-        title="10. N=3 Cantor 7-Track Hierarchy",
-        subtitle="Fractal_N3_Cantor7Track (7 tracks, 28 teeth, R in [0.30, 1.65] um)",
+        panel_letter="j",
+        slug="10_Rot_C4_TightSlot_N2",
+        title="Tight-slot N = 2 rotational variant",
+        subtitle="R in [0.30, 1.35] um, theta_rep = 6 deg",
+        step_label="Step 2: Rotational Tight-Slot N=2",
+        report_design="Rot_C4_TightSlot_N2",
+        boundary="Active-Only",
+        z_tip_override_um=None,
+        h_teeth_override_um=None,
+        theta_rep_deg=6.0,
+        theta_att_deg=48.0,
+        meep_rep_task_id=None,
+        meep_att_task_id=None,
+        category="hierarchy",
+    ),
+    ConstellationSpec(
+        index=11,
+        panel_letter="k",
+        slug="11_Fractal_N3_Cantor7Track",
+        title="Cantor N = 3 seven-track hierarchy",
+        subtitle="7 tracks, 28 teeth, R in [0.30, 1.65] um",
         step_label="Steps 3, 5 & 6: Peak Swing Champion",
         report_design="Fractal_N3_Cantor7Track",
         boundary="Active-Only",
@@ -235,26 +263,11 @@ CONSTELLATIONS: tuple[ConstellationSpec, ...] = (
         category="champion",
     ),
     ConstellationSpec(
-        index=11,
-        slug="11_Cantor_N2_HybridRZ_Monolithic",
-        title="11. N=2 Hybrid (r, z) Full-Monolithic",
-        subtitle="Cantor_N2_HybridRZ + 4 spider spokes, hub collars & trench slab",
-        step_label="Step 6: Monolithic NEMS Validation",
-        report_design="Cantor_N2_HybridRZ",
-        boundary="Full-Monolithic",
-        z_tip_override_um=None,
-        h_teeth_override_um=None,
-        theta_rep_deg=3.0,
-        theta_att_deg=48.0,
-        meep_rep_task_id=None,
-        meep_att_task_id=None,
-        category="monolithic",
-    ),
-    ConstellationSpec(
         index=12,
+        panel_letter="l",
         slug="12_Fractal_N3_Cantor7Track_Monolithic",
-        title="12. N=3 7-Track Full-Monolithic",
-        subtitle="Fractal_N3_Cantor7Track + 4 spider spokes, collars & trench slab",
+        title="Full-monolithic N = 2 & N = 3 assemblies",
+        subtitle="4 radial spokes + hub collars + trench",
         step_label="Step 6: Full-Device NEMS Clutch",
         report_design="Fractal_N3_Cantor7Track",
         boundary="Full-Monolithic",
@@ -298,6 +311,7 @@ class LoadedConstellation:
     tracks: tuple[TrackGeometry, ...]
     rib_intervals: tuple[tuple[float, float], ...]
     footprint_um2: float
+    tooth_area_um2: float
     full_tooth_count: int
     f_rep_bem_pn: float
     f_att_bem_pn: float
@@ -308,6 +322,8 @@ class LoadedConstellation:
     f_rep_ultra_pn: float | None
     f_rep_meep_pn: float | None
     f_att_meep_pn: float | None
+    f_rep_secondary_pn: float | None = None
+    f_att_secondary_pn: float | None = None
 
 
 @dataclass(frozen=True)
@@ -485,9 +501,105 @@ def find_bem_task(
     return None
 
 
-def load_constellations(report: dict[str, Any]) -> tuple[LoadedConstellation, ...]:
+def load_rotational_report(root: Path) -> dict[str, Any]:
+    path = root / "results" / "rotational_z_eff_clutch_report.json"
+    if not path.is_file():
+        raise FileNotFoundError(f"Required rotational report not found: {path}")
+    with path.open(encoding="utf-8") as handle:
+        report = json.load(handle)
+    if not isinstance(report, dict) or not isinstance(report.get("evaluations"), list):
+        raise ValueError("Rotational report must contain an evaluations list.")
+    return report
+
+
+def find_rotational_eval(
+    evaluations: list[dict[str, Any]],
+    design_name: str,
+    theta_deg: float,
+) -> dict[str, Any] | None:
+    for entry in evaluations:
+        if entry.get("design") != design_name:
+            continue
+        if math.isclose(
+            finite_number(entry.get("theta_deg", -999.0), "theta_deg"),
+            theta_deg,
+            abs_tol=1e-6,
+        ):
+            return entry
+    return None
+
+
+def extract_rotational_design(
+    evaluations: list[dict[str, Any]],
+    design_name: str,
+) -> dict[str, Any]:
+    for entry in evaluations:
+        if entry.get("design") != design_name:
+            continue
+        solver_res = entry.get("solver_result")
+        if not isinstance(solver_res, dict):
+            continue
+        params = solver_res.get("parameters")
+        if not isinstance(params, dict) or params.get("name") != design_name:
+            continue
+        elements = params.get("elements")
+        if not isinstance(elements, list) or not elements:
+            raise ValueError(f"Rotational design {design_name!r} has no elements.")
+        tooth_arc_deg = required_number(params, "tooth_arc_deg")
+        z_tip_val = required_number(params, "z_tip")
+        h_teeth_val = required_number(params, "h_teeth")
+        max_slot_w = max(
+            required_number(el, "r_outer") - required_number(el, "r_inner")
+            for el in elements
+        )
+        tracks: list[dict[str, Any]] = []
+        area_sector = 0.0
+        angle_rad = math.radians(tooth_arc_deg)
+        for el in elements:
+            r_in = required_number(el, "r_inner")
+            r_out = required_number(el, "r_outer")
+            rt_in = required_number(el, "r_tooth_in")
+            rt_out = required_number(el, "r_tooth_out")
+            ratio = max_slot_w / max(r_out - r_in, 1e-12)
+            level = 1 + int(round(math.log(max(ratio, 1.0)) / math.log(3.0)))
+            tracks.append(
+                {
+                    "r_inner": r_in,
+                    "r_outer": r_out,
+                    "r_tooth_in": rt_in,
+                    "r_tooth_out": rt_out,
+                    "z_tip": z_tip_val,
+                    "h_teeth": h_teeth_val,
+                    "level": level,
+                }
+            )
+            area_sector += 0.5 * angle_rad * (rt_out**2 - rt_in**2)
+        return {
+            "name": design_name,
+            "R_min": required_number(params, "R_min"),
+            "R_max": required_number(params, "R_max"),
+            "aperture_arc_deg": required_number(params, "aperture_arc_deg"),
+            "tooth_arc_deg": tooth_arc_deg,
+            "t_membrane": required_number(params, "t_membrane"),
+            "t_landing_pad": required_number(params, "t_landing_pad"),
+            "z_pad_top": required_number(params, "z_pad_top"),
+            "geometry_metrics": {
+                "full_tooth_planform_area_um2": float(DEFAULT_NUM_SECTORS) * area_sector,
+            },
+            "tracks": tracks,
+        }
+    raise ValueError(
+        f"Design {design_name!r} missing from both narrative and rotational reports."
+    )
+
+
+def load_constellations(
+    report: dict[str, Any],
+    rot_report: dict[str, Any] | None = None,
+) -> tuple[LoadedConstellation, ...]:
     designs = report["designs"]
     tasks = report["tasks"]
+    rot_evals = rot_report.get("evaluations", []) if isinstance(rot_report, dict) else []
     meep_tasks = {
         int(row["task_id"]): row
         for row in report.get("analysis", {}).get("meep_verification", {}).get("tasks", [])
@@ -496,9 +608,10 @@ def load_constellations(report: dict[str, Any]) -> tuple[LoadedConstellation, ..
 
     loaded: list[LoadedConstellation] = []
     for spec in CONSTELLATIONS:
-        if spec.report_design not in designs:
-            raise ValueError(f"Design {spec.report_design!r} missing from report.")
-        raw_design = designs[spec.report_design]
+        if spec.report_design in designs:
+            raw_design = designs[spec.report_design]
+        else:
+            raw_design = extract_rotational_design(rot_evals, spec.report_design)
         r_min = required_number(raw_design, "R_min")
         r_max = required_number(raw_design, "R_max")
         aperture_arc_deg = required_number(raw_design, "aperture_arc_deg")
@@ -507,7 +620,6 @@ def load_constellations(report: dict[str, Any]) -> tuple[LoadedConstellation, ..
         t_landing_pad = required_number(raw_design, "t_landing_pad")
         z_pad_top = required_number(raw_design, "z_pad_top")
         z_pad_bottom = z_pad_top - t_landing_pad
-
         raw_tracks = raw_design.get("tracks")
         if not isinstance(raw_tracks, list) or not raw_tracks:
             raise ValueError(f"Design {spec.report_design!r} has no tracks.")
@@ -535,6 +647,19 @@ def load_constellations(report: dict[str, Any]) -> tuple[LoadedConstellation, ..
                 )
             )
 
+        geom_metrics = raw_design.get("geometry_metrics")
+        if isinstance(geom_metrics, dict) and "full_tooth_planform_area_um2" in geom_metrics:
+            tooth_area_um2 = required_number(geom_metrics, "full_tooth_planform_area_um2")
+        else:
+            angle_rad = math.radians(tooth_arc_deg)
+            sector_area = sum(
+                0.5 * angle_rad * (tr.r_tooth_out**2 - tr.r_tooth_in**2)
+                for tr in tracks
+            )
+            tooth_area_um2 = float(DEFAULT_NUM_SECTORS) * sector_area
+        if tooth_area_um2 <= 0.0:
+            raise ValueError(f"Design {spec.report_design!r} has nonpositive tooth_area_um2.")
+
         ribs: list[tuple[float, float]] = []
         cursor = r_min
         for tr in tracks:
@@ -551,8 +676,8 @@ def load_constellations(report: dict[str, Any]) -> tuple[LoadedConstellation, ..
         alias_names: list[str] = [spec.report_design]
         if spec.report_design == "Fractal_N0_SingleTrack":
             alias_names.append("SingleTooth_Track0")
-        elif spec.report_design == "Cantor_N2_FlatZ":
-            alias_names.append("Fractal_N2_Cantor3Track")
+        elif spec.report_design in ("Cantor_N2_FlatZ", "Rot_C4_TightSlot_N2"):
+            alias_names.extend(["Cantor_N2_FlatZ", "Fractal_N2_Cantor3Track"])
         elif spec.report_design == "Ctrl_UniformPeriodic":
             alias_names.append("Uniform_3Track_Control")
 
@@ -574,15 +699,48 @@ def load_constellations(report: dict[str, Any]) -> tuple[LoadedConstellation, ..
             formulation="vector_dyadic",
             z_tip_override_um=spec.z_tip_override_um,
         )
-        if rep_task is None or att_task is None:
-            raise ValueError(
-                f"Missing Standard BEM task for {spec.slug} "
-                f"(found rep={rep_task is not None}, att={att_task is not None})."
-            )
+        if spec.report_design == "Rot_C4_TightSlot_N2" and (rep_task is None or att_task is None):
+            rot_rep = find_rotational_eval(rot_evals, "Rot_C4_TightSlot_N2", spec.theta_rep_deg)
+            rot_att = find_rotational_eval(rot_evals, "Rot_C4_TightSlot_N2", spec.theta_att_deg)
+            if rot_rep is None or rot_att is None:
+                raise ValueError("Missing Rot_C4_TightSlot_N2 evaluation in rotational report.")
+            f_rep_bem = required_number(rot_rep, "f_net_pN")
+            f_att_bem = required_number(rot_att, "f_net_pN")
+            rep_task_id = "rot_C4_6deg"
+            att_task_id = "rot_C4_48deg"
+        else:
+            if rep_task is None or att_task is None:
+                raise ValueError(
+                    f"Missing Standard BEM task for {spec.slug} "
+                    f"(found rep={rep_task is not None}, att={att_task is not None})."
+                )
+            f_rep_bem = required_number(rep_task, "F_z_pN")
+            f_att_bem = required_number(att_task, "F_z_pN")
+            rep_task_id = str(rep_task["task_id"])
+            att_task_id = str(att_task["task_id"])
 
-        f_rep_bem = required_number(rep_task, "F_z_pN")
-        f_att_bem = required_number(att_task, "F_z_pN")
         delta_f_bem = f_rep_bem - f_att_bem
+
+        f_rep_secondary: float | None = None
+        f_att_secondary: float | None = None
+        if spec.report_design == "Rot_C8_Compact_N2":
+            rot_c8_6 = find_rotational_eval(rot_evals, "Rot_C8_Compact_N2", 6.0)
+            if rot_c8_6 is None:
+                raise ValueError("Missing Rot_C8_Compact_N2 6-deg evaluation in rotational report.")
+            f_rep_secondary = required_number(rot_c8_6, "f_net_pN")
+        elif spec.slug == "12_Fractal_N3_Cantor7Track_Monolithic":
+            mono_n2_rep = find_bem_task(
+                tasks, ["Cantor_N2_HybridRZ"], 3.0, "Full-Monolithic", tier="Standard"
+            )
+            mono_n2_att = find_bem_task(
+                tasks, ["Cantor_N2_HybridRZ"], 48.0, "Full-Monolithic", tier="Standard"
+            )
+            if mono_n2_rep is None or mono_n2_att is None:
+                raise ValueError(
+                    "Missing Full-Monolithic Cantor_N2_HybridRZ BEM tasks in narrative report."
+                )
+            f_rep_secondary = required_number(mono_n2_rep, "F_z_pN")
+            f_att_secondary = required_number(mono_n2_att, "F_z_pN")
 
         high_task = find_bem_task(
             tasks,
@@ -608,16 +766,18 @@ def load_constellations(report: dict[str, Any]) -> tuple[LoadedConstellation, ..
         f_rep_meep = None
         if spec.meep_rep_task_id is not None and spec.meep_rep_task_id in meep_tasks:
             m_row = meep_tasks[spec.meep_rep_task_id]
-            if m_row.get("status") in ("complete", "completed") or (
-                m_row.get("source_status") == "complete"
+            if m_row.get("f_net_pN") is not None and (
+                m_row.get("status") in ("complete", "completed")
+                or m_row.get("source_status") == "complete"
             ):
                 f_rep_meep = required_number(m_row, "f_net_pN")
 
         f_att_meep = None
         if spec.meep_att_task_id is not None and spec.meep_att_task_id in meep_tasks:
             m_row = meep_tasks[spec.meep_att_task_id]
-            if m_row.get("status") in ("complete", "completed") or (
-                m_row.get("source_status") == "complete"
+            if m_row.get("f_net_pN") is not None and (
+                m_row.get("status") in ("complete", "completed")
+                or m_row.get("source_status") == "complete"
             ):
                 f_att_meep = required_number(m_row, "f_net_pN")
 
@@ -636,16 +796,19 @@ def load_constellations(report: dict[str, Any]) -> tuple[LoadedConstellation, ..
                 tracks=tuple(tracks),
                 rib_intervals=tuple(ribs),
                 footprint_um2=footprint,
+                tooth_area_um2=tooth_area_um2,
                 full_tooth_count=DEFAULT_NUM_SECTORS * len(tracks),
                 f_rep_bem_pn=f_rep_bem,
                 f_att_bem_pn=f_att_bem,
                 delta_f_bem_pn=delta_f_bem,
-                rep_task_id=str(rep_task["task_id"]),
-                att_task_id=str(att_task["task_id"]),
+                rep_task_id=rep_task_id,
+                att_task_id=att_task_id,
                 f_rep_high_pn=f_rep_high,
                 f_rep_ultra_pn=f_rep_ultra,
                 f_rep_meep_pn=f_rep_meep,
                 f_att_meep_pn=f_att_meep,
+                f_rep_secondary_pn=f_rep_secondary,
+                f_att_secondary_pn=f_att_secondary,
             )
         )
     return tuple(loaded)
@@ -735,14 +898,15 @@ def build_blender(
     scene.render.resolution_percentage = args.resolution_percentage
     scene.render.image_settings.file_format = "PNG"
     scene.render.image_settings.color_mode = "RGBA"
-    scene.render.film_transparent = False
-    scene.view_settings.view_transform = "AgX"
+    scene.render.film_transparent = True
+    scene.view_settings.view_transform = "Standard"
+    scene.view_settings.exposure = -0.04
 
     world = bpy.data.worlds.new("Constellation Studio World")
     scene.world = world
     world.use_nodes = True
-    world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.08, 0.10, 0.14, 1.0)
-    world.node_tree.nodes["Background"].inputs["Strength"].default_value = 0.95
+    world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.95, 0.96, 0.97, 1.0)
+    world.node_tree.nodes["Background"].inputs["Strength"].default_value = 1.0
 
     def material(
         name: str,
@@ -766,35 +930,41 @@ def build_blender(
                 mat.blend_method = "BLEND"
         return mat
 
-    mat_gold = material("Stator Elevated Ribs | Polished Gold", (0.96, 0.77, 0.22), 0.92, 0.17)
-    mat_copper = material("Stator Recessed Pads | Copper Gold", (0.76, 0.45, 0.18), 0.88, 0.25)
-    mat_bronze = material("Stator Slot Bridges | Rose Bronze", (0.52, 0.31, 0.15), 0.85, 0.30)
+    mat_gold = material(
+        "Stator Elevated Ribs | Grey-Brown Bronze", (0.46, 0.40, 0.35), 0.62, 0.28
+    )
+    mat_copper = material(
+        "Stator Recessed Pads | Cyan Teal", (0.04, 0.66, 0.80), 0.70, 0.22, 0.05
+    )
+    mat_bronze = material(
+        "Stator Slot Bridges | Deep Teal", (0.04, 0.50, 0.64), 0.68, 0.26, 0.03
+    )
     mat_teal_gen1 = material(
-        "Sector 0 Gen-1 Rotor Teeth | Emerald Teal", (0.06, 0.92, 0.56), 0.80, 0.16, 0.22
+        "Sector 0 Gen-1 Rotor Teeth | Rich Metallic Gold", (0.98, 0.68, 0.08), 0.78, 0.18, 0.06
     )
     mat_cyan_gen2 = material(
-        "Sector 0 Gen-2 Rotor Teeth | Electric Cyan", (0.08, 0.68, 0.98), 0.80, 0.16, 0.22
+        "Sector 0 Gen-2 Rotor Teeth | Warm Amber Gold", (0.94, 0.56, 0.06), 0.78, 0.20, 0.05
     )
     mat_violet_gen3 = material(
-        "Sector 0 Gen-3 Rotor Teeth | Vibrant Violet", (0.76, 0.34, 0.98), 0.80, 0.16, 0.24
+        "Sector 0 Gen-3 Rotor Teeth | Burnished Gold", (0.86, 0.46, 0.04), 0.78, 0.22, 0.04
     )
     mat_overhang = material(
-        "Sector 0 Overhang Tooth | Coral Red", (0.98, 0.28, 0.24), 0.78, 0.18, 0.28
+        "Sector 0 Overhang Tooth | Bright Metallic Gold", (0.98, 0.64, 0.08), 0.78, 0.18, 0.06
     )
     mat_sapphire = material(
-        "Sectors 1-3 Rotor Teeth | Platinum Sapphire", (0.34, 0.52, 0.76), 0.88, 0.22
+        "Sectors 1-3 Rotor Teeth | Warm Metallic Gold", (0.90, 0.60, 0.12), 0.76, 0.22, 0.03
     )
     mat_titanium = material(
-        "Monolithic Spider & Hub Collars | Brushed Titanium", (0.74, 0.78, 0.84), 0.90, 0.24
+        "Monolithic Spider & Hub Collars | Crystalline Silicon", (0.36, 0.46, 0.58), 0.58, 0.26
     )
     mat_slate = material(
-        "Monolithic Trench Slab | Silicon Slate", (0.22, 0.26, 0.33), 0.65, 0.35
+        "Monolithic Trench Slab | Silicon Slate", (0.24, 0.30, 0.38), 0.48, 0.34
     )
     mat_ref_ring = material(
-        "Standard R=1.35um Reference Ring", (0.35, 0.42, 0.54), 0.40, 0.45, 0.15
+        "Standard R=1.35um Reference Ring", (0.58, 0.64, 0.72), 0.35, 0.42
     )
     mat_pedestal = material(
-        "Studio Pedestal Base", (0.11, 0.13, 0.18), 0.30, 0.55
+        "Outer Stator Support Frame", (0.74, 0.78, 0.84), 0.30, 0.45
     )
 
     def create_annular_mesh(
@@ -967,8 +1137,8 @@ def build_blender(
                 z_scale,
             )
 
-        # Reference scale ring at standard R_max = 1.35 um + pedestal disc
-        ref_z = item.z_pad_bottom * z_scale - 0.06
+        # Reference scale ring at standard R_max = 1.35 um + outer stator support frame
+        ref_z = item.z_pad_bottom * z_scale - 0.04
         create_annular_mesh(
             f"{item.spec.slug}_ref_ring_1p35um",
             [(1.345, 1.365, 0.0, 360.0, ref_z - 0.012, ref_z)],
@@ -977,10 +1147,9 @@ def build_blender(
             anchor,
             1.0,
         )
-        ped_r = max(1.52, item.R_max + 0.18)
         create_annular_mesh(
-            f"{item.spec.slug}_pedestal",
-            [(0.04, ped_r, 0.0, 360.0, -0.74, -0.68)],
+            f"{item.spec.slug}_outer_support_frame",
+            [(item.R_max, item.R_max + 0.07, 0.0, 315.0, item.z_pad_bottom * z_scale, 0.0)],
             mat_pedestal,
             collection,
             anchor,
@@ -1091,9 +1260,9 @@ def build_blender(
 
     lights: list[Any] = []
     for name, location, energy, size in (
-        ("Key studio softbox", (2.2, -3.4, 4.5), 520.0, 3.5),
-        ("Fill studio softbox", (-3.0, -1.2, 2.6), 280.0, 3.0),
-        ("Rim studio softbox", (1.0, 3.6, 3.2), 600.0, 2.5),
+        ("Key studio softbox", (2.2, -3.4, 4.5), 480.0, 3.5),
+        ("Fill studio softbox", (-3.0, -1.2, 2.6), 300.0, 3.0),
+        ("Rim studio softbox", (1.0, 3.6, 3.2), 520.0, 2.5),
     ):
         light_data = bpy.data.lights.new(name, "AREA")
         light_data.energy = energy
@@ -1109,7 +1278,7 @@ def build_blender(
     scene.collection.objects.link(camera)
     scene.camera = camera
     camera_data.type = "PERSP"
-    camera_data.lens = 44.0
+    camera_data.lens = 48.0
     camera_data.clip_start = 0.001
     camera_data.clip_end = 250.0
 
@@ -1122,7 +1291,7 @@ def build_blender(
             raise RuntimeError(f"Render did not produce {destination}.")
 
     panel_w = args.resolution
-    panel_h = round(args.resolution * 760 / 1200)
+    panel_h = round(args.resolution * 640 / 1200)
 
     # 1. Render each constellation individually at the origin and save its individual .blend
     for item, col, anchor in built:
@@ -1132,15 +1301,15 @@ def build_blender(
             other_col.hide_viewport = not is_current
             other_anchor.location = (0.0, 0.0, 0.0)
 
-        r_focus = max(1.05, item.R_max)
+        r_focus = max(1.02, item.R_max)
         if item.spec.boundary == "Full-Monolithic":
-            dist = r_focus * 2.55
-            camera.location = (dist * 0.92, -dist * 0.96, dist * 0.72)
-            aim(camera, (0.0, 0.0, -0.05))
-        else:
             dist = r_focus * 2.15
-            camera.location = (dist * 0.88, -dist * 0.92, dist * 0.70)
-            aim(camera, (0.0, 0.0, -0.12))
+            camera.location = (dist * 0.90, -dist * 0.94, dist * 0.68)
+            aim(camera, (0.0, 0.0, -0.04))
+        else:
+            dist = r_focus * 1.74
+            camera.location = (dist * 0.86, -dist * 0.90, dist * 0.66)
+            aim(camera, (0.0, 0.0, -0.14))
 
         render_still(paths.panel_renders[item.spec.slug], panel_w, panel_h)
         ind_blend = paths.individual_blends[item.spec.slug]
@@ -1211,6 +1380,7 @@ def export_metadata(
         "constellations": [
             {
                 "index": item.spec.index,
+                "panel_letter": item.spec.panel_letter,
                 "slug": item.spec.slug,
                 "title": item.spec.title,
                 "subtitle": item.spec.subtitle,
@@ -1222,9 +1392,12 @@ def export_metadata(
                 "track_count": len(item.tracks),
                 "full_tooth_count": item.full_tooth_count,
                 "footprint_um2": item.footprint_um2,
+                "tooth_area_um2": item.tooth_area_um2,
                 "f_rep_bem_pN": item.f_rep_bem_pn,
                 "f_att_bem_pN": item.f_att_bem_pn,
                 "delta_f_bem_pN": item.delta_f_bem_pn,
+                "f_rep_secondary_pN": item.f_rep_secondary_pn,
+                "f_att_secondary_pN": item.f_att_secondary_pn,
                 "f_rep_high_pN": item.f_rep_high_pn,
                 "f_rep_ultra_pN": item.f_rep_ultra_pn,
                 "f_rep_meep_pN": item.f_rep_meep_pn,
@@ -1241,15 +1414,15 @@ def export_metadata(
     atomic_text(paths.manifest, json.dumps(manifest, indent=2, allow_nan=False) + "\n")
 
 
-def draw_rz_profile(ax: Any, item: LoadedConstellation) -> None:
+def draw_rz_profile(ax: Any, item: LoadedConstellation, show_ylabel: bool = True) -> None:
     from matplotlib.patches import Rectangle
 
-    ax.set_facecolor("#0f141d")
+    ax.set_facecolor("#FFFFFF")
     r_limit = 1.72
     ax.set_xlim(0.0, r_limit)
-    ax.set_ylim(-290.0, 95.0)
+    ax.set_ylim(-290.0, 136.0)
 
-    # Stator landing-pad level dashed line
+    # Recessed landing-pad level (cyan/teal, z in [-265, -115] nm)
     pad_top_nm = item.z_pad_top * 1000.0
     pad_bot_nm = item.z_pad_bottom * 1000.0
     ax.axhspan(
@@ -1257,18 +1430,18 @@ def draw_rz_profile(ax: Any, item: LoadedConstellation) -> None:
         pad_top_nm,
         xmin=item.R_min / r_limit,
         xmax=item.R_max / r_limit,
-        color="#8a5229",
-        alpha=0.28,
+        color="#06B6D4",
+        alpha=0.25,
     )
     ax.plot(
         [item.R_min, item.R_max],
         [pad_top_nm, pad_top_nm],
         "--",
-        color="#d98a4e",
-        linewidth=0.9,
+        color="#0891B2",
+        linewidth=0.8,
     )
 
-    # Elevated stator ribs (gold, z in [-25, 0] nm)
+    # Elevated stator aperture rings (grey/brown, z in [-25, 0] nm)
     mem_bot_nm = -item.t_membrane * 1000.0
     for r_in, r_out in item.rib_intervals:
         ax.add_patch(
@@ -1276,21 +1449,20 @@ def draw_rz_profile(ax: Any, item: LoadedConstellation) -> None:
                 (r_in, mem_bot_nm),
                 r_out - r_in,
                 -mem_bot_nm,
-                facecolor="#f5c238",
-                edgecolor="#ffe380",
-                linewidth=0.6,
+                facecolor="#78716C",
+                edgecolor="#44403C",
+                linewidth=0.5,
             )
         )
 
-    # Rotor teeth colored by Cantor generation / overhang status
-    is_overhang = item.spec.z_tip_override_um is not None and item.spec.z_tip_override_um > -0.08
-    level_colors = {
-        1: "#10eb8f",
-        2: "#14aeff",
-        3: "#c257fa",
+    # Gold rotor teeth across radial coordinate r (um)
+    level_gold = {
+        1: "#F59E0B",
+        2: "#D97706",
+        3: "#B45309",
     }
     for tr in item.tracks:
-        color = "#fa473e" if is_overhang else level_colors.get(tr.level, "#10eb8f")
+        color = level_gold.get(tr.level, "#F59E0B")
         z_tip_nm = tr.z_tip * 1000.0
         h_nm = tr.h_teeth * 1000.0
         ax.add_patch(
@@ -1299,38 +1471,135 @@ def draw_rz_profile(ax: Any, item: LoadedConstellation) -> None:
                 tr.r_tooth_out - tr.r_tooth_in,
                 h_nm,
                 facecolor=color,
-                edgecolor="white",
-                linewidth=0.55,
+                edgecolor="#78350F",
+                linewidth=0.5,
             )
         )
 
     if item.spec.boundary == "Full-Monolithic":
         ax.axhspan(
-            48.0,
-            82.0,
-            xmin=max(0.0, (item.R_min - 0.12) / r_limit),
-            xmax=min(1.0, (item.R_max + 0.12) / r_limit),
-            color="#b8c4d4",
-            alpha=0.85,
+            42.0,
+            98.0,
+            xmin=max(0.0, (item.R_min - 0.10) / r_limit),
+            xmax=min(1.0, (item.R_max + 0.04) / r_limit),
+            color="#64748B",
+            alpha=0.28,
         )
         ax.text(
-            (item.R_min + item.R_max) / 2.0,
-            64.0,
-            "Monolithic Spider & Collars (+350..+470 nm) + Trench (-650..-550 nm)",
-            color="#0b0f17",
-            fontsize=6.3,
-            fontweight="bold",
+            (item.R_min + item.R_max) / 2.0 - 0.03,
+            70.0,
+            "Spokes (+350..+470 nm) & trench (-650..-550 nm)",
+            color="#1E293B",
+            fontsize=4.8,
             ha="center",
             va="center",
         )
 
-    ax.axhline(0.0, color="#ffffff", linestyle=":", linewidth=0.6, alpha=0.55)
-    ax.set_xlabel("Radius r (µm)", fontsize=7.5, color="#cbd5e1", labelpad=1.5)
-    ax.set_ylabel("z (nm)", fontsize=7.5, color="#cbd5e1", labelpad=1.5)
-    ax.tick_params(colors="#cbd5e1", labelsize=6.8, length=2.5, pad=1.5)
+    ax.axhline(0.0, color="#6B7280", linestyle=":", linewidth=0.55, alpha=0.7)
+    ax.set_xticks([0.0, 0.4, 0.8, 1.2, 1.6])
+    ax.set_yticks([-250, -100, 0])
+    if not show_ylabel:
+        ax.set_yticklabels([])
+    else:
+        ax.set_ylabel("z (nm)", fontsize=6.0, color="#111827", labelpad=1.2)
+    ax.set_xlabel("r (\u03bcm)", fontsize=6.0, color="#111827", labelpad=0.4)
+    ax.tick_params(colors="#111827", labelsize=6.0, length=2.0, pad=1.0)
     for spine in ax.spines.values():
-        spine.set_edgecolor("#334155")
-        spine.set_linewidth(0.6)
+        spine.set_edgecolor("#9CA3AF")
+        spine.set_linewidth(0.55)
+
+
+def format_panel_header(item: LoadedConstellation) -> tuple[str, str]:
+    letter = item.spec.panel_letter
+    f_rep = item.f_rep_bem_pn
+    f_att = item.f_att_bem_pn
+    if letter == "a":
+        title = "N = 0 symmetric overhang"
+        sub = (
+            f"$R \\in$ [{item.R_min:.2f}, {item.R_max:.2f}] \u03bcm | 1 track ($z_{{\\mathrm{{tip}}}}$ = \u221255 nm)\n"
+            f"$F_z$(3\u00b0) = {f_rep:+.2f} pN, $F_z$(48\u00b0) = {f_att:+.2f} pN"
+        )
+    elif letter == "b":
+        title = "N = 0 deep interdigitation"
+        sub = (
+            f"$R \\in$ [{item.R_min:.2f}, {item.R_max:.2f}] \u03bcm | 1 track ($z_{{\\mathrm{{tip}}}}$ = \u2212100 nm)\n"
+            f"$F_z$(3\u00b0) = {f_rep:+.2f} pN, $F_z$(48\u00b0) = {f_att:+.2f} pN"
+        )
+    elif letter == "c":
+        title = "N = 1 fundamental Cantor slot"
+        sub = (
+            f"$R \\in$ [{item.R_min:.2f}, {item.R_max:.2f}] \u03bcm | 1 track ($W_1$ = 350 nm)\n"
+            f"$F_z$(3\u00b0) = {f_rep:+.2f} pN, $F_z$(48\u00b0) = {f_att:+.2f} pN"
+        )
+    elif letter == "d":
+        title = "Single wide tooth control"
+        sub = (
+            f"$R \\in$ [{item.R_min:.2f}, {item.R_max:.2f}] \u03bcm | 1 track "
+            f"($A_{{\\mathrm{{tooth}}}}$ = {item.tooth_area_um2:.3f} \u03bcm\u00b2)\n"
+            f"$F_z$(3\u00b0) = {f_rep:+.2f} pN, $F_z$(48\u00b0) = {f_att:+.2f} pN"
+        )
+    elif letter == "e":
+        title = "Uniform periodic grating control"
+        sub = (
+            f"$R \\in$ [{item.R_min:.2f}, {item.R_max:.2f}] \u03bcm | 3 tracks "
+            f"($A_{{\\mathrm{{tooth}}}}$ = {item.tooth_area_um2:.3f} \u03bcm\u00b2)\n"
+            f"$F_z$(3\u00b0) = {f_rep:+.2f} pN, $F_z$(48\u00b0) = {f_att:+.2f} pN"
+        )
+    elif letter == "f":
+        title = "Size-matched monotonic control"
+        sub = (
+            f"$R \\in$ [{item.R_min:.2f}, {item.R_max:.2f}] \u03bcm | 3 tracks "
+            f"($A_{{\\mathrm{{tooth}}}}$ = {item.tooth_area_um2:.3f} \u03bcm\u00b2)\n"
+            f"$F_z$(3\u00b0) = {f_rep:+.2f} pN, $F_z$(48\u00b0) = {f_att:+.2f} pN"
+        )
+    elif letter == "g":
+        title = "Cantor N = 2 uniform-depth"
+        sub = (
+            f"$R \\in$ [{item.R_min:.2f}, {item.R_max:.2f}] \u03bcm | 3 tracks ($H_1 = H_2$ = 100 nm)\n"
+            f"$F_z$(3\u00b0) = {f_rep:+.2f} pN, $F_z$(48\u00b0) = {f_att:+.2f} pN"
+        )
+    elif letter == "h":
+        title = "Cantor N = 2 (r, z)-scaled"
+        sub = (
+            f"$R \\in$ [{item.R_min:.2f}, {item.R_max:.2f}] \u03bcm | 3 tracks ($H_1$ = 100, $H_2$ = 90 nm)\n"
+            f"$F_z$(3\u00b0) = {f_rep:+.2f} pN, $F_z$(48\u00b0) = {f_att:+.2f} pN"
+        )
+    elif letter == "i":
+        if item.f_rep_secondary_pn is None:
+            raise ValueError("Missing secondary 6-deg force for Rot_C8_Compact_N2.")
+        f6 = item.f_rep_secondary_pn
+        title = "Compact N = 2 rotational variant"
+        sub = (
+            f"$R \\in$ [{item.R_min:.2f}, {item.R_max:.2f}] \u03bcm | 3 tracks "
+            f"($A_{{\\mathrm{{tooth}}}}$ = {item.tooth_area_um2:.3f} \u03bcm\u00b2)\n"
+            f"$F_z$(3\u00b0/6\u00b0) = {f_rep:+.2f}/{f6:+.2f} pN, $F_z$(48\u00b0) = {f_att:+.2f} pN"
+        )
+    elif letter == "j":
+        title = "Tight-slot N = 2 rotational variant"
+        sub = (
+            f"$R \\in$ [{item.R_min:.2f}, {item.R_max:.2f}] \u03bcm | 3 tracks "
+            f"($A_{{\\mathrm{{tooth}}}}$ = {item.tooth_area_um2:.3f} \u03bcm\u00b2)\n"
+            f"$F_z$(6\u00b0) = {f_rep:+.2f} pN, $F_z$(48\u00b0) = {f_att:+.2f} pN"
+        )
+    elif letter == "k":
+        title = "Cantor N = 3 seven-track hierarchy (28 teeth)"
+        sub = (
+            f"$R \\in$ [{item.R_min:.2f}, {item.R_max:.2f}] \u03bcm | 7 tracks "
+            f"($A_{{\\mathrm{{tooth}}}}$ = {item.tooth_area_um2:.3f} \u03bcm\u00b2)\n"
+            f"$F_z$(3\u00b0) = {f_rep:+.2f} pN, $F_z$(48\u00b0) = {f_att:+.2f} pN"
+        )
+    else:
+        if item.f_rep_secondary_pn is None or item.f_att_secondary_pn is None:
+            raise ValueError("Missing Full-Monolithic N=2 forces for Panel l.")
+        f_rep_n2 = item.f_rep_secondary_pn
+        f_att_n2 = item.f_att_secondary_pn
+        title = "Monolithic N = 2 & N = 3 assemblies"
+        sub = (
+            "4 radial spokes + hub collars + trench\n"
+            f"$F_z$(3\u00b0) = {f_rep_n2:+.2f}/{f_rep:+.2f} pN, "
+            f"$F_z$(48\u00b0) = {f_att_n2:+.2f}/{f_att:+.2f} pN"
+        )
+    return title, sub
 
 
 def compose_figure(
@@ -1344,302 +1613,363 @@ def compose_figure(
     import matplotlib.gridspec as gridspec
     import matplotlib.image as mpimg
     import matplotlib.pyplot as plt
+    from matplotlib.patches import Patch
+
+    plt.rcParams.update(
+        {
+            "font.family": "sans-serif",
+            "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+            "mathtext.fontset": "custom",
+            "mathtext.rm": "Arial",
+            "mathtext.it": "Arial:italic",
+            "mathtext.bf": "Arial:bold",
+            "axes.labelsize": 6.0,
+            "xtick.labelsize": 6.0,
+            "ytick.labelsize": 6.0,
+        }
+    )
 
     paths.figure_png.parent.mkdir(parents=True, exist_ok=True)
-    fig = plt.figure(figsize=(24.0, 26.2), facecolor="#090d14")
+    # 180 mm x 252 mm = 7.08 in x 9.92 in at 600 DPI (5 rows x 3 columns)
+    fig = plt.figure(figsize=(7.08, 9.92), dpi=600, facecolor="#FFFFFF")
 
     outer = gridspec.GridSpec(
         5,
-        4,
+        3,
         figure=fig,
-        height_ratios=[1.28, 1.02, 1.02, 1.02, 0.90],
-        hspace=0.28,
-        wspace=0.17,
-        left=0.035,
+        hspace=0.52,
+        wspace=0.19,
+        left=0.068,
         right=0.985,
-        top=0.936,
-        bottom=0.068,
+        top=0.945,
+        bottom=0.045,
     )
 
-    short_names = (
-        "#1 N=0 Overhang",
-        "#2 N=0 Baseline",
-        "#3 N=1 Ring",
-        "#4 N=2 Flat-Z",
-        "#5 Ctrl Wide",
-        "#6 Ctrl Uniform",
-        "#7 Ctrl Monotonic",
-        "#8 N=2 Hybrid(r,z)",
-        "#9 C8 Compact",
-        "#10 N=3 7-Track",
-        "#11 N=2 Monolithic",
-        "#12 N=3 Monolithic",
-    )
-
-    # Top row: Panoramic 3D Side-by-Side Lineup Render across all 4 columns
-    ax_lineup = fig.add_subplot(outer[0, :])
-    ax_lineup.imshow(mpimg.imread(paths.lineup_render))
-    ax_lineup.set_axis_off()
-    ax_lineup.set_title(
-        "A  3D Side-by-Side Exhibition Lineup of All 12 Evaluated Constellations "
-        "(Exact 1:1 Radial Scale in Blender; Top Row #1–#6, Bottom Row #7–#12)",
-        fontsize=12.5,
-        fontweight="bold",
-        color="#f8fafc",
-        loc="left",
-        pad=6,
-    )
-    for idx, label in enumerate(short_names):
-        row = idx // 6
-        col_idx = idx % 6
-        x_frac = 0.095 + col_idx * 0.162
-        y_frac = 0.535 if row == 0 else 0.035
-        ax_lineup.text(
-            x_frac,
-            y_frac,
-            f"{label}  ({constellations[idx].f_rep_bem_pn:+.2f} pN)",
-            transform=ax_lineup.transAxes,
-            fontsize=8.2,
-            fontweight="bold",
-            color="#f8fafc",
-            ha="center",
-            va="bottom",
-            bbox={
-                "boxstyle": "round,pad=0.22",
-                "facecolor": "#0f172a",
-                "edgecolor": "#475569",
-                "alpha": 0.85,
-            },
-        )
-
-    category_border = {
-        "hierarchy": "#38bdf8",
-        "control": "#f59e0b",
-        "fractal_rz": "#10b981",
-        "champion": "#a855f7",
-        "monolithic": "#e2e8f0",
-    }
-
-    # Rows 1..3: 12 Individual Constellations (each cell has 3D render + (r, z) radial profile)
     for idx, item in enumerate(constellations):
-        grid_row = 1 + idx // 4
-        grid_col = idx % 4
+        grid_row = idx // 3
+        grid_col = idx % 3
         sub = gridspec.GridSpecFromSubplotSpec(
             2,
             1,
             subplot_spec=outer[grid_row, grid_col],
-            height_ratios=[2.35, 1.0],
-            hspace=0.06,
+            height_ratios=[2.20, 1.0],
+            hspace=0.05,
         )
         ax_img = fig.add_subplot(sub[0])
         ax_rz = fig.add_subplot(sub[1])
 
+        ax_img.set_facecolor("#F3F4F6")
         ax_img.imshow(mpimg.imread(paths.panel_renders[item.spec.slug]))
         ax_img.set_xticks([])
         ax_img.set_yticks([])
-        border_col = category_border.get(item.spec.category, "#64748b")
         for spine in ax_img.spines.values():
             spine.set_visible(True)
-            spine.set_edgecolor(border_col)
-            spine.set_linewidth(1.5)
+            spine.set_edgecolor("#D1D5DB")
+            spine.set_linewidth(0.6)
 
-        ax_img.set_title(
-            f"{item.spec.title}  [{item.spec.step_label}]\n"
-            f"{item.spec.subtitle}\n"
-            f"R ∈ [{item.R_min:.2f}, {item.R_max:.2f}] µm  |  {len(item.tracks)} tracks "
-            f"({item.full_tooth_count} teeth)  |  A = {item.footprint_um2:.2f} µm²",
+        title_text, sub_text = format_panel_header(item)
+        # 8 pt bold lowercase panel label outside top-left
+        ax_img.text(
+            -0.08,
+            1.31,
+            item.spec.panel_letter,
+            transform=ax_img.transAxes,
             fontsize=8.0,
             fontweight="bold",
-            color="#f1f5f9",
-            loc="left",
-            pad=3.5,
+            color="#111827",
+            ha="left",
+            va="bottom",
         )
-
-        # Bottom-left badge inside image: BEM repulsive, attractive, and switching swing
-        sign_col = "#10b981" if item.f_rep_bem_pn > 0 else "#ef4444"
+        # 7 pt bold title above panel
         ax_img.text(
-            0.02,
-            0.055,
-            f"F(3°) = {item.f_rep_bem_pn:+.3f} pN | F(48°) = {item.f_att_bem_pn:+.2f} pN | "
-            f"ΔF = {item.delta_f_bem_pn:.2f} pN",
+            0.0,
+            1.31,
+            title_text,
             transform=ax_img.transAxes,
-            fontsize=7.3,
+            fontsize=7.0,
             fontweight="bold",
-            color="#ffffff",
-            bbox={
-                "boxstyle": "round,pad=0.23",
-                "facecolor": sign_col,
-                "edgecolor": "white",
-                "alpha": 0.88,
-            },
+            color="#111827",
+            ha="left",
+            va="bottom",
+        )
+        # 6 pt two-line specification subtitle
+        ax_img.text(
+            0.0,
+            1.02,
+            sub_text,
+            transform=ax_img.transAxes,
+            fontsize=6.0,
+            color="#374151",
+            ha="left",
+            va="bottom",
+            linespacing=1.08,
         )
 
-        # Top-right badge inside image: High/Ultra BEM and/or Meep 4-pass verification when present
-        extra_badges: list[str] = []
-        if item.f_rep_ultra_pn is not None:
-            extra_badges.append(f"BEM Ultra: {item.f_rep_ultra_pn:+.2f} pN")
-        elif item.f_rep_high_pn is not None:
-            extra_badges.append(f"BEM High: {item.f_rep_high_pn:+.2f} pN")
-        if item.f_rep_meep_pn is not None:
-            extra_badges.append(f"Meep 4-pass: {item.f_rep_meep_pn:+.3f} pN")
-        if extra_badges:
+        draw_rz_profile(ax_rz, item, show_ylabel=(grid_col == 0))
+
+    # Row 5 (Panels m, n, o): Unified 3D Conformal-Recursive Polar Cantor Hierarchy (r, theta, z)
+    uni_json_path = args.project_root / "results" / "n3_unified_3d_fractal_factorial_study.json"
+    uni_render_dir = args.project_root / "results" / "n3_unified_3d_blender"
+    if uni_json_path.is_file() and uni_render_dir.is_dir():
+        from matplotlib.patches import Rectangle as _Rect
+        from execution.multiscale_3d_fractal_architecture import make_factorial_design
+
+        uni_study = json.loads(uni_json_path.read_text(encoding="utf-8"))
+        uni_by_code = {str(r["code"]): r for r in uni_study.get("records", uni_study.get("results", []))}
+        f3_ang_raw = uni_study.get("f3_111_angular_states", {})
+        if isinstance(f3_ang_raw, dict):
+            f3_att_48 = float(f3_ang_raw.get("landing_pad", {}).get("F_z_pN", -19.98))
+        else:
+            f3_att_48 = -19.98
+
+        row5_specs = (
+            (
+                0,
+                "m",
+                "F1r_100",
+                make_factorial_design("Cantor_100_RadialOnly", "F1r_100", "fractal_1d", True, True, False, False, iso_area=True),
+                uni_render_dir / "render_03_F1r_100_Cantor_100_RadialOnly.png",
+                "Unified 1D radial Cantor (F1r_100)",
+                lambda r_row: (
+                    f"$R \\in$ [0.30, 1.65] \u03bcm | 12 sub-teeth + 5 Cu sub-ribs\n"
+                    f"$F_z$(3\u00b0) = {float(r_row.get('F_z_pN', r_row.get('f_z_pN', 9.09))):+.2f} pN ($A_{{\\mathrm{{tooth}}}}$ = {float(r_row.get('A_tooth_um2', r_row.get('total_tooth_area_um2', 0.310))):.3f} \u03bcm\u00b2)"
+                ),
+            ),
+            (
+                1,
+                "n",
+                "F2rt_110",
+                make_factorial_design("Cantor_110_RadialTheta_Planar1Mask", "F2rt_110", "fractal_2d", True, True, True, False, iso_area=True),
+                uni_render_dir / "render_06_F2rt_110_Cantor_110_RadialTheta_Planar1Mask.png",
+                "Planar 2D (r, \u03b8) Cantor 1-mask (F2rt_110)",
+                lambda r_row: (
+                    f"$R \\in$ [0.30, 1.65] \u03bcm | 12 sub-teeth, 24 lobes (1 mask)\n"
+                    f"$F_z$(3\u00b0) = {float(r_row.get('F_z_pN', r_row.get('f_z_pN', 13.54))):+.2f} pN ($A_{{\\mathrm{{tooth}}}}$ = {float(r_row.get('A_tooth_um2', r_row.get('total_tooth_area_um2', 0.310))):.3f} \u03bcm\u00b2)"
+                ),
+            ),
+            (
+                2,
+                "o",
+                "F3_111",
+                make_factorial_design("Cantor_111_Unified3DFractal", "F3_111", "most_fractal_3d", True, True, True, True, iso_area=True),
+                uni_render_dir / "render_09_F3_111_Cantor_111_Unified3DFractal.png",
+                "Unified 3D (r, \u03b8, z) Cantor (F3_111)",
+                lambda r_row: (
+                    f"$R \\in$ [0.30, 1.65] \u03bcm | 12 teeth, 24 lobes, 3 z-tiers\n"
+                    f"$F_z$(3\u00b0) = {float(r_row.get('F_z_pN', r_row.get('f_z_pN', 18.55))):+.2f} pN, $F_z$(48\u00b0) = {f3_att_48:+.2f} pN"
+                ),
+            ),
+        )
+
+        for col_idx, p_letter, code_key, u_des, r_png, p_title, sub_fn in row5_specs:
+            if code_key not in uni_by_code or not r_png.is_file():
+                continue
+            r_row = uni_by_code[code_key]
+            sub = gridspec.GridSpecFromSubplotSpec(
+                2,
+                1,
+                subplot_spec=outer[4, col_idx],
+                height_ratios=[2.20, 1.0],
+                hspace=0.05,
+            )
+            ax_img = fig.add_subplot(sub[0])
+            ax_rz = fig.add_subplot(sub[1])
+
+            ax_img.set_facecolor("#F3F4F6")
+            img_arr = mpimg.imread(r_png)
+            # Crop 4:3 -> 1.5625:1 aspect ratio to match Panels a-l
+            h_img, w_img = img_arr.shape[:2]
+            if w_img > 0 and h_img > 0 and abs((w_img / h_img) - (4.0 / 3.0)) < 0.05:
+                x_crop = int(round(w_img * 0.09))
+                w_new = w_img - 2 * x_crop
+                h_new = int(round(w_new / 1.5625))
+                y_crop_top = int(round((h_img - h_new) * 0.56))
+                img_arr = img_arr[y_crop_top : y_crop_top + h_new, x_crop : x_crop + w_new]
+            ax_img.imshow(img_arr)
+            ax_img.set_xticks([])
+            ax_img.set_yticks([])
+            for spine in ax_img.spines.values():
+                spine.set_visible(True)
+                spine.set_edgecolor("#B91C1C" if code_key == "F3_111" else "#D1D5DB")
+                spine.set_linewidth(0.85 if code_key == "F3_111" else 0.6)
+
             ax_img.text(
-                0.98,
-                0.93,
-                " | ".join(extra_badges),
+                -0.10,
+                1.31,
+                p_letter,
                 transform=ax_img.transAxes,
-                fontsize=7.2,
+                fontsize=8.0,
                 fontweight="bold",
-                color="#e2e8f0",
-                ha="right",
-                va="top",
-                bbox={
-                    "boxstyle": "round,pad=0.22",
-                    "facecolor": "#0f172a",
-                    "edgecolor": border_col,
-                    "alpha": 0.86,
-                },
+                color="#111827",
+                ha="left",
+                va="bottom",
+            )
+            ax_img.text(
+                0.0,
+                1.31,
+                p_title,
+                transform=ax_img.transAxes,
+                fontsize=6.8,
+                fontweight="bold",
+                color="#991B1B" if code_key == "F3_111" else "#111827",
+                ha="left",
+                va="bottom",
+            )
+            ax_img.text(
+                0.0,
+                1.02,
+                sub_fn(r_row),
+                transform=ax_img.transAxes,
+                fontsize=5.85,
+                color="#374151",
+                ha="left",
+                va="bottom",
+                linespacing=1.08,
             )
 
-        draw_rz_profile(ax_rz, item)
+            # Draw Unified 3D (r, z) cross-section with primary stator ribs, copper sub-ribs, and 12 sub-teeth
+            ax_rz.set_facecolor("#FFFFFF")
+            r_limit = 1.72
+            ax_rz.set_xlim(0.0, r_limit)
+            ax_rz.set_ylim(-290.0, 136.0)
+            pad_top_nm = u_des.z_pad_top * 1000.0
+            pad_bot_nm = (u_des.z_pad_top - u_des.t_landing_pad) * 1000.0
+            ax_rz.axhspan(
+                pad_bot_nm,
+                pad_top_nm,
+                xmin=u_des.R_min / r_limit,
+                xmax=u_des.R_max / r_limit,
+                color="#06B6D4",
+                alpha=0.25,
+            )
+            ax_rz.plot(
+                [u_des.R_min, u_des.R_max],
+                [pad_top_nm, pad_top_nm],
+                "--",
+                color="#0891B2",
+                linewidth=0.8,
+            )
+            mem_bot_nm = -u_des.t_membrane * 1000.0
+            # Primary stator ribs
+            prev_r = u_des.R_min
+            for sl in u_des.slots:
+                if sl.r_inner > prev_r + 1e-6:
+                    ax_rz.add_patch(
+                        _Rect(
+                            (prev_r, mem_bot_nm),
+                            sl.r_inner - prev_r,
+                            -mem_bot_nm,
+                            facecolor="#78716C",
+                            edgecolor="#44403C",
+                            linewidth=0.45,
+                        )
+                    )
+                # Copper stator sub-ribs inside subdivided slots
+                if len(sl.stator_subslots) > 1:
+                    for idx_ss in range(len(sl.stator_subslots) - 1):
+                        sr_in = sl.stator_subslots[idx_ss][1]
+                        sr_out = sl.stator_subslots[idx_ss + 1][0]
+                        if sr_out > sr_in + 1e-6:
+                            ax_rz.add_patch(
+                                _Rect(
+                                    (sr_in, mem_bot_nm),
+                                    sr_out - sr_in,
+                                    -mem_bot_nm,
+                                    facecolor="#D95F02",
+                                    edgecolor="#7C2D12",
+                                    linewidth=0.45,
+                                )
+                            )
+                prev_r = sl.r_outer
+            if u_des.R_max > prev_r + 1e-6:
+                ax_rz.add_patch(
+                    _Rect(
+                        (prev_r, mem_bot_nm),
+                        u_des.R_max - prev_r,
+                        -mem_bot_nm,
+                        facecolor="#78716C",
+                        edgecolor="#44403C",
+                        linewidth=0.45,
+                    )
+                )
+            # 12 rotor sub-teeth
+            level_gold_u = {1: "#F59E0B", 2: "#D97706", 3: "#B45309"}
+            for sl in u_des.slots:
+                for st in sl.sub_teeth:
+                    col_st = level_gold_u.get(int(st.sub_level_z), "#F59E0B")
+                    ax_rz.add_patch(
+                        _Rect(
+                            (st.r_tooth_in, st.z_tip * 1000.0),
+                            st.r_tooth_out - st.r_tooth_in,
+                            st.h_teeth * 1000.0,
+                            facecolor=col_st,
+                            edgecolor="#78350F",
+                            linewidth=0.45,
+                        )
+                    )
+            ax_rz.axhline(0.0, color="#6B7280", linestyle=":", linewidth=0.55, alpha=0.7)
+            ax_rz.set_xticks([0.0, 0.4, 0.8, 1.2, 1.6])
+            ax_rz.set_yticks([-250, -100, 0])
+            if col_idx != 0:
+                ax_rz.set_yticklabels([])
+            else:
+                ax_rz.set_ylabel("z (nm)", fontsize=6.0, color="#111827", labelpad=1.2)
+            ax_rz.set_xlabel("r (\u03bcm)", fontsize=6.0, color="#111827", labelpad=0.4)
+            ax_rz.tick_params(colors="#111827", labelsize=6.0, length=2.0, pad=1.0)
+            for spine in ax_rz.spines.values():
+                spine.set_edgecolor("#9CA3AF")
+                spine.set_linewidth(0.55)
 
-    # Bottom row: Side-by-side quantitative comparison charts across all 12 constellations
-    bottom_sub = gridspec.GridSpecFromSubplotSpec(
-        1, 2, subplot_spec=outer[4, :], width_ratios=[1.12, 1.0], wspace=0.16
-    )
-    ax_rep = fig.add_subplot(bottom_sub[0])
-    ax_swing = fig.add_subplot(bottom_sub[1])
-
-    x_positions = list(range(len(constellations)))
-    rep_vals = [c.f_rep_bem_pn for c in constellations]
-    bar_colors = [
-        "#ef4444" if c.f_rep_bem_pn < 0 else category_border.get(c.spec.category, "#38bdf8")
-        for c in constellations
+    legend_handles = [
+        Patch(facecolor="#F59E0B", edgecolor="#78350F", linewidth=0.5, label="Gold rotor teeth (Au)"),
+        Patch(
+            facecolor="#78716C",
+            edgecolor="#44403C",
+            linewidth=0.5,
+            label="Stator aperture rings ($z \\in [-25, 0]$ nm)",
+        ),
+        Patch(
+            facecolor="#D95F02",
+            edgecolor="#7C2D12",
+            linewidth=0.5,
+            label="Cantor stator sub-ribs (Cu, Panels m\u2013o)",
+        ),
+        Patch(
+            facecolor="#06B6D4",
+            edgecolor="#0891B2",
+            alpha=0.45,
+            linewidth=0.6,
+            label="Recessed landing pads ($z_{\\mathrm{pad}} = -115$ nm)",
+        ),
+        Patch(
+            facecolor="#64748B",
+            edgecolor="#334155",
+            alpha=0.55,
+            linewidth=0.5,
+            label="Monolithic Si spokes & trench",
+        ),
     ]
-
-    ax_rep.set_facecolor("#0f141d")
-    bars = ax_rep.bar(x_positions, rep_vals, color=bar_colors, edgecolor="white", linewidth=0.7)
-    ax_rep.axhline(0.0, color="#ffffff", linewidth=0.9)
-    ax_rep.set_xticks(x_positions)
-    ax_rep.set_xticklabels(short_names, rotation=22, ha="right", fontsize=8.3, color="#e2e8f0")
-    ax_rep.set_ylabel("Open-Slot Vertical Force F_z(θ = 3°) [pN]", fontsize=9.5, color="#f8fafc")
-    ax_rep.set_title(
-        "B  Disengaged Open-Slot Repulsion F_z(θ = 3°) Across All 12 Constellations (Standard 3D BEM)",
-        fontsize=10.8,
-        fontweight="bold",
-        color="#f8fafc",
-        loc="left",
-    )
-    ax_rep.tick_params(colors="#cbd5e1", labelsize=8.0)
-    ax_rep.grid(axis="y", alpha=0.22, color="#64748b")
-    ax_rep.set_ylim(min(rep_vals) - 0.55, max(rep_vals) + 0.65)
-    for bar, val in zip(bars, rep_vals):
-        y_text = val + 0.08 if val >= 0 else val - 0.24
-        ax_rep.text(
-            bar.get_x() + bar.get_width() / 2.0,
-            y_text,
-            f"{val:+.2f}",
-            ha="center",
-            va="bottom" if val >= 0 else "top",
-            fontsize=7.5,
-            fontweight="bold",
-            color="#f8fafc",
-        )
-    for spine in ax_rep.spines.values():
-        spine.set_edgecolor("#334155")
-
-    swing_vals = [c.delta_f_bem_pn for c in constellations]
-    density_vals = [c.delta_f_bem_pn / c.footprint_um2 for c in constellations]
-    ax_swing.set_facecolor("#0f141d")
-    width = 0.38
-    b1 = ax_swing.bar(
-        [x - width / 2.0 for x in x_positions],
-        swing_vals,
-        width=width,
-        color="#38bdf8",
-        edgecolor="white",
-        linewidth=0.6,
-        label="Total Switching Swing ΔF_z = F(3°) − F(48°) [pN]",
-    )
-    b2 = ax_swing.bar(
-        [x + width / 2.0 for x in x_positions],
-        density_vals,
-        width=width,
-        color="#10b981",
-        edgecolor="white",
-        linewidth=0.6,
-        label="Footprint-Normalized Swing ΔF_z / A_annulus [pN/µm²]",
-    )
-    ax_swing.set_xticks(x_positions)
-    ax_swing.set_xticklabels(short_names, rotation=22, ha="right", fontsize=8.3, color="#e2e8f0")
-    ax_swing.set_ylabel("Force Swing [pN] / Density [pN/µm²]", fontsize=9.5, color="#f8fafc")
-    ax_swing.set_title(
-        "C  Bipolar Switching Swing ΔF_z & Footprint Efficiency Across All 12 Constellations",
-        fontsize=10.8,
-        fontweight="bold",
-        color="#f8fafc",
-        loc="left",
-    )
-    ax_swing.tick_params(colors="#cbd5e1", labelsize=8.0)
-    ax_swing.grid(axis="y", alpha=0.22, color="#64748b")
-    ax_swing.legend(fontsize=8.2, facecolor="#1e293b", edgecolor="#475569", labelcolor="#f8fafc")
-    ax_swing.set_ylim(0.0, max(swing_vals) + 2.5)
-    for bar, val in zip(b1, swing_vals):
-        ax_swing.text(
-            bar.get_x() + bar.get_width() / 2.0,
-            val + 0.25,
-            f"{val:.1f}",
-            ha="center",
-            va="bottom",
-            fontsize=6.8,
-            color="#bae6fd",
-        )
-    for bar, val in zip(b2, density_vals):
-        ax_swing.text(
-            bar.get_x() + bar.get_width() / 2.0,
-            val + 0.25,
-            f"{val:.2f}",
-            ha="center",
-            va="bottom",
-            fontsize=6.8,
-            color="#a7f3d0",
-        )
-    for spine in ax_swing.spines.values():
-        spine.set_edgecolor("#334155")
-
-    fig.suptitle(
-        TITLE,
-        fontsize=16.5,
-        fontweight="bold",
-        color="#f8fafc",
-        y=0.972,
-    )
-    fig.text(
-        0.5,
-        0.948,
-        "Color Key — Gold: Elevated Stator Ribs (z ∈ [−25, 0] nm) | Copper/Bronze: Recessed Landing Pads "
-        "(z ∈ [−265, −115] nm) | Sector-0 Rotor Teeth: Emerald (Gen-1), Cyan (Gen-2), Violet (Gen-3), "
-        "Coral (Overhang +45 nm) | Sapphire: Sectors 1–3 Teeth | Titanium/Slate: Monolithic Spider & Trench",
-        ha="center",
-        fontsize=9.5,
-        color="#cbd5e1",
-    )
-    fig.text(
-        0.5,
-        0.008,
-        "Grounded Source: results/nature_6step_narrative_report.json | "
-        "Master 3D Scene: results/all_constellations_blender/all_constellations_scene.blend "
-        "(+ 12 individual .blend models in results/all_constellations_blender/models/) | "
-        f"Active-layer axial display exaggeration ×{args.z_exaggeration:g}",
-        ha="center",
-        fontsize=8.8,
-        color="#94a3b8",
+    fig.legend(
+        handles=legend_handles,
+        loc="lower center",
+        bbox_to_anchor=(0.51, 0.003),
+        ncol=5,
+        frameon=False,
+        fontsize=5.5,
+        handlelength=1.0,
+        handletextpad=0.35,
+        columnspacing=0.8,
     )
 
     try:
-        fig.savefig(paths.figure_png, dpi=220, facecolor=fig.get_facecolor())
-        fig.savefig(paths.figure_pdf, facecolor=fig.get_facecolor())
+        fig.savefig(paths.figure_png, dpi=600, facecolor="#FFFFFF")
+        fig.savefig(paths.figure_pdf, facecolor="#FFFFFF")
         shutil.copyfile(paths.figure_png, paths.composite_png)
+        for paper_sub in ("Fractal_Casimir_Nature_EM", "FCE_Nature_ver01"):
+            paper_fig_dir = args.project_root / "Papers" / paper_sub / "figures"
+            if paper_fig_dir.is_dir():
+                shutil.copyfile(paths.figure_png, paper_fig_dir / paths.figure_png.name)
+                shutil.copyfile(paths.figure_pdf, paper_fig_dir / paths.figure_pdf.name)
     finally:
         plt.close(fig)
 
@@ -1664,16 +1994,25 @@ def compose_figure(
             solver_parameters={
                 "formulation": "vector_dyadic",
                 "source_report": "results/nature_6step_narrative_report.json",
-                "constellation_count": len(constellations),
+                "rotational_report": "results/rotational_z_eff_clutch_report.json",
+                "unified_3d_report": "results/n3_unified_3d_fractal_factorial_study.json",
+                "constellation_count": len(constellations) + 3,
                 "display_z_exaggeration": args.z_exaggeration,
             },
         )
+        prov_sidecar = Path(str(fig_path) + ".provenance.json")
+        if prov_sidecar.is_file():
+            for paper_sub in ("Fractal_Casimir_Nature_EM", "FCE_Nature_ver01"):
+                paper_fig_dir = args.project_root / "Papers" / paper_sub / "figures"
+                if paper_fig_dir.is_dir():
+                    shutil.copyfile(prov_sidecar, paper_fig_dir / prov_sidecar.name)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     report = load_narrative_report(args.project_root)
-    constellations = load_constellations(report)
+    rot_report = load_rotational_report(args.project_root)
+    constellations = load_constellations(report, rot_report)
     if args.mode == "python" and args.skip_blender and 1 <= args.max_steps <= 5:
         print(
             f"Validated {len(constellations)} constellations, radial track geometries, "

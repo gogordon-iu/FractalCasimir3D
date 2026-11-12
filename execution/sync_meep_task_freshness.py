@@ -1119,6 +1119,16 @@ def _require_macro_float(macros: Macros, name: str) -> float:
     return float(macro.number)
 
 
+def _require_finite_float(value: object, label: str) -> float:
+    dec = decimal_value(value)
+    if dec is None or not dec.is_finite():
+        raise ValueError(f"Expected finite numeric {label}, got {value!r}")
+    res = float(dec)
+    if not math.isfinite(res):
+        raise ValueError(f"Expected finite float {label}, got {value!r}")
+    return res
+
+
 def _require_integral_int(value: object, label: str) -> int:
     dec = decimal_value(value)
     if dec is None or dec != dec.to_integral_value() or dec <= 0:
@@ -1154,10 +1164,64 @@ def sync_grounded_manuscript_macros(
     """Log grounded moment counts, amplification ratios, and design coordinates from source JSONs and macros."""
     narrative_path = root / "results" / "nature_6step_narrative_report.json"
     task19_path = root / "results_rotational_z_eff_meep" / "task_19_meep.json"
+    bem_conv_path = root / "results" / "bem_fdtd_convergence_resolution.json"
     narrative = read_json(narrative_path)
     task19 = read_json(task19_path)
-    if not isinstance(narrative, dict) or not isinstance(task19, dict):
-        raise ValueError("Expected JSON dicts for narrative and task_19_meep")
+    bem_conv = read_json(bem_conv_path)
+    if not isinstance(narrative, dict) or not isinstance(task19, dict) or not isinstance(bem_conv, dict):
+        raise ValueError("Expected JSON dicts for narrative, task_19_meep, and bem_fdtd_convergence_resolution")
+
+    conv_ctrl_dir = root / "results_meep_convergence_controls"
+    conv_tasks: dict[int, dict[str, Any]] = {}
+    for tid in (1, 2, 3, 4, 5, 6, 8):
+        t_doc = read_json(conv_ctrl_dir / f"task_{tid}_meep.json")
+        if not isinstance(t_doc, dict):
+            raise ValueError(f"Expected JSON dict for results_meep_convergence_controls/task_{tid}_meep.json")
+        conv_tasks[tid] = t_doc
+
+    f_meep_fb_r40 = _require_finite_float(conv_tasks[1].get("f_net_pN"), "task_1 f_net_pN")
+    f_meep_fb_r50 = _require_finite_float(conv_tasks[2].get("f_net_pN"), "task_2 f_net_pN")
+    f_meep_fb_r60 = _require_finite_float(conv_tasks[3].get("f_net_pN"), "task_3 f_net_pN")
+    f_meep_fb_r80 = _require_finite_float(conv_tasks[4].get("f_net_pN"), "task_4 f_net_pN")
+    f_meep_fb_r50_nmax2 = _require_finite_float(conv_tasks[5].get("f_net_pN"), "task_5 f_net_pN")
+    f_meep_fb_r60_nmax2 = _require_finite_float(conv_tasks[6].get("f_net_pN"), "task_6 f_net_pN")
+    f_meep_fb_r60_gold = _require_finite_float(conv_tasks[8].get("f_net_pN"), "task_8 f_net_pN")
+    nmax2_moments_per_pass = _require_integral_int(
+        conv_tasks[6].get("num_tasks_per_config"), "task_6 num_tasks_per_config"
+    )
+    nmax2_total_moments = _require_integral_int(
+        conv_tasks[6].get("completed_moments"), "task_6 completed_moments"
+    )
+    if f_meep_fb_r60 <= 0.0:
+        raise ValueError("Expected strictly positive repulsive R=60 Meep baseline force for theta=3 deg convergence controls")
+    meep_fb_r60_to_r80_drift_pct = 100.0 * abs(f_meep_fb_r80 - f_meep_fb_r60) / f_meep_fb_r60
+    meep_fb_r60_nmax2_gain_pct = 100.0 * (f_meep_fb_r60_nmax2 / f_meep_fb_r60 - 1.0)
+    meep_fb_r60_gold_pec_share_pct = 100.0 * (f_meep_fb_r60_gold / f_meep_fb_r60)
+
+    nxi_rows = {
+        _require_integral_int(r.get("n_xi"), "n_xi"): _require_finite_float(r.get("force_z_pN"), "n_xi force_z_pN")
+        for r in bem_conv["n_xi_decoupled_sweep"]
+    }
+    spatial_rows = {
+        str(r["tier_label"]): _require_finite_float(r.get("force_z_pN"), f"{r.get('tier_label')} force_z_pN")
+        for r in bem_conv["spatial_and_self_term_sweep"]
+    }
+    bem_nxi_drift_pct = _require_finite_float(
+        bem_conv["summary"].get("n_xi_relative_drift_24_to_64_pct"),
+        "n_xi_relative_drift_24_to_64_pct",
+    )
+    f_bem_dir_base = spatial_rows["Standard_2_2_2_2_diskSelf"]
+    f_bem_dir_rad = spatial_rows["RadialOnly_3_2_2_2_diskSelf"]
+    f_bem_dir_azim = spatial_rows["AzimuthalToothOnly_2_3_2_2_diskSelf"]
+    f_bem_dir_vert = spatial_rows["VerticalZOnly_2_2_2_3_diskSelf"]
+    f_bem_dir_high = spatial_rows["High_3_3_2_3_diskSelf"]
+    f_bem_dir_rect = spatial_rows["Standard_2_2_2_2_rectSelf"]
+    if f_bem_dir_base <= 0.0:
+        raise ValueError("Expected strictly positive BEM (2,2,2,2) repulsive baseline force")
+    bem_dir_rad_pct = 100.0 * (f_bem_dir_rad / f_bem_dir_base - 1.0)
+    bem_dir_azim_pct = 100.0 * (f_bem_dir_azim / f_bem_dir_base - 1.0)
+    bem_dir_vert_pct = abs(100.0 * (f_bem_dir_vert / f_bem_dir_base - 1.0))
+    bem_dir_rect_pct = 100.0 * (f_bem_dir_rect / f_bem_dir_base - 1.0)
 
     n3_moments_per_pass = _require_integral_int(
         task19.get("num_tasks_per_config"), "task_19 num_tasks_per_config"
@@ -1227,6 +1291,35 @@ def sync_grounded_manuscript_macros(
         "fractal_n3_cantorseventrack_w_slot_gen3_nm": ("FractalNthreeCantorseventrackWSlotGenthreeNm", round((float(t_n3_gen3["r_outer"]) - float(t_n3_gen3["r_inner"])) * 1000.0, 1)),
         "fractal_n3_cantorseventrack_w_tooth_gen3_nm": ("FractalNthreeCantorseventrackWToothGenthreeNm", round((float(t_n3_gen3["r_tooth_out"]) - float(t_n3_gen3["r_tooth_in"])) * 1000.0, 1)),
         "fractal_n3_cantorseventrack_g_r_gen3_nm": ("FractalNthreeCantorseventrackGRGenthreeNm", round((float(t_n3_gen3["r_tooth_in"]) - float(t_n3_gen3["r_inner"])) * 1000.0, 1)),
+        "meep_fixedbox_margin_nm": ("MeepFixedboxMarginNm", 10),
+        "meep_fixedbox_r40_fz_pn": ("MeepFixedboxRfourzeroFZPn", round(f_meep_fb_r40, 4)),
+        "meep_fixedbox_r50_fz_pn": ("MeepFixedboxRfivezeroFZPn", round(f_meep_fb_r50, 4)),
+        "meep_fixedbox_r60_fz_pn": ("MeepFixedboxRsixzeroFZPn", round(f_meep_fb_r60, 4)),
+        "meep_fixedbox_r80_fz_pn": ("MeepFixedboxReightzeroFZPn", round(f_meep_fb_r80, 4)),
+        "meep_fixedbox_r60_to_r80_drift_pct": ("MeepFixedboxRsixzeroToReightzeroDriftPct", round(meep_fb_r60_to_r80_drift_pct, 2)),
+        "meep_fixedbox_r50_nmax2_fz_pn": ("MeepFixedboxRfivezeroNmaxtwoFZPn", round(f_meep_fb_r50_nmax2, 4)),
+        "meep_fixedbox_r60_nmax2_fz_pn": ("MeepFixedboxRsixzeroNmaxtwoFZPn", round(f_meep_fb_r60_nmax2, 4)),
+        "meep_fixedbox_r60_nmax2_gain_pct": ("MeepFixedboxRsixzeroNmaxtwoGainPct", round(meep_fb_r60_nmax2_gain_pct, 1)),
+        "meep_nmax2_moments_per_pass": ("MeepNmaxtwoMomentsPerPass", nmax2_moments_per_pass),
+        "meep_nmax2_total_moments": ("MeepNmaxtwoTotalMoments", nmax2_total_moments),
+        "meep_fixedbox_r60_gold_fz_pn": ("MeepFixedboxRsixzeroGoldFZPn", round(f_meep_fb_r60_gold, 4)),
+        "meep_fixedbox_r60_gold_pec_share_pct": ("MeepFixedboxRsixzeroGoldPecSharePct", round(meep_fb_r60_gold_pec_share_pct, 1)),
+        "bem_conv_std_nxi16_pec_fz_pn": ("BemConvStdNxionesixPecFZPn", round(nxi_rows[16], 4)),
+        "bem_conv_std_nxi24_pec_fz_pn": ("BemConvStdNxitwofourPecFZPn", round(nxi_rows[24], 4)),
+        "bem_conv_std_nxi32_pec_fz_pn": ("BemConvStdNxithreetwoPecFZPn", round(nxi_rows[32], 4)),
+        "bem_conv_std_nxi40_pec_fz_pn": ("BemConvStdNxifourzeroPecFZPn", round(nxi_rows[40], 4)),
+        "bem_conv_std_nxi64_pec_fz_pn": ("BemConvStdNxisixfourPecFZPn", round(nxi_rows[64], 4)),
+        "bem_conv_nxi_drift_pct": ("BemConvNxiDriftPct", round(bem_nxi_drift_pct, 4)),
+        "bem_conv_dir_base_fz_pn": ("BemConvDirBaseFZPn", round(f_bem_dir_base, 4)),
+        "bem_conv_dir_radial_fz_pn": ("BemConvDirRadialFZPn", round(f_bem_dir_rad, 4)),
+        "bem_conv_dir_radial_pct": ("BemConvDirRadialPct", round(bem_dir_rad_pct, 1)),
+        "bem_conv_dir_azimuthal_fz_pn": ("BemConvDirAzimuthalFZPn", round(f_bem_dir_azim, 4)),
+        "bem_conv_dir_azimuthal_pct": ("BemConvDirAzimuthalPct", round(bem_dir_azim_pct, 1)),
+        "bem_conv_dir_vertical_fz_pn": ("BemConvDirVerticalFZPn", round(f_bem_dir_vert, 4)),
+        "bem_conv_dir_vertical_pct": ("BemConvDirVerticalPct", round(bem_dir_vert_pct, 1)),
+        "bem_conv_dir_high_fz_pn": ("BemConvDirHighFZPn", round(f_bem_dir_high, 4)),
+        "bem_conv_dir_rect_self_fz_pn": ("BemConvDirRectSelfFZPn", round(f_bem_dir_rect, 4)),
+        "bem_conv_dir_rect_self_pct": ("BemConvDirRectSelfPct", round(bem_dir_rect_pct, 1)),
     }
 
     owned_macros: dict[str, str] = {}

@@ -465,6 +465,7 @@ def register_supplied_metrics(
         manifest_metrics = manifest.get("metrics", {})
         nems_exported: dict[str, float] = {}
         solver3_exported: dict[str, float] = {}
+        canonical_val_exported: dict[str, float] = {}
         if isinstance(manifest_metrics, Mapping):
             for name, entry in manifest_metrics.items():
                 if not isinstance(entry, Mapping):
@@ -478,27 +479,102 @@ def register_supplied_metrics(
                 val = float(raw_val)
                 line_no = entry.get("line_number")
                 line_int = int(line_no) if isinstance(line_no, int) else None
-                if "run_nature_feasibility_and_stability.py" in src_file:
+                entry_meta = entry.get("metadata") if isinstance(entry.get("metadata"), Mapping) else {}
+                meta_group = entry_meta.get("group")
+                name_lower = name.lower()
+                declared_unit = entry.get("unit") or entry_meta.get("unit")
+                if isinstance(declared_unit, str) and declared_unit.strip():
+                    inferred_unit = declared_unit.strip()
+                elif (
+                    name_lower.endswith("_pn_per_um2")
+                    or name_lower.endswith("_pn_per_tooth_area_um2")
+                    or "density_pn_per_um2" in name_lower
+                    or "_pn_per_area_" in name_lower
+                ):
+                    inferred_unit = "pN/um^2"
+                elif (
+                    name_lower.endswith("_pn_per_um")
+                    or name_lower.endswith("_pn_per_tooth_perimeter_um")
+                    or "density_pn_per_um" in name_lower
+                    or "_pn_per_perimeter_" in name_lower
+                ):
+                    inferred_unit = "pN/um"
+                elif name_lower.endswith("_pn_um"):
+                    inferred_unit = "pN*um"
+                elif name_lower.endswith("_hbar_c_per_um"):
+                    inferred_unit = "hbar*c/um"
+                elif name_lower.endswith("_pn") or "_force_" in name_lower or "_fz_" in name_lower:
+                    inferred_unit = "pN"
+                elif name_lower.endswith("_pct") or "percent" in name_lower:
+                    inferred_unit = "%"
+                elif "panels" in name_lower:
+                    inferred_unit = "panels"
+                elif name_lower.endswith("_count"):
+                    inferred_unit = "count"
+                elif name_lower.endswith("_per_um"):
+                    inferred_unit = "1/um"
+                elif name_lower.endswith("_ev"):
+                    inferred_unit = "eV"
+                elif name_lower.endswith("_um2"):
+                    inferred_unit = "um^2"
+                elif name_lower.endswith("_um"):
+                    inferred_unit = "um"
+                elif name_lower.endswith("_nm"):
+                    inferred_unit = "nm"
+                elif name_lower.endswith("_pa"):
+                    inferred_unit = "Pa"
+                else:
+                    inferred_unit = "dimensionless"
+                if (
+                    "run_nature_feasibility_and_stability.py" in src_file
+                    or meta_group == "nems_feasibility"
+                ):
                     registry.add(
                         name,
                         val,
-                        "SI / NEMS feasibility units",
+                        inferred_unit,
                         f"True-vacuum NEMS feasibility metric: {name}",
                         "nems_feasibility",
                         Source(
-                            src_file,
+                            src_file or "execution/run_nature_feasibility_and_stability.py",
                             line_int,
                             manifest_checksum,
                             f"logged by {src_file} into results/provenance_metrics.json",
                         ),
                     )
                     nems_exported[name] = val
-                elif "run_rotational_clutch_3solver_verification.py" in src_file:
+                elif (
+                    "run_bem_canonical_validation.py" in src_file
+                    or meta_group == "bem_canonical_validation"
+                    or name_lower.startswith("bem_val_")
+                ):
                     registry.add(
                         name,
                         val,
-                        "pN / panel count",
-                        f"True-vacuum 3-solver verification metric: {name}",
+                        inferred_unit,
+                        f"Canonical 3D Vector-Dyadic BEM validation metric: {name}",
+                        "bem_canonical_validation",
+                        Source(
+                            src_file or "execution/run_bem_canonical_validation.py",
+                            line_int,
+                            manifest_checksum,
+                            f"logged by {src_file} into results/provenance_metrics.json",
+                        ),
+                    )
+                    canonical_val_exported[name] = val
+                elif (
+                    "run_rotational_clutch_3solver_verification.py" in src_file
+                    or "run_bem_fdtd_convergence_resolution.py" in src_file
+                    or "run_nature_6step_narrative.py" in src_file
+                    or "run_clutch_log_periodicity_probe.py" in src_file
+                    or "probe_edge_rounding.py" in src_file
+                    or meta_group == "rotational_clutch_3solver_verification"
+                ):
+                    registry.add(
+                        name,
+                        val,
+                        inferred_unit,
+                        f"True-vacuum 3-solver / narrative verification metric: {name}",
                         "rotational_clutch_3solver_verification",
                         Source(
                             src_file,
@@ -514,6 +590,13 @@ def register_supplied_metrics(
                 "eps_bg": 1.0,
                 "metric_count": len(nems_exported),
                 "source": "results/nature_feasibility_stability_report.json",
+            }
+        if canonical_val_exported:
+            registry.datasets["bem_canonical_validation"] = {
+                "name": "Canonical 3D Vector-Dyadic BEM Validation Suite (Lifshitz, Energy-Derivative, Matsubara)",
+                "eps_bg": 1.0,
+                "metric_count": len(canonical_val_exported),
+                "source": "results/bem_canonical_validation_report.json",
             }
         if solver3_exported:
             registry.datasets["rotational_clutch_3solver_verification"] = {
@@ -1000,6 +1083,16 @@ def register_rotary_clutch_campaigns(registry: Registry) -> None:
         ("ctrl_sizematched_monotonic_bem_theta48_f_z_pn", "Ctrl_SizeMatched_Monotonic", 48.0, "Standard"),
         ("fractal_n1_fundring_bem_theta3_f_z_pn", "Fractal_N1_FundRing", 3.0, "Standard"),
         ("fractal_n1_fundring_bem_theta48_f_z_pn", "Fractal_N1_FundRing", 48.0, "Standard"),
+        ("cantor_n2_truerz_bem_theta3_f_z_pn", "Cantor_N2_TrueRZ", 3.0, "Standard"),
+        ("cantor_n2_truerz_bem_theta48_f_z_pn", "Cantor_N2_TrueRZ", 48.0, "Standard"),
+        ("ctrl_n3_uniform7track_bem_theta3_f_z_pn", "Ctrl_N3_Uniform7Track", 3.0, "Standard"),
+        ("ctrl_n3_uniform7track_bem_theta48_f_z_pn", "Ctrl_N3_Uniform7Track", 48.0, "Standard"),
+        ("ctrl_n3_monotonic7track_bem_theta3_f_z_pn", "Ctrl_N3_Monotonic7Track", 3.0, "Standard"),
+        ("ctrl_n3_monotonic7track_bem_theta48_f_z_pn", "Ctrl_N3_Monotonic7Track", 48.0, "Standard"),
+        ("ctrl_n3_shuffled7track_bem_theta3_f_z_pn", "Ctrl_N3_Shuffled7Track", 3.0, "Standard"),
+        ("ctrl_n3_shuffled7track_bem_theta48_f_z_pn", "Ctrl_N3_Shuffled7Track", 48.0, "Standard"),
+        ("ctrl_uniformperiodic_bem_high_theta3_f_z_pn", "Ctrl_UniformPeriodic", 3.0, "High"),
+        ("ctrl_uniformperiodic_bem_ultra_theta3_f_z_pn", "Ctrl_UniformPeriodic", 3.0, "Ultra_High"),
     )
 
     def bem_candidates(
@@ -1058,24 +1151,98 @@ def register_rotary_clutch_campaigns(registry: Registry) -> None:
 
         # Register overhang sign-reversal, full-monolithic BEM, and scalar-Yukawa BEM controls
         extra_bem_specs = (
-            ("singletooth_track0_overhang_bem_theta3_f_z_pn", "step1_single_tooth_ztip_0011"),
-            ("cantor_n2_hybridrz_bem_monolithic_theta3_f_z_pn", "step6_monolithic_ultrahigh_validation_0063"),
-            ("cantor_n2_hybridrz_bem_monolithic_theta48_f_z_pn", "step6_monolithic_ultrahigh_validation_0065"),
-            ("fractal_n3_cantor7track_bem_monolithic_theta3_f_z_pn", "step6_monolithic_ultrahigh_validation_0067"),
-            ("fractal_n3_cantor7track_bem_monolithic_theta48_f_z_pn", "step6_monolithic_ultrahigh_validation_0069"),
-            ("cantor_n2_hybridrz_bem_scalar_std_theta3_f_z_pn", "step6_monolithic_ultrahigh_validation_0076"),
-            ("cantor_n2_hybridrz_bem_scalar_std_theta48_f_z_pn", "step6_monolithic_ultrahigh_validation_0077"),
+            ("singletooth_track0_overhang_bem_theta3_f_z_pn", "SingleTooth_Track0", 3.0, "Standard", "Active-Only", "vector_dyadic", -0.055),
+            ("cantor_n2_hybridrz_bem_monolithic_theta3_f_z_pn", "Cantor_N2_HybridRZ", 3.0, "Standard", "Full-Monolithic", "vector_dyadic", None),
+            ("cantor_n2_hybridrz_bem_monolithic_theta48_f_z_pn", "Cantor_N2_HybridRZ", 48.0, "Standard", "Full-Monolithic", "vector_dyadic", None),
+            ("fractal_n3_cantor7track_bem_monolithic_theta3_f_z_pn", "Fractal_N3_Cantor7Track", 3.0, "Standard", "Full-Monolithic", "vector_dyadic", None),
+            ("fractal_n3_cantor7track_bem_monolithic_theta48_f_z_pn", "Fractal_N3_Cantor7Track", 48.0, "Standard", "Full-Monolithic", "vector_dyadic", None),
+            ("cantor_n2_hybridrz_bem_scalar_std_theta3_f_z_pn", "Cantor_N2_HybridRZ", 3.0, "Standard", "Active-Only", "scalar_yukawa", None),
+            ("cantor_n2_hybridrz_bem_scalar_std_theta48_f_z_pn", "Cantor_N2_HybridRZ", 48.0, "Standard", "Active-Only", "scalar_yukawa", None),
+            ("cantor_n2_hybridrz_bem_high_theta48_f_z_pn", "Cantor_N2_HybridRZ", 48.0, "High", "Active-Only", "vector_dyadic", None),
+            ("cantor_n2_hybridrz_bem_ultra_theta48_f_z_pn", "Cantor_N2_HybridRZ", 48.0, "Ultra_High", "Active-Only", "vector_dyadic", None),
         )
-        for name, target_task_id in extra_bem_specs:
+        for name, d_name, th_deg, t_name, b_name, f_name, z_tip_val in extra_bem_specs:
             candidates = [
                 (record.get("F_z_pN"), (*pointer, "F_z_pN"))
                 for record, pointer in bem_entries
-                if record.get("task_id") == target_task_id
+                if normalized(record.get("design")) == normalized(d_name)
+                and number_matches(record.get("theta_deg"), th_deg)
+                and normalized(record.get("mesh_tier", record.get("tier"))) == normalized(t_name)
+                and normalized(record.get("boundary_condition", record.get("boundary"))) == normalized(b_name)
+                and normalized(record.get("formulation")) == normalized(f_name)
+                and (z_tip_val is None or number_matches(record.get("z_tip_um"), z_tip_val))
                 and record.get("F_z_pN") is not None
             ]
             register_candidates(name, candidates, narrative_path, checksum)
 
         raw_tasks = verification.get("tasks", []) if isinstance(verification.get("tasks"), Sequence) else []
+        best_cfg = (
+            analysis.get("step5_best_active_configuration")
+            if isinstance(analysis, Mapping)
+            else None
+        )
+        cand_cfg = (
+            analysis.get("step5_candidate_comparisons")
+            if isinstance(analysis, Mapping)
+            else None
+        )
+        use_best_cfg = (
+            isinstance(best_cfg, Mapping)
+            and isinstance(best_cfg.get("scores"), list)
+            and len(best_cfg.get("scores", [])) > 0
+        )
+        step5_key = (
+            "step5_best_active_configuration"
+            if use_best_cfg
+            else "step5_candidate_comparisons"
+        )
+        step5_analysis = (
+            best_cfg
+            if use_best_cfg and isinstance(best_cfg, Mapping)
+            else (cand_cfg if isinstance(cand_cfg, Mapping) else {})
+        )
+        step5_scores_list = step5_analysis.get("scores", []) if isinstance(step5_analysis, Mapping) else []
+        if isinstance(step5_scores_list, list):
+            for idx_s, s_rec in enumerate(step5_scores_list):
+                if not isinstance(s_rec, Mapping):
+                    continue
+                d_name = str(s_rec.get("design", ""))
+                if not d_name:
+                    continue
+                for field_key, unit_str in (
+                    ("F_rep_pN", "pN"),
+                    ("F_att_pN", "pN"),
+                    ("Delta_F_pN", "pN"),
+                    ("F_rep_pN_per_tooth_area_um2", "pN/um^2"),
+                    ("F_att_pN_per_tooth_area_um2", "pN/um^2"),
+                    ("Delta_F_pN_per_tooth_area_um2", "pN/um^2"),
+                    ("F_rep_pN_per_tooth_perimeter_um", "pN/um"),
+                    ("F_att_pN_per_tooth_perimeter_um", "pN/um"),
+                    ("Delta_F_pN_per_tooth_perimeter_um", "pN/um"),
+                    ("full_tooth_planform_area_um2", "um^2"),
+                    ("full_tooth_planform_perimeter_um", "um"),
+                ):
+                    raw_v = s_rec.get(field_key)
+                    if isinstance(raw_v, (int, float)) and not isinstance(raw_v, bool) and math.isfinite(float(raw_v)):
+                        m_name = f"nature_{d_name}_{field_key}"
+                        src_s = Source(
+                            relative_path(narrative_path),
+                            None,
+                            checksum,
+                            f"campaign JSON score at /analysis/{step5_key}/scores/{idx_s}/{field_key}",
+                        )
+                        try:
+                            registry.add(
+                                m_name,
+                                float(raw_v),
+                                unit_str,
+                                f"Step 5 {d_name} {field_key}",
+                                group,
+                                src_s,
+                            )
+                            exported[m_name] = float(raw_v)
+                        except (TypeError, ValueError) as exc:
+                            registry.fail(str(exc))
         meep_entries = [
             (item, ("analysis", "meep_verification", "tasks", str(idx)))
             for idx, item in enumerate(raw_tasks)
@@ -1350,6 +1517,117 @@ def register_rotary_clutch_campaigns(registry: Registry) -> None:
                         f"{source_path}: {design_name}, theta={theta:g}: {exc}"
                     )
 
+    conv_res_path = REPO_ROOT / "results/bem_fdtd_convergence_resolution.json"
+    conv_res = read_payload(conv_res_path)
+    if conv_res is not None:
+        payload, checksum = conv_res
+        for idx_n, item in enumerate(payload.get("n_xi_decoupled_sweep", [])):
+            if isinstance(item, Mapping) and item.get("n_xi") is not None and item.get("force_z_pN") is not None:
+                n_xi_val = int(item["n_xi"])
+                register_candidates(
+                    f"bem_conv_std_nxi{n_xi_val}_pec_fz_pn",
+                    [(item["force_z_pN"], ("n_xi_decoupled_sweep", str(idx_n), "force_z_pN"))],
+                    conv_res_path,
+                    checksum,
+                )
+        summary_block = payload.get("summary")
+        if isinstance(summary_block, Mapping) and summary_block.get("n_xi_relative_drift_24_to_64_pct") is not None:
+            register_candidates(
+                "bem_conv_nxi_drift_pct",
+                [(summary_block["n_xi_relative_drift_24_to_64_pct"], ("summary", "n_xi_relative_drift_24_to_64_pct"))],
+                conv_res_path,
+                checksum,
+            )
+        for idx_e, item in enumerate(payload.get("edge_rounded_r5nm_convergence", [])):
+            if not isinstance(item, Mapping):
+                continue
+            slug = str(item.get("slug", "")).strip()
+            if not slug:
+                continue
+            for m_key, j_key in (
+                (f"cantor_n2_hybridrz_bem_r5nm_{slug}_f_z_pn", "cantor_r5nm_fz_pN"),
+                (f"ctrl_uniformperiodic_bem_r5nm_{slug}_f_z_pn", "uniform_r5nm_fz_pN"),
+                (f"cantor_n2_vs_uniform_ratio_r5nm_{slug}", "ratio_r5nm"),
+                (f"cantor_n2_vs_uniform_ratio_sharp_{slug}", "ratio_sharp"),
+            ):
+                if item.get(j_key) is not None:
+                    register_candidates(
+                        m_key,
+                        [(item[j_key], ("edge_rounded_r5nm_convergence", str(idx_e), j_key))],
+                        conv_res_path,
+                        checksum,
+                    )
+
+    meep_ctrl_specs = (
+        ("meep_fixedbox_r40_fz_pn", 1),
+        ("meep_fixedbox_r50_fz_pn", 2),
+        ("meep_fixedbox_r60_fz_pn", 3),
+        ("meep_fixedbox_r80_fz_pn", 4),
+        ("meep_fixedbox_r60_nmax2_fz_pn", 6),
+        ("meep_fixedbox_r60_gold_fz_pn", 8),
+    )
+    meep_ctrl_vals: dict[str, tuple[float, Path, str]] = {}
+    for m_key, t_id in meep_ctrl_specs:
+        mc_path = REPO_ROOT / f"results_meep_convergence_controls/task_{t_id}_meep.json"
+        mc_loaded = read_payload(mc_path)
+        if mc_loaded is not None:
+            mc_payload, mc_checksum = mc_loaded
+            if mc_payload.get("f_net_pN") is not None:
+                register_candidates(
+                    m_key,
+                    [(mc_payload["f_net_pN"], ("f_net_pN",))],
+                    mc_path,
+                    mc_checksum,
+                )
+                meep_ctrl_vals[m_key] = (float(mc_payload["f_net_pN"]), mc_path, mc_checksum)
+    if "meep_fixedbox_r60_fz_pn" in meep_ctrl_vals and "meep_fixedbox_r80_fz_pn" in meep_ctrl_vals:
+        f60, _, _ = meep_ctrl_vals["meep_fixedbox_r60_fz_pn"]
+        f80, p80, c80 = meep_ctrl_vals["meep_fixedbox_r80_fz_pn"]
+        drift_60_80 = 100.0 * abs(f80 - f60) / max(abs(f80), 1e-12)
+        register_candidates("meep_fixedbox_r60_to_r80_drift_pct", [(drift_60_80, ("f_net_pN",))], p80, c80)
+    if "meep_fixedbox_r60_fz_pn" in meep_ctrl_vals and "meep_fixedbox_r60_gold_fz_pn" in meep_ctrl_vals:
+        f60, _, _ = meep_ctrl_vals["meep_fixedbox_r60_fz_pn"]
+        fg60, pg60, cg60 = meep_ctrl_vals["meep_fixedbox_r60_gold_fz_pn"]
+        if abs(f60) > 1e-12:
+            gold_pct = 100.0 * (fg60 / f60)
+            register_candidates("meep_fixedbox_r60_gold_vs_pec_pct", [(gold_pct, ("f_net_pN",))], pg60, cg60)
+
+    feas_path = REPO_ROOT / "results/nature_feasibility_stability_report.json"
+    feas = read_payload(feas_path)
+    if feas is not None:
+        payload, checksum = feas
+        feas_items = payload.get("evaluations", payload.get("tasks", []))
+        for idx_f, item in enumerate(feas_items if isinstance(feas_items, list) else []):
+            if not isinstance(item, Mapping):
+                continue
+            geom = str(item.get("design", item.get("geometry", ""))).strip()
+            step_idx = item.get("step_id", item.get("step_index"))
+            if not geom or not isinstance(step_idx, int):
+                continue
+            feas_units = {
+                "force_z_pN": "pN",
+                "energy_pN_um": "pN*um",
+                "energy_hbar_c_per_um": "hbar*c/um",
+            }
+            for f_key, f_unit in feas_units.items():
+                raw_v = item.get(f_key)
+                if isinstance(raw_v, (int, float)) and not isinstance(raw_v, bool) and math.isfinite(float(raw_v)):
+                    m_name = f"nature_{geom}_step{step_idx}_{f_key}"
+                    if m_name not in registry.metrics:
+                        registry.add(
+                            m_name,
+                            float(raw_v),
+                            f_unit,
+                            f"NEMS feasibility {geom} step {step_idx} {f_key}",
+                            "nems_feasibility",
+                            Source(
+                                relative_path(feas_path),
+                                None,
+                                checksum,
+                                f"campaign JSON evaluation at /evaluations/{idx_f}/{f_key}",
+                            ),
+                        )
+
     if sources:
         registry.datasets[group] = {
             "name": "Gold Concentric Cantor-Ring Rotary Quantum Clutch",
@@ -1556,6 +1834,127 @@ def find_figures(manuscript: Path) -> list[Path]:
     return sorted(figures, key=str)
 
 
+def verify_cross_table_consistency(registry: Registry) -> dict[str, Any]:
+    """Verify Extended Data Table 1 force densities and Table 1/2/3 0 K PEC & Drude gold consistency."""
+    checks: dict[str, Any] = {
+        "table1_density_ratios": {},
+        "cross_table_0k_forces": {},
+        "all_passed": True,
+    }
+    step5_designs = (
+        "Ctrl_SingleWide",
+        "Ctrl_UniformPeriodic",
+        "Ctrl_SizeMatched_Monotonic",
+        "Cantor_N2_FlatZ",
+        "Cantor_N2_HybridRZ",
+        "Cantor_N2_TrueRZ",
+        "Rot_C8_Compact_N2",
+        "Fractal_N3_Cantor7Track",
+        "Ctrl_N3_Uniform7Track",
+        "Ctrl_N3_Monotonic7Track",
+        "Ctrl_N3_Shuffled7Track",
+    )
+    for d_name in step5_designs:
+        f_metric = registry.metrics.get(f"nature_{d_name}_F_rep_pN")
+        a_metric = registry.metrics.get(f"nature_{d_name}_full_tooth_planform_area_um2")
+        p_metric = registry.metrics.get(f"nature_{d_name}_full_tooth_planform_perimeter_um")
+        da_metric = registry.metrics.get(f"nature_{d_name}_F_rep_pN_per_tooth_area_um2")
+        dp_metric = registry.metrics.get(f"nature_{d_name}_F_rep_pN_per_tooth_perimeter_um")
+        if any(m is None for m in (f_metric, a_metric, p_metric, da_metric, dp_metric)):
+            checks["all_passed"] = False
+            registry.fail(
+                f"Missing Extended Data Table 1 density metrics for {d_name} in registry."
+            )
+            continue
+        assert f_metric is not None and a_metric is not None and p_metric is not None
+        assert da_metric is not None and dp_metric is not None
+        if not (
+            math.isfinite(a_metric.value)
+            and a_metric.value > 0
+            and math.isfinite(p_metric.value)
+            and p_metric.value > 0
+        ):
+            checks["all_passed"] = False
+            registry.fail(
+                f"Invalid non-positive tooth area or perimeter for {d_name}: "
+                f"A_tooth={a_metric.value}, P_edge={p_metric.value}"
+            )
+            continue
+        expected_da = f_metric.value / a_metric.value
+        expected_dp = f_metric.value / p_metric.value
+        ok_a = math.isclose(da_metric.value, expected_da, rel_tol=1e-9, abs_tol=1e-12)
+        ok_p = math.isclose(dp_metric.value, expected_dp, rel_tol=1e-9, abs_tol=1e-12)
+        checks["table1_density_ratios"][d_name] = {
+            "F_rep_pN": f_metric.value,
+            "A_tooth_um2": a_metric.value,
+            "P_edge_um": p_metric.value,
+            "F_over_A_reported": da_metric.value,
+            "F_over_A_exact": expected_da,
+            "F_over_P_reported": dp_metric.value,
+            "F_over_P_exact": expected_dp,
+            "passed": ok_a and ok_p,
+        }
+        if not (ok_a and ok_p):
+            checks["all_passed"] = False
+            registry.fail(
+                f"Extended Data Table 1 density mismatch for {d_name}: "
+                f"F/A={da_metric.value} vs {expected_da}, F/P={dp_metric.value} vs {expected_dp}"
+            )
+
+    cross_pairs = (
+        (
+            "Cantor_N2_HybridRZ_Gold_0K_theta3",
+            "cantor_n2_hybridrz_bem_std_f_z_pn",
+            "nature_Cantor_N2_HybridRZ_step2_force_z_pN",
+        ),
+        (
+            "Cantor_N2_HybridRZ_Gold_0K_theta48",
+            "cantor_n2_hybridrz_bem_theta48_f_z_pn",
+            "nature_Cantor_N2_HybridRZ_step3_force_z_pN",
+        ),
+        (
+            "Cantor_N2_HybridRZ_PEC_0K_theta3",
+            "bem_conv_std_nxi24_pec_fz_pn",
+            "nature_Cantor_N2_HybridRZ_step0_force_z_pN",
+        ),
+        (
+            "Rot_C8_Compact_N2_Gold_0K_theta3",
+            "rot_c8_compact_n2_bem_theta3_f_z_pn",
+            "nature_Rot_C8_Compact_N2_step18_force_z_pN",
+        ),
+        (
+            "Rot_C8_Compact_N2_Gold_0K_theta48",
+            "rot_c8_compact_n2_bem_theta48_f_z_pn",
+            "nature_Rot_C8_Compact_N2_step19_force_z_pN",
+        ),
+    )
+    for label, key_tab12, key_tab3 in cross_pairs:
+        m12 = registry.metrics.get(key_tab12)
+        m3 = registry.metrics.get(key_tab3)
+        if m12 is None or m3 is None:
+            checks["all_passed"] = False
+            registry.fail(
+                f"Missing cross-table 0 K force metric for {label}: "
+                f"{key_tab12}={m12}, {key_tab3}={m3}"
+            )
+            continue
+        ok_pair = math.isclose(m12.value, m3.value, rel_tol=1e-6, abs_tol=1e-9)
+        checks["cross_table_0k_forces"][label] = {
+            "table1_2_metric": key_tab12,
+            "table1_2_value_pN": m12.value,
+            "table3_metric": key_tab3,
+            "table3_value_pN": m3.value,
+            "passed": ok_pair,
+        }
+        if not ok_pair:
+            checks["all_passed"] = False
+            registry.fail(
+                f"Cross-table 0 K force mismatch for {label}: "
+                f"{key_tab12}={m12.value} vs {key_tab3}={m3.value}"
+            )
+    return checks
+
+
 def export_pipeline(args: argparse.Namespace) -> int:
     executed_at = datetime.now(timezone.utc).isoformat()
     freshness_metadata = {
@@ -1579,6 +1978,8 @@ def export_pipeline(args: argparse.Namespace) -> int:
     registry = Registry()
     register_supplied_metrics(registry, documents)
     register_rotary_clutch_campaigns(registry)
+    consistency_checks = verify_cross_table_consistency(registry)
+    registry.datasets["cross_table_consistency_audit"] = consistency_checks
 
     all_metrics = list(registry.metrics.values())
     selected = (
@@ -1630,15 +2031,6 @@ def export_pipeline(args: argparse.Namespace) -> int:
         },
     )
 
-    if metrics_path.is_file():
-        import json
-        loaded_metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
-        metric_values = loaded_metrics.get("metrics", {})
-        if not isinstance(metric_values, dict):
-            raise ValueError("Expected a metrics dictionary")
-        for key in ("accuracy_top1", "f1_score", "embedding_reduction"):
-            metric_values.pop(key, None)
-        write_json(metrics_path, loaded_metrics)
     with working_directory(REPO_ROOT):
         logger_call(
             log_step,
@@ -1661,7 +2053,7 @@ def export_pipeline(args: argparse.Namespace) -> int:
             aliases={"name": "step_name"},
             primary="step_name",
         )
-        for metric in selected:
+        for idx, metric in enumerate(selected):
             logger_call(
                 log_metric,
                 {
@@ -1675,6 +2067,7 @@ def export_pipeline(args: argparse.Namespace) -> int:
                     "output_dir": str(output_dir),
                     "output_path": str(metrics_path),
                     "metrics_path": str(metrics_path),
+                    "defer_save": idx < len(selected) - 1,
                     "metadata": {
                         **metric.metadata,
                         "group": metric.group,
@@ -1683,6 +2076,31 @@ def export_pipeline(args: argparse.Namespace) -> int:
                 },
                 primary="value",
             )
+
+        if metrics_path.is_file():
+            loaded_metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+            metric_values = loaded_metrics.get("metrics", {})
+            if not isinstance(metric_values, dict):
+                raise ValueError("Expected a metrics dictionary")
+            for key in ("accuracy_top1", "f1_score", "embedding_reduction"):
+                metric_values.pop(key, None)
+            for metric in selected:
+                existing_entry = metric_values.get(metric.name)
+                metric_values[metric.name] = {
+                    **(dict(existing_entry) if isinstance(existing_entry, Mapping) else {}),
+                    "value": metric.value,
+                    "source_file": metric.source.path,
+                    "source_function": "export_pipeline",
+                    "line_number": metric.source.line or 1920,
+                    "step_id": "grounded_experiment_provenance_export",
+                    "recorded_at": executed_at,
+                    "metadata": {
+                        **metric.metadata,
+                        "group": metric.group,
+                        "source": asdict(metric.source),
+                    },
+                }
+            write_json(metrics_path, loaded_metrics)
 
         # Run-specific JSONL ledgers never receive the logger's JSON dictionary.
         # Empty selections intentionally produce empty JSONL files.

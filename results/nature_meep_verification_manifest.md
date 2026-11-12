@@ -18,11 +18,11 @@ All lengths are in micrometers unless otherwise indicated. Track elements are so
 | 5 | `Step4_Ctrl_UniformPeriodic_th48_R50` | 4 | 3 | 48 | 50 | 20 | 0.015 | 3 | 33.3333333 | 108 | 432 |
 | 6 | `Step3_4_Cantor_N2_FlatZ_th3_R50` | 3, 4 | 3 | 3 | 50 | 20 | 0.015 | 3 | 33.3333333 | 108 | 432 |
 | 7 | `Step3_4_Cantor_N2_FlatZ_th48_R50` | 3, 4 | 3 | 48 | 50 | 20 | 0.015 | 3 | 33.3333333 | 108 | 432 |
-| 8 | `Step4_5_Cantor_N2_HybridRZ_th3_R50` | 4, 5 | 3 | 3 | 50 | 20 | 0.005 | 3 | 100 | 108 | 432 |
-| 9 | `Step4_5_Cantor_N2_HybridRZ_th48_R50` | 4, 5 | 3 | 48 | 50 | 20 | 0.005 | 3 | 100 | 108 | 432 |
+| 8 | `Step4_5_Cantor_N2_HybridRZ_th3_R50` | 4, 5 | 3 | 3 | 50 | 20 | 0.015 | 3 | 33.3333333 | 108 | 432 |
+| 9 | `Step4_5_Cantor_N2_HybridRZ_th48_R50` | 4, 5 | 3 | 48 | 50 | 20 | 0.015 | 3 | 33.3333333 | 108 | 432 |
 | 10 | `Step5_Rot_C8_Compact_N2_th3_R50` | 5 | 3 | 3 | 50 | 20 | 0.015 | 3 | 33.3333333 | 108 | 432 |
-| 11 | `Step6_Conv_Cantor_N2_HybridRZ_th3_R40` | 6 | 3 | 3 | 40 | 25 | 0.005 | 3 | 100 | 108 | 432 |
-| 12 | `Step6_Conv_Cantor_N2_HybridRZ_th3_R60` | 6 | 3 | 3 | 60 | 16.6667 | 0.005 | 3 | 100 | 108 | 432 |
+| 11 | `Step6_Conv_Cantor_N2_HybridRZ_th3_R40` | 6 | 3 | 3 | 40 | 25 | 0.015 | 3 | 33.3333333 | 108 | 432 |
+| 12 | `Step6_Conv_Cantor_N2_HybridRZ_th3_R60` | 6 | 3 | 3 | 60 | 16.6667 | 0.015 | 3 | 33.3333333 | 108 | 432 |
 
 ## Verification comparisons
 

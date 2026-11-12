@@ -1,0 +1,33 @@
+{
+  "figure_file": "figures/fig_all_constellations_blender.png",
+  "timestamp": "2026-11-08T00:33:40.941993+00:00",
+  "input_source": {
+    "path": "results/nature_6step_narrative_data.csv",
+    "sha256": "b7da1d4cbc6ae28b6896a58b0698b17e200b8eb9f5080b528aa6bfede86c235b"
+  },
+  "data_slices_columns": [
+    "step",
+    "design",
+    "theta_deg",
+    "z_tip_um",
+    "F_z_pN",
+    "boundary",
+    "tier",
+    "formulation",
+    "footprint_um2"
+  ],
+  "generating_code": {
+    "source_file": "utils/metrics_logger.py",
+    "source_function": "save_plot_provenance",
+    "line_number": 595
+  },
+  "solver": "execution.casimir_bem_solver.run_bem_casimir_solver",
+  "solver_parameters": {
+    "formulation": "vector_dyadic",
+    "source_report": "results/nature_6step_narrative_report.json",
+    "rotational_report": "results/rotational_z_eff_clutch_report.json",
+    "unified_3d_report": "results/n3_unified_3d_fractal_factorial_study.json",
+    "constellation_count": 15,
+    "display_z_exaggeration": 1.8
+  }
+}

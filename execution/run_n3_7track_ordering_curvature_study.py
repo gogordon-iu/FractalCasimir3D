@@ -770,42 +770,93 @@ def compute_radial_surrogate_105_distribution(
 def render_figure(report: Mapping[str, Any], out_png: Path, out_pdf: Path) -> None:
     """Render 4-panel diagnostic figure for the 7-track ordering & curvature decoupling study."""
     plt.rcParams.update({
-        "font.size": 9,
-        "axes.titlesize": 10,
-        "axes.labelsize": 9,
-        "xtick.labelsize": 8,
-        "ytick.labelsize": 8,
-        "legend.fontsize": 7.5,
+        "font.size": 8.5,
+        "axes.titlesize": 9.8,
+        "axes.labelsize": 8.8,
+        "xtick.labelsize": 7.4,
+        "ytick.labelsize": 8.0,
+        "legend.fontsize": 7.2,
     })
-    fig, axes = plt.subplots(2, 2, figsize=(12.2, 8.8), dpi=300)
+    fig, axes = plt.subplots(2, 2, figsize=(13.2, 9.2), dpi=300)
     ax_a, ax_b, ax_c, ax_d = axes[0, 0], axes[0, 1], axes[1, 0], axes[1, 1]
 
-    # Panel A: Cylindrical vs Quasi-Planar (arc-matched) total force comparison
+    # Panel A: Cylindrical vs Quasi-Planar (arc-matched) + 3D Peak-Synchronized & Unified 3D reversal
     cyl_map = {r["design"]: r for r in report["part1_curvature_decoupling"]["cylindrical_0.30_1.65"]}
     qpa_map = {r["design"]: r for r in report["part1_curvature_decoupling"]["quasi_planar_arc_matched_10.0_11.35"]}
-    designs_order = [
-        ("Ctrl_Uniform7Track", "Uniform\n7-Track"),
-        ("Ctrl_RandomPermuted7Track", "Random\nPermuted"),
-        ("Fractal_N3_Cantor7Track", "Cantor N=3\n(Symmetric)"),
-        ("Ctrl_Monotonic7Track", "Monotonic\n(Inner->Outer)"),
-    ]
-    x = np.arange(len(designs_order))
-    w_bar = 0.36
-    vals_cyl = [cyl_map[k]["F_z_pN"] for k, _ in designs_order]
-    vals_qpa = [qpa_map[k]["F_z_pN"] for k, _ in designs_order]
+    prov_path = ROOT / "results" / "provenance_metrics.json"
+    pm_metrics: Mapping[str, Any] = {}
+    if prov_path.is_file():
+        pm_metrics = json.loads(prov_path.read_text(encoding="utf-8")).get("metrics", {})
+    def _pm(k: str, fallback: float) -> float:
+        entry = pm_metrics.get(k)
+        return float(entry["value"]) if isinstance(entry, Mapping) and "value" in entry else fallback
 
-    bars1 = ax_a.bar(x - w_bar / 2, vals_cyl, w_bar, label=r"Cylindrical $R \in [0.30, 1.65]\,\mu\mathrm{m}$ ($R_{\max}/R_{\min}=5.5$)", color="#1f77b4", edgecolor="black", linewidth=0.6)
-    bars2 = ax_a.bar(x + w_bar / 2, vals_qpa, w_bar, label=r"Quasi-planar $R \in [10.0, 11.35]\,\mu\mathrm{m}$ ($R_{\max}/R_{\min}=1.135$)", color="#ff7f0e", edgecolor="black", linewidth=0.6)
+    ps_cantor = _pm("n3_3d_peaksync_cantor_fz_pn", 6.655645)
+    ps_mono = _pm("n3_3d_peaksync_monotonic_fz_pn", 6.064301)
+    u3_f3 = _pm("n3_uni3d_f111_unified_fz_pn", 18.550864)
+    u3_c8 = _pm("n3_uni3d_ctrl_mono12_fz_pn", 15.067948)
+
+    labels_a = [
+        "Uniform\n7-Trk",
+        "Shuffled\n7-Trk",
+        "1D Cantor\nN=3",
+        "1D Mono.\n7-Trk",
+        "3D PeakSync\nCantor (7T)",
+        "3D PeakSync\nMono. (7T)",
+        "Unified 3D\nCantor (F3)",
+        "Unified 3D\nMono. (C8)",
+    ]
+    x_1d = np.arange(4)
+    w_bar = 0.36
+    vals_cyl = [
+        cyl_map["Ctrl_Uniform7Track"]["F_z_pN"],
+        cyl_map["Ctrl_RandomPermuted7Track"]["F_z_pN"],
+        cyl_map["Fractal_N3_Cantor7Track"]["F_z_pN"],
+        cyl_map["Ctrl_Monotonic7Track"]["F_z_pN"],
+    ]
+    vals_qpa = [
+        qpa_map["Ctrl_Uniform7Track"]["F_z_pN"],
+        qpa_map["Ctrl_RandomPermuted7Track"]["F_z_pN"],
+        qpa_map["Fractal_N3_Cantor7Track"]["F_z_pN"],
+        qpa_map["Ctrl_Monotonic7Track"]["F_z_pN"],
+    ]
+
+    bars1 = ax_a.bar(x_1d - w_bar / 2, vals_cyl, w_bar, label=r"1D Cylindrical $R \in [0.30, 1.65]\,\mu\mathrm{m}$", color="#1f77b4", edgecolor="black", linewidth=0.6)
+    bars2 = ax_a.bar(x_1d + w_bar / 2, vals_qpa, w_bar, label=r"1D Quasi-planar $R \in [10.0, 11.35]\,\mu\mathrm{m}$", color="#ff7f0e", edgecolor="black", linewidth=0.6)
+    bars_3d = ax_a.bar(
+        [4, 5, 6, 7],
+        [ps_cantor, ps_mono, u3_f3, u3_c8],
+        width=0.52,
+        color=["#d62728", "#8c564b", "#b91c1c", "#8ca252"],
+        edgecolor="black",
+        linewidth=0.7,
+        label=r"3D $(r,\theta,z)$ PeakSync (7T) & Unified (12T)",
+    )
+    ax_a.axvline(3.5, color="#64748B", linestyle="--", linewidth=0.9, alpha=0.8)
     for b in bars1:
-        ax_a.text(b.get_x() + b.get_width() / 2, b.get_height() + 0.06, f"{b.get_height():.2f}", ha="center", va="bottom", fontsize=7.5, color="#1f77b4", fontweight="bold")
+        ax_a.text(b.get_x() + b.get_width() / 2, b.get_height() + 0.18, f"{b.get_height():.2f}", ha="center", va="bottom", fontsize=6.6, color="#1f77b4", fontweight="bold")
     for b in bars2:
-        ax_a.text(b.get_x() + b.get_width() / 2, b.get_height() + 0.06, f"{b.get_height():.2f}", ha="center", va="bottom", fontsize=7.5, color="#d95f02", fontweight="bold")
-    ax_a.set_xticks(x)
-    ax_a.set_xticklabels([lbl for _, lbl in designs_order])
+        ax_a.text(b.get_x() + b.get_width() / 2, b.get_height() + 0.18, f"{b.get_height():.2f}", ha="center", va="bottom", fontsize=6.6, color="#d95f02", fontweight="bold")
+    for b in bars_3d:
+        ax_a.text(b.get_x() + b.get_width() / 2, b.get_height() + 0.22, f"{b.get_height():+.2f}", ha="center", va="bottom", fontsize=7.0, color="#0F172A", fontweight="bold")
+    ax_a.annotate(
+        "3D Fractal Reversal:\n+9.8% (7T) & +23.1% (12T)\nover Monotonic",
+        xy=(6.0, u3_f3),
+        xytext=(4.35, 14.5),
+        fontsize=7.0,
+        fontweight="bold",
+        color="#b91c1c",
+        ha="center",
+        va="center",
+        bbox=dict(boxstyle="round,pad=0.2", facecolor="#FEF2F2", edgecolor="#FCA5A5", lw=0.7),
+        arrowprops=dict(arrowstyle="->", color="#b91c1c", lw=0.8),
+    )
+    ax_a.set_xticks(np.arange(len(labels_a)))
+    ax_a.set_xticklabels(labels_a, fontsize=7.0)
     ax_a.set_ylabel(r"Open-slot repulsive force $F_z(\theta_{\mathrm{off}})$ (pN)")
-    ax_a.set_ylim(0, 5.05)
-    ax_a.set_title("a  Cylindrical Curvature vs. Quasi-Planar Ordering Decoupling", loc="left", fontweight="bold")
-    ax_a.legend(loc="upper left", frameon=True)
+    ax_a.set_ylim(0, 20.8)
+    ax_a.set_title("Cylindrical Curvature Decoupling & 3D Fractal Reversal", loc="left", fontweight="bold")
+    ax_a.legend(loc="upper left", frameon=True, fontsize=6.8)
     ax_a.grid(axis="y", linestyle=":", alpha=0.5)
 
     # Panel B: Per-track force F_{z,k} vs track radius R_k in Cylindrical vs Quasi-Planar
@@ -840,7 +891,7 @@ def render_figure(report: Mapping[str, Any], out_png: Path, out_pdf: Path) -> No
     ax_b.plot(qp_r50, qp_f50, "k--d", markersize=5, linewidth=1.2, label=r"Quasi-planar 50 nm ($R_k - 9.7\,\mu\mathrm{m}$)")
     ax_b.set_xlabel(r"Track center radius $R_k$ ($\mu$m)")
     ax_b.set_ylabel(r"Per-track axial force $F_{z,k}$ (pN)")
-    ax_b.set_title(r"b  Per-Track Force $F_{z,k}(R_k)$ Across Radial Positions", loc="left", fontweight="bold")
+    ax_b.set_title(r"Per-Track Force $F_{z,k}(R_k)$ Across Radial Positions", loc="left", fontweight="bold")
     ax_b.legend(loc="upper right", frameon=True, fontsize=7)
     ax_b.grid(True, linestyle=":", alpha=0.5)
 
@@ -857,21 +908,21 @@ def render_figure(report: Mapping[str, Any], out_png: Path, out_pdf: Path) -> No
     bins = np.linspace(min(min(fz_105), min(fz_eval)) - 0.05, max(max(fz_105), max(fz_eval)) + 0.05, 16)
     ax_c.hist(fz_105, bins=bins, color="#aec7e8", edgecolor="#1f77b4", alpha=0.55, label="105-perm radial-surrogate model")
     ax_c.hist(fz_eval, bins=bins, color="#1f77b4", edgecolor="black", alpha=0.80, label=f"Direct 3D BEM sample ($N={len(fz_eval)}$)")
-    ax_c.axvline(c_fz, color="#d62728", linestyle="-", linewidth=2.0, label=f"Cantor N=3: {c_fz:.3f} pN ({p2['cantor_percentile_strict_fz_eval']:.1f}th %ile)")
+    ax_c.axvline(c_fz, color="#d62728", linestyle="-", linewidth=2.0, label=f"1D Cantor N=3: {c_fz:.3f} pN ({p2['cantor_percentile_strict_fz_eval']:.1f}th %ile)")
     mono_eval_rec = next((r for r in eval_recs_c if tuple(r["widths_nm"]) == MONOTONIC_WIDTHS_NM), None)
     if mono_eval_rec is not None:
         m_fz_val = float(mono_eval_rec["F_z_pN"])
         n_non_mono = max(len(fz_eval) - 1, 1)
         m_pct = 100.0 * sum(1 for v in fz_eval if v < m_fz_val - 1e-9) / n_non_mono
-        mono_lbl = f"Monotonic: {m_fz_val:.3f} pN ({m_pct:.0f}th %ile)"
+        mono_lbl = f"1D Monotonic: {m_fz_val:.3f} pN ({m_pct:.0f}th %ile)"
     else:
-        mono_lbl = f"Monotonic (ref): {m_fz:.3f} pN (not in sample)"
+        mono_lbl = f"1D Monotonic (ref): {m_fz:.3f} pN"
     ax_c.axvline(m_fz, color="#2ca02c", linestyle="--", linewidth=1.8, label=mono_lbl)
     ax_c.axvline(s_fz, color="#9467bd", linestyle="-.", linewidth=1.5, label=f"Shuffled Ctrl: {s_fz:.3f} pN")
     ax_c.axvline(u_fz, color="#7f7f7f", linestyle=":", linewidth=1.8, label=f"Uniform 7-Track: {u_fz:.3f} pN")
     ax_c.set_xlabel(r"Total repulsive force $F_z = \sum_{k=1}^7 F_{z,k}$ (pN)")
     ax_c.set_ylabel("Number of permutations")
-    ax_c.set_title("c  Multiset Permutation Distribution (Raw Force $F_z$)", loc="left", fontweight="bold")
+    ax_c.set_title("1D Multiset Permutation Distribution (Raw Force $F_z$)", loc="left", fontweight="bold")
     ax_c.legend(loc="upper left", frameon=True, fontsize=7)
     ax_c.grid(True, linestyle=":", alpha=0.5)
 
@@ -886,14 +937,17 @@ def render_figure(report: Mapping[str, Any], out_png: Path, out_pdf: Path) -> No
 
     ax_d.scatter(r50_105, fcirc_105, color="#aec7e8", s=22, alpha=0.7, label="105-perm radial-surrogate model")
     ax_d.scatter(r50_eval, fcirc_eval, color="#1f77b4", edgecolor="black", linewidth=0.5, s=36, label="Direct 3D BEM evaluations")
-    ax_d.scatter([0.975], [cyl_map["Fractal_N3_Cantor7Track"]["F_circ_sum_pN_per_um"]], color="#d62728", marker="*", s=160, zorder=5, label=f"Cantor N=3 ({p2['cantor_percentile_strict_fcirc_eval']:.1f}th %ile)")
-    ax_d.scatter([0.525], [cyl_map["Ctrl_Monotonic7Track"]["F_circ_sum_pN_per_um"]], color="#2ca02c", marker="D", s=70, zorder=5, label="Monotonic (all 50 nm inner)")
+    ax_d.scatter([0.975], [cyl_map["Fractal_N3_Cantor7Track"]["F_circ_sum_pN_per_um"]], color="#d62728", marker="*", s=160, zorder=5, label=f"1D Cantor N=3 ({p2['cantor_percentile_strict_fcirc_eval']:.1f}th %ile)")
+    ax_d.scatter([0.525], [cyl_map["Ctrl_Monotonic7Track"]["F_circ_sum_pN_per_um"]], color="#2ca02c", marker="D", s=70, zorder=5, label="1D Monotonic (all 50 nm inner)")
     ax_d.axhline(cyl_map["Ctrl_Uniform7Track"]["F_circ_sum_pN_per_um"], color="#7f7f7f", linestyle=":", linewidth=1.6, label="Uniform 7-Track baseline")
     ax_d.set_xlabel(r"Mean radial center of the four 50-nm tracks $\bar{R}_{50}$ ($\mu$m)")
     ax_d.set_ylabel(r"Circumference-normalized $\sum_{k=1}^7 F_{z,k}/(2\pi R_k)$ (pN/$\mu$m)")
-    ax_d.set_title(r"d  Circumference-Normalized Force vs. $\bar{R}_{50}$ Radial Bias", loc="left", fontweight="bold")
+    ax_d.set_title(r"Circumference-Normalized Force vs. $\bar{R}_{50}$ Radial Bias", loc="left", fontweight="bold")
     ax_d.legend(loc="upper right", frameon=True, fontsize=7)
     ax_d.grid(True, linestyle=":", alpha=0.5)
+
+    for lbl_ch, ax_p in zip(("a", "b", "c", "d"), (ax_a, ax_b, ax_c, ax_d)):
+        ax_p.text(-0.085, 1.04, lbl_ch, transform=ax_p.transAxes, fontsize=12.5, fontweight="bold", va="bottom", ha="left", color="#0F172A")
 
     fig.tight_layout()
     out_png.parent.mkdir(parents=True, exist_ok=True)
@@ -901,11 +955,12 @@ def render_figure(report: Mapping[str, Any], out_png: Path, out_pdf: Path) -> No
     fig.savefig(out_pdf)
     plt.close(fig)
 
-    paper_fig_dir = ROOT / "Papers" / "FCE_Nature_ver01" / "figures"
-    if paper_fig_dir.is_dir():
-        for src in (out_png, out_pdf):
-            dst = paper_fig_dir / src.name
-            dst.write_bytes(src.read_bytes())
+    for paper_sub in ("FCE_Nature_ver01", "Fractal_Casimir_Nature_EM"):
+        paper_fig_dir = ROOT / "Papers" / paper_sub / "figures"
+        if paper_fig_dir.is_dir():
+            for src in (out_png, out_pdf):
+                dst = paper_fig_dir / src.name
+                dst.write_bytes(src.read_bytes())
 
 
 def write_markdown_summary(report: Mapping[str, Any], out_md: Path) -> None:
@@ -1324,6 +1379,21 @@ def main() -> int:
             "n3_perm_cantor_pct_fcirc_105": float(emp_105["surrogate_estimated_cantor_percentile_strict_fcirc_105"]),
             "n3_perm_qparc_cantor_pct_fz": float(qp_pct_fz),
             "n3_perm_qparc_cantor_pct_fcirc": float(qp_pct_fcirc),
+            "n3_curv_cyl_monotonic_50nm_sum_pn": float(
+                sum(
+                    f
+                    for w, f in zip(
+                        cyl_map["Ctrl_Monotonic7Track"]["widths_nm"],
+                        cyl_map["Ctrl_Monotonic7Track"]["f_tracks_pN"],
+                    )
+                    if w == 50
+                )
+            ),
+            "n3_curv_radial_model_mae_pn": float(emp_105["radial_model_mae_pN"]),
+            "n3_curv_track_50nm_r2": float(emp_105["track_50nm_r2"]),
+            "n3_perm_n_eval_gt_uni": float(n_eval_gt_uni),
+            "n3_perm_n_total_evaluated": float(len(evaluated_cyl_perms)),
+            "n3_perm_pct_eval_gt_uni": float(report["part2_permutation_distribution"]["pct_eval_exceeding_uniform"]),
         }
         if rev_mono_rec is not None:
             metrics_to_log["n3_curv_cyl_rev_monotonic_fz_pn"] = float(rev_mono_rec["F_z_pN"])
@@ -1336,6 +1406,12 @@ def main() -> int:
         export_macros(str(ROOT / "results" / "provenance_metrics.json"), str(ROOT / "results" / "macros_results.tex"))
         save_plot_provenance(str(out_png), str(ROOT / "results" / "provenance_metrics.json"), list(metrics_to_log.keys()))
         save_plot_provenance(str(out_pdf), str(ROOT / "results" / "provenance_metrics.json"), list(metrics_to_log.keys()))
+        for paper_sub in ("FCE_Nature_ver01", "Fractal_Casimir_Nature_EM"):
+            paper_fig_dir = ROOT / "Papers" / paper_sub / "figures"
+            if paper_fig_dir.is_dir():
+                for src in (out_png.with_suffix(".provenance.json"), out_pdf.with_suffix(".provenance.json")):
+                    if src.is_file():
+                        (paper_fig_dir / src.name).write_bytes(src.read_bytes())
 
     print(
         f"Completed {report['execution_status']} in {report['elapsed_seconds']:.2f}s -> {out_json}",

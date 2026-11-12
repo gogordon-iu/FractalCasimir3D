@@ -2,13 +2,15 @@
   "model": "Quant_FDTD_N2_BigRed200",
   "dataset": "cantor_n2_hybridrz_vs_uniform_r5nm",
   "study": "quant_fdtd_n2_bigred200_validation",
-  "executed_at": "2026-11-11T19:35:30.236299+00:00",
-  "generated_at": "2026-11-11T19:35:30.236299+00:00",
+  "executed_at": "2026-11-12T01:16:14.980783+00:00",
+  "generated_at": "2026-11-12T01:16:14.980783+00:00",
   "total_configured_tasks": 8,
-  "completed_tasks_count": 2,
+  "completed_tasks_count": 4,
   "completed_task_ids": [
     1,
-    2
+    2,
+    3,
+    4
   ],
   "bem_r5nm_reference_pN": {
     "Cantor_N2_HybridRZ": {
@@ -104,19 +106,19 @@
       "pml_thickness_um": 0.2,
       "cell_buffer_um": 0.15,
       "T_run": 3.0,
-      "status": "missing",
-      "executed_at": null,
-      "result_file": null,
-      "completed_moments": 0,
+      "status": "complete",
+      "executed_at": "2026-11-11T22:18:44.599529+00:00",
+      "result_file": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\results_quant_fdtd_n2\\task_3_meep.json",
+      "completed_moments": 1728,
       "total_4pass_moments": 1728,
-      "elapsed_seconds": null,
-      "f_net_pN": null,
-      "f_2pass_pN": null,
-      "f_stator_only_pN": null,
+      "elapsed_seconds": 5474.178952909075,
+      "f_net_pN": 4.747209406002474,
+      "f_2pass_pN": 7.6445396782524915,
+      "f_stator_only_pN": 2.897330272250017,
       "bem_r5nm_std_pN": 1.2671722931523985,
       "bem_r5nm_ultra_pN": 1.4040651153746457,
-      "rel_diff_vs_bem_std_pct": null,
-      "rel_diff_vs_bem_ultra_pct": null
+      "rel_diff_vs_bem_std_pct": 274.6301455339304,
+      "rel_diff_vs_bem_ultra_pct": 238.10464728594724
     },
     {
       "task_id": 4,
@@ -134,19 +136,19 @@
       "pml_thickness_um": 0.2,
       "cell_buffer_um": 0.15,
       "T_run": 3.0,
-      "status": "missing",
-      "executed_at": null,
-      "result_file": null,
-      "completed_moments": 0,
+      "status": "complete",
+      "executed_at": "2026-11-11T22:35:44.748459+00:00",
+      "result_file": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\results_quant_fdtd_n2\\task_4_meep.json",
+      "completed_moments": 1728,
       "total_4pass_moments": 1728,
-      "elapsed_seconds": null,
-      "f_net_pN": null,
-      "f_2pass_pN": null,
-      "f_stator_only_pN": null,
+      "elapsed_seconds": 6321.671985015273,
+      "f_net_pN": 4.275468613023934,
+      "f_2pass_pN": 5.759694193946332,
+      "f_stator_only_pN": 1.484225580922398,
       "bem_r5nm_std_pN": 0.9553978271609033,
       "bem_r5nm_ultra_pN": 1.0063075077522994,
-      "rel_diff_vs_bem_std_pct": null,
-      "rel_diff_vs_bem_ultra_pct": null
+      "rel_diff_vs_bem_std_pct": 347.5066293304309,
+      "rel_diff_vs_bem_ultra_pct": 324.8670093472394
     },
     {
       "task_id": 5,
@@ -278,7 +280,29 @@
       "bem_ultra_cantor_to_uniform_ratio": 1.3952644738890825,
       "ratio_rel_diff_vs_bem_std_pct": -15.595333622595046,
       "ratio_rel_diff_vs_bem_ultra_pct": -19.765464924263984
+    },
+    "R150_nmax2": {
+      "cantor_f_z_pN": 4.747209406002474,
+      "uniform_f_z_pN": 4.275468613023934,
+      "fdtd_cantor_to_uniform_ratio": 1.1103366287245153,
+      "bem_std_cantor_to_uniform_ratio": 1.3263294693876122,
+      "bem_ultra_cantor_to_uniform_ratio": 1.3952644738890825,
+      "ratio_rel_diff_vs_bem_std_pct": -16.285006527286484,
+      "ratio_rel_diff_vs_bem_ultra_pct": -20.421063568713617
     }
   },
-  "convergence_checks": {}
+  "convergence_checks": {
+    "cantor_R100_to_R150_nmax2": {
+      "f_coarse_pN": 5.645441711063771,
+      "f_fine_pN": 4.747209406002474,
+      "rel_drift_pct": 18.921269913342204,
+      "richardson_extrap_pN": 4.028623561953436
+    },
+    "uniform_R100_to_R150_nmax2": {
+      "f_coarse_pN": 5.0428964541804415,
+      "f_fine_pN": 4.275468613023934,
+      "rel_drift_pct": 17.949560869626517,
+      "richardson_extrap_pN": 3.6615263400987272
+    }
+  }
 }

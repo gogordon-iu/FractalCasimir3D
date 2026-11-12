@@ -1,0 +1,47 @@
+% tables/table_quantum_clutch.tex — Extended Data Table 3
+\begin{table*}[!htbp]
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{0.88}
+\caption{\textbf{Multi-resolution BEM convergence, corner-rounding regularization ($r_{\rm edge}=5\text{ nm}$), and qualitative 4-pass FDTD sign checks of rotational switching in vacuum ($\varepsilon_{\rm bg}=1.0$).} Axial Casimir forces $F_z$ (in pN) across Standard ($\RotCfourTightslotNtwoStandardThetaZerozerosixpzeroPanelCount{}$ panels for $N=2$; $\RotConezeroFractalNthreeStandardThetaZerozerothreepzeroPanelCount{}$ for 7-track $N=3$; $6{,}784$ panels across 4 sectors for 12-sub-tooth 3D recursive $N=3$), High ($\RotCfourTightslotNtwoHighThetaZerozerosixpzeroPanelCount{}$ panels for $N=2$; $\RotConezeroFractalNthreeHighThetaZerozerothreepzeroPanelCount{}$ for $N=3$), and Ultra-High ($\RotCfourTightslotNtwoUltraHighThetaZerozerosixpzeroPanelCount{}$ panels for $N=2$) surface discretizations in 3D Vector-Dyadic BEM, alongside independent qualitative sign checks from diagnostic 3D Scalar-Yukawa BEM (High) and 4-pass inclusion--exclusion 3D FDTD MEEP ($R=50$, $\Delta x = 20\text{ nm}$). Each 4-pass FDTD evaluation integrates $\FdtdMomentsPerToothPerPass{}$ DCT moments per tooth per pass across $\FdtdInclusionExclusionPasses{}$ passes ($\NaturemeeptaskzerozerofourMomentsPerConfig{}/\NaturemeeptaskzerozerofourTotalMoments{}$ per-pass/total moments for $N=2$ and $\RotConezeroFractalNthreeMomentsPerConfig{}/\RotConezeroFractalNthreeTotalMoments{}$ for $N=3$).}
+\label{tab:quantum_clutch}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcrrrrr}
+\toprule
+Switch constellation & $\theta$ (deg) & 3D BEM Std (pN) & 3D BEM High (pN) & 3D BEM Ultra-High (pN) & Diagnostic Scalar High (pN) & Qualitative 4-Pass FDTD $R=50$ (pN)$^{\dagger}$ \\
+\midrule
+\texttt{Cantor-N2-HybridRZ} & 3 & $+\CantorNtwoHybridrzBemStdFZPn{}$ & $+\CantorNtwoHybridrzBemHighFZPn{}$ & $+\CantorNtwoHybridrzBemUltraFZPn{}$ & $+\CantorNtwoHybridrzBemScalarStdThetathreeFZPn{}^{\ast}$ & $+\CantorNtwoHybridrzMeepRfivezeroFZPn{}$ \\
+\texttt{Cantor-N2-HybridRZ} ($r_{\rm edge}=5\text{ nm}$) & 3 & $+\CantorNtwoHybridrzBemRfiveNmStdFZPn{}$ & $+\CantorNtwoHybridrzBemRfiveNmHighFZPn{}$ & $+\CantorNtwoHybridrzBemRfiveNmUltraFZPn{}$ & --- & --- \\
+\texttt{Cantor-N2-HybridRZ} & 48 & \CantorNtwoHybridrzBemThetafoureightFZPn{} & \CantorNtwoHybridrzBemHighThetafoureightFZPn{} & \CantorNtwoHybridrzBemUltraThetafoureightFZPn{} & $\CantorNtwoHybridrzBemScalarStdThetafoureightFZPn{}^{\ast}$ & \CantorNtwoHybridrzMeepThetafoureightFZPn{} \\
+\texttt{Cantor-N2-FlatZ} & 3 & $+\CantorNtwoFlatzBemThetathreeFZPn{}$ & --- & --- & --- & $+\CantorNtwoFlatzMeepThetathreeFZPn{}$ \\
+\texttt{Cantor-N2-FlatZ} & 48 & \CantorNtwoFlatzBemThetafoureightFZPn{} & --- & --- & --- & \CantorNtwoFlatzMeepThetafoureightFZPn{} \\
+\texttt{Ctrl-UniformPeriodic} & 3 & $+\CtrlUniformperiodicBemThetathreeFZPn{}$ & $+\CtrlUniformperiodicBemHighThetathreeFZPn{}$ & $+\CtrlUniformperiodicBemUltraThetathreeFZPn{}$ & --- & $+\CtrlUniformperiodicMeepThetathreeFZPn{}$ \\
+\texttt{Ctrl-UniformPeriodic} ($r_{\rm edge}=5\text{ nm}$) & 3 & $+\CtrlUniformperiodicBemRfiveNmStdFZPn{}$ & $+\CtrlUniformperiodicBemRfiveNmHighFZPn{}$ & $+\CtrlUniformperiodicBemRfiveNmUltraFZPn{}$ & --- & --- \\
+\texttt{Ctrl-UniformPeriodic} & 48 & \CtrlUniformperiodicBemThetafoureightFZPn{} & --- & --- & --- & \CtrlUniformperiodicMeepThetafoureightFZPn{} \\
+\texttt{Compact-N2} & 0 & $+\RotCeightCompactNtwoThetaZeroStepNineFNetPn{}$ & --- & --- & --- & $+\RotCeightCompactNtwoMeepThetazeroFZPn{}$ \\
+\texttt{Compact-N2} & 6 & $+\RotCeightCompactNtwoStandardThetaZerozerosixpzeroVectorDyadicFZPn{}$ & $+\RotCeightCompactNtwoHighThetaZerozerosixpzeroVectorDyadicFZPn{}$ & $+\RotCeightCompactNtwoUltraHighThetaZerozerosixpzeroVectorDyadicFZPn{}$ & $+\RotCeightCompactNtwoHighThetaZerozerosixpzeroScalarYukawaFZPn{}$ & $+\RotCeightCompactNtwoMeepThetasixFZPn{}$ \\
+\texttt{Compact-N2} & 18 & \RotCeightCompactNtwoStandardThetaZerooneeightpzeroVectorDyadicFZPn{} & \RotCeightCompactNtwoHighThetaZerooneeightpzeroVectorDyadicFZPn{} & \RotCeightCompactNtwoUltraHighThetaZerooneeightpzeroVectorDyadicFZPn{} & \RotCeightCompactNtwoHighThetaZerooneeightpzeroScalarYukawaFZPn{} & \RotCeightCompactNtwoMeepThetaoneeightFZPn{} \\
+\texttt{Compact-N2} & 48 & \RotCeightCompactNtwoStandardThetaZerofoureightpzeroVectorDyadicFZPn{} & \RotCeightCompactNtwoHighThetaZerofoureightpzeroVectorDyadicFZPn{} & \RotCeightCompactNtwoUltraHighThetaZerofoureightpzeroVectorDyadicFZPn{} & \RotCeightCompactNtwoHighThetaZerofoureightpzeroScalarYukawaFZPn{} & \RotCeightCompactNtwoMeepThetafoureightFZPn{} \\
+\texttt{TightSlot-N2} & 0 & $+\RotCfourTightslotNtwoThetaZeroStepZeroFNetPn{}$ & --- & --- & --- & $+\RotCfourTightslotNtwoMeepThetazeroFZPn{}$ \\
+\texttt{TightSlot-N2} & 6 & $+\RotCfourTightslotNtwoStandardThetaZerozerosixpzeroVectorDyadicFZPn{}$ & $+\RotCfourTightslotNtwoHighThetaZerozerosixpzeroVectorDyadicFZPn{}$ & $+\RotCfourTightslotNtwoUltraHighThetaZerozerosixpzeroVectorDyadicFZPn{}$ & $+\RotCfourTightslotNtwoHighThetaZerozerosixpzeroScalarYukawaFZPn{}$ & $+\RotCfourTightslotNtwoMeepThetasixFZPn{}$ \\
+\texttt{TightSlot-N2} & 12 & $+\RotCfourTightslotNtwoThetaOnetwoStepTwoFNetPn{}$ & --- & --- & --- & $+\RotCfourTightslotNtwoMeepThetaonetwoFZPn{}$ \\
+\texttt{TightSlot-N2} & 18 & \RotCfourTightslotNtwoThetaOneeightStepThreeFNetPn{} & \RotCfourTightslotNtwoHighThetaZerooneeightpzeroVectorDyadicFZPn{} & \RotCfourTightslotNtwoUltraHighThetaZerooneeightpzeroVectorDyadicFZPn{} & \RotCfourTightslotNtwoHighThetaZerooneeightpzeroScalarYukawaFZPn{} & \RotCfourTightslotNtwoMeepThetaoneeightFZPn{} \\
+\texttt{TightSlot-N2} & 48 & \RotCfourTightslotNtwoThetaFoureightStepEightFNetPn{} & \RotCfourTightslotNtwoHighThetaZerofoureightpzeroVectorDyadicFZPn{} & \RotCfourTightslotNtwoUltraHighThetaZerofoureightpzeroVectorDyadicFZPn{} & \RotCfourTightslotNtwoHighThetaZerofoureightpzeroScalarYukawaFZPn{} & \RotCfourTightslotNtwoMeepThetafoureightFZPn{} \\
+\texttt{Cantor-N3-7Track} (\texttt{F0-000}) & 3 & $+\RotConezeroFractalNthreeStandardThetaZerozerothreepzeroVectorDyadicFZPn{}$ & $+\RotConezeroFractalNthreeHighThetaZerozerothreepzeroVectorDyadicFZPn{}$ & --- & $+\RotConezeroFractalNthreeHighThetaZerozerothreepzeroScalarYukawaFZPn{}$ & $+\RotConezeroFractalNthreeMeepThetathreeFZPn{}$ \\
+\texttt{Cantor-N3-7Track} (\texttt{F0-000}) & 21 & \RotConezeroFractalNthreeStandardThetaZerotwoonepzeroVectorDyadicFZPn{} & \RotConezeroFractalNthreeHighThetaZerotwoonepzeroVectorDyadicFZPn{} & --- & \RotConezeroFractalNthreeHighThetaZerotwoonepzeroScalarYukawaFZPn{} & \RotConezeroFractalNthreeMeepThetatwooneFZPn{} \\
+\texttt{Cantor-N3-7Track} (\texttt{F0-000}) & 48 & \RotConezeroFractalNthreeStandardThetaZerofoureightpzeroVectorDyadicFZPn{} & \RotConezeroFractalNthreeHighThetaZerofoureightpzeroVectorDyadicFZPn{} & --- & \RotConezeroFractalNthreeHighThetaZerofoureightpzeroScalarYukawaFZPn{} & \RotConezeroFractalNthreeMeepThetafoureightFZPn{} \\
+\midrule
+\texttt{F2rt-110} (\texttt{Cantor-110-Planar1Mask}) & 3 & $+\roundfour{\NthreeUnithreedFoneonezeroRthetaPlanarFzPn}$ & --- & --- & --- & --- \\
+\textbf{\texttt{F3-111}} (\textbf{\texttt{Cantor-111-Unified3D}}) & $\mathbf{3}$ & $\mathbf{+\roundfour{\NthreeUnithreedFoneoneoneUnifiedFzPn}}$ & --- & --- & --- & --- \\
+\textbf{\texttt{F3-111}} ($\mathbf{r_{\rm edge}=5\text{ nm}}$) & $\mathbf{3}$ & $\mathbf{+\roundfour{\NthreeUnithreedFoneoneoneRfivenmFzPn}}$ & --- & --- & --- & --- \\
+\texttt{C6-Uni12} ($r_{\rm edge}=5\text{ nm}$) & 3 & $+\roundfour{\NthreeUnithreedCtrlUnionetwoRfivenmFzPn}$ & --- & --- & --- & --- \\
+\texttt{C8-Mono12} ($r_{\rm edge}=5\text{ nm}$) & 3 & $+\roundfour{\NthreeUnithreedCtrlMonoonetwoRfivenmFzPn}$ & --- & --- & --- & --- \\
+\texttt{C9-Shuf12} ($r_{\rm edge}=5\text{ nm}$) & 3 & $+\roundfour{\NthreeUnithreedCtrlShufonetwoRfivenmFzPn}$ & --- & --- & --- & --- \\
+\textbf{\texttt{F3-111}} (\textbf{\texttt{Cantor-111-Unified3D}}) & $\mathbf{21}$ & $\mathbf{+\roundfour{\NthreeUnithreedFoneoneoneUnifiedThetatwooneFzPn}}$ & --- & --- & --- & --- \\
+\textbf{\texttt{F3-111}} (\textbf{\texttt{Cantor-111-Unified3D}}) & $\mathbf{48}$ & $\mathbf{\roundfour{\NthreeUnithreedFoneoneoneUnifiedThetafoureightFzPn}}$ & --- & --- & --- & --- \\
+\botrule
+\end{tabular}%
+}
+\smallskip
+\scriptsize{$^{\ast}$Evaluated on the \texttt{Standard} 3D Scalar-Yukawa BEM mesh for \texttt{Cantor-N2-HybridRZ}. $^{\dagger}$At $R=50$ ($\Delta x = 20\text{ nm}$) with subpixel permittivity averaging disabled (\texttt{eps\_averaging = False}) and $n_{\rm max}=1$ DCT moments per face, the $15\text{ nm}$ clearances span $\sim 1$ Yee voxel and expanding to $n_{\rm max}=2$ shifts the open-slot force by $+\MeepFixedboxRsixzeroNmaxtwoGainPct{}\%$; accordingly, the 4-pass FDTD column serves strictly as an independent qualitative sign check rather than a quantitative validation. For the 12-sub-tooth 3D recursive $N=3$ family (\texttt{F3-111}, \texttt{F2rt-110}, and controls \texttt{C6-Uni12} through \texttt{C10-OutPhase12}), each $90^\circ$ sector is discretized with $768$ rotor panels and $928$ stator panels ($1{,}696$ panels per sector; $6{,}784$ across four sectors) and $24$ identical $90^\circ$ azimuthal lobes per sector.}
+\end{table*}

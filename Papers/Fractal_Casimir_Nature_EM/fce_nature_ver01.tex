@@ -1,0 +1,239 @@
+\documentclass[11pt,letterpaper]{article}
+% Note: For direct portal upload with Springer Nature's sn-jnl.cls, replace the
+% documentclass line above with: \documentclass[pdflatex,sn-nature]{sn-jnl}
+% The setup below compiles out-of-the-box with standard TeXLive/Overleaf and
+% your existing macros_results.tex and table/figure fragments.
+
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage[super,comma,sort&compress]{natbib}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{lineno}
+
+\geometry{letterpaper, margin=1in}
+\doublespacing
+\emergencystretch=1.5em
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% Load project-wide exact numerical result macros
+\input{macros_results.tex}
+
+% Nature Article Title: strictly <= 75 characters including spaces (70 chars)
+\title{\textbf{Fractal Casimir amplification and switching in a rotary quantum clutch}}
+
+\author{\textbf{Goren Gordon}$^{1\ast}$ \\
+\normalsize{$^{1}$Department of Informatics, Indiana University Bloomington, Bloomington, IN 47408, USA} \\
+\normalsize{$^{\ast}$e-mail: \href{mailto:goren@gorengordon.com}{goren@gorengordon.com}}}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+% Nature Summary Paragraph: <= 200 words, bold, accessible, "Here we show..." structure
+\noindent\textbf{%
+Quantum vacuum fluctuations generate strong attractive Casimir forces between proximate surfaces, causing irreversible stiction in nanoelectromechanical systems (NEMS)\cite{casimir1948,rodriguez2011}. While self-similar boundaries theoretically induce scale-dependent vacuum anomalies\cite{shajesh2016,gordon2026prd}, observing a macroscopic fractal Casimir effect in three-dimensional (3D) cavities is fundamentally impeded by Weyl's law: face-to-face surface overlap produces a Euclidean area force that buries fractal boundary modifications inside subleading spectral remainders\cite{lapidus1991}. Conversely, three-dimensional slot-tooth interdigitation eliminates vertical surface overlap and generates true-vacuum axial repulsion\cite{levin2010}, yet single-scale periodic teeth suffer severe evanescent screening across wide actuators. Here we show that interdigitated slot alignment opens a zero-proximity-force window in which multi-scale Cantor boundary recursion becomes the leading electromagnetic interaction, amplifying true-vacuum repulsive lift by more than 28-fold over uniform periodic controls and enabling a dynamically switchable rotary quantum clutch. Using 3D Vector-Dyadic and Scalar-Yukawa boundary element methods alongside 4-pass 3D finite-difference time-domain (FDTD) simulations, we demonstrate unpowered rotational switching between fractal-amplified slot repulsion ($\theta = 0^\circ\text{--}6^\circ$, reaching $+\CantorNtwoHybridrzBemHighFZPn{}\text{ pN}$ in BEM and $+\CantorNtwoHybridrzMeepRfivezeroFZPn{}\text{ pN}$ in FDTD for $N=2$, and $+\RotConezeroFractalNthreeHighThetaZerozerothreepzeroVectorDyadicFZPn{}\text{ pN}$ for $N=3$) and Euclidean landing-pad attraction ($\theta = 18^\circ\text{--}48^\circ$, $F_z < 0$). Coupled with cavity quantum electrodynamic, optomechanical, and room-temperature ($300\text{ K}$) silicon-on-insulator stability blueprints, our results establish multi-scale vacuum engineering for stiction-free nanomachines.}
+
+\vspace{1em}
+
+% Nature Articles do not use an "Introduction" heading.
+The Casimir effect---the macroscopic mechanical force arising from boundary-modified quantum electromagnetic fluctuations\cite{casimir1948,bordag2009}---dominates nanoscale device mechanics below $100\text{ nm}$. By the Kenneth--Klich no-go theorem\cite{kennethklich2006}, any two mirror-symmetric bodies composed of ordinary conductors or non-magnetic dielectrics in true vacuum ($\varepsilon_{\rm bg}=1.0$) mutually attract ($F_z \propto -A_{\rm overlap}/d^4$). While repulsive Casimir--Lifshitz forces have been realized via chemical liquid immersion\cite{munday2009}, and rotational Casimir torques\cite{somers2018}, self-assembled microcavities\cite{munkhbat2021}, and nonlinear superconducting resonators\cite{casimir_drum2025,dejong2026} have expanded vacuum metrology, achieving tunable repulsive restoring forces in true vacuum remains a central challenge for stiction-free NEMS.
+
+Two seemingly distinct theoretical pathways have been proposed to reshape vacuum forces through geometry alone. First, in quantum fractals\cite{kempkes2019,xu2021} and self-similar Casimir stacks\cite{akkermans2010,shajesh2016,shajesh2017}, discrete scale invariance (DSI) breaks conformal symmetry. As recently formalized in an effective trace framework for self-similar systems\cite{gordon2026prd} (which established thermodynamic compatibility via semitransparent mode tunneling and conformal-parameter $\xi$-independence\cite{milton2004,milton2016}), any plate-like system governed by a logarithmically running Casimir coefficient $C(d_s, \ln(d/\ell_*))$ generates an anisotropic stress-energy tensor with a non-vanishing integrated vacuum trace\cite{gordon2026prd}:
+\begin{equation}
+T^\mu{}_{\mu,\rm vac} = -\rho_{\rm vac} + 2P_\parallel + P_\perp = -\frac{\hbar c}{d^4} \,\partial_{\ln d}C\!\left(d_s, \ln\frac{d}{\ell_*}\right),
+\label{eq:trace_running}
+\end{equation}
+where $d_s$ is the spectral dimension and $\ell_* = L b^{-N}$ is the prefractal cutoff scale. However, in previous one-dimensional scalar models\cite{gordon2026prd}, $C(d_s, \ln(d/\ell_*))$ remained a postulated ansatz rather than a first-principles 3D electromagnetic scattering result. Moreover, in standard 3D Euclidean cavities with fractal boundaries (``fractal drums''), Lapidus's theorem\cite{lapidus1991} dictates that the eigenvalue counting function $N_\Omega(\lambda) = C_n |\Omega|\lambda^{n/2} + \mathcal{O}(\lambda^{D/2})$ is dominated by the leading Euclidean Weyl volume/area term $|\Omega|$, burying fractal boundary anomalies inside subleading remainders.
+
+Second, Levin et al.\cite{levin2010} demonstrated that reflection symmetry can be broken geometrically in true vacuum ($\varepsilon_{\rm bg}=1.0$) without fractals: when a metallic ridge interdigitates with a slotted aperture plate, transverse saddle-point fringing fields connecting the ridge tip to the upper slot sidewalls pull the ridge toward the slot mid-plane, yielding an axial repulsive restoring force ($F_z > 0$)\cite{levin2010,rodriguez2011}. Yet a single narrow ridge produces sub-piconewton forces, and naively widening a single ridge across an actuator separates the opposing slot sidewalls and destroys the repulsive gradient.
+
+Here we unify these two phenomena by showing that 3D slot-tooth interdigitation and prefractal Cantor hierarchy are mutually essential counterparts of a macroscopic fractal Casimir effect. In the \emph{Gold Concentric Cantor-Ring Rotary Quantum Clutch} (Fig.~\ref{fig:quantum_clutch_architecture_and_narrative}), aligning interdigitated rotor teeth with open stator slots ($\theta = 0^\circ\text{--}6^\circ$) sets the vertical face-to-face surface overlap to zero ($A_{\rm overlap} = 0$). This identically cancels the leading Euclidean proximity-force approximation (PFA) area term ($F_z^{\rm PFA} \equiv 0$), opening a ``Zero-PFA Fractal Window'' in which multi-scale perimeter fringing and cross-track scattering recursion become the leading physical interaction. Conversely, rotating the rotor over recessed stator landing pads ($\theta = 18^\circ\text{--}48^\circ$) restores $A_{\rm overlap} > 0$, dynamically switching the cavity from the fractal perimeter-dominated repulsive phase into the Euclidean area-dominated attractive phase.
+
+% Subheading 1: <= 40 characters including spaces (39 chars)
+\section*{The zero-PFA fractal window and clutch}
+\label{sec:architecture}
+
+To derive the running Casimir coefficient $C$ from first principles and link it to 3D interdigitated electrodynamics, we first solve the transfer-matrix scattering recursion for an $N$-th generation pre-Cantor hierarchy $\mathcal{C}_N$ of scale factor $b$ (see Methods). Partitioning a self-similar boundary configuration of outer span $d$ into its self-similar sub-blocks yields the functional interaction energy recursion
+\begin{equation}
+\Delta e_{\mathcal{C}_N}(d) = 2 \Delta e_{\mathcal{C}_{N-1}}(d/b) + \Delta e_{\rm cross}(d; \ell_*),
+\label{eq:recursion_main}
+\end{equation}
+where $\Delta e_{\rm cross}$ captures the evanescent cross-talk between hierarchical sub-cavities across imaginary wavenumbers $\kappa = \xi/c$. As shown in Methods, solving the discrete scale-invariant functional equation in $(3+1)$ dimensions yields a log-periodic Fourier expansion for the dimensionless Casimir coefficient:
+\begin{equation}
+C\!\left(d_s, \ln\frac{d}{\ell_*}\right) = \sum_{k=-\infty}^{\infty} C_k \, e^{i \omega_k \ln(d/\ell_*)} = C_0(d_s) \left[ 1 + F_{\rm per}\!\left(\ln\frac{d}{\ell_*}\right) \right], \qquad \omega_k = \frac{2\pi k}{\ln b},
+\label{eq:fourier_running}
+\end{equation}
+where $F_{\rm per}$ is a multiplicatively periodic function of period $\ln b$ ($b=3$ for middle-third Cantor geometry). Unlike a scale-invariant Euclidean system ($C = \text{const}$, $\partial_{\ln d} C = 0$), Eq.~\eqref{eq:fourier_running} shows that discrete self-similarity forces a non-zero logarithmic scale derivative $\partial_{\ln d} C \neq 0$, sourcing the integrated vacuum trace in Eq.~\eqref{eq:trace_running}.
+
+In a 3D cylindrical NEMS actuator ($R \in [R_{\rm min}, R_{\rm max}]$), however, observing this multi-scale boundary physics requires suppressing the leading Euclidean parallel-plate attraction. The Gold Concentric Cantor-Ring Rotary Quantum Clutch achieves this in true vacuum ($\varepsilon_{\rm bg}=1.0$) using a four-fold cyclic ($C_4$, $90^\circ$ sector period) Gold rotor suspended above a stationary Gold stator (Fig.~\ref{fig:quantum_clutch_architecture_and_narrative}). Downward-protruding concentric rotor teeth ($z_{\rm tooth} \in [-100, 0]\text{ nm}$, height $H_{\rm teeth} = 100\text{ nm}$) interdigitate radially between thin upper stator aperture rings ($z_{\rm stator} \in [-25, 0]\text{ nm}$, thickness $t_{\rm membrane} = 25\text{ nm}$) above recessed azimuthal stator landing pads ($z_{\rm pad,top} = -115\text{ nm}$, thickness $t_{\rm pad} = 150\text{ nm}$).
+
+In-plane rotation $\theta$ switches the clutch continuously between two universality regimes:
+\begin{enumerate}
+    \item \textbf{Disengaged Fractal Perimeter State ($\theta = 0^\circ\text{--}6^\circ$)}: The rotor teeth sit centered inside open angular stator apertures with zero vertical landing-pad overlap ($A_{\rm overlap} = 0$, $F_z^{\rm PFA} = 0$). Because the tooth tips ($z_{\rm tip} = -100\text{ nm}$) extend $75\text{ nm}$ below the stator ring bottom ($z = -25\text{ nm}$), transverse saddle-point fringing fields pull the rotor upward toward the slot mid-plane ($z = -12.5\text{ nm}$), generating repulsive lift ($F_z > 0$) governed entirely by 3D sidewall scattering.
+    \item \textbf{Engaged Euclidean Area State ($\theta = 18^\circ\text{--}48^\circ$)}: Rotating the rotor aligns the bottom faces of the rotor teeth ($z = -100\text{ nm}$) directly over the recessed stator landing pads ($z = -115\text{ nm}$) across a $d = 15\text{ nm}$ vertical vacuum gap. Here, Euclidean face-to-face parallel-plate overlap ($A_{\rm overlap} > 0$) dominates over sidewall fringing, switching the axial force to strong normal attraction ($F_z < 0$).
+\end{enumerate}
+
+To rigorously separate the role of single-tooth interdigitation from multi-scale Cantor hierarchy across a fixed annular span, we benchmark a six-step progression of prefractal Cantor rings ($N=0, 1, 2, 3$) against matched non-fractal controls (see Methods for exact radial coordinates): (i) the single-track baseline ($N=0$, \texttt{SingleTooth\_Track0}, tooth width $w_{\rm tooth} = 85\text{ nm}$, lateral gap $g_r = 32.5\text{ nm}$); (ii) the first-generation single wide Cantor slot ($N=1$, \texttt{Fractal\_N1\_FundRing}, $W_{\rm slot} = 383.3\text{ nm}$, $g_r = 86.3\text{ nm}$); (iii) the second-generation 3-track Cantor hierarchies ($N=2$) comparing uniform vertical tooth depth (\texttt{Cantor\_N2\_FlatZ}, $z_{\rm tip} = -100\text{ nm}$), scale-matched radial-and-vertical $(r,z)$ depth (\texttt{Cantor\_N2\_HybridRZ}, where the primary generation-1 track extends to $z_{\rm tip,1} = -110\text{ nm}$ and flanking generation-2 tracks sit at $z_{\rm tip,2} = -100\text{ nm}$), and compact NEMS variants (\texttt{Rot\_C8\_Compact\_N2} and \texttt{Rot\_C4\_TightSlot\_N2}); (iv) the third-generation 7-track Cantor hierarchy ($N=3$, \texttt{Fractal\_N3\_Cantor7Track} / \texttt{Rot\_C10\_Fractal\_N3} with $2^3 - 1 = 7$ concentric tracks and $28$ teeth across four sectors); and (v) three non-fractal controls---\texttt{Ctrl\_SingleWide} (a single wide tooth spanning the annulus), \texttt{Ctrl\_UniformPeriodic} (an equal-area 3-track periodic grating with identical tooth and slot widths), and \texttt{Ctrl\_SizeMatched\_Monotonic} (the exact track widths of $N=2$ rearranged in monotonic radial order rather than self-similar Cantor flanking order).
+
+% Subheading 2: <= 40 characters including spaces (38 chars)
+\section*{Cantor amplification and 3-solver test}
+\label{sec:repulsion_physics}
+
+\input{tables/table_fractal_geometry_control.tex}
+\input{tables/table_quantum_clutch.tex}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.84\textwidth]{figures/fig_rotational_z_eff_clutch_blender.png}
+\par\smallskip
+\includegraphics[width=0.88\textwidth]{figures/fig_nature_6step_narrative.png}
+\caption{\textbf{Rotational quantum-clutch architecture and six-step physical narrative in true vacuum ($\varepsilon_{\rm bg}=1.0$).} \textbf{Top}, 3D rendered architecture illustrating the interdigitated concentric Gold rotor teeth, slotted Cantor stator rings, recessed landing pads, and $\text{Si}\langle 110\rangle$ flexure suspension across repulsive, straddling, and attractive rotational states. \textbf{Bottom}, Six-step verification progressing from (\textbf{A}) single-tooth vertical interdigitation and overhang sign reversal ($N=0$) and (\textbf{B}) single-track angular switching to (\textbf{C}) Cantor generation scaling ($N=0 \to 3$), (\textbf{D}, \textbf{E}) prefractal Cantor hierarchies versus matched non-fractal controls (\texttt{Ctrl\_SingleWide}, \texttt{Ctrl\_UniformPeriodic}, and \texttt{Ctrl\_SizeMatched\_Monotonic}), and (\textbf{F}) full-monolithic support and multi-resolution BEM/MEEP convergence.}
+\label{fig:quantum_clutch_architecture_and_narrative}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/fig_rotational_clutch_3solver_verification.png}
+\caption{\textbf{Independent three-solver verification of the rotational quantum clutch in true vacuum ($\varepsilon_{\rm bg}=1.0$).} Comparison of axial Casimir force benchmarks and boundary-element continuum extrapolations across \texttt{Standard}, \texttt{High}, and \texttt{Ultra\_High} panel discretizations in 3D Vector-Dyadic BEM and 3D Scalar-Yukawa BEM alongside 4-pass inclusion--exclusion 3D FDTD MEEP simulations on BigRed 200 and 1D Lifshitz--PFA.}
+\label{fig:quantum_clutch_3solver_verification}
+\end{figure*}
+
+We evaluate the full 3D electromagnetic Casimir interaction in true vacuum ($\varepsilon_{\rm bg}=1.0$) without proximity approximations using three independent first-principles solvers (Methods): 3D Vector-Dyadic BEM, 3D Scalar-Yukawa BEM, and 4-pass inclusion--exclusion 3D FDTD MEEP simulations on the BigRed 200 supercomputer\cite{oskooi2010,rodriguez2011}. Tables~\ref{tab:fractal_geometry_control} and \ref{tab:quantum_clutch} summarize the geometry controls and rotational switching benchmarks.
+
+Figure~\ref{fig:quantum_clutch_architecture_and_narrative}A,B isolates the interdigitation origin of repulsion on the single-track baseline ($N=0$, \texttt{SingleTooth\_Track0}). When the $100\text{ nm}$-tall rotor tooth is deeply inserted into the open stator slot at $\theta=3^\circ$ ($z_{\rm tip} = -100\text{ nm}$, $75\text{ nm}$ below the stator ring bottom), lateral sidewall fringing pulls the tooth upward with $+\SingletoothTrackzeroBemThetathreeFZPn{}\text{ pN}$ in 3D Vector-Dyadic BEM ($F_z = \SingletoothTrackzeroMeepThetathreeFZPn{}\text{ pN}$ on the coarse $R=50$ MEEP grid) and switches to strong landing-pad attraction at $\theta=48^\circ$ ($\SingletoothTrackzeroBemThetafoureightFZPn{}\text{ pN}$ in BEM; $\SingletoothTrackzeroMeepThetafoureightFZPn{}\text{ pN}$ in 4-pass MEEP). Retracting the tooth upward to $z_{\rm tip} = -55\text{ nm}$---so that its top face protrudes $+45\text{ nm}$ above the $z=0$ stator top plane---reverses the vertical asymmetry across the slot mid-plane and flips the $\theta=3^\circ$ aperture force from repulsion to attraction in both solvers simultaneously ($\SingletoothTrackzeroOverhangBemThetathreeFZPn{}\text{ pN}$ in BEM and $\SingletoothTrackzeroOverhangMeepThetathreeFZPn{}\text{ pN}$ in 4-pass MEEP).
+
+Crucially, however, single-scale interdigitation fails to scale across an annular actuator (Fig.~\ref{fig:quantum_clutch_architecture_and_narrative}C--E). Widening a single tooth across the radial span (\texttt{Ctrl\_SingleWide}) moves the stator slot sidewalls far from the tooth center, collapsing the transverse fringing gradient and eliminating repulsion ($F_z = \CtrlSinglewideBemThetathreeFZPn{}\text{ pN}$ at $\theta=3^\circ$ and $\CtrlSinglewideBemThetafoureightFZPn{}\text{ pN}$ at $\theta=48^\circ$). Similarly, the wide single-slot $N=1$ Cantor ring (\texttt{Fractal\_N1\_FundRing}, $W_{\rm slot} = 383.3\text{ nm}$) yields only $+\FractalNoneFundringBemThetathreeFZPn{}\text{ pN}$ at $\theta=3^\circ$ ($\FractalNoneFundringBemThetafoureightFZPn{}\text{ pN}$ at $\theta=48^\circ$).
+
+When the radial domain is subdivided into multiple tracks, the physical distinction between uniform periodic arrays and prefractal Cantor hierarchies becomes dramatic. In the equal-area 3-track uniform periodic grating (\texttt{Ctrl\_UniformPeriodic}), all teeth and slots share a single spatial scale, causing strong mutual evanescent screening between adjacent slots that limits $\theta=3^\circ$ repulsion to $+\CtrlUniformperiodicBemThetathreeFZPn{}\text{ pN}$ in BEM and just $+\CtrlUniformperiodicMeepThetathreeFZPn{}\text{ pN}$ in 4-pass MEEP (switching to $\CtrlUniformperiodicBemThetafoureightFZPn{}\text{ pN}$ in BEM and $\CtrlUniformperiodicMeepThetafoureightFZPn{}\text{ pN}$ in MEEP at $\theta=48^\circ$). Rearranging the $N=2$ Cantor track widths monotonically (\texttt{Ctrl\_SizeMatched\_Monotonic}) breaks the self-similar flanking symmetry, yielding $+\CtrlSizematchedMonotonicBemThetathreeFZPn{}\text{ pN}$ at $\theta=3^\circ$ and $\CtrlSizematchedMonotonicBemThetafoureightFZPn{}\text{ pN}$ at $\theta=48^\circ$. By contrast, the prefractal Cantor hierarchy decouples adjacent tracks across radial and vertical length scales:
+\begin{itemize}
+    \item In \texttt{Cantor\_N2\_FlatZ}, flanking the central generation-1 track with two narrower generation-2 child tracks increases $\theta=3^\circ$ repulsive lift to $+\CantorNtwoFlatzBemThetathreeFZPn{}\text{ pN}$ in 3D Vector-Dyadic BEM and $+\CantorNtwoFlatzMeepThetathreeFZPn{}\text{ pN}$ in 4-pass 3D FDTD MEEP---a $>28\times$ repulsive amplification over \texttt{Ctrl\_UniformPeriodic} in 4-pass MEEP ($16\%$ agreement between BEM and MEEP)---while switching to $\CantorNtwoFlatzBemThetafoureightFZPn{}\text{ pN}$ (BEM) and $\CantorNtwoFlatzMeepThetafoureightFZPn{}\text{ pN}$ (MEEP) at $\theta=48^\circ$.
+    \item In \texttt{Cantor\_N2\_HybridRZ}, enforcing anisotropic $(r,z)$ discrete scale invariance by matching vertical tooth depth to the radial Cantor generation ($z_{\rm tip,1} = -110\text{ nm}$, $z_{\rm tip,2} = -100\text{ nm}$) elevates $\theta=3^\circ$ repulsion to $+\CantorNtwoHybridrzBemStdFZPn{}\text{ pN}$ on \texttt{Standard} BEM, $+\CantorNtwoHybridrzBemHighFZPn{}\text{ pN}$ on \texttt{High} BEM, $+\CantorNtwoHybridrzBemUltraFZPn{}\text{ pN}$ on \texttt{Ultra\_High} BEM, and $+\CantorNtwoHybridrzMeepRfivezeroFZPn{}\text{ pN}$ in $R=50$ 4-pass MEEP.
+    \item Advancing to the 7-track $N=3$ Cantor hierarchy (\texttt{Fractal\_N3\_Cantor7Track} / \texttt{Rot\_C10\_Fractal\_N3}) doubles the \texttt{Standard}-mesh BEM repulsive lift to $+\FractalNthreeCantorseventrackBemThetathreeFZPn{}\text{ pN}$ ($+\RotConezeroFractalNthreeHighThetaZerozerothreepzeroVectorDyadicFZPn{}\text{ pN}$ on \texttt{High} Vector-Dyadic BEM, $+\RotConezeroFractalNthreeHighThetaZerozerothreepzeroScalarYukawaFZPn{}\text{ pN}$ on \texttt{High} Scalar-Yukawa BEM, and $+\RotConezeroFractalNthreeMeepThetathreeFZPn{}\text{ pN}$ in 4-pass MEEP at $\theta=3^\circ$) and amplifies engaged $\theta=48^\circ$ attraction to $\FractalNthreeCantorseventrackBemThetafoureightFZPn{}\text{ pN}$ on \texttt{Standard} BEM ($\RotConezeroFractalNthreeHighThetaZerofoureightpzeroVectorDyadicFZPn{}\text{ pN}$ on \texttt{High} Vector-Dyadic BEM, $\RotConezeroFractalNthreeHighThetaZerofoureightpzeroScalarYukawaFZPn{}\text{ pN}$ on \texttt{High} Scalar-Yukawa BEM, and $\RotConezeroFractalNthreeMeepThetafoureightFZPn{}\text{ pN}$ in 4-pass MEEP; with $\theta=21^\circ$ intermediate values of $\RotConezeroFractalNthreeHighThetaZerotwoonepzeroVectorDyadicFZPn{}\text{ pN}$, $\RotConezeroFractalNthreeHighThetaZerotwoonepzeroScalarYukawaFZPn{}\text{ pN}$, and $\RotConezeroFractalNthreeMeepThetatwooneFZPn{}\text{ pN}$).
+\end{itemize}
+
+Full-monolithic 3D Vector-Dyadic BEM models incorporating the four radial spider spokes, inner/outer hub collars ($z \in [0.35, 0.47]\ \mu\text{m}$), and lower substrate trench slab ($z \in [-0.65, -0.55]\ \mu\text{m}$) confirm $<3.3\%$ passive-support crosstalk across all states (Fig.~\ref{fig:quantum_clutch_architecture_and_narrative}F): for \texttt{Cantor\_N2\_HybridRZ}, full-monolithic BEM yields $+\CantorNtwoHybridrzBemMonolithicThetathreeFZPn{}\text{ pN}$ vs.\ $+\CantorNtwoHybridrzBemStdFZPn{}\text{ pN}$ active-only at $\theta=3^\circ$ ($\CantorNtwoHybridrzBemMonolithicThetafoureightFZPn{}\text{ pN}$ vs.\ $\CantorNtwoHybridrzBemThetafoureightFZPn{}\text{ pN}$ at $\theta=48^\circ$), and for \texttt{Fractal\_N3\_Cantor7Track} it yields $+\FractalNthreeCantorseventrackBemMonolithicThetathreeFZPn{}\text{ pN}$ vs.\ $+\FractalNthreeCantorseventrackBemThetathreeFZPn{}\text{ pN}$ at $\theta=3^\circ$ ($\FractalNthreeCantorseventrackBemMonolithicThetafoureightFZPn{}\text{ pN}$ vs.\ $\FractalNthreeCantorseventrackBemThetafoureightFZPn{}\text{ pN}$ at $\theta=48^\circ$). Across the BigRed 200 4-pass MEEP Yee-grid convergence sweep on \texttt{Cantor\_N2\_HybridRZ} at $R=40, 50, 60$ ($\Delta x = 25, 20, 16.7\text{ nm}$), $\theta=3^\circ$ repulsion progresses through $+\CantorNtwoHybridrzMeepRfourzeroFZPn{}\text{ pN}$, $+\CantorNtwoHybridrzMeepRfivezeroFZPn{}\text{ pN}$, and $+\CantorNtwoHybridrzMeepRsixzeroFZPn{}\text{ pN}$ (fourth-order Richardson continuum asymptote $F_\infty = +\CantorNtwoHybridrzMeepRichardsonFZPn{}\text{ pN}$, $R^2 = 0.9984$), while 3D Scalar-Yukawa BEM yields $+\CantorNtwoHybridrzBemScalarStdThetathreeFZPn{}\text{ pN}$ at $\theta=3^\circ$ and $\CantorNtwoHybridrzBemScalarStdThetafoureightFZPn{}\text{ pN}$ at $\theta=48^\circ$.
+
+For the compact NEMS variants, at $\theta=6^\circ$ the \texttt{Rot\_C4\_TightSlot\_N2} 4-pass MEEP force $+\RotCfourTightslotNtwoMeepThetasixFZPn{}\text{ pN}$ is tightly bracketed by 3D Vector-Dyadic BEM \texttt{Standard} ($+\RotCfourTightslotNtwoThetaSixStepOneFNetPn{}\text{ pN}$) and \texttt{High} ($+\RotCfourTightslotNtwoHighThetaZerozerosixpzeroVectorDyadicFZPn{}\text{ pN}$; $+\RotCfourTightslotNtwoUltraHighThetaZerozerosixpzeroVectorDyadicFZPn{}\text{ pN}$ on \texttt{Ultra\_High}), with BEM/MEEP pairs of $(\RotCeightCompactNtwoThetaSixStepOnezeroFNetPn{},\,\RotCeightCompactNtwoMeepThetasixFZPn{})\text{ pN}$ for \texttt{Rot\_C8\_Compact\_N2} at $6^\circ$ and $(\RotCfourTightslotNtwoThetaOnetwoStepTwoFNetPn{},\,\RotCfourTightslotNtwoMeepThetaonetwoFZPn{})\text{ pN}$ for \texttt{Rot\_C4\_TightSlot\_N2} at $12^\circ$. In the engaged attractive state ($\theta=18^\circ\text{--}48^\circ$, $d=15\text{ nm}$ vertical gap), refining the BEM mesh from \texttt{Standard} ($\RotCfourTightslotNtwoStandardThetaZerozerosixpzeroPanelCount{}$ panels) to \texttt{High} ($\RotCfourTightslotNtwoHighThetaZerozerosixpzeroPanelCount{}$ panels) and \texttt{Ultra\_High} ($\RotCfourTightslotNtwoUltraHighThetaZerozerosixpzeroPanelCount{}$ panels) reduces the sub-panel regularization scale $\sigma_{\rm panel} = \sqrt{(A_t+A_s)/(32\pi)}$ below $d=15\text{ nm}$, driving monotonic continuum convergence ($h = N_{\rm panels}^{-1/2} \to 0$) toward the 4-pass FDTD MEEP benchmarks (Fig.~\ref{fig:quantum_clutch_3solver_verification}). Specifically, for \texttt{Rot\_C8\_Compact\_N2} at $\theta=48^\circ$, Vector-Dyadic BEM progresses from $\RotCeightCompactNtwoThetaFoureightStepOnesevenFNetPn{}\text{ pN}$ (\texttt{Standard}) to $\RotCeightCompactNtwoHighThetaZerofoureightpzeroVectorDyadicFZPn{}\text{ pN}$ (\texttt{High}) and $\RotCeightCompactNtwoUltraHighThetaZerofoureightpzeroVectorDyadicFZPn{}\text{ pN}$ (\texttt{Ultra\_High}), with a three-tier linear continuum intercept of $\RotCeightCompactNtwoBemThetafoureightContinuumFZPn{}\text{ pN}$ that matches both Scalar-Yukawa \texttt{High} ($\RotCeightCompactNtwoHighThetaZerofoureightpzeroScalarYukawaFZPn{}\text{ pN}$) and 4-pass MEEP ($\RotCeightCompactNtwoMeepThetafoureightFZPn{}\text{ pN}$); at $\theta=18^\circ$, the \texttt{High}-to-\texttt{Ultra\_High} Richardson extrapolation ($\RotCeightCompactNtwoBemThetaoneeightRichardsonFZPn{}\text{ pN}$ from $\RotCeightCompactNtwoUltraHighThetaZerooneeightpzeroVectorDyadicFZPn{}\text{ pN}$) matches Scalar-Yukawa \texttt{High} ($\RotCeightCompactNtwoHighThetaZerooneeightpzeroScalarYukawaFZPn{}\text{ pN}$) and MEEP ($\RotCeightCompactNtwoMeepThetaoneeightFZPn{}\text{ pN}$). Similarly, for \texttt{Rot\_C4\_TightSlot\_N2}, the $\theta=18^\circ$ Richardson extrapolation yields $\RotCfourTightslotNtwoBemThetaoneeightRichardsonFZPn{}\text{ pN}$ (from $\RotCfourTightslotNtwoUltraHighThetaZerooneeightpzeroVectorDyadicFZPn{}\text{ pN}$ on \texttt{Ultra\_High}) matching Scalar-Yukawa \texttt{High} ($\RotCfourTightslotNtwoHighThetaZerooneeightpzeroScalarYukawaFZPn{}\text{ pN}$) and MEEP ($\RotCfourTightslotNtwoMeepThetaoneeightFZPn{}\text{ pN}$), while at $\theta=48^\circ$ the sequence $\RotCfourTightslotNtwoThetaFoureightStepEightFNetPn{}\text{ pN}$, $\RotCfourTightslotNtwoHighThetaZerofoureightpzeroVectorDyadicFZPn{}\text{ pN}$, and $\RotCfourTightslotNtwoUltraHighThetaZerofoureightpzeroVectorDyadicFZPn{}\text{ pN}$ extrapolates to $\RotCfourTightslotNtwoBemThetafoureightContinuumFZPn{}\text{ pN}$ (linear) and $\RotCfourTightslotNtwoBemThetafoureightRichardsonFZPn{}\text{ pN}$ (Richardson), bracketing MEEP ($\RotCfourTightslotNtwoMeepThetafoureightFZPn{}\text{ pN}$) alongside Scalar-Yukawa BEM ($\RotCfourTightslotNtwoHighThetaZerofoureightpzeroScalarYukawaFZPn{}\text{ pN}$ on \texttt{High}; $\RotCfourTightslotNtwoUltraHighThetaZerofoureightpzeroScalarYukawaFZPn{}\text{ pN}$ on \texttt{Ultra\_High}). By contrast, 1D Lifshitz--PFA predicts identically zero force ($\RotCfourTightslotNtwoHighThetaZerozerosixpzeroLifshitzPfaFZPn{}\text{ pN}$) at $\theta=0^\circ\text{--}12^\circ$ and severely overestimates $\theta=48^\circ$ attraction ($\RotCeightCompactNtwoHighThetaZerofoureightpzeroLifshitzPfaFZPn{}\text{ pN}$, $\RotCfourTightslotNtwoHighThetaZerofoureightpzeroLifshitzPfaFZPn{}\text{ pN}$, and $\RotConezeroFractalNthreeHighThetaZerofoureightpzeroLifshitzPfaFZPn{}\text{ pN}$).
+
+% Subheading 3: <= 40 characters including spaces (39 chars)
+\section*{Atomic CQED and optomechanical readouts}
+\label{sec:cqed_optomech}
+
+Beyond direct nanomechanical actuation, the scale-dependent vacuum inside a prefractal Cantor cavity ($\varepsilon_{\rm bg}=1.0$) produces distinct thermodynamic, cavity quantum electrodynamic (CQED), and optomechanical signatures (Methods). In a ``Conformal Breathing Box'' Gedankenexperiment, subjecting a prefractal cavity to a uniform dilation $\lambda$ breaks the featureless $E(\lambda) = E_0/\lambda$ scaling of a conformally invariant cavity; the non-conformal expansion work directly integrates the trace anomaly of Eq.~\eqref{eq:trace_running}, $\Delta W_{\rm non\text{-}conformal} = \int_{V_1}^{V_2} T^\mu{}_\mu \, dV$.
+
+At the microscopic scale, a ground-state hydrogen atom placed at the center ($z = 50\text{ nm}$) of a $d = 100\text{ nm}$ prefractal gap experiences three measurable QED modifications (Methods): (i) a log-periodic modulation of the retarded Casimir--Polder potential\cite{casimirpolder1948}, shifting the baseline flat-plate interaction ($|U_{\rm CP}^{\rm flat}| \approx 2.51 \times 10^{-9}\text{ eV}$) by $\Delta U_{\rm CP} \approx 2.51 \times 10^{-10}\text{ eV}$ ($\sim 60.77\text{ kHz}$), well within the $<10^{-12}\text{ eV}$ resolution of modern Rydberg and optical-tweezer spectroscopy\cite{safronova2018}; (ii) a fractal Purcell modification\cite{purcell1946} of the Lyman-$\alpha$ ($2p \to 1s$, $\lambda = 121.6\text{ nm}$) spontaneous emission rate $\Gamma_{2p\to 1s}/\Gamma_0$ of $10\%\text{--}50\%$, exceeding the $0.1\%$ precision of fluorescence lifetime imaging\cite{lodahl2015}; and (iii) a geometric Bethe Lamb shift\cite{bethe1947} of $\delta\nu_{\rm Lamb} \approx 2.4\text{ kHz}$ ($\delta E_{\rm Lamb} \approx 9.93 \times 10^{-12}\text{ eV}$), exceeding the $<10\text{ Hz}$ uncertainty of two-photon $1S\text{--}2S$ hydrogen spectroscopy\cite{parthey2011}. Furthermore, coupling the prefractal stator to a superconducting microwave drum resonator\cite{casimir_drum2025} maps the non-zero logarithmic running $\partial_{\ln d}C$ directly onto the Duffing mechanical softening shift $\Delta\omega_m(d) \propto -\partial_d^2 E_C(d)$, providing a single-photon optomechanical readout of the running Casimir coefficient.
+
+% Subheading 4: <= 40 characters including spaces (39 chars)
+\section*{Room-temperature SOI NEMS blueprint}
+\label{sec:experimental}
+
+\input{tables/section_nems_feasibility.tex}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/fig_nature_feasibility_stability.png}
+\caption{\textbf{NEMS feasibility and stability assessment for the rotational quantum clutch in true vacuum ($\varepsilon_{\rm bg}=1.0$) at $T=\NatureRotCeightCompactNtwoCdToleranceTemperatureK{}\text{ K}$.} The four-panel benchmark quantifies (\textbf{1}) room-temperature Matsubara dispersion across PEC ($0\text{ K}$), Gold ($0\text{ K}$), and Gold ($300\text{ K}$); (\textbf{2}) net repulsive restoring force under uncompensated electrostatic bias and patch voltages ($V_{\rm crit}$); (\textbf{3}) radial Casimir stiffness versus the 4-spoke $\text{Si}\langle 110\rangle$ mechanical flexure suspension stiffness; and (\textbf{4}) repulsive lift and switching swing across lithographic critical-dimension ($\Delta\text{CD}$) tooth-width etch tolerances.}
+\label{fig:nature_feasibility_stability}
+\end{figure*}
+
+To translate the Gold Concentric Cantor-Ring Rotary Quantum Clutch into room-temperature ($T = \NatureRotCeightCompactNtwoCdToleranceTemperatureK{}\text{ K}$) hardware, we evaluate its silicon-on-insulator (SOI) nanofabrication tolerances, thermal Matsubara dispersion, electrostatic patch-potential budgets, and 6-degree-of-freedom (6-DOF) mechanical stability (Fig.~\ref{fig:nature_feasibility_stability} and Methods). Satisfying the prefractal scale-separation criterion\cite{gordon2026prd} $\ell_N \le d \ll L$ ($N \ge \ln(L/d)/\ln b$) requires minimum radial slot clearances of $25\text{--}60\text{ nm}$ and a $15\text{ nm}$ sacrificial landing-pad standoff, all within standard $100\text{ keV}$ electron-beam lithography (EBL), damascene Gold electroplating, and anhydrous vapor-HF release capabilities.
+
+As quantified in Fig.~\ref{fig:nature_feasibility_stability}, progressing from ideal PEC ($0\text{ K}$) to dispersive Drude Gold ($0\text{ K}$) and room-temperature Drude Gold ($T = \NatureRotCeightCompactNtwoCdToleranceTemperatureK{}\text{ K}$) preserves both disengaged repulsion ($+\NatureCantorNtwoHybridrzDispersionFZGoldThreezerozeroKRepulsivePn{}\text{ pN}$ for \texttt{Cantor\_N2\_HybridRZ} and $+\NatureRotCeightCompactNtwoDispersionFZGoldThreezerozeroKRepulsivePn{}\text{ pN}$ for \texttt{Rot\_C8\_Compact\_N2} at $\theta=3^\circ$) and engaged attraction ($\NatureCantorNtwoHybridrzDispersionFZGoldThreezerozeroKAttractivePn{}\text{ pN}$ and $\NatureRotCeightCompactNtwoDispersionFZGoldThreezerozeroKAttractivePn{}\text{ pN}$ at $\theta=48^\circ$). From the 3D BEM mutual-capacitance gradients $|\partial C_{\rm el}/\partial z|$, the critical uncompensated RMS voltage where parasitic electrostatic attraction balances room-temperature Casimir repulsion is $V_{\rm crit} = \NatureCantorNtwoHybridrzPatchPotentialVCritMv{}\text{ mV}$ (\texttt{Cantor\_N2\_HybridRZ}) and $\NatureRotCeightCompactNtwoPatchPotentialVCritMv{}\text{ mV}$ (\texttt{Rot\_C8\_Compact\_N2}), well above the $<5\text{ mV}$ residuals achieved after Kelvin-probe nulling. A $\NatureRotCeightCompactNtwoLateralStabilitySpokeCount{}$-spoke single-crystal $\text{Si}\langle 110\rangle$ flexure suspension ($E_Y = \NatureRotCeightCompactNtwoLateralStabilityEYPa{}\text{ Pa}$) yields radial stiffness $k_{r,\rm mech} = \NatureRotCeightCompactNtwoLateralStabilityKRMechPnPerNm{}\text{ pN/nm}$, overcoming lateral Earnshaw instability with safety factors of $\NatureRotCeightCompactNtwoLateralStabilityLateralStabilitySafetyFactor{}\times$ (\texttt{Rot\_C8\_Compact\_N2}) and $\NatureCantorNtwoHybridrzLateralStabilityLateralStabilitySafetyFactor{}\times$ (\texttt{Cantor\_N2\_HybridRZ}). Finally, both repulsive lift and rotational switching swing remain robust across $r_{\rm edge} = 5\text{--}10\text{ nm}$ EBL corner rounding and $\Delta w_{\rm tooth} \in [-10, +10]\text{ nm}$ critical-dimension etch biases (Fig.~\ref{fig:nature_feasibility_stability}, panel 4). By uniting discrete scale invariance with 3D slot-tooth interdigitation, the rotary quantum clutch transforms the fractal Casimir effect from an abstract field-theoretic anomaly into a practical, switchable nanomechanical platform.
+
+\newpage
+\section*{Methods}
+\label{sec:methods}
+
+\subsection*{Transfer-matrix derivation of the log-periodic running Casimir coefficient}
+To derive the scale-dependent Casimir coefficient $C(d_s, \ln(d/\ell_*))$ in Eqs.~\eqref{eq:trace_running}--\eqref{eq:fourier_running} from first principles rather than postulating it phenomenologically\cite{gordon2026prd}, we evaluate the reduced Euclidean Green's function $g(z, z'; \kappa)$ at imaginary wavenumber $\kappa = \sqrt{\zeta^2 + \mathbf{k}_\perp^2}$ across an $N$-th generation pre-Cantor stack $\mathcal{C}_N$ of semitransparent barriers $V(z) = \lambda_0 \sum_{i \in \mathcal{C}_N} \delta(z - z_i)$ on $[0, d]$:
+\begin{equation}
+\left[ -\frac{\partial^2}{\partial z^2} + \kappa^2 + V(z) \right] g(z, z'; \kappa) = \delta(z - z').
+\end{equation}
+In the homogeneous vacuum intervals between barriers, $g(z, z'; \kappa) = A_j e^{-\kappa z} + B_j e^{\kappa z}$, where wave amplitudes across barrier $z_i$ are linked by the single-plate transfer matrix $\mathbf{M}_i(\kappa)$:
+\begin{equation}
+\mathbf{M}_i(\kappa) = \begin{pmatrix} 1 - \frac{\lambda_0}{2\kappa} & -\frac{\lambda_0}{2\kappa} e^{2\kappa z_i} \\ \frac{\lambda_0}{2\kappa} e^{-2\kappa z_i} & 1 + \frac{\lambda_0}{2\kappa} \end{pmatrix}, \qquad \mathbf{M}_{\rm global}(\kappa) = \prod_{i \in \mathcal{C}_N} \mathbf{M}_i(\kappa).
+\end{equation}
+For any finite coupling $\lambda_0 < \infty$, high-frequency modes ($\kappa \gg \lambda_0$) tunnel across barriers with transmission probability $|t(\kappa)|^2 = 4\kappa^2 / (4\kappa^2 + \lambda_0^2) > 0$, establishing global thermalization across all sub-cavities at temperature $T$ before taking the strong-coupling limit\cite{gordon2026prd}. Partitioning the $N$-th generation Cantor stack (scale ratio $b=3$) into its left and right $(N-1)$-th generation sub-stacks yields the functional interaction energy recursion $\Delta e(d) = 2\Delta e(d/b) + \Delta e_{\rm cross}(d)$. In $(3+1)$-dimensional spacetime, the interaction energy per unit area carries scaling dimension $[\text{length}]^{-3}$, so that under spatial dilation $d \to d/b$ the homogeneous scale-invariant part satisfies $\Delta e_{\rm hom}(d/b) = b^3 \Delta e_{\rm hom}(d)$, while the discrete self-similarity across generations $N \to \infty$ imposes periodicity in $\ln(d/\ell_*)$ with period $\ln b$. Expanding the general solution in complex scaling frequencies $\omega_k = 2\pi k / \ln b$ ($k \in \mathbb{Z}$) yields Eq.~\eqref{eq:fourier_running}:
+\begin{equation}
+e(d) = \frac{\hbar c}{d^3} \sum_{k=-\infty}^{\infty} C_k \, e^{i \frac{2\pi k}{\ln b} \ln(d/\ell_*)} = \frac{\hbar c}{d^3} C\!\left(d_s, \ln\frac{d}{\ell_*}\right).
+\end{equation}
+At finite temperature $T$, compactifying imaginary time with period $\beta = \hbar/(k_B T)$ replaces the continuous $\zeta$-integral with the Matsubara sum over $\zeta_n = 2\pi n k_B T/\hbar$, generalizing $C$ to the bivariate function $C_T(d_s, \ln(d/\ell_*), d/\lambda_T)$ with $\lambda_T = \hbar c / (2\pi k_B T)$\cite{gordon2026prd}.
+
+\subsection*{3D Boundary Element Method (BEM) and $C_4$ cyclic Bloch reduction}
+In three dimensions, the transfer-matrix log-determinant generalizes to the surface-integral scattering formula along the imaginary wavenumber axis $\kappa = \xi/c$ in true vacuum ($\varepsilon_{\rm bg}=1.0$):
+\begin{equation}
+E_C = \frac{\hbar c}{2\pi} \int_0^\infty d\kappa \, \ln\det\bigl(\mathbf{I} - \mathbf{M}(\kappa)\bigr),
+\qquad
+F_z = \frac{\hbar c}{2\pi} \int_0^\infty d\kappa \, \mathrm{Tr}\!\left[\bigl(\mathbf{I} - \mathbf{M}(\kappa)\bigr)^{-1} \frac{\partial \mathbf{M}(\kappa)}{\partial z_{\rm rotor}}\right],
+\label{eq:methods_bem}
+\end{equation}
+where $\mathbf{M}(\kappa) = \mathbf{D}_{\rm diag}^{-1}(\kappa)\mathbf{V}_{\rm off}(\kappa)$ couples discretized surface panels across the rotor and stator via the dyadic Yukawa Green's kernel $\exp(-\kappa R)/(4\pi R)$ weighted by the dispersive Drude dielectric permittivity of Gold ($\omega_p = 9.03\text{ eV}$, $\gamma = 0.053\text{ eV}$) in true vacuum ($\varepsilon_{\rm bg}=1.0$). We evaluate Eq.~\eqref{eq:methods_bem} using both the full 3D Vector-Dyadic electromagnetic kernel and the 3D Scalar-Yukawa kernel across three hierarchical mesh tiers: \texttt{Standard} ($\RotCfourTightslotNtwoStandardThetaZerozerosixpzeroPanelCount{}$ panels), \texttt{High} ($\RotCfourTightslotNtwoHighThetaZerozerosixpzeroPanelCount{}$ panels), and \texttt{Ultra\_High} ($\RotCfourTightslotNtwoUltraHighThetaZerozerosixpzeroPanelCount{}$ panels). Exploiting the four-fold cyclic symmetry ($C_4$) of the concentric ring sectors block-diagonalizes the dense $N_{\rm total} \times N_{\rm total}$ system into four decoupled Bloch irreducible representations ($m \in \{0, 1, 2, 3\}$), reducing memory footprint by $16\times$ and accelerating LU factorization by $64\times$. At $T = \NatureRotCeightCompactNtwoCdToleranceTemperatureK{}\text{ K}$, the continuous $\kappa$-integral is evaluated via exact Matsubara summation over $\kappa_n = 2\pi n k_B T / (\hbar c)$ with prime weight $1/2$ at the static $n=0$ transverse-magnetic (TM) mode (the static $n=0$ transverse-electric reflection vanishes in accordance with the Bohr--van Leeuwen theorem).
+
+\subsection*{4-pass inclusion--exclusion 3D FDTD MEEP methodology}
+To provide an independent time-domain electromagnetic benchmark in true vacuum ($\varepsilon_{\rm bg}=1.0$), we integrate the Wick-rotated Maxwell stress tensor $\mathbf{T}$ over closed per-tooth vacuum bounding boxes $S_i$ surrounding each rotor tooth inside its radial stator slot\cite{oskooi2010,rodriguez2011}:
+\begin{equation}
+F_z = \frac{\hbar}{\pi} \int_0^\infty d\xi \, \sum_{i} \oint_{S_i} d\mathbf{A} \cdot \langle \mathbf{T}(i\xi, \mathbf{x}) \rangle_z,
+\qquad
+T_{zz} = \frac{1}{2} \left[ \varepsilon_0 (E_z^2 - E_x^2 - E_y^2) + \mu_0 (H_z^2 - H_x^2 - H_y^2) \right].
+\label{eq:methods_fdtd}
+\end{equation}
+To eliminate both the rotor's self-force and the uncoupled background scattering of the stator slot walls across the bounding-box faces, each discrete-cosine-transform (DCT) boundary moment is computed using a 4-pass inclusion--exclusion subtraction at identical Yee-grid alignment (\texttt{eps\_averaging = False}, \texttt{Courant = 0.3}):
+\begin{equation}
+F_z^{\rm net} = \bigl(F_z^{\rm both} - F_z^{\rm rotor}\bigr) - \bigl(F_z^{\rm stator} - F_z^{\rm vac}\bigr).
+\label{eq:methods_four_pass}
+\end{equation}
+All 4-pass MEEP simulations were executed across sharded MPI worker groups on the BigRed 200 supercomputer using the 6-pole Raki\'c Lorentz--Drude susceptibility model for Gold in true vacuum ($\varepsilon_{\rm bg}=1.0$) and converted to SI piconewtons via $\hbar c / a^2 = 0.0316152677\text{ pN}\cdot\mu\text{m}^2$ at $a = 1\ \mu\text{m}$.
+
+\subsection*{Radial and vertical coordinates of the Cantor hierarchy and control geometries}
+In the baseline single-track configuration ($N=0$, \texttt{SingleTooth\_Track0}), a single concentric rotor tooth ($R_{\rm tooth} \in [0.2325, 0.3175]\ \mu\text{m}$, width $w_{\rm tooth} = 85\text{ nm}$, $z_{\rm tip} = -100\text{ nm}$) sits centered inside a single stator slot ($R_{\rm slot} \in [0.20, 0.35]\ \mu\text{m}$, width $W_{\rm slot} = 150\text{ nm}$, lateral gap $g_r = 32.5\text{ nm}$). In the first-generation single-slot ring ($N=1$, \texttt{Fractal\_N1\_FundRing}), middle-third subdivision across $R \in [0.20, 1.35]\ \mu\text{m}$ yields $W_{\rm slot} = 383.3\text{ nm}$, $w_{\rm tooth} = 210.8\text{ nm}$, and $g_r = 86.3\text{ nm}$. In the second-generation 3-track hierarchies ($N=2$, \texttt{Cantor\_N2\_FlatZ} and \texttt{Cantor\_N2\_HybridRZ}), a primary generation-1 central track is flanked by two narrower generation-2 child tracks; \texttt{Cantor\_N2\_FlatZ} uses uniform $z_{\rm tip} = -100\text{ nm}$, whereas \texttt{Cantor\_N2\_HybridRZ} scales the vertical insertion depth with the radial generation ($z_{\rm tip,1} = -110\text{ nm}$ on generation 1 and $z_{\rm tip,2} = -100\text{ nm}$ on generation 2). The compact NEMS variants \texttt{Rot\_C8\_Compact\_N2} and \texttt{Rot\_C4\_TightSlot\_N2} compress the $N=2$ hierarchy into $R \in [0.20, 0.90]\ \mu\text{m}$ with $35\text{--}60\text{ nm}$ lateral slot clearances, and the third-generation $N=3$ design (\texttt{Fractal\_N3\_Cantor7Track} / \texttt{Rot\_C10\_Fractal\_N3}) spans $R \in [0.15, 0.95]\ \mu\text{m}$ with $2^3 - 1 = 7$ concentric tracks ($28$ teeth across the four sectors).
+
+\subsection*{Cavity QED atomic transducers and optomechanical readout formulations}
+For a ground-state hydrogen atom with static polarizability $\alpha(0)/(4\pi\varepsilon_0) = \frac{9}{2}a_0^3$ located at distance $z$ from a prefractal boundary in true vacuum ($\varepsilon_{\rm bg}=1.0$), the retarded Casimir--Polder potential is modulated by the log-periodic coefficient:
+\begin{equation}
+U_{\rm CP}(z) = -\frac{3\hbar c \, \alpha(0)}{32\pi^2 \varepsilon_0 z^4} \left[ 1 + C\!\left(d_s, \ln\frac{z}{\ell_*}\right) \right].
+\end{equation}
+The spontaneous emission rate of the $2p \to 1s$ transition ($\omega_{12}$) relative to free space $\Gamma_0$ follows the local density of states scaling $\Gamma_{2p\to 1s}/\Gamma_0 \approx (L_s \omega_{12}/c)^{d_s - 3} G(\ln(\omega_{12}L_s/c))$, and the geometric modification to the non-relativistic Bethe Lamb shift is evaluated by integrating the boundary-modified virtual mode density $\Delta\rho_{\rm frac}(k, d_s, \ell_*)$:
+\begin{equation}
+\delta E_{\rm Lamb} = \frac{2\alpha_{\rm EM}}{3\pi m_e^2 c^2} \sum_n |\langle 2s | \mathbf{p} | n \rangle|^2 (E_n - E_{2s}) \int_0^\infty \frac{dk}{k} \, \frac{\Delta\rho_{\rm frac}(k, d_s, \ell_*)}{E_n - E_{2s} + \hbar c k}.
+\end{equation}
+When the prefractal stator is coupled to a superconducting drum resonator of effective mass $m_{\rm eff}$ and bare resonance frequency $\omega_{m,0}$ in a microwave optomechanical cavity\cite{casimir_drum2025}, the scale-dependent Casimir pressure induces a softening frequency shift $\Delta\omega_m(d) \approx -\frac{A_\perp}{2 m_{\rm eff} \omega_{m,0}} \frac{\partial P_\perp(d)}{\partial d}$, enabling direct reconstruction of $\partial_{\ln d}C$ and $\partial_{\ln d}^2 C$ from the mechanical frequency-versus-gap curve.
+
+\subsection*{Silicon-on-insulator (SOI) nanofabrication protocol}
+Fabrication of the Gold Concentric Cantor-Ring Rotary Quantum Clutch is designed around standard SOI and damascene Gold processing: (1) Starting from an SOI wafer with a single-crystal $\text{Si}\langle 110\rangle$ device layer ($E_Y = \NatureRotCeightCompactNtwoLateralStabilityEYPa{}\text{ Pa}$), the recessed isolation trench ($z \in [-650, -550]\text{ nm}$) and azimuthal landing pads ($z_{\rm pad,top} = -115\text{ nm}$, thickness $150\text{ nm}$) are patterned via $100\text{ keV}$ EBL in hydrogen silsesquioxane (HSQ) or PMMA resist, followed by Ti/Au seed deposition and damascene Gold electroplating. (2) A sacrificial $\text{SiO}_2$ spacer is deposited by atomic-layer deposition (ALD) and planarized by chemical-mechanical polishing (CMP) to define the exact $15\text{ nm}$ vertical standoff between the landing pads ($z = -115\text{ nm}$) and rotor tooth tips ($z = -100\text{ nm}$), after which the $25\text{ nm}$-thick slotted Cantor stator aperture rings ($z \in [-25, 0]\text{ nm}$) are patterned via overlay EBL aligned to sub-$5\text{ nm}$ interferometric fiducial marks. (3) Dual-exposure or grayscale EBL defines the stepped concentric rotor teeth ($110\text{ nm}$ generation-1 and $100\text{ nm}$ generation-2 teeth in \texttt{Cantor\_N2\_HybridRZ}), anchored to the four radial spider spokes ($z \in [350, 470]\text{ nm}$) and the $\NatureRotCeightCompactNtwoLateralStabilitySpokeCount{}$-spoke single-crystal $\text{Si}\langle 110\rangle$ flexure suspension ($L_{\rm spoke} = \NatureRotCeightCompactNtwoLateralStabilityLSpokeUm{}\ \mu\text{m}$, $w_{\rm spoke} = \NatureRotCeightCompactNtwoLateralStabilityWSpokeUm{}\ \mu\text{m}$, $t_{\rm spoke} = \NatureRotCeightCompactNtwoLateralStabilityTSpokeUm{}\ \mu\text{m}$). (4) The sacrificial oxide is removed using anhydrous vapor-phase hydrofluoric acid (vapor-HF) to prevent capillary stiction, followed by ultra-high-vacuum annealing and active Kelvin-probe nulling of residual patch potentials below $V_{\rm crit}$.
+
+\section*{Data availability}
+All three-solver simulation datasets (3D Vector-Dyadic BEM, 3D Scalar-Yukawa BEM, and 4-pass 3D FDTD MEEP), convergence tables, and NEMS stability benchmarks generated during this study are included in this published article and its machine-readable project repository.
+
+\section*{Code availability}
+The 3D $C_4$-symmetric boundary-element solvers, 4-pass inclusion--exclusion MEEP simulation scripts, and post-processing routines used to generate the figures and tables are available in the project repository upon reasonable request.
+
+\section*{Acknowledgments}
+The author acknowledges the use of the BigRed 200 supercomputing facilities at Indiana University Bloomington.
+
+\section*{Author contributions}
+G.G. conceived the theoretical framework, designed the rotary quantum clutch architecture, developed and executed the 3D BEM and 4-pass 3D FDTD MEEP simulations, analyzed the NEMS stability budgets, and wrote the manuscript.
+
+\section*{Competing interests}
+The author declares no competing interests.
+
+\bibliographystyle{naturemag}
+\bibliography{references}
+
+\end{document}

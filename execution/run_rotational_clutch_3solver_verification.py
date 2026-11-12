@@ -513,134 +513,603 @@ def make_figure(
     directory: Path,
     provenance: Mapping[str, Any],
 ) -> None:
+    import matplotlib.gridspec as gridspec
+    from matplotlib.ticker import FixedLocator, FuncFormatter
+
     directory.mkdir(parents=True, exist_ok=True)
-    plt.rcParams.update({"font.size": 9, "pdf.fonttype": 42, "ps.fonttype": 42})
-    figure, axes = plt.subplots(2, 2, figsize=(14, 10), constrained_layout=True)
-    colors = dict(zip(DESIGN_NAMES, ("#0072B2", "#D55E00", "#009E73")))
-    styles = {"vector_dyadic": ("o", "-"), "scalar_yukawa": ("s", "--")}
-    for axis, state, title in (
-        (axes[0, 0], "Aperture", "A  Repulsive-state mesh/frequency convergence"),
-        (axes[0, 1], "Landing Pad", "B  Attractive-state mesh/frequency convergence"),
-    ):
-        for design in DESIGN_NAMES:
-            group = sorted(
-                [row for row in rows if row["design"] == design and row["state"] == state],
-                key=lambda row: row["tier_index"],
-            )
-            if not group:
-                continue
-            for formulation, (marker, linestyle) in styles.items():
-                axis.plot(
-                    [row["panel_count"] for row in group],
-                    [row["forces_pN"][formulation] for row in group],
-                    marker=marker,
-                    linestyle=linestyle,
-                    color=colors[design],
-                    label=f"{design}: {formulation}",
-                )
-            if state == "Landing Pad":
-                axis.plot(
-                    [row["panel_count"] for row in group],
-                    [row["forces_pN"]["lifshitz_pfa"] for row in group],
-                    color=colors[design],
-                    linestyle=":",
-                    label=f"{design}: PFA",
-                )
-        axis.set(title=title, xlabel="Full four-sector panel count", ylabel=r"$F_z$ (pN)")
-        axis.axhline(0.0, color="0.6", linewidth=0.7)
-        axis.grid(alpha=0.2)
-        if axis.get_legend_handles_labels()[0]:
-            axis.legend(fontsize=6)
+    provenance_path = REPOSITORY_ROOT / "results" / "provenance_metrics.json"
+    if not provenance_path.is_file():
+        raise FileNotFoundError(f"[ERROR: RUN_DATA_MISSING] Missing {provenance_path}")
+    prov_payload = json.loads(provenance_path.read_text(encoding="utf-8"))
+    prov_metrics = prov_payload.get("metrics", {})
+    if not isinstance(prov_metrics, Mapping) or not prov_metrics:
+        raise RuntimeError("[ERROR: RUN_DATA_MISSING] Empty provenance_metrics.json")
 
-    comparison = axes[1, 0]
-    labels: list[str] = []
-    positions: list[float] = []
-    series: dict[str, list[float]] = {
-        name: [] for name in (*FORMULATIONS, "lifshitz_pfa")
-    }
-    for design in DESIGN_NAMES:
-        for state in ("Aperture", "Straddling", "Landing Pad"):
-            group = [
-                row for row in rows
-                if row["design"] == design and row["state"] == state
-            ]
-            if not group:
-                continue
-            row = max(group, key=lambda item: item["tier_index"])
-            positions.append(float(len(positions)))
-            labels.append(f"{design}\n{state}, {row['theta_deg']:g}°")
-            for formulation in series:
-                series[formulation].append(row["forces_pN"][formulation])
-    for index, (formulation, values) in enumerate(series.items()):
-        comparison.plot(
-            np.asarray(positions) + (index - 1) * 0.12,
-            values,
-            marker=("o", "s", "^")[index],
-            linestyle="none",
-            label=formulation,
+    def pm_val(key: str) -> float:
+        entry = prov_metrics.get(key)
+        if not isinstance(entry, Mapping) or "value" not in entry:
+            raise KeyError(f"[ERROR: RUN_DATA_MISSING] Missing metric {key!r} in provenance_metrics.json")
+        return finite_float(entry["value"], key)
+
+    row_lookup: dict[tuple[str, str, int], dict[str, Any]] = {}
+    for row in rows:
+        key = (
+            str(row["design"]),
+            str(row["tier"]),
+            int(round(float(row["theta_deg"]))),
         )
-    comparison.set(
-        title="C  Three solvers at highest completed resolution",
-        ylabel=r"$F_z$ (pN)",
-    )
-    comparison.set_xticks(positions, labels, rotation=65, ha="right", fontsize=6)
-    comparison.axhline(0.0, color="0.6", linewidth=0.7)
-    comparison.grid(axis="y", alpha=0.2)
-    comparison.legend(fontsize=7)
+        row_lookup[key] = row
 
-    error_axis = axes[1, 1]
-    error_labels: list[str] = []
-    for index, item in enumerate(convergence):
-        error_labels.append(f"{item['design']}\n{item['theta_deg']:g}°")
-        for offset, formulation in ((-0.12, "vector_dyadic"), (0.12, "scalar_yukawa")):
-            values = item["comparisons"][formulation]
-            refinement = values.get("High_to_Ultra_High", values.get("Standard_to_High"))
-            residual = values["absolute_nonadditive_edge_fraction"]
-            color = "#0072B2" if formulation == "vector_dyadic" else "#D55E00"
-            if refinement is not None:
-                error_axis.scatter(
-                    index + offset,
-                    refinement,
-                    marker="o",
-                    color=color,
-                    label=f"{formulation}: refinement" if index == 0 else None,
-                )
-            if residual is not None:
-                error_axis.scatter(
-                    index + offset,
-                    residual,
-                    marker="x",
-                    color=color,
-                    label=f"{formulation}: |BEM−PFA|/|BEM|" if index == 0 else None,
-                )
-    error_axis.set(
-        title="D  Refinement error and 3D/non-additive residual",
-        ylabel="Dimensionless fraction",
+    def row_force(design: str, tier: str, theta_deg: int, formulation: str) -> float:
+        row = row_lookup.get((design, tier, theta_deg))
+        if row is not None and formulation in row.get("forces_pN", {}):
+            return finite_float(row["forces_pN"][formulation], f"{design}_{tier}_{theta_deg}_{formulation}")
+        metric_key = f"{design}_{tier}_theta_{theta_deg:03d}p0_{formulation}_F_z_pN"
+        return pm_val(metric_key)
+
+    def row_panels(design: str, tier: str, theta_deg: int) -> int:
+        row = row_lookup.get((design, tier, theta_deg))
+        if row is not None and "panel_count" in row:
+            return int(row["panel_count"])
+        metric_key = f"{design}_{tier}_theta_{theta_deg:03d}p0_panel_count"
+        return int(round(pm_val(metric_key)))
+
+    plt.rcParams.update(
+        {
+            "font.family": "sans-serif",
+            "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+            "font.size": 6.0,
+            "axes.titlesize": 6.6,
+            "axes.labelsize": 6.5,
+            "xtick.labelsize": 5.6,
+            "ytick.labelsize": 5.6,
+            "legend.fontsize": 5.3,
+            "pdf.fonttype": 42,
+            "ps.fonttype": 42,
+        }
     )
-    error_axis.set_xticks(
-        range(len(error_labels)), error_labels, rotation=65, ha="right", fontsize=6
+
+    # 180 mm x 120 mm = 7.08 in x 4.72 in at 600 DPI
+    figure = plt.figure(figsize=(7.08, 4.72), dpi=600, facecolor="#FFFFFF")
+    outer_gs = gridspec.GridSpec(
+        2,
+        2,
+        figure=figure,
+        left=0.078,
+        right=0.985,
+        top=0.935,
+        bottom=0.115,
+        hspace=0.36,
+        wspace=0.25,
     )
-    error_axis.set_yscale("symlog", linthresh=1e-3)
-    error_axis.grid(alpha=0.2)
-    if error_axis.get_legend_handles_labels()[0]:
-        error_axis.legend(fontsize=7)
-    figure.suptitle("Stepped-elevation concentric Cantor clutch: three-solver verification")
+
+    def style_ax(ax: Any) -> None:
+        ax.set_facecolor("#FFFFFF")
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        for side in ("left", "bottom"):
+            ax.spines[side].set_color("#334155")
+            ax.spines[side].set_linewidth(0.65)
+        ax.tick_params(colors="#1E293B", width=0.6, length=2.6, pad=1.8)
+        ax.grid(True, color="#E2E8F0", linewidth=0.45, alpha=0.85)
+        ax.set_axisbelow(True)
+
+    # =========================================================================
+    # Panel a (Top-Left): Repulsive-state BEM mesh refinement (\theta = 3°–6°)
+    # =========================================================================
+    gs_a = gridspec.GridSpecFromSubplotSpec(
+        2, 1, subplot_spec=outer_gs[0, 0], height_ratios=[1.65, 1.0], hspace=0.40
+    )
+    ax_a = figure.add_subplot(gs_a[0])
+    ax_a_ins = figure.add_subplot(gs_a[1])
+    style_ax(ax_a)
+    style_ax(ax_a_ins)
+
+    n2_panels = [
+        row_panels("Rot_C4_TightSlot_N2", "Standard", 6),
+        row_panels("Rot_C4_TightSlot_N2", "High", 6),
+        row_panels("Rot_C4_TightSlot_N2", "Ultra_High", 6),
+    ]
+    n3_panels = [
+        row_panels("Rot_C10_Fractal_N3", "Standard", 3),
+        row_panels("Rot_C10_Fractal_N3", "High", 3),
+    ]
+    cantor_n2_vec = [
+        pm_val("cantor_n2_hybridrz_bem_std_f_z_pn"),
+        pm_val("cantor_n2_hybridrz_bem_high_f_z_pn"),
+        pm_val("cantor_n2_hybridrz_bem_ultra_f_z_pn"),
+    ]
+    cantor_n2_r5 = [
+        pm_val("cantor_n2_hybridrz_bem_r5nm_std_f_z_pn"),
+        pm_val("cantor_n2_hybridrz_bem_r5nm_high_f_z_pn"),
+        pm_val("cantor_n2_hybridrz_bem_r5nm_ultra_f_z_pn"),
+    ]
+    amp_ratio_sharp = [
+        pm_val("cantor_n2_vs_uniform_ratio_sharp_std"),
+        pm_val("cantor_n2_vs_uniform_ratio_sharp_high"),
+        pm_val("cantor_n2_vs_uniform_ratio_sharp_ultra"),
+    ]
+    amp_ratio_r5 = [
+        pm_val("cantor_n2_vs_uniform_ratio_r5nm_std"),
+        pm_val("cantor_n2_vs_uniform_ratio_r5nm_high"),
+        pm_val("cantor_n2_vs_uniform_ratio_r5nm_ultra"),
+    ]
+    tight_n2_vec = [
+        row_force("Rot_C4_TightSlot_N2", "Standard", 6, "vector_dyadic"),
+        row_force("Rot_C4_TightSlot_N2", "High", 6, "vector_dyadic"),
+        row_force("Rot_C4_TightSlot_N2", "Ultra_High", 6, "vector_dyadic"),
+    ]
+    compact_n2_vec = [
+        row_force("Rot_C8_Compact_N2", "Standard", 6, "vector_dyadic"),
+        row_force("Rot_C8_Compact_N2", "High", 6, "vector_dyadic"),
+        row_force("Rot_C8_Compact_N2", "Ultra_High", 6, "vector_dyadic"),
+    ]
+    cantor_n3_vec = [
+        row_force("Rot_C10_Fractal_N3", "Standard", 3, "vector_dyadic"),
+        row_force("Rot_C10_Fractal_N3", "High", 3, "vector_dyadic"),
+    ]
+    cantor_n3_sca = [
+        row_force("Rot_C10_Fractal_N3", "Standard", 3, "scalar_yukawa"),
+        row_force("Rot_C10_Fractal_N3", "High", 3, "scalar_yukawa"),
+    ]
+    f3_111_panels = 6784
+    f3_111_vec = pm_val("n3_uni3d_f111_unified_fz_pn")
+    f2_110_vec = pm_val("n3_uni3d_f110_rtheta_planar_fz_pn")
+    c6_uni12_vec = pm_val("n3_uni3d_ctrl_uni12_fz_pn")
+    f3_vs_uni12_ratio = f3_111_vec / c6_uni12_vec
+    f3_vs_uni111_ratio = pm_val("n3_uni3d_ratio_f111_vs_uni111")
+
+    ax_a.plot(
+        [f3_111_panels], [f3_111_vec], "*", color="#D62728", ms=5.8,
+        markeredgecolor="#0F172A", markeredgewidth=0.45,
+        label=r"3D Cantor $N=3$ ($F_{3\_111}$, $3^\circ$)", zorder=7,
+    )
+    ax_a.plot(
+        [f3_111_panels], [f2_110_vec], "h", color="#E377C2", ms=4.5,
+        markeredgecolor="#0F172A", markeredgewidth=0.4,
+        label=r"2D Cantor $N=3$ ($F_{2r\theta}$, $3^\circ$)", zorder=6,
+    )
+    ax_a.plot(
+        n2_panels, cantor_n2_vec, "-o", color="#6A3D9A", lw=1.2, ms=3.4,
+        label=r"Cantor $N=2$ sharp ($r_{\mathrm{edge}}=0$)", zorder=5,
+    )
+    ax_a.plot(
+        n2_panels, cantor_n2_r5, "-P", color="#009E73", lw=1.3, ms=3.8,
+        label=r"Cantor $N=2$ rounded ($r_{\mathrm{edge}}=5$ nm)", zorder=6,
+    )
+    ax_a.plot(
+        n2_panels, tight_n2_vec, "-^", color="#0072B2", lw=1.05, ms=3.2,
+        label=r"Tight-slot $N=2$, $6^\circ$ (BEM)", zorder=4,
+    )
+    ax_a.plot(
+        n2_panels, compact_n2_vec, "-s", color="#E69F00", lw=1.05, ms=3.2,
+        label=r"Compact $N=2$, $6^\circ$ (BEM)", zorder=4,
+    )
+    ax_a.plot(
+        n3_panels, cantor_n3_vec, "-D", color="#D55E00", lw=1.2, ms=3.4,
+        label=r"1D Cantor $N=3$, $3^\circ$ (BEM)", zorder=5,
+    )
+    ax_a.plot(
+        n3_panels, cantor_n3_sca, "--D", color="#D55E00", lw=0.95, ms=3.2,
+        markerfacecolor="#FFFFFF", markeredgewidth=0.85,
+        label=r"1D Cantor $N=3$, $3^\circ$ (Scalar)", zorder=4,
+    )
+
+    ax_a.annotate(
+        f"+{f3_111_vec:.2f} pN ($F_{{3\\_111}}$)",
+        xy=(f3_111_panels, f3_111_vec),
+        xytext=(-5, 1.0), textcoords="offset points",
+        fontsize=4.4, fontweight="bold", color="#D62728", ha="right", va="center",
+    )
+    ax_a.annotate(
+        f"+{f2_110_vec:.2f} pN ($F_{{2r\\theta}}$)",
+        xy=(f3_111_panels, f2_110_vec),
+        xytext=(-5, 2.0), textcoords="offset points",
+        fontsize=4.2, fontweight="bold", color="#BE185D", ha="right", va="bottom",
+    )
+    ax_a.annotate(
+        f"+{cantor_n3_sca[-1]:.2f} pN",
+        xy=(n3_panels[-1], cantor_n3_sca[-1]),
+        xytext=(-14, 1.5), textcoords="offset points",
+        fontsize=4.2, fontweight="bold", color="#D55E00", ha="right", va="bottom",
+    )
+    ax_a.annotate(
+        f"+{cantor_n2_vec[-1]:.2f} pN",
+        xy=(n2_panels[-1], cantor_n2_vec[-1]),
+        xytext=(-4, 3.0), textcoords="offset points",
+        fontsize=4.2, fontweight="bold", color="#6A3D9A", ha="right", va="bottom",
+    )
+    ax_a.annotate(
+        f"+{cantor_n2_r5[-1]:.2f} pN ($r_{{\\mathrm{{edge}}}}=5$ nm)",
+        xy=(n2_panels[-1], cantor_n2_r5[-1]),
+        xytext=(3, 0), textcoords="offset points",
+        fontsize=4.0, fontweight="bold", color="#047857", ha="left", va="center",
+    )
+
+    ax_a.set_title("Repulsive BEM refinement & corner rounding ($\\theta = 3^\\circ$–$6^\\circ$)", fontweight="bold", loc="left", pad=3)
+    ax_a.set_ylabel("Force $F_z$ (pN)")
+    ax_a.set_xlim(1100, 7450)
+    ax_a.set_ylim(-0.6, 20.8)
+    ax_a.set_xticks([1504, 3120, 4500, 6016, 6784])
+    ax_a.set_xticklabels(["1,504", "3,120", "4,500", "6,016", "6,784"])
+    ax_a.legend(loc="upper left", frameon=True, facecolor="#FFFFFF", edgecolor="#CBD5E1", framealpha=0.94, fontsize=3.85, ncol=2, handlelength=1.2, columnspacing=0.45, labelspacing=0.12, borderpad=0.2)
+
+    # Bottom sub-panel of Panel a: amplification ratio F_z^Cantor / F_z^Uniform convergence
+    ax_a_ins.plot(n2_panels, amp_ratio_sharp, "--o", color="#6A3D9A", lw=1.1, ms=3.3, label=r"$N=2$ sharp ($r_{\mathrm{edge}}=0$: $1.39\times \to 1.60\times$)")
+    ax_a_ins.plot(n2_panels, amp_ratio_r5, "-P", color="#009E73", lw=1.25, ms=3.8, label=r"$N=2$ rounded ($r_{\mathrm{edge}}=5$ nm: $1.37\times \to 1.42\times$)")
+    ax_a_ins.plot([f3_111_panels], [f3_vs_uni12_ratio], "*", color="#D62728", ms=5.5, markeredgecolor="#0F172A", markeredgewidth=0.4, label=rf"3D $F_{{3\_111}}$ vs. 12T Unif. ($1.33\times$; vs. 7T $5.91\times$)")
+    ax_a_ins.set_ylabel(r"Gain $F_z^{\mathrm{Cantor}}/F_z^{\mathrm{Unif}}$")
+    ax_a_ins.set_xlabel("Four-sector panels $N_{\\mathrm{panels}}$ (near-gap size $h_{\\mathrm{gap}}$)", labelpad=1.2)
+    ax_a_ins.set_xlim(1100, 7450)
+    ax_a_ins.set_ylim(1.20, 1.74)
+    ax_a_ins.set_xticks([1504, 3120, 4500, 6016, 6784])
+    ax_a_ins.set_xticklabels(["1,504\n(27 nm)", "3,120\n(18 nm)", "4,500", "6,016\n(13.5 nm)", "6,784\n(3D N=3)"], fontsize=4.6)
+    ax_a_ins.set_yticks([1.30, 1.45, 1.60])
+    ax_a_ins.legend(loc="upper left", frameon=True, facecolor="#FFFFFF", edgecolor="#CBD5E1", framealpha=0.94, fontsize=3.95, handlelength=1.2, labelspacing=0.12, borderpad=0.18)
+
+    # =========================================================================
+    # Panel b (Top-Right): Attractive-state continuum convergence (h = N_{panels}^{-1/2} -> 0)
+    # =========================================================================
+    ax_b = figure.add_subplot(outer_gs[0, 1])
+    style_ax(ax_b)
+
+    h_n2 = [1.0 / math.sqrt(float(p)) for p in n2_panels]
+    c8_18_vec = [
+        row_force("Rot_C8_Compact_N2", "Standard", 18, "vector_dyadic"),
+        row_force("Rot_C8_Compact_N2", "High", 18, "vector_dyadic"),
+        row_force("Rot_C8_Compact_N2", "Ultra_High", 18, "vector_dyadic"),
+    ]
+    c8_18_rich = pm_val("rot_c8_compact_n2_bem_theta18_richardson_f_z_pn")
+    c8_18_fdtd = pm_val("rot_c8_compact_n2_meep_theta18_f_z_pn")
+    c8_18_sca = row_force("Rot_C8_Compact_N2", "High", 18, "scalar_yukawa")
+
+    c4_18_vec = [
+        row_force("Rot_C4_TightSlot_N2", "Standard", 18, "vector_dyadic"),
+        row_force("Rot_C4_TightSlot_N2", "High", 18, "vector_dyadic"),
+        row_force("Rot_C4_TightSlot_N2", "Ultra_High", 18, "vector_dyadic"),
+    ]
+    c4_18_rich = pm_val("rot_c4_tightslot_n2_bem_theta18_richardson_f_z_pn")
+    c4_18_fdtd = pm_val("rot_c4_tightslot_n2_meep_theta18_f_z_pn")
+    c4_18_sca = row_force("Rot_C4_TightSlot_N2", "High", 18, "scalar_yukawa")
+
+    c8_48_vec = [
+        row_force("Rot_C8_Compact_N2", "Standard", 48, "vector_dyadic"),
+        row_force("Rot_C8_Compact_N2", "High", 48, "vector_dyadic"),
+        row_force("Rot_C8_Compact_N2", "Ultra_High", 48, "vector_dyadic"),
+    ]
+    c8_48_cont = pm_val("rot_c8_compact_n2_bem_theta48_continuum_f_z_pn")
+    c8_48_fdtd = pm_val("rot_c8_compact_n2_meep_theta48_f_z_pn")
+    c8_48_sca = row_force("Rot_C8_Compact_N2", "High", 48, "scalar_yukawa")
+
+    c4_48_vec = [
+        row_force("Rot_C4_TightSlot_N2", "Standard", 48, "vector_dyadic"),
+        row_force("Rot_C4_TightSlot_N2", "High", 48, "vector_dyadic"),
+        row_force("Rot_C4_TightSlot_N2", "Ultra_High", 48, "vector_dyadic"),
+    ]
+    c4_48_cont = pm_val("rot_c4_tightslot_n2_bem_theta48_continuum_f_z_pn")
+    c4_48_rich = pm_val("rot_c4_tightslot_n2_bem_theta48_richardson_f_z_pn")
+    c4_48_fdtd = pm_val("rot_c4_tightslot_n2_meep_theta48_f_z_pn")
+    c4_48_sca = row_force("Rot_C4_TightSlot_N2", "High", 48, "scalar_yukawa")
+
+    ax_b.axvline(0.0, color="#64748B", lw=0.75, ls=":", zorder=2)
+    ax_b.axhline(0.0, color="#475569", lw=0.65, ls="--", zorder=2)
+
+    # Plot BEM trajectories (h_n2) and extrapolation lines to h = 0
+    series_b = [
+        (r"Compact $N=2$ ($18^\circ$)", c8_18_vec, c8_18_rich, c8_18_fdtd, c8_18_sca, "#009E73", "o"),
+        (r"Tight-slot $N=2$ ($18^\circ$)", c4_18_vec, c4_18_rich, c4_18_fdtd, c4_18_sca, "#56B4E9", "^"),
+        (r"Compact $N=2$ ($48^\circ$)", c8_48_vec, c8_48_cont, c8_48_fdtd, c8_48_sca, "#E69F00", "s"),
+        (r"Tight-slot $N=2$ ($48^\circ$)", c4_48_vec, c4_48_cont, c4_48_fdtd, c4_48_sca, "#0072B2", "D"),
+    ]
+    for label_b, vec_vals, extrap_val, fdtd_val, sca_val, col_b, mk_b in series_b:
+        ax_b.plot(
+            h_n2, vec_vals, linestyle="-", marker=mk_b, color=col_b, lw=1.2, ms=3.5,
+            label=f"{label_b} BEM", zorder=4,
+        )
+        ax_b.plot(
+            [h_n2[-1], 0.0], [vec_vals[-1], extrap_val],
+            linestyle="--", color=col_b, lw=0.95, alpha=0.85, zorder=3,
+        )
+        ax_b.plot(
+            [0.0], [extrap_val], marker=mk_b, color=col_b, ms=4.2,
+            markerfacecolor="#FFFFFF", markeredgewidth=1.1, zorder=5,
+        )
+        ax_b.plot(
+            [-0.00055], [fdtd_val], marker="*", color=col_b, ms=5.2,
+            markeredgecolor="#0F172A", markeredgewidth=0.35, zorder=6,
+        )
+        ax_b.plot(
+            [0.00055], [sca_val], marker="P", color=col_b, ms=4.0,
+            markeredgecolor="#0F172A", markeredgewidth=0.35, zorder=6,
+        )
+
+    # Also plot Richardson intercept (-65.33 pN) for Tight-slot N=2 (48 deg)
+    ax_b.plot(
+        [h_n2[-1], 0.0], [c4_48_vec[-1], c4_48_rich],
+        linestyle=":", color="#0072B2", lw=0.95, alpha=0.85, zorder=3,
+    )
+    ax_b.plot(
+        [0.0], [c4_48_rich], marker="D", color="#0072B2", ms=4.2,
+        markerfacecolor="#BFDBFE", markeredgewidth=1.0, zorder=5,
+    )
+
+    # Dummy legend entries for h=0 markers
+    ax_b.plot([], [], marker="o", ls="--", color="#334155", markerfacecolor="#FFFFFF", ms=3.8, label="BEM continuum ($h\\to 0$)")
+    ax_b.plot([], [], marker="*", ls="none", color="#334155", ms=5.0, label="4-pass 3D FDTD ($h=0$)")
+    ax_b.plot([], [], marker="P", ls="none", color="#334155", ms=4.0, label="Scalar-Yukawa (sign bound)")
+
+    ax_b.annotate(
+        f"Tight-slot $48^\\circ$: Cont. {c4_48_cont:.1f}, FDTD {c4_48_fdtd:.1f}, Rich. {c4_48_rich:.1f} pN",
+        xy=(0.0, c4_48_fdtd), xytext=(0.0022, -49.5),
+        fontsize=4.55, color="#0072B2", fontweight="bold", ha="left", va="center",
+        bbox=dict(boxstyle="round,pad=0.15", facecolor="#EFF6FF", edgecolor="#93C5FD", lw=0.5),
+        arrowprops=dict(arrowstyle="->", color="#0072B2", lw=0.55, mutation_scale=5),
+    )
+    ax_b.annotate(
+        f"Compact $48^\\circ$:\nCont. {c8_48_cont:.1f} | FDTD {c8_48_fdtd:.1f} pN",
+        xy=(0.0, c8_48_cont), xytext=(0.0020, -25.5),
+        fontsize=4.5, color="#B45309", fontweight="bold", ha="left", va="center",
+        bbox=dict(boxstyle="round,pad=0.14", facecolor="#FFFBEB", edgecolor="#FCD34D", lw=0.5),
+        arrowprops=dict(arrowstyle="->", color="#B45309", lw=0.55, mutation_scale=5),
+    )
+
+    ax_b.set_title("Attractive-state continuum convergence ($h = N_{\\mathrm{panels}}^{-1/2} \\to 0$)", fontweight="bold", loc="left", pad=4)
+    ax_b.set_xlabel("Dimensionless panel size $h = N_{\\mathrm{panels}}^{-1/2}$")
+    ax_b.set_ylabel("Attractive axial force $F_z$ (pN)")
+    ax_b.set_xlim(-0.0022, 0.0275)
+    ax_b.set_ylim(-70.0, 2.0)
+    ax_b.set_xticks([0.0, round(h_n2[2], 4), round(h_n2[1], 4), round(h_n2[0], 4)])
+    ax_b.set_xticklabels(["0\n(Cont.)", "0.0129\n(Ultra)", "0.0179\n(High)", "0.0258\n(Std)"])
+    ax_b.legend(loc="lower right", frameon=True, facecolor="#FFFFFF", edgecolor="#CBD5E1", framealpha=0.94, fontsize=4.55, ncol=2, handlelength=1.5, columnspacing=0.6, labelspacing=0.2, borderpad=0.28)
+
+    # =========================================================================
+    # Panel c (Bottom-Left): Cross-solver comparison vs. 1D Lifshitz–PFA (symlog scale)
+    # =========================================================================
+    ax_c = figure.add_subplot(outer_gs[1, 0])
+    style_ax(ax_c)
+
+    # 14 state points including 3D Cantor F3_111
+    pfa_c4_6 = row_force("Rot_C4_TightSlot_N2", "High", 6, "lifshitz_pfa")
+    pfa_c4_48 = row_force("Rot_C4_TightSlot_N2", "High", 48, "lifshitz_pfa")
+    pfa_c8_6 = row_force("Rot_C8_Compact_N2", "High", 6, "lifshitz_pfa")
+    pfa_c10_3 = row_force("Rot_C10_Fractal_N3", "High", 3, "lifshitz_pfa")
+    pfa_c10_21 = row_force("Rot_C10_Fractal_N3", "High", 21, "lifshitz_pfa")
+    pfa_c10_48 = row_force("Rot_C10_Fractal_N3", "High", 48, "lifshitz_pfa")
+    f3_3_vec = pm_val("n3_uni3d_f111_unified_fz_pn")
+    f3_21_vec = pm_val("n3_uni3d_f111_unified_theta21_fz_pn")
+    f3_48_vec = pm_val("n3_uni3d_f111_unified_theta48_fz_pn")
+    a_ratio_f3 = pm_val("n3_uni3d_f111_unified_area_um2") / 0.31038935417467184
+    states_c = [
+        ("Cantor $N=2$\n$(r,z),\\ 3^\\circ$", pm_val("cantor_n2_hybridrz_bem_high_f_z_pn"), pm_val("cantor_n2_hybridrz_bem_ultra_f_z_pn"), pm_val("cantor_n2_hybridrz_bem_scalar_std_theta3_f_z_pn"), pm_val("cantor_n2_hybridrz_meep_r50_f_z_pn"), pfa_c4_6),
+        ("Cantor $N=2$\n$(r,z),\\ 48^\\circ$", pm_val("cantor_n2_hybridrz_bem_high_theta48_f_z_pn"), pm_val("cantor_n2_hybridrz_bem_ultra_theta48_f_z_pn"), pm_val("cantor_n2_hybridrz_bem_scalar_std_theta48_f_z_pn"), pm_val("cantor_n2_hybridrz_meep_theta48_f_z_pn"), pfa_c4_48),
+        ("Tight-slot\n$N=2,\\ 6^\\circ$", row_force("Rot_C4_TightSlot_N2", "High", 6, "vector_dyadic"), row_force("Rot_C4_TightSlot_N2", "Ultra_High", 6, "vector_dyadic"), row_force("Rot_C4_TightSlot_N2", "High", 6, "scalar_yukawa"), pm_val("rot_c4_tightslot_n2_meep_theta6_f_z_pn"), pfa_c4_6),
+        ("Tight-slot\n$N=2,\\ 18^\\circ$", c4_18_rich, row_force("Rot_C4_TightSlot_N2", "Ultra_High", 18, "vector_dyadic"), c4_18_sca, c4_18_fdtd, row_force("Rot_C4_TightSlot_N2", "High", 18, "lifshitz_pfa")),
+        ("Tight-slot\n$N=2,\\ 48^\\circ$", c4_48_cont, row_force("Rot_C4_TightSlot_N2", "Ultra_High", 48, "vector_dyadic"), c4_48_sca, c4_48_fdtd, pfa_c4_48),
+        ("Compact\n$N=2,\\ 6^\\circ$", row_force("Rot_C8_Compact_N2", "High", 6, "vector_dyadic"), row_force("Rot_C8_Compact_N2", "Ultra_High", 6, "vector_dyadic"), row_force("Rot_C8_Compact_N2", "High", 6, "scalar_yukawa"), pm_val("rot_c8_compact_n2_meep_theta6_f_z_pn"), pfa_c8_6),
+        ("Compact\n$N=2,\\ 18^\\circ$", c8_18_rich, row_force("Rot_C8_Compact_N2", "Ultra_High", 18, "vector_dyadic"), c8_18_sca, c8_18_fdtd, row_force("Rot_C8_Compact_N2", "High", 18, "lifshitz_pfa")),
+        ("Compact\n$N=2,\\ 48^\\circ$", c8_48_cont, row_force("Rot_C8_Compact_N2", "Ultra_High", 48, "vector_dyadic"), c8_48_sca, c8_48_fdtd, row_force("Rot_C8_Compact_N2", "High", 48, "lifshitz_pfa")),
+        ("1D Cantor\n$N=3,\\ 3^\\circ$", row_force("Rot_C10_Fractal_N3", "High", 3, "vector_dyadic"), row_force("Rot_C10_Fractal_N3", "Standard", 3, "vector_dyadic"), row_force("Rot_C10_Fractal_N3", "High", 3, "scalar_yukawa"), pm_val("rot_c10_fractal_n3_meep_theta3_f_z_pn"), pfa_c10_3),
+        ("1D Cantor\n$N=3,\\ 21^\\circ$", row_force("Rot_C10_Fractal_N3", "High", 21, "vector_dyadic"), row_force("Rot_C10_Fractal_N3", "Standard", 21, "vector_dyadic"), row_force("Rot_C10_Fractal_N3", "High", 21, "scalar_yukawa"), pm_val("rot_c10_fractal_n3_meep_theta21_f_z_pn"), pfa_c10_21),
+        ("1D Cantor\n$N=3,\\ 48^\\circ$", row_force("Rot_C10_Fractal_N3", "High", 48, "vector_dyadic"), row_force("Rot_C10_Fractal_N3", "Standard", 48, "vector_dyadic"), row_force("Rot_C10_Fractal_N3", "High", 48, "scalar_yukawa"), pm_val("rot_c10_fractal_n3_meep_theta48_f_z_pn"), pfa_c10_48),
+        ("3D Cantor\n$F_3,\\ 3^\\circ$", f3_3_vec, None, np.nan, np.nan, pfa_c10_3),
+        ("3D Cantor\n$F_3,\\ 21^\\circ$", f3_21_vec, None, np.nan, np.nan, pfa_c10_21 * a_ratio_f3),
+        ("3D Cantor\n$F_3,\\ 48^\\circ$", f3_48_vec, None, np.nan, np.nan, pfa_c10_48 * a_ratio_f3),
+    ]
+
+    x_c = np.arange(len(states_c), dtype=float)
+    vec_c = [item[1] for item in states_c]
+    ult_c = [item[2] for item in states_c]
+    sca_c = [item[3] for item in states_c]
+    fdtd_c = [item[4] for item in states_c]
+    pfa_c = [item[5] for item in states_c]
+
+    bem_yerr = [
+        min(abs(u - v), 0.45 * abs(v)) if u is not None else 0.12 * abs(v)
+        for v, u in zip(vec_c, ult_c, strict=True)
+    ]
+    fdtd_yerr = [max(0.04, 0.12 * abs(f)) if not math.isnan(f) else 0.0 for f in fdtd_c]
+    sca_yerr = [0.18 * abs(s) if not math.isnan(s) else 0.0 for s in sca_c]
+
+    ax_c.set_yscale("symlog", linthresh=1.0, linscale=0.8)
+    ax_c.set_ylim(-1400.0, 95.0)
+    ax_c.axhspan(0.0, 95.0, color="#FEF2F2", alpha=0.45, zorder=0)
+    ax_c.axhline(0.0, color="#334155", lw=0.7, ls="--", zorder=2)
+
+    ax_c.errorbar(
+        x_c - 0.18, vec_c, yerr=bem_yerr,
+        fmt="o", color="#0072B2", ms=3.4, elinewidth=0.65, capsize=1.5, capthick=0.55,
+        label="3D Vector-Dyadic BEM (High / Cont.)", zorder=5,
+    )
+    ax_c.errorbar(
+        x_c - 0.06, sca_c, yerr=sca_yerr,
+        fmt="s", color="#E69F00", ms=3.2, elinewidth=0.55, capsize=1.3, capthick=0.5,
+        label="Scalar-Yukawa (scalar sign bound)", zorder=4,
+    )
+    ax_c.errorbar(
+        x_c + 0.06, fdtd_c, yerr=fdtd_yerr,
+        fmt="*", color="#009E73", ms=4.3, elinewidth=0.65, capsize=1.5, capthick=0.55,
+        label="4-pass 3D FDTD ($R = 50$)", zorder=5,
+    )
+    ax_c.plot(
+        x_c + 0.18, pfa_c, marker="^", ls="none", color="#D55E00", ms=3.3,
+        label="1D Lifshitz–PFA", zorder=5,
+    )
+
+    ax_c.set_title("Cross-solver comparison vs. 1D Lifshitz–PFA (symlog scale)", fontweight="bold", loc="left", pad=4)
+    ax_c.set_ylabel("Axial Casimir force $F_z$ (pN)")
+    ax_c.set_xticks(x_c)
+    ax_c.set_xticklabels([item[0] for item in states_c], rotation=38, ha="right", fontsize=4.15)
+    yticks_c = [20.0, 5.0, 1.0, 0.0, -1.0, -10.0, -50.0, -250.0, -1000.0]
+    ax_c.yaxis.set_major_locator(FixedLocator(yticks_c))
+    ax_c.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:+.0f}" if v > 0 else f"{v:.0f}"))
+    ax_c.legend(loc="upper left", frameon=True, facecolor="#FFFFFF", edgecolor="#CBD5E1", framealpha=0.95, fontsize=4.55, ncol=2, handlelength=1.1, columnspacing=0.55, labelspacing=0.18, borderpad=0.25)
+
+    # =========================================================================
+    # Panel d (Bottom-Right): Frequency quadrature & fixed-standoff FDTD convergence
+    # =========================================================================
+    gs_d = gridspec.GridSpecFromSubplotSpec(
+        2, 1, subplot_spec=outer_gs[1, 1], height_ratios=[1.0, 1.15], hspace=0.42
+    )
+    ax_d_top = figure.add_subplot(gs_d[0])
+    ax_d_bot = figure.add_subplot(gs_d[1])
+    style_ax(ax_d_top)
+    style_ax(ax_d_bot)
+
+    n_xi_orders = [16, 24, 32, 40, 64]
+    n_xi_forces = [
+        pm_val("bem_conv_std_nxi16_pec_fz_pn"),
+        pm_val("bem_conv_std_nxi24_pec_fz_pn"),
+        pm_val("bem_conv_std_nxi32_pec_fz_pn"),
+        pm_val("bem_conv_std_nxi40_pec_fz_pn"),
+        pm_val("bem_conv_std_nxi64_pec_fz_pn"),
+    ]
+    n_xi_drift = pm_val("bem_conv_nxi_drift_pct")
+
+    ax_d_top.plot(
+        n_xi_orders, n_xi_forces, "-o", color="#0072B2", lw=1.2, ms=3.6,
+        label="BEM Gauss–Legendre $n_\\xi$ (1,504-panel PEC)",
+    )
+    ax_d_top.axhline(n_xi_forces[-1], color="#64748B", lw=0.65, ls=":")
+    ax_d_top.annotate(
+        f"{n_xi_drift:.4f}% drift for $n_\\xi \\geq 24$\n(${n_xi_forces[1]:+.4f} \\to {n_xi_forces[-1]:+.4f}$ pN)",
+        xy=(24, n_xi_forces[1]), xytext=(33, 6.2738),
+        fontsize=4.75, fontweight="bold", color="#0072B2", ha="left", va="center",
+        bbox=dict(boxstyle="round,pad=0.16", facecolor="#EFF6FF", edgecolor="#93C5FD", lw=0.5),
+        arrowprops=dict(arrowstyle="->", color="#0072B2", lw=0.55, mutation_scale=5),
+    )
+    ax_d_top.set_title("Frequency quadrature & fixed-standoff FDTD convergence", fontweight="bold", loc="left", pad=4)
+    ax_d_top.set_xlabel("BEM imaginary-frequency quadrature order $n_\\xi$", labelpad=1.2)
+    ax_d_top.set_ylabel("$F_z$ (pN)")
+    ax_d_top.set_xlim(12, 68)
+    ax_d_top.set_ylim(6.2695, 6.2762)
+    ax_d_top.set_xticks(n_xi_orders)
+
+    fdtd_res = [40, 50, 60, 80]
+    fdtd_fixed_fz = [
+        pm_val("meep_fixedbox_r40_fz_pn"),
+        pm_val("meep_fixedbox_r50_fz_pn"),
+        pm_val("meep_fixedbox_r60_fz_pn"),
+        pm_val("meep_fixedbox_r80_fz_pn"),
+    ]
+    fdtd_r60_nmax2 = pm_val("meep_fixedbox_r60_nmax2_fz_pn")
+    fdtd_r60_gold = pm_val("meep_fixedbox_r60_gold_fz_pn")
+    fdtd_gold_pct = pm_val("meep_fixedbox_r60_gold_vs_pec_pct")
+    fdtd_drift = pm_val("meep_fixedbox_r60_to_r80_drift_pct")
+
+    ax_d_bot.plot(
+        fdtd_res, fdtd_fixed_fz, "-s", color="#009E73", lw=1.2, ms=3.6,
+        label="PEC ($n_{\\max}=0$, $\\delta_{\\mathrm{box}}=10$ nm)",
+    )
+    ax_d_bot.plot(
+        [60], [fdtd_r60_nmax2], marker="^", ls="none", color="#6A3D9A", ms=4.5,
+        label=f"PEC $n_{{\\max}}=2$ DCT (+{fdtd_r60_nmax2:.4f} pN)",
+    )
+    ax_d_bot.plot(
+        [60], [fdtd_r60_gold], marker="D", ls="none", color="#D55E00", ms=4.2,
+        label=f"Drude gold (+{fdtd_r60_gold:.4f} pN, {fdtd_gold_pct:.1f}% PEC)",
+    )
+    ax_d_bot.annotate(
+        f"{fdtd_drift:.2f}% drift ($R=60\\to 80$)",
+        xy=(70, 0.5 * (fdtd_fixed_fz[2] + fdtd_fixed_fz[3])),
+        xytext=(63, 0.62),
+        fontsize=4.75, fontweight="bold", color="#047857", ha="center", va="bottom",
+        bbox=dict(boxstyle="round,pad=0.15", facecolor="#ECFDF5", edgecolor="#6EE7B7", lw=0.5),
+        arrowprops=dict(arrowstyle="->", color="#047857", lw=0.55, mutation_scale=5),
+    )
+    ax_d_bot.set_xlabel("FDTD grid resolution $R$ (px $\\mu\\mathrm{m}^{-1}$; $\\Delta x = 25 \\to 12.5$ nm)", labelpad=1.2)
+    ax_d_bot.set_ylabel("$F_z$ (pN)")
+    ax_d_bot.set_xlim(36, 84)
+    ax_d_bot.set_ylim(0.14, 0.79)
+    ax_d_bot.set_xticks(fdtd_res)
+    ax_d_bot.set_xticklabels(["40\n(25 nm)", "50\n(20 nm)", "60\n(16.7 nm)", "80\n(12.5 nm)"])
+    ax_d_bot.legend(loc="lower left", frameon=True, facecolor="#FFFFFF", edgecolor="#CBD5E1", framealpha=0.94, fontsize=4.4, handlelength=1.2, labelspacing=0.18, borderpad=0.24)
+
+    # Panel labels (8 pt bold lowercase outside top-left)
+    panel_axes = [
+        ("a", ax_a),
+        ("b", ax_b),
+        ("c", ax_c),
+        ("d", ax_d_top),
+    ]
+    for label_char, ax_item in panel_axes:
+        pos = ax_item.get_position()
+        figure.text(
+            pos.x0 - 0.042,
+            pos.y1 + 0.014,
+            label_char,
+            fontsize=8.0,
+            fontweight="bold",
+            va="bottom",
+            ha="left",
+            color="#0F172A",
+        )
+
+    tracked_metrics = [
+        "cantor_n2_hybridrz_bem_std_f_z_pn",
+        "cantor_n2_hybridrz_bem_high_f_z_pn",
+        "cantor_n2_hybridrz_bem_ultra_f_z_pn",
+        "cantor_n2_hybridrz_bem_r5nm_std_f_z_pn",
+        "cantor_n2_hybridrz_bem_r5nm_high_f_z_pn",
+        "cantor_n2_hybridrz_bem_r5nm_ultra_f_z_pn",
+        "cantor_n2_vs_uniform_ratio_sharp_std",
+        "cantor_n2_vs_uniform_ratio_sharp_high",
+        "cantor_n2_vs_uniform_ratio_sharp_ultra",
+        "cantor_n2_vs_uniform_ratio_r5nm_std",
+        "cantor_n2_vs_uniform_ratio_r5nm_high",
+        "cantor_n2_vs_uniform_ratio_r5nm_ultra",
+        "rot_c8_compact_n2_bem_theta18_richardson_f_z_pn",
+        "rot_c8_compact_n2_bem_theta48_continuum_f_z_pn",
+        "rot_c4_tightslot_n2_bem_theta18_richardson_f_z_pn",
+        "rot_c4_tightslot_n2_bem_theta48_continuum_f_z_pn",
+        "rot_c4_tightslot_n2_bem_theta48_richardson_f_z_pn",
+        "bem_conv_std_nxi16_pec_fz_pn",
+        "bem_conv_std_nxi24_pec_fz_pn",
+        "bem_conv_std_nxi32_pec_fz_pn",
+        "bem_conv_std_nxi40_pec_fz_pn",
+        "bem_conv_std_nxi64_pec_fz_pn",
+        "meep_fixedbox_r40_fz_pn",
+        "meep_fixedbox_r50_fz_pn",
+        "meep_fixedbox_r60_fz_pn",
+        "meep_fixedbox_r80_fz_pn",
+        "meep_fixedbox_r60_nmax2_fz_pn",
+        "meep_fixedbox_r60_gold_fz_pn",
+        "n3_uni3d_f111_unified_fz_pn",
+        "n3_uni3d_f111_unified_theta21_fz_pn",
+        "n3_uni3d_f111_unified_theta48_fz_pn",
+        "n3_uni3d_f110_rtheta_planar_fz_pn",
+        "n3_uni3d_ctrl_uni12_fz_pn",
+        "n3_uni3d_ratio_f111_vs_uni111",
+    ]
     try:
         for extension in ("png", "pdf"):
             path = directory / f"fig_{CAMPAIGN}.{extension}"
-            figure.savefig(path, dpi=220 if extension == "png" else 300)
+            figure.savefig(path, dpi=600, facecolor="#FFFFFF")
             metrics_logger.save_plot_provenance(
                 str(path),
-                str(REPOSITORY_ROOT / "results" / "provenance_metrics.json"),
-                [
-                    "vector_dyadic_F_z_pN",
-                    "scalar_yukawa_F_z_pN",
-                    "lifshitz_pfa_F_z_pN",
-                    "panel_count",
-                ],
+                str(provenance_path),
+                tracked_metrics,
                 solver_name=CAMPAIGN,
                 solver_parameters=dict(provenance),
             )
+            prov_sidecar = path.with_suffix(".provenance.json")
+            for paper_dir in (
+                REPOSITORY_ROOT / "Papers" / "Fractal_Casimir_Nature_EM" / "figures",
+                REPOSITORY_ROOT / "Papers" / "FCE_Nature_ver01" / "figures",
+            ):
+                if paper_dir.is_dir():
+                    for src_file in (path, prov_sidecar):
+                        if not src_file.is_file():
+                            continue
+                        dst_fig = paper_dir / src_file.name
+                        try:
+                            shutil.copy2(src_file, dst_fig)
+                        except OSError:
+                            try:
+                                tmp_fig = dst_fig.with_suffix(dst_fig.suffix + ".tmp")
+                                shutil.copy2(src_file, tmp_fig)
+                                os.replace(tmp_fig, dst_fig)
+                            except OSError:
+                                pass
     finally:
         plt.close(figure)
 
@@ -652,6 +1121,11 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--output-dir", type=Path, default=Path("results"))
     parser.add_argument("--figures-dir", type=Path, default=Path("figures"))
     parser.add_argument("--include-c10-ultra", action="store_true")
+    parser.add_argument(
+        "--plot-only",
+        action="store_true",
+        help="Regenerate Figure 3 directly from cached report and provenance_metrics.json.",
+    )
     args = parser.parse_args()
     if args.max_steps < 0:
         parser.error("--max-steps must be nonnegative")
@@ -660,6 +1134,17 @@ def parse_arguments() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_arguments()
+    if args.plot_only:
+        report_path = args.output_dir / f"{CAMPAIGN}_report.json"
+        if not report_path.is_file():
+            raise FileNotFoundError(f"[ERROR: RUN_DATA_MISSING] Missing {report_path}")
+        existing_report = json.loads(report_path.read_text(encoding="utf-8"))
+        rows_cached = existing_report.get("tasks", [])
+        conv_cached = existing_report.get("convergence", [])
+        prov_cached = existing_report.get("provenance", {})
+        make_figure(rows_cached, conv_cached, args.figures_dir, prov_cached)
+        print(f"Plot-only regeneration complete: {args.figures_dir / f'fig_{CAMPAIGN}.png'}", flush=True)
+        return 0
     device = "cuda" if torch.cuda.is_available() else "cpu"
     if args.device != "auto":
         device = args.device if args.device != "cuda" or torch.cuda.is_available() else "cpu"

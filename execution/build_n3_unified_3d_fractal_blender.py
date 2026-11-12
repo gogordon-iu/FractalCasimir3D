@@ -48,6 +48,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--angular-segments", type=int, default=256, help="Full-circle angular mesh subdivisions")
     parser.add_argument("--z-exaggeration", type=float, default=2.2, help="Vertical z exaggeration for visual clarity")
     parser.add_argument("--specs-json", default="", help="Path to serialized Blender scene specifications JSON")
+    parser.add_argument(
+        "--reuse-renders",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Reuse existing individual Blender render PNGs when all expected panels exist",
+    )
     args = parser.parse_args(argv)
     if args.max_steps < 0:
         parser.error("--max-steps must be >= 0")
@@ -552,9 +558,12 @@ def compose_atlas_figure(
         else:
             fz_str = "Fz(3°): Pending HPC solve"
 
-        title_line = f"({idx + 1:02d}) {des.code}: {des.name}"
+        panel_letter = chr(ord("a") + idx)
+        code_clean = str(des.code).replace("_", "-")
+        name_clean = str(des.name).replace("_", "-")
+        title_line = f"({panel_letter}) {code_clean}: {name_clean}"
         sub_line = (
-            f"U=({des.u_r},{des.u_theta},{des.u_z}) | "
+            f"u=({des.u_r},{des.u_theta},{des.u_z}) | "
             f"SubSlots={aud['n_stator_subslots_sector']} (SubRibs={aud['n_internal_stator_subribs']}) | "
             f"Teeth={aud['n_rotor_subteeth_sector']} | Lobes={aud['n_azimuthal_lobes_sector']}/sec\n"
             f"A={aud['A_tooth_analytic_um2']:.4f} um² | {fz_str} | Audit: {aud['audit_status']}"
@@ -564,14 +573,7 @@ def compose_atlas_figure(
     for idx in range(n, len(axes_flat)):
         axes_flat[idx].axis("off")
 
-    fig.suptitle(
-        "3D Blender Structural & Geometric Audit Atlas: All 19 Factorial & Matched-Control Configurations\n"
-        "(Bright Copper = Internal Stator Sub-Ribs; Gold/Amber/Crimson = Gen 1/2/3 Rotor Sub-Teeth & Azimuthal Lobes)",
-        fontsize=11.5,
-        fontweight="bold",
-        y=0.995,
-    )
-    fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.975))
+    fig.tight_layout()
     out_png.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_png, dpi=200)
     fig.savefig(out_pdf)
@@ -609,48 +611,52 @@ def main(argv: Sequence[str] | None = None) -> int:
     if failed:
         raise RuntimeError(f"Geometry/mesh audit failed on designs: {failed}")
 
-    # 2. Serialize Blender patch specifications for Blender's embedded Python:
-    specs_payload = {
-        "out_dir": str(out_dir),
-        "specs": [serialize_design_blender_spec(idx, d) for idx, d in enumerate(selected, 1)],
-    }
-    specs_json_path = out_dir / "blender_scene_specs.json"
-    with tempfile.NamedTemporaryFile("w", dir=out_dir, delete=False, encoding="utf-8") as tmp:
-        json.dump(specs_payload, tmp, indent=2)
-        tmp_specs = Path(tmp.name)
-    tmp_specs.replace(specs_json_path)
+    expected_renders = [out_dir / f"render_{idx:02d}_{d.code}_{d.name}.png" for idx, d in enumerate(selected, 1)]
+    need_blender = not (args.reuse_renders and all(p.is_file() for p in expected_renders))
 
-    # 3. Launch headless Blender 4.5+ to build .blend models and render .png panels:
-    blender_exe = shutil.which(args.blender) or (args.blender if Path(args.blender).is_file() else shutil.which("blender"))
-    if not blender_exe:
-        raise FileNotFoundError(f"Blender executable not found at {args.blender!r}")
+    if need_blender:
+        # 2. Serialize Blender patch specifications for Blender's embedded Python:
+        specs_payload = {
+            "out_dir": str(out_dir),
+            "specs": [serialize_design_blender_spec(idx, d) for idx, d in enumerate(selected, 1)],
+        }
+        specs_json_path = out_dir / "blender_scene_specs.json"
+        with tempfile.NamedTemporaryFile("w", dir=out_dir, delete=False, encoding="utf-8") as tmp:
+            json.dump(specs_payload, tmp, indent=2)
+            tmp_specs = Path(tmp.name)
+        tmp_specs.replace(specs_json_path)
 
-    cmd = [
-        str(blender_exe),
-        "--background",
-        "--factory-startup",
-        "--python-exit-code",
-        "1",
-        "--python",
-        str(Path(__file__).resolve()),
-        "--",
-        "--mode",
-        "blender",
-        "--specs-json",
-        str(specs_json_path),
-        "--samples",
-        str(args.samples),
-        "--resolution",
-        str(args.resolution),
-        "--angular-segments",
-        str(args.angular_segments),
-        "--z-exaggeration",
-        str(args.z_exaggeration),
-    ]
-    try:
-        subprocess.run(cmd, check=True)
-    finally:
-        specs_json_path.unlink(missing_ok=True)
+        # 3. Launch headless Blender 4.5+ to build .blend models and render .png panels:
+        blender_exe = shutil.which(args.blender) or (args.blender if Path(args.blender).is_file() else shutil.which("blender"))
+        if not blender_exe:
+            raise FileNotFoundError(f"Blender executable not found at {args.blender!r}")
+
+        cmd = [
+            str(blender_exe),
+            "--background",
+            "--factory-startup",
+            "--python-exit-code",
+            "1",
+            "--python",
+            str(Path(__file__).resolve()),
+            "--",
+            "--mode",
+            "blender",
+            "--specs-json",
+            str(specs_json_path),
+            "--samples",
+            str(args.samples),
+            "--resolution",
+            str(args.resolution),
+            "--angular-segments",
+            str(args.angular_segments),
+            "--z-exaggeration",
+            str(args.z_exaggeration),
+        ]
+        try:
+            subprocess.run(cmd, check=True)
+        finally:
+            specs_json_path.unlink(missing_ok=True)
 
     # 4. Load empirical BEM results where available and compose the 19-panel atlas:
     bem_json = ROOT / "results" / "n3_unified_3d_fractal_factorial_study.json"
@@ -709,6 +715,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         export_macros(str(ROOT / "results" / "provenance_metrics.json"), str(ROOT / "results" / "macros_results.tex"))
         save_plot_provenance(str(out_png), str(ROOT / "results" / "provenance_metrics.json"), list(metrics_to_log.keys()))
         save_plot_provenance(str(out_pdf), str(ROOT / "results" / "provenance_metrics.json"), list(metrics_to_log.keys()))
+        for paper_dir in (
+            ROOT / "Papers" / "Fractal_Casimir_Nature_EM" / "figures",
+            ROOT / "Papers" / "FCE_Nature_ver01" / "figures",
+        ):
+            if paper_dir.is_dir():
+                for src_f in (out_png, out_pdf, out_png.with_suffix(".provenance.json"), out_pdf.with_suffix(".provenance.json")):
+                    if src_f.is_file():
+                        shutil.copy2(src_f, paper_dir / src_f.name)
 
     print(
         f"[BLENDER-AUDIT] Built & audited {len(selected)} configurations -> {manifest_path}",

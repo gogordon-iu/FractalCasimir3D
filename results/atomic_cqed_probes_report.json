@@ -1,0 +1,85 @@
+{
+  "dataset": "atomic_cqed",
+  "environment": "true_vacuum",
+  "eps_bg": 1.0,
+  "executed_at": "2026-10-26T21:26:28.452959+00:00",
+  "metrics": {
+    "atomic_cqed_cp_base_ev": {
+      "description": "True-vacuum baseline flat-plate Casimir-Polder potential |U_CP(50 nm)|",
+      "unit": "eV",
+      "value": 2.513e-09
+    },
+    "atomic_cqed_cp_shift": {
+      "description": "True-vacuum 10% fractal Casimir-Polder energy shift Delta U_CP at z=50 nm",
+      "unit": "eV",
+      "value": 2.51e-10
+    },
+    "atomic_cqed_cp_shift_khz": {
+      "description": "True-vacuum 10% fractal Casimir-Polder frequency shift at z=50 nm",
+      "unit": "kHz",
+      "value": 60.77
+    },
+    "atomic_cqed_lamb_shift_delta_E": {
+      "description": "Geometric Lamb energy shift at d=100 nm",
+      "unit": "eV",
+      "value": 9.93e-12
+    },
+    "atomic_cqed_lamb_shift_delta_nu": {
+      "description": "Geometric Lamb frequency shift at d=100 nm",
+      "unit": "kHz",
+      "value": 2.4
+    },
+    "atomic_cqed_purcell_lifetime_variation_max": {
+      "description": "Maximum fractal Purcell spontaneous-emission lifetime variation",
+      "unit": "%",
+      "value": 50.0
+    },
+    "atomic_cqed_purcell_lifetime_variation_min": {
+      "description": "Minimum fractal Purcell spontaneous-emission lifetime variation",
+      "unit": "%",
+      "value": 10.0
+    },
+    "atomic_cqed_scattering_deviation": {
+      "description": "Relativistic electron scattering fractional cross-section deviation",
+      "unit": "dimensionless",
+      "value": 3e-19
+    }
+  },
+  "model": "AtomicCQED_VacuumProbes",
+  "probes": {
+    "casimir_polder": {
+      "alpha_vol_nm3": 0.0006668312010141512,
+      "bohr_radius_nm": 0.052917721074148695,
+      "cp_shift_ev": 2.51e-10,
+      "cp_shift_khz": 60.77,
+      "u_cp_base_ev": 2.513e-09,
+      "z_nm": 50.0
+    },
+    "electron_scattering": {
+      "compton_wavelength_nm": 0.0024263101323398024,
+      "log_periodic_derivative": 5.719202,
+      "scattering_deviation": 3e-19,
+      "z_atom_nm": 50.0
+    },
+    "geometric_lamb_shift": {
+      "cavity_gap_nm": 100.0,
+      "lamb_shift_delta_E": 9.93e-12,
+      "lamb_shift_delta_nu": 2.4
+    },
+    "purcell_effect": {
+      "cavity_gap_nm": 100.0,
+      "k12_d_dimensionless": 5.168495,
+      "lyman_alpha_nm": 121.56701,
+      "purcell_lifetime_variation_max": 50.0,
+      "purcell_lifetime_variation_min": 10.0,
+      "resonance_envelope": 1.0
+    },
+    "casimir_polder_power_law_exponent": -3.0,
+    "probe_standoff_um": 0.1,
+    "flat_plate_cp_shift_khz_at_50nm": 121.6,
+    "atomic_species_mass_number": 87.0,
+    "probe_distance_z_nm": 100.0
+  },
+  "script": "execution/run_atomic_cqed_probes.py",
+  "status": "completed"
+}
