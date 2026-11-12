@@ -395,10 +395,10 @@
 - **Bug**: 2x2x2 BEM mesh with n_phi_collar=3 produced 59:1 collar strips (min LU pivot 1.1e-5) and >40 GB unbatched kappas VRAM.
 - **Solution**: Set bem_n_phi_collar=9 on H3_Cantor_Sym_2x2x2 (min pivot 1.3e-3) and cap GPU LU cache to 2 with max_k_batch=28 (<18 GB).
 
-### [BUG-261112-01] 2026-11-12 | fractal_casimir_gravity/solvers/bem_scattering.py | scope=model
+### [BUG-261112-01] 2026-11-12T07:13:05Z | fractal_casimir_gravity/solvers/bem_scattering.py | scope=model
 - **Bug**: Cartesian voxel grids sampled points inside hollow solid PEC vane/collar interiors where vacuum Green functions are unphysical.
 - **Solution**: Added is_inside_cpsc_conductor cylindrical bulk masking to compute_four_pass_stress_tensor so interior conductor voxels vanish.
 
-### [BUG-261112-02] 2026-11-12 | fractal_casimir_gravity/simulations/sim4_nec_sec_raychaudhuri_qei.py | scope=eval
+### [BUG-261112-02] 2026-11-12T07:13:05Z | fractal_casimir_gravity/simulations/sim4_nec_sec_raychaudhuri_qei.py | scope=eval
 - **Bug**: Sim 4 and Sim 5 read unsubtracted t_total_ren instead of 4-pass t_mutual and sampled QEI beyond the half-gap causal horizon.
 - **Solution**: Switched Sim 4 and Sim 5 to 4-pass t_mutual and evaluated Ford-Roman QEI on the causal sub-reflection window tau_eff.

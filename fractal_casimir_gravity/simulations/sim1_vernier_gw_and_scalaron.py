@@ -39,7 +39,11 @@ from fractal_casimir_gravity.solvers.linearized_gravity import (  # noqa: E402
     compute_vernier_gw_waveforms,
     construct_covariant_virial_and_quadrupole,
 )
-from fractal_casimir_gravity.utils.metrics_logger import log_metric, log_step  # noqa: E402
+from fractal_casimir_gravity.utils.metrics_logger import (  # noqa: E402
+    log_metric,
+    log_step,
+    save_simulation_json,
+)
 
 
 def _build_cavity_ring_voxels(
@@ -256,7 +260,7 @@ def run_simulation(
         "azimuthal_t00_snapshot": t00_em_n3[0, :36].tolist(),
     }
     out_json = out_dir / "sim1_vernier_gw_and_scalaron.json"
-    out_json.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    save_simulation_json(out_json, "Sim1_VernierGW_Scalaron", "CPSC_Vernier64_N3", payload)
     print(f"[SIM1] Completed {n_steps} steps -> {out_json}")
     return payload
 

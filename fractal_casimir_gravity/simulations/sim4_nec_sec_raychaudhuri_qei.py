@@ -33,7 +33,11 @@ from fractal_casimir_gravity.solvers.linearized_gravity import (  # noqa: E402
     evaluate_ford_roman_worldline_qei,
     integrate_raychaudhuri_geodesics,
 )
-from fractal_casimir_gravity.utils.metrics_logger import log_metric, log_step  # noqa: E402
+from fractal_casimir_gravity.utils.metrics_logger import (  # noqa: E402
+    log_metric,
+    log_step,
+    save_simulation_json,
+)
 
 
 def run_simulation(
@@ -212,7 +216,7 @@ def run_simulation(
         "qei_saturation_ratios": qei_saturations,
     }
     out_json = out_dir / "sim4_nec_sec_raychaudhuri_qei.json"
-    out_json.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    save_simulation_json(out_json, "Sim4_NEC_SEC_Raychaudhuri_QEI", "CPSC_Breathing44_N3", payload)
     print(f"[SIM4] Completed {n_steps} steps (QEI max sat = {max_qei_sat:.4e}) -> {out_json}")
     return payload
 

@@ -34,7 +34,11 @@ from fractal_casimir_gravity.solvers.cpsc_geometry import CPSCSpec  # noqa: E402
 from fractal_casimir_gravity.solvers.linearized_gravity import (  # noqa: E402
     compute_cumulative_tolman_komar_mass,
 )
-from fractal_casimir_gravity.utils.metrics_logger import log_metric, log_step  # noqa: E402
+from fractal_casimir_gravity.utils.metrics_logger import (  # noqa: E402
+    log_metric,
+    log_step,
+    save_simulation_json,
+)
 
 
 def _build_cartesian_cavity_grid(
@@ -172,7 +176,7 @@ def run_simulation(
         "komar_unscreened_face": komar_face["m_unscreened"].tolist(),  # type: ignore[union-attr]
     }
     out_json = out_dir / "sim2_force_free_curvature_tolman.json"
-    out_json.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    save_simulation_json(out_json, "Sim2_ForceFreeCurvature_Tolman", "CPSC_Breathing44_N3", payload)
     print(f"[SIM2] Completed {n_steps} steps (theta_0 = {theta_zero_deg:.3f} deg) -> {out_json}")
     return payload
 

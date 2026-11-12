@@ -34,7 +34,11 @@ from fractal_casimir_gravity.solvers.linearized_gravity import (  # noqa: E402
     fit_log_periodic_metric_comb,
     solve_linearized_einstein_static,
 )
-from fractal_casimir_gravity.utils.metrics_logger import log_metric, log_step  # noqa: E402
+from fractal_casimir_gravity.utils.metrics_logger import (  # noqa: E402
+    log_metric,
+    log_step,
+    save_simulation_json,
+)
 
 
 def _eval_homothetic_metric_point(
@@ -188,7 +192,7 @@ def run_simulation(
         "r2_periodic": r2_periodic,
     }
     out_json = out_dir / "sim3_log_periodic_metric_comb.json"
-    out_json.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    save_simulation_json(out_json, "Sim3_LogPeriodicMetricComb", "CPSC_Homothetic_b3_N4", payload)
     print(f"[SIM3] Completed {n_steps} steps (omega_1={omega_hat:.3f}, b_hat={b_hat:.3f}) -> {out_json}")
     return payload
 

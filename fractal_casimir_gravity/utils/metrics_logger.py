@@ -167,7 +167,7 @@ def _load_or_init_manifest(path: Path) -> Dict[str, Any]:
 
     # Migrate legacy top-level metric entries when no metrics section exists.
     if "metrics" not in manifest:
-        reserved_keys = {"run_metadata", "intermediate_steps", "metrics"}
+        reserved_keys = {"run_metadata", "intermediate_steps", "metrics", "model", "dataset", "updated_at", "executed_at"}
         metric_keys = [key for key in manifest if key not in reserved_keys]
         manifest["metrics"] = {key: manifest.pop(key) for key in metric_keys}
 
@@ -175,9 +175,14 @@ def _load_or_init_manifest(path: Path) -> Dict[str, Any]:
         if not isinstance(manifest.get(key), dict):
             manifest[key] = {}
 
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    manifest.setdefault("model", "FractalCasimirGravity_Suite")
+    manifest.setdefault("dataset", "CPSC_3D_QFT")
+    manifest.setdefault("updated_at", now_iso)
+
     metadata_defaults = {
-        "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        "updated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "created_at": now_iso,
+        "updated_at": now_iso,
         "environment": platform.system(),
         "entry_point": _get_caller_info(skip_frames=3)["source_file"],
     }
@@ -192,15 +197,17 @@ def log_step(name: str, data: Any, metrics_path: str = str(DEFAULT_METRICS_PATH)
     path = Path(metrics_path)
     manifest = _load_or_init_manifest(path)
     caller = _get_caller_info(skip_frames=1)
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
     manifest["intermediate_steps"][name] = {
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "timestamp": now_iso,
         "source_file": caller["source_file"],
         "source_function": caller["source_function"],
         "line_number": caller["line_number"],
         "data_summary": data,
     }
-    manifest["run_metadata"]["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    manifest["updated_at"] = now_iso
+    manifest["run_metadata"]["updated_at"] = now_iso
 
     with open(path, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
@@ -216,6 +223,7 @@ def log_metric(
     path = Path(metrics_path)
     manifest = _load_or_init_manifest(path)
     caller = _get_caller_info(skip_frames=1)
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
     manifest["metrics"][key] = {
         "value": value,
@@ -223,12 +231,31 @@ def log_metric(
         "source_function": caller["source_function"],
         "line_number": caller["line_number"],
         "step_id": step_id or "final_evaluation",
-        "recorded_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "recorded_at": now_iso,
     }
-    manifest["run_metadata"]["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    manifest["updated_at"] = now_iso
+    manifest["run_metadata"]["updated_at"] = now_iso
 
     with open(path, "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
+
+
+def save_simulation_json(
+    out_path: Path,
+    model_name: str,
+    dataset_name: str,
+    payload: Dict[str, Any],
+) -> None:
+    """Write a simulation artifact JSON stamped with freshness-guard model/dataset/executed_at metadata."""
+    now_iso = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    stamped: Dict[str, Any] = {
+        "model": model_name,
+        "dataset": dataset_name,
+        "executed_at": now_iso,
+    }
+    stamped.update(payload)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(stamped, indent=2), encoding="utf-8")
 
 
 def _sanitize_macro_name(key: str) -> str:
@@ -360,7 +387,14 @@ def generate_manuscript_map(
         with open(metrics_manifest_path, "r", encoding="utf-8") as f:
             metrics_data = json.load(f).get("metrics", {})
 
-    ledger: Dict[str, Any] = {"macros": {}, "figures": {}, "audit_status": "PASS"}
+    ledger: Dict[str, Any] = {
+        "model": "FractalCasimirGravity_ManuscriptAudit",
+        "dataset": "CPSC_3D_QFT",
+        "executed_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "macros": {},
+        "figures": {},
+        "audit_status": "PASS",
+    }
 
     macro_matches = re.findall(r"\\([A-Z][a-zA-Z]+)", text)
     for m in sorted(set(macro_matches)):

@@ -35,7 +35,11 @@ from fractal_casimir_gravity.solvers.cpsc_geometry import CPSCSpec  # noqa: E402
 from fractal_casimir_gravity.solvers.linearized_gravity import (  # noqa: E402
     solve_gem_lense_thirring,
 )
-from fractal_casimir_gravity.utils.metrics_logger import log_metric, log_step  # noqa: E402
+from fractal_casimir_gravity.utils.metrics_logger import (  # noqa: E402
+    log_metric,
+    log_step,
+    save_simulation_json,
+)
 
 
 def _count_sign_reversals(profile: np.ndarray, rel_tol: float = 0.02) -> int:
@@ -164,7 +168,7 @@ def run_simulation(
         "cantor_to_periodic_ratio": circ_ratio,
     }
     out_json = out_dir / "sim5_gravitomagnetic_frame_dragging.json"
-    out_json.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    save_simulation_json(out_json, "Sim5_GravitomagneticFrameDragging", "CPSC_Chiral44_N3", payload)
     print(f"[SIM5] Completed {nz_steps} z-slices (peak LT = {peak_lt_n3:.4e}, rev = {sign_reversals}) -> {out_json}")
     return payload
 
