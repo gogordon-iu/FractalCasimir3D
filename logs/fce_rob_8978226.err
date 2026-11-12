@@ -1,0 +1,16 @@
+[W1111 20:13:58.513552286 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 3523215360 bytes (free: 1224015872, total: 42405855232).
+[W1111 20:13:58.568758271 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 3523215360 bytes (free: 2329214976, total: 42405855232).
+Traceback (most recent call last):
+  File "/N/project/gorengor_werewolf/FractalCasimir3D/execution/run_unified_fractal_robustness_study.py", line 1499, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/N/project/gorengor_werewolf/FractalCasimir3D/execution/run_unified_fractal_robustness_study.py", line 1323, in main
+    res = _execute_single_task(tsk, by_code, n_xi=args.n_xi, device=args.device)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/N/project/gorengor_werewolf/FractalCasimir3D/execution/run_unified_fractal_robustness_study.py", line 418, in _execute_single_task
+    return evaluate_homothetic_3d_bem(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/N/project/gorengor_werewolf/FractalCasimir3D/execution/homothetic_3d_robust_architecture.py", line 1524, in evaluate_homothetic_3d_bem
+    W_D = torch.empty((Kb, 16, M), dtype=torch.float64, device=dev)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 3.28 GiB. GPU 0 has a total capacity of 39.49 GiB of which 2.17 GiB is free. Including non-PyTorch memory, this process has 37.31 GiB memory in use. Of the allocated memory 34.17 GiB is allocated by PyTorch, and 2.65 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)
