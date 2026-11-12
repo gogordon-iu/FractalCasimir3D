@@ -1,0 +1,459 @@
+\documentclass[aps,prd,twocolumn,nofootinbib,floatfix]{revtex4-2}
+
+\usepackage{amsmath,amssymb,amsfonts,bm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!70!black,
+    citecolor=blue!70!black,
+    urlcolor=blue!70!black
+}
+
+% Lowercase helper macros (kept lowercase for provenance scanner compatibility)
+\newcommand{\pendingval}{\textcolor{orange!80!black}{\textsc{[tbd]}}}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\figbox}[2]{%
+    \IfFileExists{#1}{%
+        \includegraphics[width=0.98\linewidth]{#1}%
+    }{%
+        \fbox{\parbox{0.92\linewidth}{\centering\vspace{1.6em}\textbf{Figure Placeholder:} \texttt{\detokenize{#1}}\\[0.4em]\footnotesize #2\vspace{1.6em}}}%
+    }%
+}
+\newcommand{\widefigbox}[2]{%
+    \IfFileExists{#1}{%
+        \includegraphics[width=0.96\textwidth]{#1}%
+    }{%
+        \fbox{\parbox{0.92\textwidth}{\centering\vspace{2.0em}\textbf{Wide Figure Placeholder:} \texttt{\detokenize{#1}}\\[0.4em]\footnotesize #2\vspace{2.0em}}}%
+    }%
+}
+
+\input{macros_gravity.tex}
+
+\begin{document}
+
+\title{Semiclassical Gravitation of Prefractal Casimir Cavities: Effective Trace Anomalies, Vernier Gravitational Radiation, Energy-Condition Switching, and Vacuum Frame Dragging}
+
+\author{Goren Gordon}
+\email{goren@gorengordon.com}
+\affiliation{Department of Informatics, Indiana University Bloomington, Bloomington, Indiana 47408, USA}
+
+\date{\today}
+
+\begin{abstract}
+Between infinite, flat, ideally conducting parallel plates in $(3+1)$-dimensional Minkowski spacetime, the renormalized electromagnetic Casimir stress-energy tensor $\langle T_{\mu\nu}\rangle_{\mathrm{ren}}$ is conformally traceless ($T^\mu{}_\mu = 0$) and invariant under in-plane Lorentz boosts ($\rho_{\mathrm{vac}}c^2 + P_\parallel = 0$). Coupled to semiclassical Einstein gravity, $G_{\mu\nu} = (8\pi G/c^4)\langle T_{\mu\nu}\rangle_{\mathrm{ren}}$, the canonical planar vacuum therefore sources zero local Ricci scalar curvature ($R = 0$), emits no bulk scalar-tensor breathing radiation, and carries zero non-dissipative angular momentum under rigid in-plane rotation. Here we formulate the semiclassical gravitational field theory of an idealized zero-temperature \emph{Canonical Prefractal Sector Cavity} (CPSC)---an azimuthally sectored, radially self-similar boundary configuration that breaks continuous scale invariance into discrete scale invariance (scale ratio $b$) while breaking planar boost symmetry and modulating vacuum boundary conditions between open-aperture saddle-point fringing and parallel-sector confinement. Combining the effective macroscopic trace formalism for self-similar hierarchies with first-principles three-dimensional boundary-element scattering and four-pass Euclidean correlator reconstructions across conformally coupled scalar ($\xi = 1/6$), minimally coupled scalar ($\xi = 0$), and perfect-conductor vector electromagnetic fields in Planck-normalized dimensionless units ($\epsilon_P = \ell_P / L$), we establish five purely theoretical gravitational phenomena: (i) symmetry-filtered spin-2 gravitational radiation from a $(6,4)$ Vernier cavity whose rigid $C_6$ and $C_4$ boundaries possess zero classical mass quadrupole ($\mathcal{I}_{ij}^{\mathrm{mass}} = \FcgGwRigidCSixQuadrupoleResidual$), yielding dimensionless vacuum-sourced strain $\tilde{h}_+ = \FcgGwVernierStrainAmpEmGenThree$ ($\FcgGwVernierCantorToPeriodicRatio\times$ relative to a single-scale periodic grating), alongside monopole ($l=0$) scalaron radiation ($\tilde{\varphi}_0 = \FcgGwScalaronMonopoleAmpGenThree$) in linearized $R + \alpha R^2$ gravity; (ii) an axial-force-free curvature crossover at $\theta_0 = \FcgFfcThetaZeroDegGenThree^\circ$ where net axial Casimir force vanishes ($|\tilde{F}_z| = \FcgFfcResidualForceAtThetaZero$) while the scale-locked effective Ricci scalar remains finite ($\tilde{R}_{\mathrm{eff}} = \FcgFfcRicciEffAtThetaZero$); (iii) a discrete-scale-invariant, log-periodic Newtonian potential and tidal curvature comb with complex scaling exponents $2 + i(2\pi k/\ln b)$ ($\hat{\omega}_1 = \FcgDsiRecoveredOmegaOneBThree$, $\hat{b} = \FcgDsiRecoveredScaleFactorBHat$); (iv) reversible rotary switching of local Null and Strong Energy Conditions ($\widetilde{\mathrm{NEC}}_z \in [\FcgEcNecZMinFacingPhase, \FcgEcNecZMaxOpenPhase]$) and Raychaudhuri geodesic focusing within Ford--Roman quantum energy inequality bounds (saturation ratio $\FcgEcFordRomanQeiSaturationRatio$); and (v) Cantor-stratified gravitomagnetic Lense--Thirring frame dragging ($\max|\tilde{\Omega}_{\mathrm{LT},z}^{\mathrm{vac}}| = \FcgGemPeakLenseThirringGenThree$) sourced by broken vacuum boost invariance. Although suppressed in physical magnitude by $\epsilon_P^2 = \hbar G/(c^3 L^2) \sim 10^{-58}$ at micrometer scales, these results demonstrate that boundary discrete scale invariance and azimuthal symmetry breaking qualitatively reorganize every sector of linearized semiclassical gravity.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction and Literature Review}
+\label{sec:intro}
+
+The Coupling between quantum vacuum fluctuations and the classical geometry of spacetime lies at the heart of semiclassical gravity~\cite{birrell1982,wald1984},
+\begin{equation}
+G_{\mu\nu} \equiv R_{\mu\nu} - \frac{1}{2} g_{\mu\nu} R = \frac{8\pi G}{c^4} \langle \hat{T}_{\mu\nu} \rangle_{\mathrm{ren}},
+\label{eq:semiclassical_einstein}
+\end{equation}
+where $\langle \hat{T}_{\mu\nu} \rangle_{\mathrm{ren}}$ denotes the renormalized expectation value of the quantum stress-energy tensor in a specified boundary and metric state (using metric signature $(-,+,+,+)$ throughout~\cite{misner1973,wald1984}). Since Casimir's discovery that conducting boundaries modify electromagnetic zero-point modes~\cite{casimir1948,bordag2009}, the Casimir apparatus has served as the canonical theoretical arena in which renormalized quantum stresses are finite, calculable from first principles, and explicitly non-classical. Yet nearly everything known about how Casimir vacua gravitate has been derived from maximally symmetric Euclidean geometries---most notably two infinite, flat, parallel plates separated by distance $a$.
+
+\subsection{Conformal Tracelessness and Boost Symmetry of the Planar Casimir Vacuum}
+In their foundational image-method calculation, Brown and Maclay~\cite{brown1969} proved that for the source-free quantized electromagnetic field between ideal parallel conducting plates at $z=0$ and $z=a$, conformal symmetry and translational/boost invariance in the $(x,y)$ plane uniquely fix the renormalized stress-energy tensor to the spatially uniform form
+\begin{equation}
+\langle T^\mu{}_\nu \rangle_{\mathrm{flat}} = \frac{\pi^2 \hbar c}{720 a^4} \, \mathrm{diag}(-1, +1, +1, -3),
+\label{eq:brown_maclay}
+\end{equation}
+where $T_{00} = +\rho_{\mathrm{vac}} c^2 = -\pi^2\hbar c/(720 a^4) < 0$ is the negative vacuum energy density, $T_{xx} = T_{yy} = P_\parallel = -\rho_{\mathrm{vac}} c^2 > 0$ are the transverse tensions, and $T_{zz} = P_\perp = 3\rho_{\mathrm{vac}} c^2 < 0$ is the attractive normal pressure. For curved boundaries or scalar fields with non-conformal curvature coupling $\xi \neq 1/6$~\cite{callan1970,deutsch1979,milton2016}, local surface divergences and bulk improvement terms $\propto (1/6 - \xi)\Box\langle\hat{\phi}^2\rangle$ enter $\langle T_{\mu\nu}(\mathbf{x})\rangle_{\mathrm{ren}}$, whereas in curved four-dimensional backgrounds pure Weyl trace anomalies arise only at quadratic order in curvature~\cite{duff1994,birrell1982}.
+
+Within linearized semiclassical gravity around flat spacetime, Eq.~\eqref{eq:brown_maclay} imposes three severe structural degeneracies on planar Casimir gravitation:
+\begin{enumerate}
+    \item \emph{Vanishing Ricci scalar curvature}: Because the classical and renormalized Maxwell stress tensor is traceless in bulk vacuum ($T \equiv g^{\mu\nu}T_{\mu\nu} = T^\mu{}_\mu = -\rho_{\mathrm{vac}}c^2 + 2P_\parallel + P_\perp = 0$), contracting Eq.~\eqref{eq:semiclassical_einstein} yields $R = -(8\pi G/c^4)\langle T^\mu{}_\mu\rangle_{\mathrm{ren}} = 0$ identically throughout the planar gap. Moreover, in quadratic $f(R) = R + \alpha R^2$ or scalar-tensor extensions of general relativity~\cite{starobinsky1980,damour1992,defelice2010,berry2011}, the massive or massless scalar gravitational degree of freedom (scalaron) couples exclusively to $T^\mu{}_\mu$ and therefore decouples from bulk conformal Casimir fluctuations.
+    \item \emph{Algebraic locking of force, energy, and energy-condition violation}: Because $P_\perp = 3\rho_{\mathrm{vac}} c^2 < 0$, the planar Casimir force cannot vanish at finite separation without the vacuum energy also vanishing. Along the plate normal $k^\mu = (1,0,0,1)$, the Null Energy Condition (NEC) projection $T_{\mu\nu}k^\mu k^\nu = \rho_{\mathrm{vac}}c^2 + P_\perp = 4\rho_{\mathrm{vac}}c^2 < 0$ and the Strong Energy Condition (SEC) scalar $R_{00}(c^4/4\pi G) = \rho_{\mathrm{vac}}c^2 + \sum_i P_i = 2\rho_{\mathrm{vac}}c^2 < 0$ are unconditionally negative, forcing purely defocusing Raychaudhuri geodesic perturbations~\cite{raychaudhuri1955,kontou2020}.
+    \item \emph{In-plane Lorentz boost invariance and rotational silence}: Parallel to the plates, the vacuum enthalpy density vanishes identically, $\rho_{\mathrm{vac}}c^2 + P_\parallel = 0$. Under a tangential Lorentz boost or rigid rotation of axisymmetric disks, a planar Casimir state acquires zero first-order non-dissipative momentum density $T^{0\phi}_{\mathrm{vac}} \propto v_\phi(\rho_{\mathrm{vac}}c^2 + P_\parallel) = 0$ (leaving only higher-order radiative vacuum friction $\propto \Omega^3$ on polarizable bodies~\cite{manjavacas2010,maghrebi2012}), and therefore generates zero stationary gravitomagnetic Lense--Thirring frame dragging~\cite{ciufolini2004,mashhoon2007}.
+\end{enumerate}
+
+\subsection{Equivalence Principle, Vacuum Weight, and Energy Inequalities}
+A second pillar of the literature has clarified how bounded Casimir cavities behave in external gravitational fields and under covariant conservation $\nabla_\mu T^{\mu\nu}_{\mathrm{tot}} = 0$. Early calculations in Fermi and Rindler coordinates~\cite{bimonte2006,sorge2005} highlighted apparent orientation-dependent buoyancy forces when integrating $\langle T_{\mu\nu}\rangle_{\mathrm{ren}}$ in isolation. In the landmark ``How does Casimir energy fall?'' series, Fulling, Milton, Parashar, Romeo, Shajesh, and Wagner~\cite{fulling2007,milton2014fall} proved via variational energy-momentum principles that once the mechanical constraint stresses required to hold the plates at fixed separation are included covariantly, anisotropic spatial pressures integrate to zero by the relativistic virial (Laue) theorem, so that both the passive and active gravitational mass of a static, self-equilibrated Casimir apparatus equal $E_C/c^2$ in exact compliance with Einstein's Weak Equivalence Principle (WEP). Experimental proposals such as the \emph{Archimedes} balance~\cite{calloni2014} aim to weigh vacuum condensation energy shifts directly, while Sorge and Wilson~\cite{sorge2005,sorge2019} showed that genuine background Riemann tidal curvature ($\Phi'' \neq 0$, as near a Schwarzschild black hole) induces physical, gauge-invariant shifts in Casimir energy beyond uniform acceleration.
+
+Concurrently, to prevent local Casimir violations of classical energy conditions from enabling macroscopic causal pathologies, Ford and Roman~\cite{ford1995,ford1997} and Fewster and Eveson~\cite{fewster1998,fewster2012} established rigorous Quantum Energy Inequalities (QEIs), proving that along any timelike worldline with smooth sampling function $f(t)$ of width $\tau$, renormalized negative energy densities satisfy $\int_{-\infty}^\infty \langle T_{00}(t)\rangle |f(t)|^2 \dd t \ge -C/\tau^4$, while background-potential studies by Graham and Olum~\cite{graham2003} demonstrated that negative Casimir densities are accompanied by positive stress-energy concentrations near boundaries.
+
+\subsection{Discrete Scale Invariance, Aperture Stress Inversion, and Scope of This Work}
+Two developments outside gravitational physics suggest a route to lifting all three planar degeneracies simultaneously in a purely theoretical setting. First, whereas mirror-symmetric bodies in vacuum always attract by the Kenneth--Klich theorem~\cite{kennethklich2006}, Levin \emph{et al.}~\cite{levin2010} demonstrated using surface-integral scattering~\cite{reid2009,reid2013} and time-domain stress integration~\cite{rodriguez2009pra} that positioning an elongated conductor inside or near an open metallic slot aperture in true vacuum ($\varepsilon = 1$) bends transverse electric fringing fields across the slot walls, creating a saddle-point energy landscape with repulsive axial force ($F_z > 0$, positive normal stress $P_z > 0$). Second, studies of quantum fields on fractals and self-similar plate stacks~\cite{akkermans2010,shajesh2016,shajesh2017} show that replacing continuous scale invariance with discrete scale invariance (DSI)~\cite{sornette1998}---a symmetry known in general relativity since Choptuik's discovery of log-periodic universality in critical gravitational collapse~\cite{choptuik1993} and Calcagni's multifractal quantum-gravity program~\cite{calcagni2010}---induces log-periodic spectral oscillations at frequencies $\omega_k = 2\pi k/\ln b$. Recently, Gordon~\cite{gordon2026prd} formulated an \emph{effective macroscopic trace framework} for self-similar Casimir hierarchies, proving that logarithmic scale running of the dimensionless Casimir coefficient $\mathcal{C}(\ln(d/\ell_*))$ generates a non-vanishing coarse-grained effective trace $T^\mu{}_{\mu,\mathrm{eff}} \propto -\partial_{\ln d}\mathcal{C}$ at the level of cavity thermodynamics.
+
+In this paper, we unite the effective trace framework~\cite{gordon2026prd} with three-dimensional prefractal boundary scattering and linearized general relativity. To formulate a completely self-contained relativistic field-theory *gedankenexperiment* at $T = 0\text{ K}$, we introduce the \emph{Canonical Prefractal Sector Cavity} (CPSC): an idealized, dimensionless cylindrical boundary hierarchy in true vacuum whose azimuthal sector symmetry $(M_{\mathrm{up}}, M_{\mathrm{low}})$ and radial Cantor scaling ratio $b$ are chosen according to gravitational multipole selection rules, and whose fields are analyzed across conformal scalar ($\xi = 1/6$), minimal scalar ($\xi = 0$), and ideal perfect-conductor (PEC) vector electromagnetism alongside covariant constraint stresses ($\nabla_\mu T^{\mu\nu}_{\mathrm{tot}} = 0$).
+
+We derive and formulate numerical benchmarks for five gravitational phenomena:
+\begin{enumerate}
+    \item \textbf{Symmetry-Filtered Spin-2 and Spin-0 Gravitational Radiation (Sec.~\ref{sec:gw})}: Pairing a rotating $C_6$ upper boundary with a stationary $C_4$ prefractal aperture plate eliminates all classical rigid-body $l=2$ mass-quadrupole radiation while generating a rotating $m = 6-4 = 2$ Casimir vacuum energy-stress wave that radiates pure spin-2 gravitational waves ($h_+, h_\times$) at $\omega_{\mathrm{GW}} = 6\Omega$; concurrently, a $(4,4)$ cavity radiates $l=0$ scalar-tensor breathing waves via the time-varying effective trace $T^\mu{}_{\mu,\mathrm{eff}}(t)$.
+    \item \textbf{Force-Free Spacetime Curvature and Tolman--Komar Mass Modulation (Sec.~\ref{sec:force_free})}: Across the angular transition between open-aperture repulsion ($F_z > 0$) and facing-sector attraction ($F_z < 0$), the axial force vanishes at $\theta = \theta_0$ while locking $\partial_{\ln|\tilde{z}|}\mathcal{C} = 3\mathcal{C} \neq 0$, creating an axial-force-free curvature source ($R_{\mathrm{eff}}(\theta_0) \neq 0$) while globally respecting the Weak Equivalence Principle ($\Delta M_{\mathrm{Komar}} = \Delta E_C/c^2$).
+    \item \textbf{Discrete-Scale-Invariant Log-Periodic Spacetime Metric (Sec.~\ref{sec:metric_comb})}: In a homothetically $(r,z)$-staged prefractal cavity, solving $\nabla^2 \bar{h}_{\mu\nu} = -(16\pi G/c^4)\langle T_{\mu\nu}\rangle_{\mathrm{ren}}$ yields a Newtonian potential perturbation $h_{00}$ and tidal Riemann curvature $R_{0z0z}$ with complex scaling exponents $2 + i(2\pi k/\ln b)$ that can be switched on and off by rotation.
+    \item \textbf{Rotary NEC/SEC Switching, Raychaudhuri Geodesic Lensing, and Worldline QEIs (Sec.~\ref{sec:energy_conditions})}: Rotating the CPSC switches local Null and Strong Energy Conditions between defocusing violation and saddle-point restoration, reversing Raychaudhuri null and timelike geodesic focusing while obeying Ford--Roman worldline QEI bounds.
+    \item \textbf{Cantor-Stratified Gravitomagnetic Frame Dragging (Sec.~\ref{sec:gem})}: Breaking azimuthal boost invariance yields $\rho_{\mathrm{vac}}c^2 + P_\phi \neq 0$, so steady rotation sweeps nested Cantor rings of vacuum momentum $T^{0\phi}_{\mathrm{vac}}$ that source Lense--Thirring vorticity $\mathbf{B}_g^{\mathrm{vac}} = \nabla \times \mathbf{h}_0$, in sharp contrast to the boost-invariant flat-annulus control ($\mathbf{B}_g^{\mathrm{vac}} = 0$).
+\end{enumerate}
+
+The remainder of this article is organized as follows. Section~\ref{sec:formalism} defines the Planck--Casimir dimensionless unit system, the CPSC geometry, and the covariant 3D effective trace and virial identities. Section~\ref{sec:methods} details our first-principles boundary-element scattering, four-pass Euclidean voxel correlator, and linearized Einstein--GEM--QEI numerical algorithms. Sections~\ref{sec:gw}--\ref{sec:gem} present the analytical derivations and simulation protocols for the five gravitational effects. Section~\ref{sec:discussion} examines covariant consistency and Planck-scale scaling, and Sec.~\ref{sec:conclusion} summarizes our conclusions.
+
+---
+
+\section{Canonical Prefractal Sector Cavity and Covariant Effective Trace Formalism}
+\label{sec:formalism}
+
+\begin{figure*}[t]
+\centering
+\widefigbox{figures/fig1_cpsc_architecture_and_trace.pdf}{Canonical Prefractal Sector Cavity (CPSC) constellations: (a) radial prefractal slot hierarchy $\mathcal{C}_{N,b}$ in open-aperture ($\theta=0$) vs.\ facing-sector ($\theta=\pi/M_{\mathrm{low}}$) phases; (b) multipole constellations $(M_{\mathrm{up}}, M_{\mathrm{low}}) = (4,4)$ breathing, $(6,4)$ Vernier spin-2 quadrupole, and chiral frame-dragging sectors; (c) wavenumber sub-band partitioning $\tilde{\kappa}_m \sim b^{m-1}/\tilde{g}_{r,1}$ and coarse-grained Effective Trace running $\mathcal{D}_{\mathrm{scale}}\mathcal{C}$.}
+\caption{Idealized zero-temperature geometry and spectral-trace mechanism of the Canonical Prefractal Sector Cavity (CPSC) in dimensionless coordinates $\tilde{x}^\mu = x^\mu / L$.}
+\label{fig:cpsc_architecture}
+\end{figure*}
+
+\subsection{Planck--Casimir Dimensionless Units}
+Let $L$ denote the outer radius of the cavity. Because zero-temperature Casimir stresses scale purely with $\hbar c / L^4$ while Einstein's gravitational coupling introduces $G/c^4$, their product defines the squared Planck length $\ell_P^2 = \hbar G / c^3 \approx 2.612 \times 10^{-70}\text{ m}^2$ and the dimensionless Planck--cavity ratio $\epsilon_P \equiv \ell_P / L$. To render all field equations universal and free of numerical underflow, we introduce dimensionless coordinates and fields (denoted by tildes):
+\begin{align}
+\tilde{x}^\mu &= \frac{x^\mu}{L}, \qquad \tilde{\kappa} = \kappa L, \qquad \tilde{E}_C = \frac{L}{\hbar c} E_C, \qquad \tilde{F}_z = \frac{L^2}{\hbar c} F_z, \nonumber\\
+\tilde{T}_{\mu\nu} &= \frac{L^4}{\hbar c} \langle \hat{T}_{\mu\nu} \rangle_{\mathrm{ren}}, \qquad \tilde{R}_{\mu\nu} = \frac{L^4}{\ell_P^2} R_{\mu\nu}, \qquad \tilde{\bar{h}}_{\mu\nu} = \frac{L^2}{\ell_P^2} \bar{h}_{\mu\nu},
+\label{eq:planck_units}
+\end{align}
+where $\bar{h}_{\mu\nu} \equiv h_{\mu\nu} - \frac{1}{2}\eta_{\mu\nu}\eta^{\alpha\beta}h_{\alpha\beta}$ is the trace-reversed metric perturbation in Lorenz gauge $\partial^\mu \bar{h}_{\mu\nu} = 0$. In these units, the linearized semiclassical Einstein equation reduces identically to parameter-free form:
+\begin{equation}
+\tilde{\Box} \tilde{\bar{h}}_{\mu\nu}(\tilde{x}) = \left(-\frac{\partial^2}{\partial \tilde{x}_0^2} + \tilde{\nabla}^2\right)\tilde{\bar{h}}_{\mu\nu}(\tilde{x}) = -16\pi \, \tilde{T}_{\mu\nu}^{\mathrm{tot}}(\tilde{x}),
+\label{eq:dimensionless_einstein}
+\end{equation}
+with dimensionless Ricci scalar $\tilde{R} = -8\pi \tilde{T}^\mu{}_\mu$. Physical SI quantities at any chosen reference scale $L$ follow immediately via $h_{\mu\nu} = \epsilon_P^2 \tilde{h}_{\mu\nu}$ and $R = (\epsilon_P^2/L^2)\tilde{R}$.
+
+\subsection{Geometry of the Canonical Prefractal Sector Cavity}
+We consider two disjoint, rigid, ideally lossless boundary assemblies in $(3+1)$-dimensional Minkowski vacuum at $T = 0\text{ K}$ spanning the dimensionless cylindrical annulus $\tilde{r} \in [\tilde{r}_{\mathrm{in}}, \tilde{r}_{\mathrm{out}}] = [0.25, 1.00]$ ($\Delta\tilde{r} = 0.75$; Fig.~\ref{fig:cpsc_architecture}):
+\begin{enumerate}
+    \item \emph{Recursive radial Cantor hierarchy $\mathcal{C}_{N,b}$}: Given prefractal generation $N \in \{0,1,2,3\}$ and symmetric scaling factor $b > 2$ (with retention ratio $\eta = 1/b$ and central removal fraction $\gamma = 1 - 2/b$, reducing to middle-third Cantor at $b=3$), generation $m \in \{1,\dots,N\}$ defines $2^{m-1}$ concentric aperture slots ($N_{\mathrm{tracks}} = 2^N - 1$ total slots for $N \ge 1$) of exact dimensionless radial width
+    \begin{equation}
+    \tilde{W}_m = \Delta\tilde{r}\left(1 - \frac{2}{b}\right) b^{-(m-1)}, \qquad m = 1,\dots,N.
+    \label{eq:cantor_widths}
+    \end{equation}
+    Centered radially inside each slot $\tilde{r} \in [\tilde{r}_{c,k} - \tilde{W}_m/2, \tilde{r}_{c,k} + \tilde{W}_m/2]$ is an upper movable vane of radial width $\tilde{w}_m = \chi \tilde{W}_m$ ($\chi = 0.50$), yielding strictly self-similar radial clearances $\tilde{g}_{r,m} = \frac{1}{2}(1-\chi)\tilde{W}_m = \tilde{g}_{r,1} b^{-(m-1)}$ across all generations without artificial minimum-feature clamping.
+    \item \emph{Coplanar versus homothetic $(r,z)$ vertical staging}: In the \emph{coplanar} CPSC, all lower aperture rims occupy $\tilde{z} \in [-\tilde{\tau}_0, 0]$ ($\tilde{\tau}_0 = 0.03$), upper vanes span $\tilde{z} \in [\tilde{z}_{\mathrm{vane}}, \tilde{z}_{\mathrm{vane}} + \tilde{h}_0]$ ($\tilde{h}_0 = 0.12$, baseline $\tilde{z}_{\mathrm{vane}} = -0.10$), and lower azimuthal facing sectors reside at $\tilde{z}_{\mathrm{top}} = -0.12$ (vertical facing gap $\tilde{d}_0 = 0.02$). In the \emph{homothetic $(r,z)$-staged} CPSC, both cross-sectional dimensions and vertical aperture centers scale geometrically by $b^{-(m-1)}$,
+    \begin{equation}
+    \tilde{z}_{{\rm stage},m} = -\tilde{Z}_1 b^{-(m-1)}, \qquad \tilde{h}_{{\rm rim},m} = \tilde{\tau}_1 b^{-(m-1)},
+    \label{eq:homothetic_staging}
+    \end{equation}
+    with $\tilde{Z}_1 = 0.27$ and $\tilde{\tau}_1 = 0.054$, so a vertical dilation $\tilde{z}_{\mathrm{vane}} \to \tilde{z}_{\mathrm{vane}}/b$ maps generation $m$ onto generation $m+1$.
+    \item \emph{Azimuthal multipole constellations $(M_{\mathrm{up}}, M_{\mathrm{low}})$ and non-fractal controls}: Let $M_{\mathrm{up}}$ and $M_{\mathrm{low}}$ denote the cyclic symmetry orders of the upper vane wheel and lower aperture-and-sector stator. Rotating the upper assembly by angle $\theta$ transitions each vane between open-aperture alignment ($\theta_{\mathrm{open}} = 0$, zero vertical surface overlap, saddle-point sidewall fringing~\cite{levin2010}) and facing-sector alignment ($\theta_{\mathrm{face}} = \pi/M_{\mathrm{low}}$, parallel-plate confinement~\cite{casimir1948,brown1969}). We analyze three symmetry constellations: (A) $(M_{\mathrm{up}}, M_{\mathrm{low}}) = (4,4)$ coherent breathing symmetry; (B) $(M_{\mathrm{up}}, M_{\mathrm{low}}) = (6,4)$ Vernier spin-2 symmetry; and (C) chiral skew-sector symmetry with asymmetric azimuthal aperture bevel $\delta\phi_m$ for gravitomagnetic frame dragging. Each prefractal constellation is benchmarked against two iso-measure non-fractal controls over $\tilde{r}\in[0.25,1.00]$: a featureless flat parallel annulus (\texttt{Ctrl\_FlatAnnulus}) and an equal-slot-area single-scale periodic sector grating (\texttt{Ctrl\_PeriodicGrating}) with $N_{\mathrm{tracks}}$ identical slots of width $\tilde{W}_{\mathrm{unif}} = N_{\mathrm{tracks}}^{-1}\sum_k \tilde{W}_k$.
+\end{enumerate}
+
+\subsection{Quantum Field Models, Effective Trace Identity, and Covariant Constraint Conservation}
+\label{subsec:effective_trace_covariant}
+
+To isolate the role of field spin and conformal vs.\ non-conformal stress-tensor structure, we evaluate three massless zero-temperature quantum field theories satisfying ideal Dirichlet/perfect-conductor conditions on the CPSC boundaries $\partial\Omega = \partial\Omega_{\mathrm{up}} \cup \partial\Omega_{\mathrm{low}}$:
+\begin{enumerate}
+    \item \emph{Conformal massless real scalar ($\xi = 1/6$)}: Equipped with the Callan--Coleman--Jackiw improved stress-energy tensor~\cite{callan1970,birrell1982},
+    \begin{equation}
+    \hat{T}_{\mu\nu}^{(\xi)} = \partial_\mu \hat{\phi}\,\partial_\nu \hat{\phi} - \frac{1}{2}\eta_{\mu\nu}(\partial\hat{\phi})^2 + \xi\bigl(\eta_{\mu\nu}\Box - \partial_\mu\partial_\nu\bigr)\hat{\phi}^2,
+    \label{eq:scalar_tmunu}
+    \end{equation}
+    which at $\xi = 1/6$ satisfies $\eta^{\mu\nu}\hat{T}_{\mu\nu}^{(1/6)} = 0$ identically on shell ($\Box\hat{\phi}=0$) everywhere in the interior vacuum $\mathbb{R}^3 \setminus \partial\Omega$.
+    \item \emph{Minimally coupled massless real scalar ($\xi = 0$)}: Possesses an intrinsic local bulk trace $\eta^{\mu\nu}\langle \hat{T}_{\mu\nu}^{(0)}(\mathbf{x})\rangle_{\mathrm{ren}} = -\langle(\partial\hat{\phi})^2\rangle_{\mathrm{ren}} = -\frac{1}{2}\Box\langle\hat{\phi}^2(\mathbf{x})\rangle_{\mathrm{ren}} \neq 0$ whenever $\langle\hat{\phi}^2(\mathbf{x})\rangle_{\mathrm{ren}}$ is spatially inhomogeneous~\cite{deutsch1979,milton2016}.
+    \item \emph{Ideal $0\text{ K}$ PEC vector electromagnetism}: Governed by the renormalized Maxwell stress-energy tensor
+    \begin{align}
+    \langle \hat{T}_{00} \rangle_{\mathrm{EM}} &= \frac{1}{2}\left\langle \varepsilon_0 \mathbf{E}^2 + \mu_0 \mathbf{H}^2 \right\rangle_{\mathrm{ren}}, \nonumber\\
+    \langle \hat{T}_{ij} \rangle_{\mathrm{EM}} &= \frac{1}{2}\delta_{ij}\left\langle \varepsilon_0 \mathbf{E}^2 + \mu_0 \mathbf{H}^2 \right\rangle_{\mathrm{ren}} - \left\langle \varepsilon_0 E_i E_j + \mu_0 H_i H_j \right\rangle_{\mathrm{ren}},
+    \label{eq:maxwell_tmunu}
+    \end{align}
+    which is pointwise traceless ($\eta^{\mu\nu}\langle\hat{T}_{\mu\nu}\rangle_{\mathrm{EM}} = 0$) in $\mathbb{R}^3 \setminus \partial\Omega$ while supporting vector TE/TM polarization couplings absent in scalar models.
+\end{enumerate}
+
+How does a non-vanishing \emph{Effective Trace} arise in conformal theories ($\xi=1/6$ and PEC EM) whose microscopic interior trace vanishes? Consider first a global uniform spatial dilation $\mathbf{x} \to \lambda\mathbf{x}$ scaling \emph{all} geometric parameters $\bm{\Lambda} = (|\tilde{z}_{\mathrm{vane}}|, \{\tilde{r}_k, \tilde{W}_k, \tilde{w}_k, \tilde{h}_k, \tilde{d}_0\})$ simultaneously. Because $0\text{ K}$ massless QFT in vacuum contains no intrinsic length scale, Euler's homogeneous function theorem guarantees $E_C(\lambda\bm{\Lambda}) = \lambda^{-1} E_C(\bm{\Lambda})$, or $(\sum_a \Lambda_a \partial_{\Lambda_a}) E_C = -E_C$. However, in a prefractal hierarchy~\cite{gordon2026prd} with fixed short-distance cutoff $\ell_* = L b^{-N}$ (and, in physical realizations, fixed material plasma scale), varying the operational vertical separation $|\tilde{z}|$ and outer annulus scale $\tilde{R}$ (annular area $\tilde{A}_{\mathrm{ann}} = \pi(\tilde{r}_{\mathrm{out}}^2 - \tilde{r}_{\mathrm{in}}^2) \propto \tilde{R}^2$) at \emph{fixed} internal prefractal cutoff $\tilde{\ell}_*$ defines the coarse-grained cavity free energy $\tilde{E}_C(\theta, |\tilde{z}|, \tilde{R}; \tilde{\ell}_*) = \tilde{A}_{\mathrm{ann}} |\tilde{z}|^{-3}\mathcal{C}(\theta, \ln(|\tilde{z}|/\tilde{\ell}_*), \tilde{R}/\tilde{\ell}_*)$. Defining the coarse-grained macroscopic cavity pressures over reference cavity volume $\tilde{V}_{\mathrm{cav}} = \tilde{A}_{\mathrm{ann}}|\tilde{z}|$ by virtual work under cavity deformations at fixed $\tilde{\ell}_*$ generalizes the 1D effective trace identity of Ref.~\cite{gordon2026prd} to three cylindrical dimensions:
+\begin{align}
+\tilde{T}^\mu{}_{\mu,\mathrm{eff}}(\theta, \tilde{z}) &\equiv -\tilde{\rho}_{\mathrm{vac}} + \tilde{P}_r + \tilde{P}_\phi + \tilde{P}_z \nonumber\\
+&= -\frac{1}{\tilde{V}_{\mathrm{cav}}}\mathcal{D}_{\mathrm{cav}}\tilde{E}_C = -\frac{1}{|\tilde{z}|^4}\left(\frac{\partial \mathcal{C}}{\partial \ln|\tilde{z}|} + \frac{\partial \mathcal{C}}{\partial \ln\tilde{R}}\right)\Bigg|_{\tilde{\ell}_*},
+\label{eq:effective_trace_3d}
+\end{align}
+where $\mathcal{D}_{\mathrm{cav}} \equiv 1 + |\tilde{z}|\partial_{|\tilde{z}|}|_{\tilde{\ell}_*} + \tilde{R}\partial_{\tilde{R}}|_{\tilde{\ell}_*}$. By exact Euler homogeneity, this cavity dilatation derivative equals the negative logarithmic derivative with respect to the internal prefractal cutoff, $\mathcal{D}_{\mathrm{cav}}\tilde{E}_C = -\tilde{\ell}_* \partial_{\tilde{\ell}_*}\tilde{E}_C$, vanishing identically in the scale-free planar limit while directly measuring the boundary scale anomaly induced by the $N$-th generation prefractal hierarchy! Under discrete scale invariance ($\tilde{z} \to \tilde{z}/b$), $\mathcal{C}$ expands in log-periodic harmonics:
+\begin{equation}
+\mathcal{C}\!\left(\theta, \ln\frac{|\tilde{z}|}{\tilde{\ell}_*}\right) = \sum_{k=-\infty}^{\infty} \mathcal{C}_k(\theta) \exp\!\left(i \omega_k \ln\frac{|\tilde{z}|}{\tilde{\ell}_*}\right), \qquad \omega_k = \frac{2\pi k}{\ln b}.
+\label{eq:dsi_fourier}
+\end{equation}
+
+Crucially, because Eq.~\eqref{eq:dimensionless_einstein} possesses zero divergence on its left-hand side ($\partial^\mu \tilde{\Box}\tilde{\bar{h}}_{\mu\nu} = 0$ in Lorenz gauge), consistency of linearized general relativity demands exact covariant conservation of the \emph{total} stress-energy tensor:
+\begin{equation}
+\partial_\mu \tilde{T}^{\mu\nu}_{\mathrm{tot}} = \partial_\mu \Bigl( \tilde{T}^{\mu\nu}_{\mathrm{vac}} + \tilde{T}^{\mu\nu}_{\mathrm{con}} \Bigr) = 0,
+\label{eq:covariant_conservation}
+\end{equation}
+where $\tilde{T}^{\mu\nu}_{\mathrm{con}}$ is the idealized relativistic background constraint stress tensor supporting the boundary surfaces against Casimir forces $\tilde{F}_z(\theta)$ and azimuthal torques $\tilde{\tau}_\theta(\theta) = -\partial_\theta \tilde{E}_C(\theta)$~\cite{fulling2007,milton2014fall} (and supplying the external power $\partial_{\tilde{t}}\tilde{E}_C = \dot{\theta}\partial_\theta \tilde{E}_C = -\Omega \tilde{\tau}_\theta$ during steady rotation $\theta(t) = \Omega t$). As proved explicitly in Appendix~\ref{app:virial}, enforcing Eq.~\eqref{eq:covariant_conservation} eliminates gauge-artifacts in gravitational wave and Tolman mass integrals while preserving all five genuine physical gravitational signatures below.
+
+---
+
+\section{First-Principles Scattering, Voxel Correlator, and Linearized Gravity Methodology}
+\label{sec:methods}
+
+To evaluate $\tilde{E}_C$, $\tilde{T}_{\mu\nu}(\tilde{\mathbf{x}})$, $\tilde{T}^\mu{}_{\mu,\mathrm{eff}}$, and all induced gravitational fields without relying on proximity-force approximations, we formulate four coupled numerical methods matching our standalone software suite.
+
+\subsection{3D Cyclic-Bloch Boundary-Element Scattering and Scale-Derivative Engine}
+\label{subsec:methods_bem}
+Along the Wick-rotated imaginary wavenumber axis $\tilde{\kappa} = \xi L / c \in (0, \infty)$, the zero-temperature renormalized Casimir interaction energy between the disjoint upper ($\mathrm{U}$) and lower ($\mathrm{L}$) boundary manifolds $\partial\Omega_{\mathrm{U}} \cup \partial\Omega_{\mathrm{L}}$ is given by the exact surface-scattering log-determinant~\cite{reid2009,reid2013}:
+\begin{equation}
+\tilde{E}_C(\theta, \tilde{z}) = \frac{\sigma_{\mathrm{field}}}{2\pi} \int_0^\infty \dd\tilde{\kappa} \, \ln\det\bigl[\mathbf{I} - \mathbf{M}(\tilde{\kappa}; \theta, \tilde{z})\bigr],
+\label{eq:bem_logdet}
+\end{equation}
+where $\sigma_{\mathrm{field}} = \frac{1}{2}$ for a single real scalar field and $\sigma_{\mathrm{field}} = 1$ for two-polarization vector electromagnetism, and $\mathbf{M}(\tilde{\kappa}) = \mathbf{\Gamma}_{\mathrm{UU}}^{-1}\mathbf{\Gamma}_{\mathrm{UL}}\mathbf{\Gamma}_{\mathrm{LL}}^{-1}\mathbf{\Gamma}_{\mathrm{LU}}$ (or the equivalent normalized block off-diagonal operator $-\mathbf{D}_{\mathrm{diag}}^{-1}\mathbf{V}_{\mathrm{off}}$) subtracts the isolated self-energies of each rigid body identically at every $\tilde{\kappa}$. Surface panels $\{\mathcal{P}_a\}_{a=1}^{N_p}$ are discretized with piecewise-constant basis functions regularized at sub-panel quadrature length $\tilde{\sigma}_a = \sqrt{\tilde{A}_a/(16\pi)}$:
+\begin{itemize}
+    \item \emph{Scalar Dirichlet kernel}: Single-layer Euclidean Yukawa kernel $G_0(\tilde{\mathbf{r}}, \tilde{\mathbf{r}}'; \tilde{\kappa}) = \exp(-\tilde{\kappa}|\tilde{\mathbf{r}}-\tilde{\mathbf{r}}'|)/(4\pi|\tilde{\mathbf{r}}-\tilde{\mathbf{r}}'|)$ with $1$ degree of freedom per panel.
+    \item \emph{PEC vector-dyadic kernel}: Electric-field integral equation (EFIE) coupling two orthogonal tangential surface-current basis vectors $(\hat{\mathbf{t}}_{a,1}, \hat{\mathbf{t}}_{a,2})$ per panel via the symmetric positive-definite Euclidean dyadic Green's tensor $\mathbf{G}(\tilde{\mathbf{r}}, \tilde{\mathbf{r}}'; \tilde{\kappa}) = \bigl(\mathbf{I} + \tilde{\kappa}^{-2}\tilde{\nabla}\tilde{\nabla}'\bigr) G_0(\tilde{\mathbf{r}}, \tilde{\mathbf{r}}'; \tilde{\kappa}) = \bigl(\mathbf{I} - \tilde{\kappa}^{-2}\tilde{\nabla}\tilde{\nabla}\bigr) G_0(\tilde{\mathbf{r}}, \tilde{\mathbf{r}}'; \tilde{\kappa})$ ($2N_p$ degrees of freedom).
+\end{itemize}
+For constellations with greatest common divisor $M_g = \gcd(M_{\mathrm{up}}, M_{\mathrm{low}}) > 1$ ($M_g = 4$ for $(4,4)$ and $M_g = 2$ for $(6,4)$ Vernier), exact cyclic Bloch projection into $M_g$ decoupled irreducible blocks $\mathbf{M}^{(\ell)}(\tilde{\kappa}) = \sum_{q=0}^{M_g-1} e^{2\pi i \ell q / M_g} \mathbf{M}_{0,q}(\tilde{\kappa})$ ($\ell = 0,\dots,M_g-1$) accelerates dense LU factorization by $M_g^3$ with zero approximation. The axial force $\tilde{F}_z = -\partial_{\tilde{z}}\tilde{E}_C$, azimuthal torque $\tilde{\tau}_\theta = -\partial_\theta \tilde{E}_C$, and effective trace $\tilde{T}^\mu{}_{\mu,\mathrm{eff}}$ in Eq.~\eqref{eq:effective_trace_3d} are computed via Gauss--Legendre quadrature in $\tilde{\kappa} \in [10^{-2}, 2\times 10^2]$ combined with centered fourth-order parametric finite differences and trace identities $\mathrm{Tr}[(\mathbf{I}-\mathbf{M})^{-1}\partial_\lambda \mathbf{M}]$.
+
+\subsection{Four-Pass Inclusion--Exclusion 3D Euclidean Correlator Voxel Mapping}
+\label{subsec:methods_voxel}
+To reconstruct the spatially resolved renormalized stress-energy tensor $\tilde{T}_{\mu\nu}(\tilde{\mathbf{x}}; \theta)$ at interior field points $\tilde{\mathbf{x}} \in \Omega_{\mathrm{grid}} \subset \mathbb{R}^3 \setminus \partial\Omega$ for Ideas 3--5, we evaluate the scattered Euclidean two-point Green's correlator $\Delta G(\tilde{\mathbf{x}}, \tilde{\mathbf{x}}'; \tilde{\kappa}) \equiv G^{\mathrm{full}}(\tilde{\mathbf{x}}, \tilde{\mathbf{x}}'; \tilde{\kappa}) - G_0(\tilde{\mathbf{x}}, \tilde{\mathbf{x}}'; \tilde{\kappa})$. To remove both free-space ultraviolet divergences ($G_0$ coincidence limit) and static single-body self-stresses near individual vane or aperture walls when isolating the mutual interaction stress tensor, we apply an exact \emph{four-pass inclusion--exclusion subtraction} across identical spatial grids:
+\begin{equation}
+\Delta \tilde{T}_{\mu\nu}^{\mathrm{mut}}(\tilde{\mathbf{x}}; \theta) = \tilde{T}_{\mu\nu}^{\mathrm{U+L}}(\tilde{\mathbf{x}}; \theta) - \tilde{T}_{\mu\nu}^{\mathrm{U}}(\tilde{\mathbf{x}}; \theta) - \tilde{T}_{\mu\nu}^{\mathrm{L}}(\tilde{\mathbf{x}}) + \tilde{T}_{\mu\nu}^{\mathrm{vac}}(\tilde{\mathbf{x}}),
+\label{eq:four_pass_correlator}
+\end{equation}
+alongside the full boundary-renormalized total interior tensor $\tilde{T}_{\mu\nu}^{\mathrm{ren}}(\tilde{\mathbf{x}}; \theta) = \tilde{T}_{\mu\nu}^{\mathrm{U+L}}(\tilde{\mathbf{x}}; \theta) - \tilde{T}_{\mu\nu}^{\mathrm{vac}}(\tilde{\mathbf{x}})$. In the boundary-integral representation, the scattered coincidence correlators at point $\tilde{\mathbf{x}}$ follow directly from the LU-factorized surface scattering inverse $\mathbf{\Gamma}^{-1}(\tilde{\kappa})$:
+\begin{equation}
+\Delta G_{\mathrm{ren}}(\tilde{\mathbf{x}}, \tilde{\mathbf{x}}'; \tilde{\kappa}) = -\sum_{a,b} g_0(\tilde{\mathbf{x}}, \mathcal{P}_a; \tilde{\kappa}) \bigl[\mathbf{\Gamma}^{-1}(\tilde{\kappa})\bigr]_{ab} g_0(\mathcal{P}_b, \tilde{\mathbf{x}}'; \tilde{\kappa}),
+\label{eq:scattered_greens_pointwise}
+\end{equation}
+from which spatial derivatives $\partial_i \partial'_j \Delta G_{\mathrm{ren}}|_{\tilde{\mathbf{x}}'=\tilde{\mathbf{x}}}$ and $\tilde{\kappa}^2 \Delta G_{\mathrm{ren}}(\tilde{\mathbf{x}}, \tilde{\mathbf{x}}; \tilde{\kappa})$ assemble the exact scalar ($\xi = 1/6$ and $\xi = 0$, Eq.~\eqref{eq:scalar_tmunu}) and dyadic PEC electromagnetic (Eq.~\eqref{eq:maxwell_tmunu}) stress-energy components at every 3D voxel. In the planar parallel-plate limit (\texttt{Ctrl\_FlatAnnulus}), this solver is benchmarked directly against the analytical Brown--Maclay tensor~\eqref{eq:brown_maclay}.
+
+\subsection{3D Spectral Linearized Einstein, Scalaron, and Gravitomagnetic PDE Solvers}
+\label{subsec:methods_pde}
+Given the 3D source distribution $\tilde{T}_{\mu\nu}^{\mathrm{tot}}(\tilde{\mathbf{x}}, \tilde{t})$ on a Cartesian domain $[-\tilde{L}_{\mathrm{box}}, \tilde{L}_{\mathrm{box}}]^3$ enclosing the cavity ($\tilde{L}_{\mathrm{box}} = 2.0$), we solve the elliptic and radiative gravitational field equations across three sectors:
+\begin{enumerate}
+    \item \emph{Far-zone radiative multipole integration}: For slow-motion gravitational wave emission ($\tilde{\omega}\tilde{R} = \omega L/c \ll 1$), the transverse-traceless tensor waveform in observation direction $\hat{\mathbf{n}} = (\sin\vartheta\cos\varphi, \sin\vartheta\sin\varphi, \cos\vartheta)$ is evaluated via the exact conserved quadrupole formula~\cite{wald1984,misner1973},
+    \begin{align}
+    \tilde{h}_{ij}^{\mathrm{TT}}(\tilde{t}, \tilde{r}\hat{\mathbf{n}}) &= \frac{2}{\tilde{r}} \Lambda_{ij,kl}(\hat{\mathbf{n}}) \frac{\dd^2 \tilde{\mathcal{Q}}_{kl}^{\mathrm{tot}}}{\dd\tilde{t}^2}(\tilde{t} - \tilde{r}), \nonumber\\
+    \tilde{\mathcal{Q}}_{kl}^{\mathrm{tot}}(\tilde{t}) &= \int \tilde{T}_{00}^{\mathrm{tot}}(\tilde{\mathbf{x}}, \tilde{t})\left(\tilde{x}_k\tilde{x}_l - \frac{1}{3}\tilde{\mathbf{x}}^2\delta_{kl}\right)\dd^3\tilde{x},
+    \label{eq:tt_quadrupole_wave}
+    \end{align}
+    cross-checked numerically against direct volume stress integration $2\int (\tilde{T}_{kl}^{\mathrm{tot}})^{\mathrm{TF}} \dd^3\tilde{x}$ via Eq.~\eqref{eq:covariant_conservation}. In linearized $f(R) = R + \alpha R^2$ gravity (scalaron mass $\tilde{m}_\varphi = L/\sqrt{6\alpha}$), the retarded monopole ($l=0$) scalar graviton mode is integrated via~\cite{berry2011}
+    \begin{equation}
+    \tilde{\varphi}(\tilde{t}, \tilde{r}) = -\frac{2\alpha_\varphi}{\tilde{r}} \int_0^\infty \dd\tilde{\omega}\,\mathrm{Re}\!\left[\tilde{\mathcal{T}}_{\mathrm{eff}}(\tilde{\omega}) \, e^{i(\tilde{k}_\varphi \tilde{r} - \tilde{\omega}\tilde{t})}\right],
+    \label{eq:scalaron_retarded}
+    \end{equation}
+    for modes above cutoff $\tilde{\omega} > \tilde{m}_\varphi$ with $\tilde{k}_\varphi = \sqrt{\tilde{\omega}^2 - \tilde{m}_\varphi^2}$ (reducing in the massless Brans--Dicke limit $\tilde{m}_\varphi \to 0$ to $\tilde{\varphi}(\tilde{t}, \tilde{r}) = -(2\alpha_\varphi/\tilde{r})\tilde{\mathcal{T}}_{\mathrm{eff}}(\tilde{t} - \tilde{r})$).
+    \item \emph{Near-zone 3D isolated-boundary Poisson solver}: Static and quasi-static metric perturbations $\tilde{\nabla}^2 \tilde{\bar{h}}_{\mu\nu} = -16\pi \tilde{T}_{\mu\nu}^{\mathrm{tot}}$ and gravitomagnetic vector potentials $\tilde{\nabla}^2 \tilde{h}_{0i} = -16\pi \tilde{T}_{0i}^{\mathrm{tot}}$ with exact asymptotic falloff $\tilde{\bar{h}}_{\mu\nu} \to 0$ as $|\tilde{\mathbf{x}}| \to \infty$ are solved using Hockney--Eastwood zero-padded ($2\times$ domain padding) 3D Fast Fourier Transform convolution with the exact lattice-regularized Newtonian Green's kernel $1/(4\pi|\tilde{\mathbf{x}}-\tilde{\mathbf{x}}'|)$, from which linearized Riemann tidal components $\tilde{R}_{0i0j} = -\frac{1}{2}\partial_i\partial_j \tilde{h}_{00}$ (static gauge) and Lense--Thirring fields $\tilde{\mathbf{B}}_g^{\mathrm{vac}} = \tilde{\nabla} \times \tilde{\mathbf{h}}_0$ are obtained by fourth-order spectral/finite-difference stencils.
+    \item \emph{Raychaudhuri and QEI line/worldline quadrature}: Geodesic expansion shifts $\Delta\tilde{\Theta}$ and Lorentzian-sampled Ford--Roman worldline integrals are integrated via adaptive Gauss--Kronrod quadrature along axial rays $(\tilde{r}_0, \phi_0, \tilde{z})$ and stationary-observer azimuthal worldlines $\phi(\tilde{t}) = \phi_0 - \tilde{\Omega}\tilde{t}$.
+\end{enumerate}
+
+---
+
+\section{Phenomenon I: Symmetry-Filtered Spin-2 Vernier Gravitational Radiation and Effective-Trace Breathing Waves}
+\label{sec:gw}
+
+\begin{figure*}[t]
+\centering
+\widefigbox{figures/fig2_vernier_gw_and_scalaron.pdf}{(a) Azimuthal Casimir vacuum energy wave $\Delta\tilde{\rho}_{\mathrm{vac}}(\phi, \tilde{t})$ in the $(6,4)$ Vernier cavity showing pure $m=2$ quadrupole rotation at $\Omega_{\mathrm{pat}} = 3\Omega$ while rigid $C_6$ and $C_4$ mass quadrupoles vanish identically; (b) Far-zone dimensionless spin-2 waveforms $\tilde{h}_+(\tilde{t})$ and $\tilde{h}_\times(\tilde{t})$ across PEC EM, $\xi=1/6$, and $\xi=0$ fields versus periodic control; (c) Covariant virial conservation verification $|\ddot{\tilde{\mathcal{Q}}}_{ij}^{\mathrm{tot}} - 2\int (\tilde{T}_{ij}^{\mathrm{tot}})^{\mathrm{TF}}\dd^3\tilde{x}|$; (d) Monopole ($l=0$) scalar-tensor breathing radiation $\tilde{\varphi}(\tilde{t})$ sourced by $\tilde{\mathcal{T}}_{\mathrm{eff}}(\tilde{t})$ in the $(4,4)$ prefractal cavity versus the silent flat-annulus control.}
+\caption{Symmetry-filtered tensor and scalar-tensor gravitational radiation generated by steady rotation of the Canonical Prefractal Sector Cavity.}
+\label{fig:gw_radiation}
+\end{figure*}
+
+\subsection{Elimination of Classical Rigid-Body Quadrupole Background via Vernier Symmetry}
+Consider first a rigid body of mass density $\rho_{\mathrm{mass}}(r, \phi, z)$ invariant under $M$-fold discrete rotations $\phi \to \phi + 2\pi/M$. Expanding $\rho_{\mathrm{mass}}$ in azimuthal harmonics $\sum_{n\in\mathbb{Z}} \rho_{nM}(r,z)e^{inM\phi}$, its trace-free mass quadrupole components $I_{\pm 2}^{\mathrm{mass}} = \int \rho_{\mathrm{mass}}(r,\phi,z) r^2 e^{\pm 2i\phi} r\,\dd r\,\dd\phi\,\dd z$ vanish identically whenever $M \ge 3$, because $nM = \pm 2$ has no integer solution for $M \ge 3$! Consequently, rotating a rigid $C_6$ vane wheel above a stationary $C_4$ stator at constant angular velocity $\Omega$ produces \emph{identically zero} classical $l=2$ mass-quadrupole gravitational radiation ($\dddot{I}_{ij}^{\mathrm{mass},C_6} = 0$; numerical mesh verification residual $\FcgGwRigidCSixQuadrupoleResidual$). Classical mass radiation is pushed to the $l=6$ duodecapole multipole at $6\Omega$, suppressed by an additional relativistic factor $(\Omega L/c)^8$ in radiated power!
+
+Now include the renormalized quantum vacuum energy density $\Delta\tilde{T}_{00}^{\mathrm{vac}}(\tilde{r}, \phi, \tilde{z}; \theta)$ between the $C_6$ upper vanes (at $\phi - \theta(t)$ with $\theta(t) = \Omega t$) and the $C_4$ lower prefractal apertures (at $\phi$). Because the local boundary overlap is a nonlinear product of $M_{\mathrm{up}}=6$ and $M_{\mathrm{low}}=4$ azimuthal indicator functions, the Fourier expansion of $\Delta\tilde{T}_{00}^{\mathrm{vac}}$ generates sum and difference azimuthal harmonics $m = p M_{\mathrm{up}} - q M_{\mathrm{low}}$ ($p,q \in \mathbb{Z}$). At lowest non-trivial order $(p,q) = (\pm 1, \pm 1)$, this yields $m = \pm(6 - 4) = \pm 2$:
+\begin{equation}
+\Delta\tilde{T}_{00}^{\mathrm{vac}}(\tilde{r}, \phi, \tilde{z}; \tilde{t}) = \bar{\mathcal{E}}_0(\tilde{r}, \tilde{z}) + 2\,\mathrm{Re}\!\left[\mathcal{E}_2(\tilde{r}, \tilde{z}) \, e^{i(2\phi - 6\tilde{\Omega}\tilde{t})}\right] + \dots,
+\label{eq:vernier_vacuum_wave}
+\end{equation}
+where $\tilde{\Omega} \equiv \Omega L / c$. Geometrically, while opposite sectors along $\phi = 0, \pi$ sit in the facing-sector attractive Casimir phase ($\Delta\tilde{T}_{00}^{\mathrm{vac}} < 0$), orthogonal sectors along $\phi = \pm\pi/2$ sit simultaneously in the open-aperture saddle-point phase! As the $C_6$ wheel turns at $\Omega$, this **negative-energy quantum vacuum quadrupole** sweeps azimuthally at Vernier-amplified pattern speed $\Omega_{\mathrm{pat}} = 3\Omega$, yielding a non-zero rotating quadrupole moment $\tilde{\mathcal{Q}}_{\pm 2}^{\mathrm{tot}}(\tilde{t}) = \tilde{Q}_2^{(6\Omega)} e^{-6i\tilde{\Omega}\tilde{t}}$ even when the total angle-integrated energy $\int \Delta\tilde{T}_{00}^{\mathrm{vac}}\,\dd^3\tilde{x}$ is time-independent ($6\text{ and }4$ share common period $\pi/6$, so $m=0$ modulates only at $\text{lcm}(6,4)\Omega = 12\Omega$, meaning zero net shaft power is required at $6\Omega$!).
+
+Substituting Eq.~\eqref{eq:vernier_vacuum_wave} into Eq.~\eqref{eq:tt_quadrupole_wave} yields circularly polarized (on-axis $\vartheta = 0$) spin-2 gravitational waves at $\omega_{\mathrm{GW}} = 6\Omega$:
+\begin{align}
+\tilde{h}_+(\tilde{t}, \tilde{r}, \vartheta) &= -\frac{72\,\tilde{\Omega}^2 |\tilde{Q}_2^{(6\Omega)}|}{\tilde{r}} \frac{1 + \cos^2\vartheta}{2} \cos\bigl(6\tilde{\Omega}(\tilde{t}-\tilde{r}) - \delta_2\bigr), \nonumber\\
+\tilde{h}_\times(\tilde{t}, \tilde{r}, \vartheta) &= -\frac{72\,\tilde{\Omega}^2 |\tilde{Q}_2^{(6\Omega)}|}{\tilde{r}} \cos\vartheta \sin\bigl(6\tilde{\Omega}(\tilde{t}-\tilde{r}) - \delta_2\bigr),
+\label{eq:vernier_hplus_hcross}
+\end{align}
+with dimensionless Peters--Mathews luminosity $\tilde{P}_{\mathrm{GW}}^{(2,2)} = \frac{1}{5}\langle \dddot{\tilde{\mathcal{Q}}}_{ij}\dddot{\tilde{\mathcal{Q}}}_{ij}\rangle = \frac{46656}{5}\tilde{\Omega}^6 |\tilde{Q}_2^{(6\Omega)}|^2$ (physical power $P_{\mathrm{GW}} = (\hbar c^2/L^2)\epsilon_P^2 \tilde{P}_{\mathrm{GW}}$, i.e., $P_{\mathrm{GW}} \propto G \hbar^2 \Omega^6 L^2 / c^7$).
+
+\subsection{Effective-Trace Monopole Radiation in Scalar-Tensor and \texorpdfstring{$f(R)$}{f(R)} Gravity}
+In Constellation A $(M_{\mathrm{up}}, M_{\mathrm{low}}) = (4,4)$, all four sectors transition in phase between $\theta_{\mathrm{open}} = 0$ and $\theta_{\mathrm{face}} = \pi/4$ at fundamental frequency $\omega_B = 4\Omega$. In pure Einstein gravity, spherical symmetry of the $l=0$ moment forbids monopole radiation; only the axisymmetric $l=2, m=0$ mode ($\tilde{h}_+ \propto \sin^2\vartheta\, \ddot{\tilde{\mathcal{Q}}}_{zz}^{\mathrm{tot}}$) radiates. However, in one-loop quantum-corrected Starobinsky gravity $f(R) = R + \alpha R^2$~\cite{starobinsky1980,berry2011} or Brans--Dicke/Damour--Esposito-Far\`ese scalar-tensor gravity~\cite{damour1992}, the trace of the stress-energy tensor directly sources an isotropic $l=0$ breathing mode via Eq.~\eqref{eq:scalaron_retarded}:
+\begin{equation}
+\left(\tilde{\Box} - \tilde{m}_\varphi^2\right)\tilde{\varphi}(\tilde{t}, \tilde{\mathbf{x}}) = 8\pi\alpha_\varphi \, \tilde{T}^\mu{}_{\mu,\mathrm{eff}}(\tilde{t}, \tilde{\mathbf{x}}).
+\label{eq:scalaron_wave_eq}
+\end{equation}
+In the conformal flat-annulus control, $\tilde{T}^\mu{}_{\mu,\mathrm{bulk}} = 0$ ($\FcgGwScalaronFlatPlateNull$). In the $(4,4)$ prefractal CPSC, rotary modulation of the multiscale boundary cutoff coupling $\mathcal{D}_{\mathrm{cav}}\tilde{E}_C(\theta(\tilde{t}))$ pumps $\tilde{\mathcal{T}}_{\mathrm{eff}}(\tilde{t}) = \sum_{n=1}^\infty \tilde{\mathcal{T}}_{4n} \cos(4n\tilde{\Omega}\tilde{t})$, radiating isotropic scalar-tensor waves of normalized amplitude $\FcgGwScalaronMonopoleAmpGenThree$ at generation $N=3$ (compared alongside the $(6,4)$ Vernier tensor strains $\FcgGwVernierStrainAmpEmGenThree$ for PEC EM, $\FcgGwVernierStrainAmpConfGenThree$ for $\xi=1/6$, and $\FcgGwVernierStrainAmpPeriodicCtrl$ for the periodic control, with virial conservation relative error $\FcgGwVirialConservationRelErr$; Fig.~\ref{fig:gw_radiation} and Table~\ref{tab:summary_five_effects}).
+
+---
+
+\section{Phenomenon II: Force-Free Spacetime Curvature Crossover and Tolman--Komar Active Mass}
+\label{sec:force_free}
+
+\begin{figure*}[t]
+\centering
+\widefigbox{figures/fig3_force_free_curvature_tolman.pdf}{(a) Phase diagram of dimensionless axial Casimir force $\tilde{F}_z(\theta, \tilde{z})$ across rotor angle and vertical elevation, highlighting the exact zero-force contour $\tilde{F}_z(\theta_0, \tilde{z}) = 0$; (b) Effective Ricci scalar curvature $\tilde{R}_{\mathrm{eff}}(\theta, \tilde{z}) = -8\pi\tilde{T}^\mu{}_{\mu,\mathrm{eff}}$ showing finite spacetime curvature along the force-free locus; (c) Verification of the algebraic scale-locking law $\partial_{\ln|\tilde{z}|}\mathcal{C} / \mathcal{C} = 3$ at $\tilde{F}_z = 0$; (d) Spatial cumulative integral of the Tolman--Komar active gravitational mass density $\tilde{\rho}_{\mathrm{Tolman}}(<\tilde{r})$, contrasting unscreened near-zone pressure anomalies against exact asymptotic Equivalence Principle recovery ($\Delta\tilde{M}_{\mathrm{Komar}}(\infty) = \Delta\tilde{E}_C$).}
+\caption{Decoupling of mechanical boundary force from spacetime curvature and spatial resolution of the Tolman--Komar active gravitational mass in the CPSC.}
+\label{fig:force_free_curvature}
+\end{figure*}
+
+In stationary general relativity with timelike Killing vector $\xi^\mu = (1,\mathbf{0})$, the active gravitational mass enclosed within radius $r$ is governed by the Tolman--Komar integral~\cite{tolman1930,komar1959,wald1984}:
+\begin{align}
+\Delta\tilde{M}_{\mathrm{Komar}}(\tilde{r}_{\mathrm{enc}}; \theta) &= \int_{|\tilde{\mathbf{x}}| < \tilde{r}_{\mathrm{enc}}} \bigl(2\tilde{T}_{00}^{\mathrm{tot}} + \tilde{T}^\mu{}_{\mu,\mathrm{tot}}\bigr)\,\dd^3\tilde{x} \nonumber\\
+&= \int_{|\tilde{\mathbf{x}}| < \tilde{r}_{\mathrm{enc}}} \bigl(\tilde{\rho}_{\mathrm{tot}} + \tilde{P}_{x,\mathrm{tot}} + \tilde{P}_{y,\mathrm{tot}} + \tilde{P}_{z,\mathrm{tot}}\bigr)\,\dd^3\tilde{x}.
+\label{eq:komar_mass}
+\end{align}
+For a stationary, self-equilibrated apparatus ($\partial_j \tilde{T}^{ij}_{\mathrm{tot}} = 0$ with compactly supported constraint stresses inside $\tilde{r}_{\mathrm{sup}}$), the identity $\tilde{T}^{ij}_{\mathrm{tot}} = \partial_k(\tilde{x}^i \tilde{T}^{kj}_{\mathrm{tot}})$ ensures that $\int_{|\tilde{\mathbf{x}}| < \infty} \tilde{P}_{i,\mathrm{tot}}\,\dd^3\tilde{x} = 0$, recovering $\Delta\tilde{M}_{\mathrm{Komar}}(\infty; \theta) = \tilde{E}_C(\theta)$~\cite{fulling2007}. Nevertheless, two non-trivial gravitational phenomena emerge within the prefractal cavity:
+
+1. \emph{Force-free curvature crossover ($\theta = \theta_0$)}: At $\theta_{\mathrm{open}} = 0$, open-aperture saddle-point fringing produces repulsive axial force $\tilde{F}_z(0, \tilde{z}) > 0$; at $\theta_{\mathrm{face}} = \pi/M_{\mathrm{low}}$, parallel-sector confinement produces attractive axial force $\tilde{F}_z(\theta_{\mathrm{face}}, \tilde{z}) < 0$. By continuity, there exists a critical crossover locus $\theta = \theta_0(\tilde{z})$ where the net axial Casimir force vanishes identically:
+\begin{equation}
+\tilde{F}_z(\theta_0, \tilde{z}) = -\frac{\partial \tilde{E}_C}{\partial |\tilde{z}|}\Bigg|_{\theta_0} = \frac{\tilde{A}_{\mathrm{ann}}}{|\tilde{z}|^4}\Bigl[3\mathcal{C}(\theta_0) - \partial_{\ln|\tilde{z}|}\mathcal{C}(\theta_0)\Bigr] = 0.
+\label{eq:force_free_condition}
+\end{equation}
+At $\theta = \theta_0$ ($\theta_0 = \FcgFfcThetaZeroDegGenThree^\circ$ with numerical force residual $|\tilde{F}_z| = \FcgFfcResidualForceAtThetaZero$), the vertical constraint load vanishes completely, yet $\tilde{E}_C(\theta_0) < 0$ is non-zero! Equation~\eqref{eq:force_free_condition} algebraically locks the vertical scale anomaly to $\partial_{\ln|\tilde{z}|}\mathcal{C}|_{\theta_0} = 3\mathcal{C}(\theta_0)$ (numerical ratio $\FcgFfcScaleLockRatioAtThetaZero$). Substituting into Eq.~\eqref{eq:effective_trace_3d} yields a non-vanishing **force-free effective Ricci scalar curvature**:
+\begin{equation}
+\tilde{R}_{\mathrm{eff}}(\theta_0, \tilde{z}) = -8\pi\tilde{T}^\mu{}_{\mu,\mathrm{eff}}(\theta_0, \tilde{z}) = \frac{8\pi}{|\tilde{z}|^4}\Bigl[3\mathcal{C}(\theta_0) + \partial_{\ln\tilde{R}}\mathcal{C}(\theta_0)\Bigr],
+\label{eq:ricci_force_free}
+\end{equation}
+attaining $\tilde{R}_{\mathrm{eff}}(\theta_0) = \FcgFfcRicciEffAtThetaZero$ at $N=3$.
+
+2. \emph{Near-zone Tolman anomaly versus asymptotic WEP mass modulation}: When the mechanical support ring resides at an exterior radius $\tilde{r}_{\mathrm{sup}} > \tilde{r}_{\mathrm{out}}$, any local test probe inside $\tilde{r}_{\mathrm{enc}} \in [\tilde{r}_{\mathrm{in}}, \tilde{r}_{\mathrm{out}}]$ encloses the uncompensated vacuum pressure integral $\int_{\mathrm{cav}}(\tilde{P}_r + \tilde{P}_\phi + \tilde{P}_z)\dd^3\tilde{x} \neq 0$, experiencing a near-zone Tolman density swing $\FcgFfcNearZoneTolmanSwing$ across $\theta \in [0, \theta_{\mathrm{face}}]$, whereas an asymptotic observer at $\tilde{r}_{\mathrm{enc}} > \tilde{r}_{\mathrm{sup}}$ measures the pure WEP vacuum binding-mass modulation $\Delta\tilde{M}_{\mathrm{Komar}}(\infty) = \tilde{E}_C(\theta_{\mathrm{face}}) - \tilde{E}_C(0) = \FcgFfcGlobalWepMassDefectSwing$ at strictly conserved particle number (Fig.~\ref{fig:force_free_curvature}).
+
+---
+
+\section{Phenomenon III: Discrete-Scale-Invariant Log-Periodic Spacetime Metric Comb}
+\label{sec:metric_comb}
+
+\begin{figure*}[t]
+\centering
+\widefigbox{figures/fig4_log_periodic_metric_comb.pdf}{(a) Scale-compensated Newtonian metric perturbation $|\tilde{z}|^2 \tilde{h}_{00}(\tilde{\mathbf{x}}_0; \tilde{z})$ swept logarithmically across vertical stroke $\ln(|\tilde{z}|/\tilde{\ell}_*)$ in the homothetic $(r,z)$-staged CPSC ($b \in \{2.5, 3.0, 4.0\}$) versus single-scale periodic and arithmetic controls; (b) Detrended log-periodic metric oscillation $\delta(|\tilde{z}|^2\tilde{h}_{00})$ and Lomb--Scargle / Mellin spectral recovery of $\omega_1 = 2\pi/\ln b$; (c) Axial tidal Riemann tensor component $|\tilde{z}|^4 \tilde{R}_{0z0z}$ across Cantor stages; (d) Rotary suppression of the log-periodic metric comb upon switching from $\theta_{\mathrm{open}}$ to $\theta_{\mathrm{face}}$.}
+\caption{Imprinting discrete scale invariance onto linearized spacetime geometry via the homothetic prefractal Casimir cavity.}
+\label{fig:metric_comb}
+\end{figure*}
+
+In critical gravitational collapse, Choptuik~\cite{choptuik1993} demonstrated that discrete self-similarity manifests as log-periodic echoing in spacetime curvature with universal period $\Delta$ (corresponding to imaginary scaling dimensions~\cite{sornette1998,calcagni2010}). Here we show that the homothetically staged CPSC (Eq.~\eqref{eq:homothetic_staging}) imprints an exact, analytically controlled discrete scale invariance onto the linearized quantum-vacuum spacetime metric.
+
+In static Lorenz gauge, the time-time metric perturbation satisfies $\tilde{\nabla}^2 \tilde{h}_{00}(\tilde{\mathbf{x}}) = -8\pi\bigl(\tilde{\rho}_{\mathrm{tot}} + \tilde{P}_{x,\mathrm{tot}} + \tilde{P}_{y,\mathrm{tot}} + \tilde{P}_{z,\mathrm{tot}}\bigr) = -8\pi\bigl(2\tilde{\rho}_{\mathrm{tot}} + \tilde{T}^\mu{}_{\mu,\mathrm{tot}}\bigr)$. In the homothetic open-aperture state ($\theta = \theta_{\mathrm{open}}$), scaling the vertical vane elevation as $|\tilde{z}| \to |\tilde{z}|/b$ maps the scattered Green's function of generation $m$ onto generation $m+1$ across the prefractal scaling window $\tilde{\ell}_* \ll |\tilde{z}| \ll \tilde{Z}_1$. Applying the Mellin transform along $|\tilde{z}|$ to the Green's convolution $\tilde{h}_{00}(\tilde{\mathbf{x}}; \tilde{z}) = 2\int |\tilde{\mathbf{x}}-\tilde{\mathbf{x}}'|^ {-1}(2\tilde{\rho}_{\mathrm{tot}} + \tilde{T}^\mu{}_{\mu,\mathrm{tot}})\dd^3\tilde{x}'$ yields a metric perturbation with **complex scaling exponents** $\Delta_k = 2 + i\omega_k$ ($\omega_k = 2\pi k/\ln b$):
+\begin{equation}
+\tilde{h}_{00}(\tilde{\mathbf{x}}; \theta_{\mathrm{open}}, \tilde{z}) = \frac{1}{|\tilde{z}|^2} \sum_{k=-\infty}^{\infty} \mathcal{H}_k^{(00)}\!\left(\frac{\tilde{\mathbf{x}}}{|\tilde{z}|}\right) \exp\!\left(i \frac{2\pi k}{\ln b} \ln\frac{|\tilde{z}|}{\tilde{\ell}_*}\right),
+\label{eq:log_periodic_metric}
+\end{equation}
+and a corresponding axial tidal Riemann curvature tensor component $\tilde{R}_{0z0z} = -\frac{1}{2}\partial_{\tilde{z}}^2 \tilde{h}_{00}$ scaling as $|\tilde{z}|^{-4}$ modulated by amplified harmonic weights $(2 + i\omega_k)(3 + i\omega_k)\mathcal{H}_k^{(00)}$!
+
+Conversely, rotating the vane wheel to $\theta = \theta_{\mathrm{face}}$ activates direct facing-sector overlap across the single vertical gap $\tilde{d}_0$, overwhelming the multi-stage sidewall comb by a single power-law parallel-plate potential ($\tilde{h}_{00} \propto \tilde{d}_0^{-2}$). Across our logarithmic stroke sweep, spectral harmonic analysis tests recovery of $\hat{\omega}_1 = \FcgDsiRecoveredOmegaOneBThree$ and $\hat{b} = \FcgDsiRecoveredScaleFactorBHat$ at $b=3$ (harmonic fit $R^2 = \FcgDsiMetricCombRSquaredCantor$ vs.\ $\FcgDsiMetricCombRSquaredPeriodic$ in the periodic control, peak open-phase tidal curvature $\FcgDsiTidalRiemannPeakOpen$, and rotary harmonic suppression factor $\FcgDsiOpenToFaceHarmonicSuppression$; Fig.~\ref{fig:metric_comb}).
+
+---
+
+\section{Phenomenon IV: Rotary Energy-Condition Switching, Raychaudhuri Geodesic Lensing, and Worldline QEIs}
+\label{sec:energy_conditions}
+
+\begin{figure*}[t]
+\centering
+\widefigbox{figures/fig5_nec_sec_raychaudhuri_qei.pdf}{(a,b) Cross-sectional $(r,z)$ voxel maps of the axial Null Energy Condition density $\widetilde{\mathrm{NEC}}_z(\tilde{\mathbf{x}}, \theta) = \tilde{T}_{00} + \tilde{T}_{zz}$ and Strong Energy Condition density $\widetilde{\mathrm{SEC}}(\tilde{\mathbf{x}}, \theta) = 2\tilde{T}_{00} + \tilde{T}^\mu{}_\mu$ in the facing-sector ($\theta_{\mathrm{face}}$) versus open-aperture ($\theta_{\mathrm{open}}$) states; (c) Raychaudhuri null ($\Delta\tilde{\Theta}_{\mathrm{null}}$) and timelike ($\Delta\tilde{\Theta}_{\mathrm{time}}$) geodesic expansion shifts across $\theta \in [0, \pi/4]$ comparing PEC EM, $\xi=1/6$, and $\xi=0$; (d) Lorentzian-sampled Ford--Roman worldline quantum energy inequality integral $\tilde{\mathcal{I}}_{\mathrm{QEI}}(\tilde{\Omega})$ normalized against the universal QFT lower bound.}
+\caption{Rotary switching of general-relativistic energy conditions, geodesic focusing/defocusing, and worldline quantum energy inequality compliance in the CPSC.}
+\label{fig:energy_conditions}
+\end{figure*}
+
+The physical action of spacetime curvature on test light rays (null tangent $k^\mu = (1, \hat{\mathbf{k}})$) and slow neutral test particles (timelike 4-velocity $u^\mu = (1, \mathbf{0})$) is governed at linear order in $\epsilon_P^2$ by the Raychaudhuri equations~\cite{raychaudhuri1955,wald1984} with zero initial twist and shear:
+\begin{align}
+\frac{\dd\tilde{\Theta}_{\mathrm{null}}}{\dd\tilde{\lambda}} &= -\tilde{R}_{\mu\nu} k^\mu k^\nu = -8\pi \underbrace{\bigl(\tilde{T}_{00} + \tilde{T}_{ij}\hat{k}^i\hat{k}^j\bigr)}_{\widetilde{\mathrm{NEC}}_{\hat{\mathbf{k}}}}, \label{eq:raychaudhuri_null}\\
+\frac{\dd\tilde{\Theta}_{\mathrm{time}}}{\dd\tilde{\tau}} &= -\tilde{R}_{\mu\nu} u^\mu u^\nu = -4\pi \underbrace{\bigl(2\tilde{T}_{00} + \tilde{T}^\mu{}_\mu\bigr)}_{\widetilde{\mathrm{SEC}}}. \label{eq:raychaudhuri_time}
+\end{align}
+Notice the sharp structural distinction between Eqs.~\eqref{eq:raychaudhuri_null} and \eqref{eq:raychaudhuri_time}: null geodesic focusing is blind to the trace $\tilde{T}^\mu{}_\mu$ because $g_{\mu\nu}k^\mu k^\nu = 0$, whereas timelike geodesic focusing couples directly to $\tilde{T}^\mu{}_\mu$ (distinguishing $\xi = 1/6$ from $\xi = 0$ locally via $-\frac{1}{2}\tilde{\Box}\langle\hat{\phi}^2\rangle$, and globally via $\tilde{T}^\mu{}_{\mu,\mathrm{eff}}$)!
+
+1. \emph{Rotary switching between gravitational defocusing and focusing}:
+   - In the facing-sector phase ($\theta = \theta_{\mathrm{face}}$), parallel-plate mode exclusion yields $\tilde{T}_{00} < 0$ and $\tilde{T}_{zz} \approx 3\tilde{T}_{00} < 0$. Hence $\widetilde{\mathrm{NEC}}_z < 0$ (reaching $\FcgEcNecZMinFacingPhase$) and $\widetilde{\mathrm{SEC}} < 0$, so both $\dd\tilde{\Theta}_{\mathrm{null}}/\dd\tilde{\lambda} > 0$ and $\dd\tilde{\Theta}_{\mathrm{time}}/\dd\tilde{\tau} > 0$: axial photon congruences and slow test trajectories undergo **repulsive gravitational defocusing**.
+   - Rotating to the open-aperture phase ($\theta = \theta_{\mathrm{open}}$) eliminates parallel-plate overlap and concentrates transverse electric/scalar gradients across the radial slot clearances ($\langle E_r^2\rangle > \langle E_z^2\rangle$). In Eq.~\eqref{eq:maxwell_tmunu}, $\tilde{T}_{zz} = \frac{1}{2}\varepsilon_0\langle E_r^2 + E_\phi^2 - E_z^2\rangle + \frac{1}{2}\mu_0\langle H_r^2 + H_\phi^2 - H_z^2\rangle$ becomes strongly positive ($\tilde{P}_z > 0$). Wherever $\tilde{P}_z > |\tilde{\rho}_{\mathrm{vac}}|$, both $\widetilde{\mathrm{NEC}}_z$ (peaking at $\FcgEcNecZMaxOpenPhase$) and $\widetilde{\mathrm{SEC}}$ (positive across volume fraction $\FcgEcSecPositiveVolumeFracOpen$) flip sign to $\ge 0$, switching the slot sub-channels into **converging gravitational microlenses** (net null expansion swing $\FcgEcRaychaudhuriNullSwitchDelta$; trace-coupling share of timelike focusing $\FcgEcRaychaudhuriTimeTraceShare$; Fig.~\ref{fig:energy_conditions}a--c).
+
+2. \emph{Worldline Ford--Roman Quantum Energy Inequalities under steady rotation}:
+   Consider a stationary observer at $(\tilde{r}_0, \phi_0, \tilde{z}_0)$ inside the cavity gap while the upper vane wheel rotates at $\tilde{\Omega}$. The observer's worldline samples a periodic temporal sequence $\tilde{T}_{00}(\tilde{t}) = \tilde{T}_{00}(\tilde{r}_0, \phi_0 - \tilde{\Omega}\tilde{t}, \tilde{z}_0)$ alternating between negative facing-sector troughs and open-aperture pulses over characteristic pass duration $\tilde{\tau}_\Omega = \Delta\phi_{\mathrm{vane}}/(M_{\mathrm{up}}\tilde{\Omega})$. Evaluating the normalized Lorentzian sampling function $f_{\tilde{\tau}}(\tilde{t}) = \sqrt{\tilde{\tau}/\pi}/(\tilde{t}^2 + \tilde{\tau}^2)$ ($|f_{\tilde{\tau}}|^2$ integral unity) tests the $(3+1)$-dimensional Ford--Roman bound~\cite{ford1995,ford1997}:
+   \begin{equation}
+   \tilde{\mathcal{I}}_{\mathrm{QEI}}(\tilde{\tau}) \equiv \int_{-\infty}^{\infty} \tilde{T}_{00}(\tilde{t}) \frac{\tilde{\tau}/\pi}{(\tilde{t}^2 + \tilde{\tau}^2)^2} \tilde{\tau}^2 \,\dd\tilde{t} \ge -\frac{C_{\mathrm{FR}}}{\tilde{\tau}^4},
+   \label{eq:ford_roman_qei}
+   \end{equation}
+   where $C_{\mathrm{FR}} = 3/(32\pi^2)$ per massless scalar degree of freedom ($C_{\mathrm{FR}}^{\mathrm{EM}} = 3/(16\pi^2)$ for electromagnetism; using the normalized fourth-power Lorentzian weight $\tilde{w}(\tilde{t}) = (2\tilde{\tau}^3/\pi)/(\tilde{t}^2 + \tilde{\tau}^2)^2$ with $\int \tilde{w}(\tilde{t})\dd\tilde{t} = 1$). As $\tilde{\Omega}$ increases ($\tilde{\tau} \sim \tilde{\tau}_\Omega \to 0$), short-pulse sampling approaches while remaining strictly bounded by Eq.~\eqref{eq:ford_roman_qei} (maximum saturation ratio $\FcgEcFordRomanQeiSaturationRatio < 1$; Fig.~\ref{fig:energy_conditions}d), while complete grazing null geodesics satisfy the Averaged Null Energy Condition $\int_{-\infty}^\infty \tilde{T}_{\mu\nu}k^\mu k^\nu \dd\tilde{\lambda} \ge 0$.
+
+---
+
+\section{Phenomenon V: Cantor-Stratified Gravitomagnetic Frame Dragging from Broken Boost Invariance}
+\label{sec:gem}
+
+\begin{figure*}[t]
+\centering
+\widefigbox{figures/fig6_gravitomagnetic_lense_thirring.pdf}{(a) Azimuthal vacuum enthalpy density $\tilde{w}_\phi(\tilde{\mathbf{x}}) = \tilde{T}_{00} + \tilde{T}_{\phi\phi}$ in the prefractal CPSC versus the boost-invariant flat annulus ($\tilde{w}_\phi \equiv 0$); (b) Induced azimuthal quantum-vacuum momentum density $\tilde{T}^{0\phi}_{\mathrm{vac}}(\tilde{r}, \tilde{z})$ under steady rotation $\tilde{\Omega}$; (c) Gravitomagnetic vector potential $\tilde{h}_{0\phi}(\tilde{r}, \tilde{z})$ and nested Cantor Lense--Thirring vorticity rings $\tilde{B}_{g,z}^{\mathrm{vac}}(\tilde{r}, \tilde{z})$; (d) Radial profile of Lense--Thirring frame-dragging precession $\tilde{\Omega}_{\mathrm{LT},z}^{\mathrm{vac}}(\tilde{r})$ across generations $N = 0, 1, 2, 3$ and periodic control.}
+\caption{Quantum-vacuum Lense--Thirring frame dragging generated by broken azimuthal Lorentz boost invariance in the rotating prefractal cavity.}
+\label{fig:gem_lense_thirring}
+\end{figure*}
+
+In the gravito-electromagnetic (GEM) decomposition of linearized general relativity~\cite{mashhoon2007,ciufolini2004}, off-diagonal metric components $\tilde{h}_{0i}$ form the gravitomagnetic vector potential sourced by momentum density $\tilde{T}_{0i} = -\tilde{T}^{0i}$:
+\begin{equation}
+\tilde{\nabla}^2 \tilde{h}_{0i}(\tilde{\mathbf{x}}) = -16\pi \tilde{T}_{0i}(\tilde{\mathbf{x}}) = +16\pi \tilde{T}^{0i}(\tilde{\mathbf{x}}), \qquad \tilde{\mathbf{B}}_g = \tilde{\nabla} \times \tilde{\mathbf{h}}_0,
+\label{eq:gem_poisson}
+\end{equation}
+causing a local gyroscope at rest to undergo Lense--Thirring precession at angular velocity $\tilde{\boldsymbol{\Omega}}_{\mathrm{LT}} = -\frac{1}{2}\tilde{\mathbf{B}}_g$ (in physical units, $\boldsymbol{\Omega}_{\mathrm{LT}} = -(c/2L)\epsilon_P^2 \tilde{\mathbf{B}}_g$).
+
+Why does a flat parallel-disk Casimir cavity fail to drag inertial frames via its static vacuum stress tensor? Under a local tangential Lorentz boost of velocity $\tilde{v}_\phi = \tilde{\Omega}\tilde{r} \ll 1$ along $\hat{\bm{\phi}}$, a diagonal rest-frame stress tensor $\mathrm{diag}(\tilde{\rho}_{\mathrm{vac}}, \tilde{P}_r, \tilde{P}_\phi, \tilde{P}_z)$ transforms to laboratory-frame momentum density
+\begin{equation}
+\tilde{T}^{0\phi}_{\mathrm{vac}}(\tilde{\mathbf{x}}) = \frac{\tilde{v}_\phi}{1 - \tilde{v}_\phi^2}\bigl(\tilde{\rho}_{\mathrm{vac}} + \tilde{P}_\phi\bigr) \simeq \tilde{\Omega}\tilde{r}\bigl(\tilde{T}_{00} + \tilde{T}_{\phi\phi}\bigr) + \mathcal{O}(\tilde{\Omega}^3).
+\label{eq:boost_enthalpy_current}
+\end{equation}
+In the planar Brown--Maclay state~\eqref{eq:brown_maclay}, $\tilde{T}_{00} + \tilde{T}_{\phi\phi} = \tilde{\rho}_{\mathrm{vac}} + \tilde{P}_\parallel = 0$ identically (numerical flat-annulus verification $\FcgGemFlatAnnulusEnthalpyNull$): the planar Casimir vacuum is Lorentz boost-invariant parallel to the plates and carries zero linear or angular momentum at $\mathcal{O}(\tilde{\Omega})$!
+
+In the prefractal CPSC (and especially in Constellation C with chiral/phase-skewed sector walls), azimuthal boundary walls explicitly break $\phi$-boost invariance, generating a non-zero azimuthal enthalpy $\tilde{w}_\phi(\tilde{\mathbf{x}}, \theta) \equiv \tilde{T}_{00}(\tilde{\mathbf{x}}, \theta) + \tilde{T}_{\phi\phi}(\tilde{\mathbf{x}}, \theta) \neq 0$ concentrated along the $2^{m-1}$ radial Cantor slot tracks of each generation $m = 1,\dots,N$. Furthermore, because $\tilde{w}_\phi$ changes sign between regions dominated by negative energy confinement ($\tilde{T}_{00} < 0, |\tilde{T}_{00}| > \tilde{T}_{\phi\phi}$) and regions dominated by azimuthal electric/magnetic tension ($\tilde{T}_{\phi\phi}$ sign-reversed across slot rims), sweeping the boundary pattern at $\tilde{\Omega}$ induces **counter-rotating concentric rings of quantum-vacuum momentum current** $\tilde{J}_\phi^{\mathrm{vac}}(\tilde{r}, \tilde{z}) = \langle \tilde{T}^{0\phi}_{\mathrm{vac}} \rangle_\phi$. Solving Eq.~\eqref{eq:gem_poisson} produces a Cantor-stratified Lense--Thirring vortex lattice exhibiting $\FcgGemVortexSignReversalsRadial$ radial vorticity sign inversions, peak normalized precession $|\tilde{\Omega}_{\mathrm{LT},z}^{\mathrm{vac}}|/\tilde{\Omega} = \FcgGemPeakLenseThirringGenThree$ at $N=3$, and a $\FcgGemCantorToPeriodicCirculationRatio\times$ enhancement in root-mean-square gravitomagnetic vorticity relative to the matched periodic grating (Fig.~\ref{fig:gem_lense_thirring}).
+
+\begin{table*}[t]
+\caption{Summary of the five semiclassical gravitational phenomena of the Canonical Prefractal Sector Cavity (CPSC) in Planck-normalized dimensionless units ($\epsilon_P = \ell_P/L$), contrasting the planar Brown--Maclay limit, the matched single-scale periodic grating control, and the $N=3$ prefractal Cantor hierarchy.}
+\label{tab:summary_five_effects}
+\begin{ruledtabular}
+\begin{tabular}{lllll}
+Gravitational Phenomenon & Governing Coupling & Flat Annulus Control & Periodic Grating Control & Prefractal CPSC ($N=3$) \\
+\midrule
+I(a). Spin-2 Vernier GWs $(6,4)$ & $\ddot{\tilde{\mathcal{Q}}}_{ij}^{\mathrm{tot}}$ ($\tilde{h}_+$ amp.) & $0$ (axisymmetric) & $\FcgGwVernierStrainAmpPeriodicCtrl$ & $\FcgGwVernierStrainAmpEmGenThree$ ($\FcgGwVernierCantorToPeriodicRatio\times$) \\
+I(b). Spin-0 Scalaron Wave $(4,4)$ & $\tilde{\mathcal{T}}_{\mathrm{eff}}(t)$ ($R+\alpha R^2$) & $\FcgGwScalaronFlatPlateNull$ & Non-zero (single band) & $\FcgGwScalaronMonopoleAmpGenThree$ (multi-band) \\
+II. Force-Free Curvature ($\tilde{F}_z=0$) & $\tilde{R}_{\mathrm{eff}}(\theta_0)$ at $\theta_0=\FcgFfcThetaZeroDegGenThree^\circ$ & Forbidden ($\tilde{F}_z < 0$) & Single-scale crossover & $\FcgFfcRicciEffAtThetaZero$ (lock $\FcgFfcScaleLockRatioAtThetaZero$) \\
+III. Log-Periodic Metric Comb & $\hat{\omega}_1$ ($R^2$ at $2\pi/\ln b$) & Power-law ($R^2 = 0$) & $\FcgDsiMetricCombRSquaredPeriodic$ & $\hat{\omega}_1=\FcgDsiRecoveredOmegaOneBThree$ ($R^2=\FcgDsiMetricCombRSquaredCantor$) \\
+IV. NEC/SEC & Geodesic Switch & $\widetilde{\mathrm{NEC}}_z$ range / QEI sat. & Violated everywhere & Single-scale switch & $[\FcgEcNecZMinFacingPhase, \FcgEcNecZMaxOpenPhase]$ (QEI $\FcgEcFordRomanQeiSaturationRatio$) \\
+V. Vacuum Frame Dragging & $|\tilde{\Omega}_{\mathrm{LT},z}^{\mathrm{vac}}|/\tilde{\Omega}$ (vorticity) & $\FcgGemFlatAnnulusEnthalpyNull$ (boost inv.) & Reference vortex & $\FcgGemPeakLenseThirringGenThree$ ($\FcgGemCantorToPeriodicCirculationRatio\times$, $\FcgGemVortexSignReversalsRadial$ rev.) \\
+\end{tabular}
+\end{ruledtabular}
+\end{table*}
+
+---
+
+\section{Discussion: Covariant Consistency, Equivalence Principle, and Planck-Scale Magnitude}
+\label{sec:discussion}
+
+\subsection{Role of Constraint Stresses and Elimination of Coordinate Artifacts}
+A recurring pitfall in early studies of vacuum gravitation was evaluating linearized Einstein or Komar integrals over $\langle \hat{T}_{\mu\nu}\rangle_{\mathrm{vac}}$ alone while omitting the mechanical or constraint stresses $\tilde{T}_{\mu\nu}^{\mathrm{con}}$ needed to hold boundary surfaces along their prescribed trajectories~\cite{fulling2007,bimonte2006}. In our formulation, $\partial_\mu(\tilde{T}^{\mu\nu}_{\mathrm{vac}} + \tilde{T}^{\mu\nu}_{\mathrm{con}}) = 0$ is enforced identically across every phenomenon:
+\begin{enumerate}
+    \item In the $(6,4)$ Vernier radiator (Sec.~\ref{sec:gw}), the constraint stress carries the elastic reaction balancing local radial/axial pressures across each boundary ring; however, because $\tilde{\mathcal{Q}}_{ij}^{\mathrm{tot}} = \int (\tilde{T}_{00}^{\mathrm{vac}} + \tilde{T}_{00}^{\mathrm{con}})(\tilde{x}_i\tilde{x}_j - \frac{1}{3}\tilde{r}^2\delta_{ij})\dd^3\tilde{x}$ depends on energy density $\tilde{T}_{00}$ (where rigid $C_6$ and $C_4$ mass distributions have strictly zero $m=2$ quadrupole and elastic strain energy scales only at higher order in $1/Y_{\mathrm{rigid}} \to 0$), the $6\Omega$ spin-2 radiation is genuinely sourced by the rotating $m=2$ Casimir vacuum energy distribution!
+    \item In the stationary Tolman--Komar problem (Sec.~\ref{sec:force_free}), exterior support stresses restore $\Delta\tilde{M}_{\mathrm{Komar}}(\infty) = \tilde{E}_C(\theta)$ globally in full agreement with Fulling \emph{et al.}~\cite{fulling2007}, while leaving the interior effective Ricci curvature $\tilde{R}_{\mathrm{eff}}(\theta_0)$ at the zero-axial-force angle $\theta_0$ completely unscreened inside the cavity gap.
+\end{enumerate}
+
+\subsection{Physical Scale Estimates and Analogue-Gravity Connections}
+Restoring physical constants at an illustrative reference outer radius $L = 1\ \mu\text{m}$ ($\epsilon_P^2 = \ell_P^2/L^2 = 2.612 \times 10^{-58}$) underscores why this investigation is strictly foundational:
+\begin{itemize}
+    \item Static metric perturbations scale as $|h_{\mu\nu}| = \epsilon_P^2 |\tilde{h}_{\mu\nu}| \sim 10^{-56}\text{--}10^{-54}$, and local Ricci scalars scale as $|R| = (\epsilon_P^2/L^2)|\tilde{R}| \sim 10^{-45}\text{--}10^{-42}\text{ m}^{-2}$.
+    \item Vernier spin-2 gravitational wave strain at distance $r_{\mathrm{obs}}$ for rotation rate $\Omega$ scales as $h_+ \sim \epsilon_P^2 (L/r_{\mathrm{obs}})(\Omega L/c)^2 |\tilde{Q}_2|$, far below conceivable interferometric sensitivity, though coherent $N_{\mathrm{arr}} \times N_{\mathrm{arr}}$ phased modulator arrays scale near-zone Newtonian/GEM fields linearly with $N_{\mathrm{arr}}^2$ and far-zone coherent radiation power quadratically with total synchronized array area.
+\end{itemize}
+Despite their Planck-suppressed amplitude in real spacetime, each of the five mechanisms establishes a rigorous structural theorem in quantum field theory in curved spacetime: discrete scale invariance and azimuthal symmetry breaking liberate the Casimir vacuum from conformal tracelessness, monotonic force-energy locking, purely defocusing energy-condition violations, and rotational boost silence. Moreover, in optical metamaterial and Bose--Einstein condensate analogue-gravity platforms where an effective acoustic/optical ``speed of light'' $c_{\mathrm{eff}} \ll c$ and effective coupling $G_{\mathrm{eff}} \gg G$ replace $\ell_P$, analogous boundary-induced trace and boost-breaking phenomena may admit laboratory simulation.
+
+---
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have established a standalone theoretical and computational framework for **Fractal Casimir Gravity**, coupling the effective trace anomaly of three-dimensional prefractal boundary hierarchies~\cite{gordon2026prd} to linearized general relativity and scalar-tensor gravity at zero temperature. By introducing the Canonical Prefractal Sector Cavity across $(4,4)$ breathing, $(6,4)$ Vernier quadrupole, and chiral symmetry constellations and enforcing exact covariant stress-energy conservation $\nabla_\mu T^{\mu\nu}_{\mathrm{tot}} = 0$, we demonstrated five distinct gravitational effects: (1) pure-vacuum Vernier spin-2 gravitational waves and $l=0$ effective-trace scalaron breathing waves; (2) an axial-force-free curvature source at the repulsive-to-attractive crossover angle $\theta_0$; (3) a discrete-scale-invariant, log-periodic Newtonian metric and tidal curvature comb with complex scaling exponents $2 + i(2\pi k/\ln b)$; (4) rotary switching of local Null and Strong Energy Conditions and Raychaudhuri geodesic focusing within Ford--Roman quantum energy inequality bounds; and (5) Cantor-stratified gravitomagnetic Lense--Thirring frame dragging driven by broken in-plane vacuum boost invariance. Together, these results bridge prefractal Casimir electrodynamics and semiclassical gravitation within a unified, covariantly consistent field-theoretic formalism.
+
+\begin{acknowledgments}
+Computational workflow verification and supercomputing resource support are provided by the BigRed 200 facilities at Indiana University Bloomington.
+\end{acknowledgments}
+
+\appendix
+
+\section{Covariant Virial Identity and Conservation of the Total Quadrupole Tensor}
+\label{app:virial}
+
+In linearized general relativity around Minkowski spacetime, Lorenz gauge $\partial^\mu \bar{h}_{\mu\nu} = 0$ requires $\partial_\mu T^{\mu\nu}_{\mathrm{tot}} = 0$, or explicitly:
+\begin{equation}
+\frac{\partial \tilde{T}^{00}_{\mathrm{tot}}}{\partial \tilde{t}} + \partial_j \tilde{T}^{j0}_{\mathrm{tot}} = 0, \qquad \frac{\partial \tilde{T}^{0i}_{\mathrm{tot}}}{\partial \tilde{t}} + \partial_j \tilde{T}^{ji}_{\mathrm{tot}} = 0.
+\label{eq:app_continuity}
+\end{equation}
+Multiplying the energy continuity equation by $\tilde{x}^i\tilde{x}^j$, integrating over a ball $\mathcal{B}_R$ enclosing the entire isolated cavity-plus-support assembly ($\tilde{T}^{\mu\nu}_{\mathrm{tot}} = 0$ on $\partial\mathcal{B}_R$), and integrating by parts twice using momentum continuity yields the exact relativistic second-moment virial theorem:
+\begin{equation}
+\frac{\dd^2}{\dd\tilde{t}^2} \int_{\mathcal{B}_R} \tilde{T}^{00}_{\mathrm{tot}}(\tilde{\mathbf{x}}, \tilde{t}) \, \tilde{x}^i \tilde{x}^j \, \dd^3\tilde{x} = 2 \int_{\mathcal{B}_R} \tilde{T}^{ij}_{\mathrm{tot}}(\tilde{\mathbf{x}}, \tilde{t}) \, \dd^3\tilde{x}.
+\label{eq:app_virial}
+\end{equation}
+In the ideal rigid-support limit ($Y_{\mathrm{rigid}} \to \infty$), boundary displacements under Casimir pressure scale as $\delta\tilde{u} \sim \tilde{P}/Y_{\mathrm{rigid}} \to 0$, so the elastic strain energy vanishes ($\tilde{T}^{00}_{\mathrm{con,elas}} \sim \tilde{P}^2/Y_{\mathrm{rigid}} \to 0$) while the constraint stress $\tilde{T}^{ij}_{\mathrm{con}}$ remains finite ($\mathcal{O}(\tilde{P})$) to satisfy $\partial_j \tilde{T}^{ji}_{\mathrm{con}} = -\partial_j \tilde{T}^{ji}_{\mathrm{vac}} - \partial_{\tilde{t}}\tilde{T}^{0i}_{\mathrm{tot}}$ at the boundary walls! Specifically, for a quasi-static configuration ($\partial_{\tilde{t}} = 0$), Eq.~\eqref{eq:app_virial} requires $\int \tilde{T}^{ij}_{\mathrm{con}}\dd^3\tilde{x} = -\int \tilde{T}^{ij}_{\mathrm{vac}}\dd^3\tilde{x}$ (Laue's theorem), guaranteeing that static vacuum pressures do not violate the Weak Equivalence Principle~\cite{fulling2007}. Conversely, during steady rotation $\theta(\tilde{t}) = \tilde{\Omega}\tilde{t}$ of the $(6,4)$ Vernier cavity, $\tilde{T}^{00}_{\mathrm{vac}}(\tilde{\mathbf{x}}, \tilde{t})$ itself possesses a time-dependent $m=2$ azimuthal wave~\eqref{eq:vernier_vacuum_wave} while $\tilde{T}^{00}_{\mathrm{mass}}$ of the rigid $C_6$ and $C_4$ bodies has zero $m=2$ harmonic; by Eq.~\eqref{eq:app_virial}, the non-zero $\ddot{\tilde{\mathcal{Q}}}_{ij}^{\mathrm{vac}}$ is accompanied by an exact dynamic imbalance $\int (\tilde{T}^{ij}_{\mathrm{vac}} + \tilde{T}^{ij}_{\mathrm{con}})^{\mathrm{TF}}\dd^3\tilde{x} = \frac{1}{2}\ddot{\tilde{\mathcal{Q}}}_{ij}^{\mathrm{vac}}$ driven by the $\partial_{\tilde{t}}\tilde{T}^{0i}_{\mathrm{tot}}$ inertial term of the sweeping vacuum enthalpy! Our numerical solver constructs $\tilde{T}^{\mu\nu}_{\mathrm{con}}$ explicitly via Helmholtz--Hodge projection of $-\partial_\mu \tilde{T}^{\mu\nu}_{\mathrm{vac}}$ onto the boundary support domain and verifies Eq.~\eqref{eq:app_virial} to machine precision ($\FcgGwVirialConservationRelErr$).
+
+\bibliographystyle{apsrev4-2}
+\bibliography{references_gravity}
+
+\end{document}
