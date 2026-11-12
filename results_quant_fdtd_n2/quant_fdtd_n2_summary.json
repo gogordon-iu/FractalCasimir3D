@@ -2,16 +2,17 @@
   "model": "Quant_FDTD_N2_BigRed200",
   "dataset": "cantor_n2_hybridrz_vs_uniform_r5nm",
   "study": "quant_fdtd_n2_bigred200_validation",
-  "executed_at": "2026-11-12T23:14:34.306650+00:00",
-  "generated_at": "2026-11-12T23:14:34.306650+00:00",
+  "executed_at": "2026-11-12T23:38:23.917075+00:00",
+  "generated_at": "2026-11-12T23:38:23.917075+00:00",
   "total_configured_tasks": 8,
-  "completed_tasks_count": 5,
+  "completed_tasks_count": 6,
   "completed_task_ids": [
     1,
     2,
     3,
     4,
-    7
+    7,
+    8
   ],
   "bem_r5nm_reference_pN": {
     "Cantor_N2_HybridRZ": {
@@ -257,19 +258,19 @@
       "pml_thickness_um": 0.2,
       "cell_buffer_um": 0.15,
       "T_run": 3.0,
-      "status": "missing",
-      "executed_at": null,
-      "result_file": null,
-      "completed_moments": 0,
-      "total_4pass_moments": 3072,
-      "elapsed_seconds": null,
-      "f_net_pN": null,
-      "f_2pass_pN": null,
-      "f_stator_only_pN": null,
+      "status": "complete",
+      "executed_at": "2026-11-12T23:37:33.505636+00:00",
+      "result_file": "/N/project/gorengor_werewolf/FractalCasimir3D/results/quant_fdtd_n2/task_8_meep.json",
+      "completed_moments": 3888,
+      "total_4pass_moments": 3888,
+      "elapsed_seconds": 5307.310653812252,
+      "f_net_pN": 6.880832214394782,
+      "f_2pass_pN": 8.599941052210662,
+      "f_stator_only_pN": 1.7191088378158796,
       "bem_r5nm_std_pN": 0.9553978271609033,
       "bem_r5nm_ultra_pN": 1.0063075077522994,
-      "rel_diff_vs_bem_std_pct": null,
-      "rel_diff_vs_bem_ultra_pct": null
+      "rel_diff_vs_bem_std_pct": 620.205972714228,
+      "rel_diff_vs_bem_ultra_pct": 583.7703347522362
     }
   ],
   "pair_comparisons": {
@@ -290,6 +291,15 @@
       "bem_ultra_cantor_to_uniform_ratio": 1.3952644738890825,
       "ratio_rel_diff_vs_bem_std_pct": -16.285006527286484,
       "ratio_rel_diff_vs_bem_ultra_pct": -20.421063568713617
+    },
+    "R150_nmax3": {
+      "cantor_f_z_pN": 9.783083079031694,
+      "uniform_f_z_pN": 6.880832214394782,
+      "fdtd_cantor_to_uniform_ratio": 1.4217877684279774,
+      "bem_std_cantor_to_uniform_ratio": 1.3263294693876122,
+      "bem_ultra_cantor_to_uniform_ratio": 1.3952644738890825,
+      "ratio_rel_diff_vs_bem_std_pct": 7.197178472136326,
+      "ratio_rel_diff_vs_bem_ultra_pct": 1.9009510408421244
     }
   },
   "convergence_checks": {
@@ -309,6 +319,11 @@
       "f_nmax2_pN": 4.747209406002474,
       "f_nmax3_pN": 9.783083079031694,
       "rel_drift_pct": 106.08071484400399
+    },
+    "uniform_R150_nmax2_to_nmax3": {
+      "f_nmax2_pN": 4.275468613023934,
+      "f_nmax3_pN": 6.880832214394782,
+      "rel_drift_pct": 60.93749801915019
     }
   }
 }
