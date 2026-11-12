@@ -1137,7 +1137,52 @@ run_user_job() (
     trap 'trap - SIGTERM SIGINT; kill -15 0 2>/dev/null || true; exit 143' SIGTERM
     trap 'trap - SIGTERM SIGINT; kill -15 0 2>/dev/null || true; exit 130' SIGINT
     set -Eeuo pipefail
-'python3' '-u' '--' 'fractal_casimir_gravity/simulations/sim2_force_free_curvature_tolman.py' '--planned-steps' '30'
+    mkdir -p -- fractal_casimir_gravity/logs fractal_casimir_gravity/results fractal_casimir_gravity/figures
+    if command -v module >/dev/null 2>&1; then
+        module unload xalt 2>/dev/null || true
+        module load python/gpu/3.10.10 2>/dev/null || true
+    fi
+    export XALT_EXECUTABLE_TRACKING=no
+    export PYTHONUNBUFFERED=1
+    export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-16}"
+    export PYTHONPATH="${SLURM_SUBMIT_DIR:-$PWD}:${PYTHONPATH:-}"
+
+    PYTHON_BIN=""
+    CANDIDATES=(
+        "${SLURM_SUBMIT_DIR:-$PWD}/.venv/bin/python"
+        "/N/project/gorengor_werewolf/FractalCasimir3D/.venv/bin/python"
+        "${VIRTUAL_ENV:-}/bin/python"
+        "$HOME/venvs/research/bin/python"
+        "/N/slate/$USER/venvs/research/bin/python"
+        "/N/u/gogordon/BigRed200/.conda/envs/pytorch/bin/python"
+        "/N/u/gogordon/BigRed200/.conda/envs/meep/bin/python"
+        "$(command -v python3 2>/dev/null || true)"
+        "$(command -v python 2>/dev/null || true)"
+    )
+    for candidate in "${CANDIDATES[@]}"; do
+        if [[ -n "$candidate" && -x "$candidate" ]]; then
+            if "$candidate" -c "import sys, torch, scipy, matplotlib; sys.exit(0 if torch.cuda.is_available() else 1)" >/dev/null 2>&1; then
+                PYTHON_BIN="$candidate"
+                break
+            fi
+        fi
+    done
+    if [[ -z "$PYTHON_BIN" ]]; then
+        for candidate in "${CANDIDATES[@]}"; do
+            if [[ -n "$candidate" && -x "$candidate" ]]; then
+                if "$candidate" -c "import torch, scipy, matplotlib" >/dev/null 2>&1; then
+                    PYTHON_BIN="$candidate"
+                    break
+                fi
+            fi
+        done
+    fi
+    if [[ -z "$PYTHON_BIN" ]]; then
+        PYTHON_BIN="python3"
+    fi
+    echo "=== [BigRed200 FCG Started: $(date) on $(hostname) | Python: $PYTHON_BIN] ==="
+    "$PYTHON_BIN" -c "import torch; print('CUDA available:', torch.cuda.is_available())" || true
+    "$PYTHON_BIN" '-u' '--' 'fractal_casimir_gravity/simulations/sim2_force_free_curvature_tolman.py' '--planned-steps' '30'
 )
 set -m
 run_user_job &
