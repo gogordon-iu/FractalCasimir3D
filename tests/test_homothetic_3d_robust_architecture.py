@@ -25,6 +25,7 @@ from execution.homothetic_3d_robust_architecture import (
     active_tooth_area_um2,
     build_all_robustness_study_designs,
     build_h3_cantor_robust_design,
+    build_h3_cantor_sym_2x2x2_design,
     build_homothetic_sector_bem_mesh,
     clear_bem_lu_caches,
     compute_design_geometric_summary,
@@ -71,7 +72,7 @@ def test_h3_cantor_exact_b3_3d_homothety() -> None:
 def test_iso_area_and_feature_floors_across_all_controls() -> None:
     """Verify exact active-area matching, envelope bounds, and g_min=27 nm floor."""
     designs = build_all_robustness_study_designs()
-    assert len(designs) == 6
+    assert len(designs) == 7
     h3 = designs[0]
     a_ref = active_tooth_area_um2(h3)
     assert math.isclose(a_ref, 3.102624, rel_tol=1.0e-12)
@@ -357,10 +358,14 @@ def test_postprocessing_provenance_figure_and_table_end_to_end(tmp_path: Path) -
             "wavenumber_subbands": {
                 "H3_Cantor_Robust_PEC": mock_subband,
                 "H3_Cantor_Robust_Gold300K": mock_subband,
+                "H3_Cantor_Sym_2x2x2_PEC": mock_subband,
+                "H3_Cantor_Sym_2x2x2_Gold300K": mock_subband,
             },
             "stroke_log_periodicity": {
                 "H3_Cantor_Robust_PEC": mock_lomb,
                 "H3_Cantor_Robust_Gold300K": mock_lomb,
+                "H3_Cantor_Sym_2x2x2_PEC": mock_lomb,
+                "H3_Cantor_Sym_2x2x2_Gold300K": mock_lomb,
                 "Ctrl_Lin_3Stage_Gold300K": mock_lomb,
                 "Ctrl_KnifeEdge_g27_Gold300K": mock_lomb,
             },
@@ -379,7 +384,9 @@ def test_postprocessing_provenance_figure_and_table_end_to_end(tmp_path: Path) -
     assert fig_chk["status"] == "PASS", fig_chk
 
     _write_latex_summary_table(mock_summary, out_tex)
-    assert "H3-Cantor-Robust" in out_tex.read_text(encoding="utf-8")
+    tex_txt = out_tex.read_text(encoding="utf-8")
+    assert "H3-Cantor-Robust" in tex_txt
+    assert "H3-Cantor-Sym-2x2x2" in tex_txt
 
     # Also verify Blender atlas live BEM metric annotation path
     audits = [audit_robust_design_for_blender(d) for d in designs]
@@ -389,6 +396,40 @@ def test_postprocessing_provenance_figure_and_table_end_to_end(tmp_path: Path) -
     compose_six_design_atlas_figure(designs, audits, designs_dict, render_dir, atlas_png, atlas_pdf)
     atlas_chk = inspect_rendered_png_quality(atlas_png, min_fg_fraction=0.10)
     assert atlas_chk["status"] == "PASS", atlas_chk
+
+
+def test_h3_cantor_sym_2x2x2_symmetry_and_mesh_structure() -> None:
+    """Verify H3-Cantor-Sym-2x2x2 zero-Vernier slot symmetry, 2x2x2+collar=9 mesh counts, and mirror-symmetric BEM energy."""
+    h3_sym = build_h3_cantor_sym_2x2x2_design()
+    assert h3_sym.code == "H3_Cantor_Sym_2x2x2"
+    assert (h3_sym.bem_n_r_lobe, h3_sym.bem_n_phi_lobe, h3_sym.bem_n_z_lobe, h3_sym.bem_n_phi_collar) == (2, 2, 2, 9)
+    assert math.isclose(active_tooth_area_um2(h3_sym), 3.102624, rel_tol=1.0e-12)
+
+    for trk in h3_sym.tracks:
+        assert trk.vernier_phase_deg == 0.0
+        # Verify lobe center offsets d_phi are exact mirror images around 0 deg (slot center = 18 deg)
+        centers = [d_phi for d_phi, _ in trk.lobe_offsets_deg]
+        assert np.allclose(centers, [-c for c in reversed(centers)], atol=1.0e-12)
+        # Verify stator micro-bridges are exact mirror images across the [0, 36] deg aperture
+        b_centers = [b.phi_center_deg for b in trk.micro_bridges]
+        assert np.allclose(b_centers, [36.0 - bc for bc in reversed(b_centers)], atol=1.0e-12)
+
+    built_222 = build_homothetic_sector_bem_mesh(h3_sym)
+    assert built_222.mesh is not None
+    assert built_222.mesh.sector_arrays("rotor").count == 1008
+    assert built_222.mesh.sector_arrays("stator").count == 1050
+
+    # Fast 1x1x1 BEM check confirming exact mirror symmetry around theta = 3.0 deg (Delta_phi = 0)
+    clear_bem_lu_caches()
+    r_left = evaluate_homothetic_3d_bem(
+        h3_sym, theta_deg=DISENGAGED_THETA_DEG - 0.5, n_xi=4, n_r_lobe=1, n_phi_lobe=1, n_z_lobe=1, n_phi_collar=3
+    )
+    r_right = evaluate_homothetic_3d_bem(
+        h3_sym, theta_deg=DISENGAGED_THETA_DEG + 0.5, n_xi=4, n_r_lobe=1, n_phi_lobe=1, n_z_lobe=1, n_phi_collar=3
+    )
+    assert math.isclose(r_left["energy_J"], r_right["energy_J"], rel_tol=1.0e-11)
+    assert math.isclose(r_left["F_z_pN"], r_right["F_z_pN"], rel_tol=1.0e-11)
+
 
 
 

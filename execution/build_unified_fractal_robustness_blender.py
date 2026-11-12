@@ -668,9 +668,10 @@ def compose_six_design_atlas_figure(
     import numpy as np
 
     n = len(designs)
-    ncols = 3
+    ncols = 4 if n >= 7 else 3
     nrows = math.ceil(n / ncols)
-    fig, axes = plt.subplots(nrows, ncols, figsize=(16.5, 4.65 * nrows), dpi=220)
+    fig_w = 18.6 if ncols == 4 else 16.5
+    fig, axes = plt.subplots(nrows, ncols, figsize=(fig_w, 4.75 * nrows), dpi=220)
     axes_flat = np.atleast_1d(axes).ravel()
 
     def _fmt_sf(sf_val: float) -> str:
@@ -715,7 +716,7 @@ def compose_six_design_atlas_figure(
             f"Bridges={aud['n_bridges_per_sector']}/sec | g_min={aud['g_min_nm']:.0f} nm\n"
             f"A_tooth={aud['A_tooth_analytic_um2']:.4f} um² | {perf_str} | {aud['audit_status']}"
         )
-        ax.set_title(title_line, fontsize=11.0, fontweight="bold", color=title_color, pad=22)
+        ax.set_title(title_line, fontsize=10.2 if n >= 7 else 11.0, fontweight="bold", color=title_color, pad=22)
         ax.text(
             0.5,
             1.008,
@@ -723,7 +724,7 @@ def compose_six_design_atlas_figure(
             transform=ax.transAxes,
             ha="center",
             va="bottom",
-            fontsize=7.9,
+            fontsize=7.1 if n >= 7 else 7.9,
             color="#374151",
         )
 
@@ -731,7 +732,7 @@ def compose_six_design_atlas_figure(
         axes_flat[idx].axis("off")
 
     fig.suptitle(
-        "Unified 3D Fractal Switch (H3-Cantor-Robust, b = 3, g_min = 27 nm) vs. Five Iso-Area Matched Controls\n"
+        "Unified 3D Fractal Switch (H3-Cantor-Robust & H3-Cantor-Sym-2x2x2, b = 3, g_min = 27 nm) vs. Five Iso-Area Matched Controls\n"
         "Sector 0 Key: Gold = Gen-1 (W=810 nm, z=-360 nm) | Amber = Gen-2 (W=270 nm, z=-120 nm) | "
         "Crimson = Gen-3 (W=90 nm, z=-40 nm) | Emerald = Rim Micro-Bridges | Sapphire = Landing Pads",
         fontsize=10.5,

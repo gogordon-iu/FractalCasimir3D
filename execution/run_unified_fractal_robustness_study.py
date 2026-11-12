@@ -67,6 +67,7 @@ from execution.homothetic_3d_robust_architecture import (
     RobustClutchDesign3D,
     active_tooth_area_um2,
     build_all_robustness_study_designs,
+    build_homothetic_sector_bem_mesh,
     clear_bem_lu_caches,
     compute_design_fingerprint,
     compute_design_geometric_summary,
@@ -292,6 +293,8 @@ def _build_bem_task_list(designs: Sequence[RobustClutchDesign3D]) -> list[dict[s
     for d_code, mat, temp in (
         ("H3_Cantor_Robust", "PEC", 0.0),
         ("H3_Cantor_Robust", "Gold", 300.0),
+        ("H3_Cantor_Sym_2x2x2", "PEC", 0.0),
+        ("H3_Cantor_Sym_2x2x2", "Gold", 300.0),
         ("Ctrl_Lin_3Stage", "PEC", 0.0),
         ("Ctrl_Lin_3Stage", "Gold", 300.0),
     ):
@@ -313,24 +316,27 @@ def _build_bem_task_list(designs: Sequence[RobustClutchDesign3D]) -> list[dict[s
                 }
             )
 
-    # 8. Benchmark 5B: 36-point ideal PEC (0 K) stroke sweep on H3-Cantor-Robust
-    for z_um in STROKE_Z_GRID_UM:
-        tasks.append(
-            {
-                "task_key": f"B5_pec_stroke_H3_Cantor_Robust_z{z_um:.6f}",
-                "benchmark": "B5_pec_stroke",
-                "design_code": "H3_Cantor_Robust",
-                "z_shift_um": z_um,
-                "theta_deg": DISENGAGED_THETA_DEG,
-                "delta_w_um": 0.0,
-                "delta_r_um": 0.0,
-                "r_edge_um": 0.0,
-                "material": "PEC",
-                "temperature_K": 0.0,
-                "spectral_91": False,
-                "refined_mesh": False,
-            }
-        )
+    # 8. Benchmark 5B: 36-point ideal PEC (0 K) stroke sweep on Cantor architectures
+    for pec_code in ("H3_Cantor_Robust", "H3_Cantor_Sym_2x2x2"):
+        if pec_code not in by_code:
+            continue
+        for z_um in STROKE_Z_GRID_UM:
+            tasks.append(
+                {
+                    "task_key": f"B5_pec_stroke_{pec_code}_z{z_um:.6f}",
+                    "benchmark": "B5_pec_stroke",
+                    "design_code": pec_code,
+                    "z_shift_um": z_um,
+                    "theta_deg": DISENGAGED_THETA_DEG,
+                    "delta_w_um": 0.0,
+                    "delta_r_um": 0.0,
+                    "r_edge_um": 0.0,
+                    "material": "PEC",
+                    "temperature_K": 0.0,
+                    "spectral_91": False,
+                    "refined_mesh": False,
+                }
+            )
 
     # 9. Benchmark 5C: Mesh-refinement convergence verification on H3-Cantor-Robust
     tasks.append(
@@ -352,10 +358,19 @@ def _build_bem_task_list(designs: Sequence[RobustClutchDesign3D]) -> list[dict[s
     return tasks
 
 
-def _checkpoint_matches_task(cached: Mapping[str, Any], task: Mapping[str, Any]) -> bool:
-    """Verify a cached BEM task record matches all task physical & mesh parameters before reuse."""
+VERIFIED_V1_6DESIGN_CODE_HASH = "9c65828d1361e664"
+
+
+def _checkpoint_matches_task(
+    cached: Mapping[str, Any],
+    task: Mapping[str, Any],
+    *,
+    by_code: Mapping[str, RobustClutchDesign3D] | None = None,
+) -> bool:
+    """Verify a cached BEM task record matches all task physical & mesh panel counts before reuse."""
     try:
-        if str(cached.get("design_code")) != str(task["design_code"]):
+        d_code = str(task["design_code"])
+        if str(cached.get("design_code")) != d_code:
             return False
         if str(cached.get("material")) != str(task["material"]):
             return False
@@ -365,6 +380,26 @@ def _checkpoint_matches_task(cached: Mapping[str, Any], task: Mapping[str, Any])
         if not bool(cached.get("shorted", False)) and not bool(cached.get("all_teeth_etched_away", False)):
             if bool(task.get("spectral_91", False)) and len(cached.get("kappas_um_inv", ())) != len(SPECTRAL_KAPPA_GRID_UM_INV):
                 return False
+            if by_code is not None and d_code in by_code:
+                des = by_code[d_code]
+                is_ref = bool(task.get("refined_mesh", False))
+                built = build_homothetic_sector_bem_mesh(
+                    des,
+                    z_shift_um=float(task["z_shift_um"]),
+                    theta_deg=float(task["theta_deg"]),
+                    delta_w_um=float(task["delta_w_um"]),
+                    delta_r_um=float(task["delta_r_um"]),
+                    r_edge_um=float(task["r_edge_um"]),
+                    n_r_lobe=2 if is_ref else None,
+                    n_phi_lobe=2 if is_ref else None,
+                    n_z_lobe=2 if is_ref else None,
+                    n_phi_collar=3 if is_ref else None,
+                )
+                if built.mesh is not None:
+                    if int(cached.get("n_rotor_panels_sector", -1)) != built.mesh.sector_arrays("rotor").count:
+                        return False
+                    if int(cached.get("n_stator_panels_sector", -1)) != built.mesh.sector_arrays("stator").count:
+                        return False
         return True
     except (KeyError, TypeError, ValueError):
         return False
@@ -393,9 +428,10 @@ def _execute_single_task(
         kappas_override=SPECTRAL_KAPPA_GRID_UM_INV if is_spec else None,
         device=device,
         use_lu_cache=not is_ref,
-        n_r_lobe=2 if is_ref else 1,
-        n_phi_lobe=2 if is_ref else 1,
-        n_z_lobe=2 if is_ref else 1,
+        n_r_lobe=2 if is_ref else None,
+        n_phi_lobe=2 if is_ref else None,
+        n_z_lobe=2 if is_ref else None,
+        n_phi_collar=3 if is_ref else None,
     )
 
 
@@ -730,9 +766,13 @@ def _analyze_spectral_and_ln3_scaling(
     for key_label, task_key in (
         ("H3_Cantor_Robust_PEC", "B5_spec91_H3_Cantor_Robust_PEC"),
         ("H3_Cantor_Robust_Gold300K", "B5_spec91_H3_Cantor_Robust_Gold"),
+        ("H3_Cantor_Sym_2x2x2_PEC", "B5_spec91_H3_Cantor_Sym_2x2x2_PEC"),
+        ("H3_Cantor_Sym_2x2x2_Gold300K", "B5_spec91_H3_Cantor_Sym_2x2x2_Gold"),
         ("Ctrl_Lin_3Stage_PEC", "B5_spec91_Ctrl_Lin_3Stage_PEC"),
         ("Ctrl_Lin_3Stage_Gold300K", "B5_spec91_Ctrl_Lin_3Stage_Gold"),
     ):
+        if task_key not in task_results:
+            continue
         rec = task_results[task_key]
         kappas = np.asarray(rec["kappas_um_inv"], dtype=np.float64)
         ln_k = np.log(kappas)
@@ -759,9 +799,14 @@ def _analyze_spectral_and_ln3_scaling(
     for label, prefix in (
         ("H3_Cantor_Robust_PEC", "B5_pec_stroke_H3_Cantor_Robust"),
         ("H3_Cantor_Robust_Gold300K", "B1_stroke_H3_Cantor_Robust"),
+        ("H3_Cantor_Sym_2x2x2_PEC", "B5_pec_stroke_H3_Cantor_Sym_2x2x2"),
+        ("H3_Cantor_Sym_2x2x2_Gold300K", "B1_stroke_H3_Cantor_Sym_2x2x2"),
         ("Ctrl_Lin_3Stage_Gold300K", "B1_stroke_Ctrl_Lin_3Stage"),
         ("Ctrl_KnifeEdge_g27_Gold300K", "B1_stroke_Ctrl_KnifeEdge_g27"),
     ):
+        first_key = f"{prefix}_z{H3_ROBUST_NOMINAL_OP_Z_UM:.6f}"
+        if first_key not in task_results:
+            continue
         zs = []
         fs = []
         for z_um in STROKE_Z_GRID_UM:
@@ -826,7 +871,8 @@ def _render_summary_figure(
     """Render 6-panel publication figure directly from verified 3D BEM + Hermite FEM results."""
     pdf_path.parent.mkdir(parents=True, exist_ok=True)
     designs_data = summary["designs"]
-    order = [
+    all_order = [
+        "H3_Cantor_Sym_2x2x2",
         "H3_Cantor_Robust",
         "Ctrl_KnifeEdge_g27",
         "Ctrl_Uni_7Trk",
@@ -834,7 +880,9 @@ def _render_summary_figure(
         "Ctrl_Mono_3Stage",
         "Ctrl_Shuf_OutPhase",
     ]
+    order = [c for c in all_order if c in designs_data]
     labels = {
+        "H3_Cantor_Sym_2x2x2": "H3-Cantor-Sym (2x2x2)",
         "H3_Cantor_Robust": "H3-Cantor-Robust (b=3)",
         "Ctrl_KnifeEdge_g27": "Ctrl-KnifeEdge-g27",
         "Ctrl_Uni_7Trk": "Ctrl-Uni-7Trk",
@@ -843,6 +891,7 @@ def _render_summary_figure(
         "Ctrl_Shuf_OutPhase": "Ctrl-Shuf-OutPhase",
     }
     colors = {
+        "H3_Cantor_Sym_2x2x2": "#B22222",
         "H3_Cantor_Robust": "#0072B2",
         "Ctrl_KnifeEdge_g27": "#D55E00",
         "Ctrl_Uni_7Trk": "#009E73",
@@ -851,6 +900,7 @@ def _render_summary_figure(
         "Ctrl_Shuf_OutPhase": "#56B4E9",
     }
     lstyles = {
+        "H3_Cantor_Sym_2x2x2": "-",
         "H3_Cantor_Robust": "-",
         "Ctrl_KnifeEdge_g27": "--",
         "Ctrl_Uni_7Trk": "-.",
@@ -869,7 +919,7 @@ def _render_summary_figure(
         pts = designs_data[code]["benchmark_1_axial_stroke"]["stroke_points"]
         zs = [p["z_d_nm"] for p in pts]
         fs = [p["F_z_pN"] for p in pts]
-        lw = 2.4 if code == "H3_Cantor_Robust" else 1.5
+        lw = 2.4 if code in ("H3_Cantor_Sym_2x2x2", "H3_Cantor_Robust") else 1.5
         ax.plot(zs, fs, label=labels[code], color=colors[code], ls=lstyles[code], lw=lw)
     ax.set_xscale("log")
     ax.set_xlabel("Axial stroke depth $z_d$ (nm)")
@@ -912,7 +962,7 @@ def _render_summary_figure(
         dws = [row["delta_w_nm"] for row in ec]
         fzs = [row["F_z_zop_pN"] for row in ec]
         yld = designs_data[code]["benchmark_4_cleanroom_yield"]["cleanroom_yield_Y_lab_pct"]
-        lw = 2.4 if code == "H3_Cantor_Robust" else 1.5
+        lw = 2.4 if code in ("H3_Cantor_Sym_2x2x2", "H3_Cantor_Robust") else 1.5
         ax.plot(
             dws,
             fzs,
@@ -952,11 +1002,14 @@ def _render_summary_figure(
     ax = axes[1, 2]
     st_lomb = summary["benchmark_5_ln3_scale_covering"]["stroke_log_periodicity"]
     for key_s, lbl_s, col_s, ls_s in (
+        ("H3_Cantor_Sym_2x2x2_Gold300K", "H3-Cantor-Sym 2x2x2 (Gold)", "#B22222", "-"),
         ("H3_Cantor_Robust_PEC", "H3-Cantor (PEC 0K)", "#003f5c", "-"),
         ("H3_Cantor_Robust_Gold300K", "H3-Cantor (Gold 300K)", "#0072B2", "--"),
         ("Ctrl_Lin_3Stage_Gold300K", "Ctrl-Lin-3Stage", "#CC79A7", ":"),
         ("Ctrl_KnifeEdge_g27_Gold300K", "Ctrl-KnifeEdge-g27", "#D55E00", "-."),
     ):
+        if key_s not in st_lomb:
+            continue
         ls_data = st_lomb[key_s]["free_frequency_lomb_scargle"]
         if not ls_data.get("underdetermined", True):
             ax.plot(ls_data["omega_grid"], ls_data["r2_1h_spectrum"], lw=1.9, color=col_s, ls=ls_s, label=lbl_s)
@@ -1001,25 +1054,27 @@ def _write_latex_summary_table(summary: Mapping[str, Any], out_tex: Path) -> Non
     """Write manuscript-ready LaTeX benchmark table directly from solved BEM/FEM data."""
     out_tex.parent.mkdir(parents=True, exist_ok=True)
     designs_data = summary["designs"]
-    order = [
-        ("H3_Cantor_Robust", "\\textbf{H3-Cantor-Robust ($b=3$)}"),
+    all_order = [
+        ("H3_Cantor_Sym_2x2x2", "\\textbf{H3-Cantor-Sym-2x2x2 ($b=3$, $\\Delta\\phi=0^\\circ$)}"),
+        ("H3_Cantor_Robust", "\\textbf{H3-Cantor-Robust ($b=3$, Vernier)}"),
         ("Ctrl_KnifeEdge_g27", "Ctrl-KnifeEdge-g27"),
         ("Ctrl_Uni_7Trk", "Ctrl-Uni-7Trk"),
         ("Ctrl_Lin_3Stage", "Ctrl-Lin-3Stage"),
         ("Ctrl_Mono_3Stage", "Ctrl-Mono-3Stage"),
         ("Ctrl_Shuf_OutPhase", "Ctrl-Shuf-OutPhase"),
     ]
+    order = [(c, n) for c, n in all_order if c in designs_data]
     lines = [
         "% Auto-generated by execution/run_unified_fractal_robustness_study.py -- DO NOT EDIT BY HAND",
         "\\begin{table*}[t]",
         "\\centering",
-        "\\caption{Multi-perturbation nanomechanical and cleanroom fabrication robustness benchmark comparing \\texttt{H3-Cantor-Robust} ($b=3.0$, $N=3$, $g_{\\min}=27\\,\\mathrm{nm}$, $A_{\\mathrm{tooth}}=3.103\\,\\mu\\mathrm{m}^2$) against five strictly matched non-fractal controls in 3D Vector-Dyadic BEM ($300\\,\\mathrm{K}$ Drude--Lorentz Gold) and 32-element Hermite curved-beam FEM.}",
+        "\\caption{Multi-perturbation nanomechanical and cleanroom fabrication robustness benchmark comparing \\texttt{H3-Cantor-Sym-2x2x2} ($b=3.0$, $\\Delta\\phi=0^\\circ$, $2\\times 2\\times 2$ mesh) and \\texttt{H3-Cantor-Robust} ($b=3.0$, $N=3$, $g_{\\min}=27\\,\\mathrm{nm}$, $A_{\\mathrm{tooth}}=3.103\\,\\mu\\mathrm{m}^2$) against five strictly matched non-fractal controls in 3D Vector-Dyadic BEM ($300\\,\\mathrm{K}$ Drude--Lorentz Gold) and 32-element Hermite curved-beam FEM.}",
         "\\label{tab:unified_fractal_robustness}",
         "\\small",
-        "\\begin{tabular}{lccccccc}",
+        "\\begin{tabular}{lcccccccc}",
         "\\hline\\hline",
-        "Design & $F_z(3^\\circ)$ & $F_z(48^\\circ)$ & Stroke Basin $\\mathcal{B}_z$ & Min Stroke $F_z$ & Torque Ripple & Rib Safety & Lab Yield \\\\",
-        " & (pN) & (pN) & $\\ln(z_{\\max}/z_{\\min})$ & $[45,360]\\,\\mathrm{nm}$ (pN) & $\\mathcal{R}_\\tau$ & $\\mathrm{SF}_{\\mathrm{rib}}$ & $Y_{\\mathrm{lab}}$ (\\%) \\\\",
+        "Design & $F_z(3^\\circ)$ & $F_z(48^\\circ)$ & Stroke Basin $\\mathcal{B}_z$ & Min Stroke $F_z$ & Torque Ripple & Rib Safety & $V_{\\mathrm{crit}}$ & Lab Yield \\\\",
+        " & (pN) & (pN) & $\\ln(z_{\\max}/z_{\\min})$ & $[45,360]\\,\\mathrm{nm}$ (pN) & $\\mathcal{R}_\\tau$ & $\\mathrm{SF}_{\\mathrm{rib}}$ & (mV) & $Y_{\\mathrm{lab}}$ (\\%) \\\\",
         "\\hline",
     ]
     for code, tex_name in order:
@@ -1029,11 +1084,12 @@ def _write_latex_summary_table(summary: Mapping[str, Any], out_tex: Path) -> Non
         b3 = d["benchmark_3_rib_and_vcrit"]
         b4 = d["benchmark_4_cleanroom_yield"]
         sf = b3["rib_elastostatics"]["SF_rib"]
-        sf_str = f"{sf:.1f}" if sf < 999.0 else f"{sf:.0f}"
+        sf_str = f"{sf:.1f}" if sf < 999.0 else f"{sf:.2e}"
+        vc_mv = b3["laplace_electrostatics"]["V_crit_mV"]
         lines.append(
-            f"{tex_name} & {b1['F_z_op_pN']:+.2f} & {b2['F_z_engaged_48deg_pN']:+.1f} & "
+            f"{tex_name} & {b1['F_z_op_pN']:+.2f} & {b2['F_z_engaged_48deg_pN']:+.2f} & "
             f"{b1['log_stroke_basin_Bz']:.2f} & {b1['min_Fz_working_window_45_360nm_pN']:+.2f} & "
-            f"{b2['torque_ripple_R_tau']:.4f} & {sf_str} & {b4['cleanroom_yield_Y_lab_pct']:.1f} \\\\"
+            f"{b2['torque_ripple_R_tau']:.4f} & {sf_str} & {vc_mv:.1f} & {b4['cleanroom_yield_Y_lab_pct']:.1f} \\\\"
         )
     lines.extend(["\\hline\\hline", "\\end{tabular}", "\\end{table*}", ""])
     out_tex.write_text("\n".join(lines), encoding="utf-8")
@@ -1044,11 +1100,12 @@ def _log_grounded_provenance_metrics(summary: Mapping[str, Any], solver_params: 
     set_solver_provenance("vector_dyadic_bem_3d_plus_hermite_fem", dict(solver_params))
     step_id = "unified_fractal_robustness_3d_study"
     h3 = summary["designs"]["H3_Cantor_Robust"]
+    h3_sym = summary["designs"].get("H3_Cantor_Sym_2x2x2")
     ke = summary["designs"]["Ctrl_KnifeEdge_g27"]
     sp_pec = summary["benchmark_5_ln3_scale_covering"]["wavenumber_subbands"]["H3_Cantor_Robust_PEC"]
     sp_gold = summary["benchmark_5_ln3_scale_covering"]["wavenumber_subbands"]["H3_Cantor_Robust_Gold300K"]
 
-    step_summary = {
+    step_summary: dict[str, Any] = {
         "status": "completed",
         "executed_at": summary["executed_at"],
         "h3_Fz_op_pN": h3["benchmark_1_axial_stroke"]["F_z_op_pN"],
@@ -1056,6 +1113,10 @@ def _log_grounded_provenance_metrics(summary: Mapping[str, Any], solver_params: 
         "h3_Y_lab_pct": h3["benchmark_4_cleanroom_yield"]["cleanroom_yield_Y_lab_pct"],
         "knife_edge_Y_lab_pct": ke["benchmark_4_cleanroom_yield"]["cleanroom_yield_Y_lab_pct"],
     }
+    if h3_sym is not None:
+        step_summary["h3_sym_2x2x2_Fz_op_pN"] = h3_sym["benchmark_1_axial_stroke"]["F_z_op_pN"]
+        step_summary["h3_sym_2x2x2_R_tau"] = h3_sym["benchmark_2_angular_lateral"]["torque_ripple_R_tau"]
+        step_summary["h3_sym_2x2x2_Y_lab_pct"] = h3_sym["benchmark_4_cleanroom_yield"]["cleanroom_yield_Y_lab_pct"]
     log_step(step_id, step_summary)
 
     metrics_map = {
@@ -1078,6 +1139,22 @@ def _log_grounded_provenance_metrics(summary: Mapping[str, Any], solver_params: 
         "h3_gold_dlnk_21": sp_gold["spacing_comparison"]["delta_ln_kappa_21"],
         "h3_gold_dlnk_32": sp_gold["spacing_comparison"]["delta_ln_kappa_32"],
     }
+    if h3_sym is not None:
+        metrics_map.update(
+            {
+                "h3_sym_Fz_op_pN": h3_sym["benchmark_1_axial_stroke"]["F_z_op_pN"],
+                "h3_sym_Fz_engaged_pN": h3_sym["benchmark_2_angular_lateral"]["F_z_engaged_48deg_pN"],
+                "h3_sym_stroke_span_nm": h3_sym["benchmark_1_axial_stroke"]["sign_safe_span_nm"],
+                "h3_sym_stroke_basin_Bz": h3_sym["benchmark_1_axial_stroke"]["log_stroke_basin_Bz"],
+                "h3_sym_min_stroke_Fz_pN": h3_sym["benchmark_1_axial_stroke"]["min_Fz_working_window_45_360nm_pN"],
+                "h3_sym_escape_work_kBT": h3_sym["benchmark_1_axial_stroke"]["escape_work_kBT_300K"],
+                "h3_sym_torque_ripple": h3_sym["benchmark_2_angular_lateral"]["torque_ripple_R_tau"],
+                "h3_sym_SF_rib": h3_sym["benchmark_3_rib_and_vcrit"]["rib_elastostatics"]["SF_rib"],
+                "h3_sym_V_crit_mV": h3_sym["benchmark_3_rib_and_vcrit"]["laplace_electrostatics"]["V_crit_mV"],
+                "h3_sym_yield_pct": h3_sym["benchmark_4_cleanroom_yield"]["cleanroom_yield_Y_lab_pct"],
+                "h3_sym_median_mc_Fz_pN": h3_sym["benchmark_4_cleanroom_yield"]["median_mc_Fz_net_pN"],
+            }
+        )
     for key, val in metrics_map.items():
         log_metric(key, float(val), step_id=step_id, defer_save=False)
     export_macros()
@@ -1201,6 +1278,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     out_json = args.output_json if args.output_json is not None else DEFAULT_OUTPUT_JSON
     ckpt_dir = args.checkpoint_dir / f"hash_{code_hash}_nxi{args.n_xi}"
     ckpt_dir.mkdir(parents=True, exist_ok=True)
+    verified_v1_ckpt_dir = args.checkpoint_dir / f"hash_{VERIFIED_V1_6DESIGN_CODE_HASH}_nxi{args.n_xi}"
+    unchanged_legacy_codes = {
+        "H3_Cantor_Robust",
+        "Ctrl_KnifeEdge_g27",
+        "Ctrl_Uni_7Trk",
+        "Ctrl_Lin_3Stage",
+        "Ctrl_Mono_3Stage",
+        "Ctrl_Shuf_OutPhase",
+    }
 
     task_results: dict[str, dict[str, Any]] = {}
     n_total = len(all_tasks)
@@ -1208,12 +1294,29 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     for idx, tsk in enumerate(all_tasks, start=1):
         t_key = str(tsk["task_key"])
+        d_code = str(tsk["design_code"])
+        des_cur = by_code[d_code]
         ckpt_file = ckpt_dir / f"{t_key}.json"
         loaded_ckpt: dict[str, Any] | None = None
         if not args.no_cache_ckpt and ckpt_file.is_file():
             candidate_ckpt = json.loads(ckpt_file.read_text(encoding="utf-8"))
-            if _checkpoint_matches_task(candidate_ckpt, tsk):
+            if _checkpoint_matches_task(candidate_ckpt, tsk, by_code=by_code):
                 loaded_ckpt = candidate_ckpt
+        if (
+            loaded_ckpt is None
+            and not args.no_cache_ckpt
+            and d_code in unchanged_legacy_codes
+            and (des_cur.bem_n_r_lobe, des_cur.bem_n_phi_lobe, des_cur.bem_n_z_lobe, des_cur.bem_n_phi_collar)
+            == (1, 1, 1, 3)
+            and verified_v1_ckpt_dir.is_dir()
+            and verified_v1_ckpt_dir.resolve() != ckpt_dir.resolve()
+        ):
+            prev_file = verified_v1_ckpt_dir / f"{t_key}.json"
+            if prev_file.is_file():
+                candidate_ckpt = json.loads(prev_file.read_text(encoding="utf-8"))
+                if _checkpoint_matches_task(candidate_ckpt, tsk, by_code=by_code):
+                    loaded_ckpt = candidate_ckpt
+                    ckpt_file.write_text(json.dumps(loaded_ckpt), encoding="utf-8")
         if loaded_ckpt is not None:
             task_results[t_key] = loaded_ckpt
         else:
@@ -1306,6 +1409,21 @@ def main(argv: Sequence[str] | None = None) -> int:
             key=lambda kv: kv[1],
             reverse=True,
         ),
+        "by_electrostatic_V_crit_mV": sorted(
+            ((c, designs_summary[c]["benchmark_3_rib_and_vcrit"]["laplace_electrostatics"]["V_crit_mV"]) for c in designs_summary),
+            key=lambda kv: kv[1],
+            reverse=True,
+        ),
+        "by_min_working_stroke_Fz_pN": sorted(
+            ((c, designs_summary[c]["benchmark_1_axial_stroke"]["min_Fz_working_window_45_360nm_pN"]) for c in designs_summary),
+            key=lambda kv: kv[1],
+            reverse=True,
+        ),
+        "by_median_mc_Fz_net_pN": sorted(
+            ((c, designs_summary[c]["benchmark_4_cleanroom_yield"]["median_mc_Fz_net_pN"]) for c in designs_summary),
+            key=lambda kv: kv[1],
+            reverse=True,
+        ),
     }
 
     solver_params = {
@@ -1360,7 +1478,11 @@ def main(argv: Sequence[str] | None = None) -> int:
 
         if not args.skip_blender:
             blender_render_dir = REPOSITORY_ROOT / "results" / "unified_fractal_robustness_blender"
-            has_cached_renders = blender_render_dir.is_dir() and len(list(blender_render_dir.glob("render_*.png"))) >= 10
+            expected_render_count = len(designs) + 4
+            has_cached_renders = (
+                blender_render_dir.is_dir()
+                and len(list(blender_render_dir.glob("render_*.png"))) >= expected_render_count
+            )
             if find_blender_executable() is not None or has_cached_renders:
                 build_blender_main(["--reuse-renders"])
                 print("[UNIFIED-ROBUSTNESS] Built & visually verified 3D Blender atlas and hero figures.")

@@ -200,6 +200,10 @@ class RobustClutchDesign3D:
     has_micro_bridges: bool
     tracks: tuple[HomotheticTrack3D, ...]
     ribs: tuple[StatorRibSpan3D, ...]
+    bem_n_r_lobe: int = 1
+    bem_n_phi_lobe: int = 1
+    bem_n_z_lobe: int = 1
+    bem_n_phi_collar: int = 3
 
 
 def active_tooth_area_um2(design: RobustClutchDesign3D) -> float:
@@ -465,6 +469,90 @@ def build_h3_cantor_robust_design() -> RobustClutchDesign3D:
     )
 
 
+def build_h3_cantor_sym_2x2x2_design() -> RobustClutchDesign3D:
+    """Construct the slot-symmetric (`Delta_phi = 0 deg`), 2x2x2 mesh-refined Cantor switch (`H3-Cantor-Sym-2x2x2`)."""
+    gens = H3_ROBUST_CANTOR_GENERATIONS
+    rib_widths_um = [w_nm * 1.0e-3 for w_nm in H3_ROBUST_CANTOR_RIB_WIDTHS_NM]
+    cursor_r = H3_ROBUST_R_MIN_UM + rib_widths_um[0]
+    tracks: list[HomotheticTrack3D] = []
+
+    for idx, gen in enumerate(gens):
+        scale = _homothetic_scale_for_gen(gen)
+        w_slot = H3_ROBUST_SLOT_FINE_UM * scale
+        w_tooth = H3_ROBUST_W_RATIO * w_slot
+        r_s_in = cursor_r
+        r_s_out = cursor_r + w_slot
+        r_c = 0.5 * (r_s_in + r_s_out)
+        r_t_in = r_c - 0.5 * w_tooth
+        r_t_out = r_c + 0.5 * w_tooth
+
+        z_stage = H3_ROBUST_Z_STAGE_FINE_UM * scale
+        h_stage = H3_ROBUST_HEIGHT_TO_STAGE_RATIO * abs(z_stage)
+        z_pad_top = -H3_ROBUST_NOMINAL_OP_Z_UM - 0.5 * h_stage - H3_ROBUST_ENGAGED_PAD_GAP_UM
+        collar_w = H3_ROBUST_BRIDGE_THICKNESS_BY_GEN_UM[gen]
+
+        lobes, bridges = _build_lobe_train_and_bridges(
+            r_center_um=r_c,
+            n_lobes=int(H3_ROBUST_LOBES_BY_GEN[gen]),
+            lobe_chord_um=H3_ROBUST_LOBE_CHORD_FINE_UM * scale,
+            inter_lobe_gap_deg=float(H3_ROBUST_INTER_LOBE_GAP_BY_GEN_DEG[gen]),
+            vernier_phase_deg=0.0,
+            z_stage_center_um=z_stage,
+            h_stage_um=h_stage,
+            bridge_arc_width_deg=float(H3_ROBUST_BRIDGE_ARC_WIDTH_BY_GEN_DEG[gen]),
+            bridge_thickness_um=float(H3_ROBUST_BRIDGE_THICKNESS_BY_GEN_UM[gen]),
+            enable_bridges=True,
+        )
+        tracks.append(
+            HomotheticTrack3D(
+                track_index=idx,
+                generation=gen,
+                r_slot_in_um=float(r_s_in),
+                r_slot_out_um=float(r_s_out),
+                r_tooth_in_um=float(r_t_in),
+                r_tooth_out_um=float(r_t_out),
+                collar_width_um=float(collar_w),
+                z_stage_center_um=float(z_stage),
+                h_stage_um=float(h_stage),
+                z_pad_top_um=float(z_pad_top),
+                lobe_offsets_deg=lobes,
+                vernier_phase_deg=0.0,
+                micro_bridges=bridges,
+            )
+        )
+        cursor_r = r_s_out + rib_widths_um[idx + 1]
+
+    if not math.isclose(cursor_r, H3_ROBUST_R_MAX_UM, rel_tol=0.0, abs_tol=1.0e-12):
+        raise ValueError(f"Radial budget mismatch: cursor_r={cursor_r} vs R_max={H3_ROBUST_R_MAX_UM}")
+
+    ribs = _assemble_ribs_for_tracks(
+        tracks, H3_ROBUST_R_MIN_UM, H3_ROBUST_R_MAX_UM, H3_ROBUST_APERTURE_ARC_DEG
+    )
+    return RobustClutchDesign3D(
+        name="H3-Cantor-Sym-2x2x2",
+        code="H3_Cantor_Sym_2x2x2",
+        family_role="fractal_homothetic_symmetric_refined",
+        description=(
+            "Unified 3D homothetic b=3.0, g_min=27 nm Cantor rotary-axial switch with centered "
+            "slot-symmetric phase (Delta_phi = 0 deg), homothetic micro-bridges, stepped landing "
+            "pads, and refined 2x2x2 lobe BEM discretization."
+        ),
+        R_min_um=H3_ROBUST_R_MIN_UM,
+        R_max_um=H3_ROBUST_R_MAX_UM,
+        aperture_arc_deg=H3_ROBUST_APERTURE_ARC_DEG,
+        pad_thickness_um=H3_ROBUST_PAD_THICKNESS_UM,
+        nominal_op_z_um=H3_ROBUST_NOMINAL_OP_Z_UM,
+        is_fractal=True,
+        has_micro_bridges=True,
+        tracks=tuple(tracks),
+        ribs=ribs,
+        bem_n_r_lobe=2,
+        bem_n_phi_lobe=2,
+        bem_n_z_lobe=2,
+        bem_n_phi_collar=9,
+    )
+
+
 def _scale_design_lobe_arcs_to_target_area(
     design: RobustClutchDesign3D, target_area_um2: float
 ) -> RobustClutchDesign3D:
@@ -711,9 +799,10 @@ def build_five_matched_robustness_controls(
 
 
 def build_all_robustness_study_designs() -> list[RobustClutchDesign3D]:
-    """Return `[H3-Cantor-Robust, *5 matched controls]`."""
+    """Return `[H3-Cantor-Robust, *5 matched controls, H3-Cantor-Sym-2x2x2]`."""
     h3 = build_h3_cantor_robust_design()
-    return [h3, *build_five_matched_robustness_controls(h3)]
+    h3_sym_ref = build_h3_cantor_sym_2x2x2_design()
+    return [h3, *build_five_matched_robustness_controls(h3), h3_sym_ref]
 
 
 def compute_design_fingerprint(design: RobustClutchDesign3D) -> str:
@@ -872,13 +961,17 @@ def build_homothetic_sector_bem_mesh(
     r_edge_um: float = 0.0,
     material: str = "Gold",
     temperature_K: float = 300.0,
-    n_r_lobe: int = 1,
-    n_phi_lobe: int = 1,
-    n_z_lobe: int = 1,
-    n_phi_collar: int = 3,
+    n_r_lobe: int | None = None,
+    n_phi_lobe: int | None = None,
+    n_z_lobe: int | None = None,
+    n_phi_collar: int | None = None,
     n_phi_pad: int = 3,
 ) -> PerturbedMeshBuildResult:
     """Construct the exact C4-sector 3D BEM mesh for `design` under geometric/cleanroom perturbations."""
+    n_r_lobe = int(design.bem_n_r_lobe if n_r_lobe is None else n_r_lobe)
+    n_phi_lobe = int(design.bem_n_phi_lobe if n_phi_lobe is None else n_phi_lobe)
+    n_z_lobe = int(design.bem_n_z_lobe if n_z_lobe is None else n_z_lobe)
+    n_phi_collar = int(design.bem_n_phi_collar if n_phi_collar is None else n_phi_collar)
     r_edge_val = max(0.0, float(r_edge_um))
     # Physical EBL corner-fillet flat-face width reduction: delta_w_round = -2*(1 - pi/4)*r_edge
     dw_round_um = -2.0 * (1.0 - math.pi / 4.0) * r_edge_val
@@ -1215,15 +1308,21 @@ def evaluate_homothetic_3d_bem(
     kappas_override: Sequence[float] | None = None,
     device: Literal["auto", "cpu", "cuda"] = "auto",
     use_lu_cache: bool = True,
-    n_r_lobe: int = 1,
-    n_phi_lobe: int = 1,
-    n_z_lobe: int = 1,
+    n_r_lobe: int | None = None,
+    n_phi_lobe: int | None = None,
+    n_z_lobe: int | None = None,
+    n_phi_collar: int | None = None,
 ) -> dict[str, Any]:
     """Evaluate 3D Vector-Dyadic Casimir force, free energy, per-track forces, and spectral trace."""
     t0 = time.perf_counter()
     if device == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA explicitly requested but unavailable.")
     dev = torch.device("cuda" if (device in {"auto", "cuda"} and torch.cuda.is_available()) else "cpu")
+
+    eff_n_r = int(design.bem_n_r_lobe if n_r_lobe is None else n_r_lobe)
+    eff_n_phi = int(design.bem_n_phi_lobe if n_phi_lobe is None else n_phi_lobe)
+    eff_n_z = int(design.bem_n_z_lobe if n_z_lobe is None else n_z_lobe)
+    eff_n_col = int(design.bem_n_phi_collar if n_phi_collar is None else n_phi_collar)
 
     built = build_homothetic_sector_bem_mesh(
         design,
@@ -1234,9 +1333,10 @@ def evaluate_homothetic_3d_bem(
         r_edge_um=r_edge_um,
         material=material,
         temperature_K=temperature_K,
-        n_r_lobe=n_r_lobe,
-        n_phi_lobe=n_phi_lobe,
-        n_z_lobe=n_z_lobe,
+        n_r_lobe=eff_n_r,
+        n_phi_lobe=eff_n_phi,
+        n_z_lobe=eff_n_z,
+        n_phi_collar=eff_n_col,
     )
     if built.shorted or built.all_teeth_etched_away or built.mesh is None:
         return {
@@ -1260,10 +1360,12 @@ def evaluate_homothetic_3d_bem(
             "energy_J": 0.0,
             "energy_kBT_300K": 0.0,
             "f_tracks_pN": [0.0 for _ in design.tracks],
+            "e_tracks_approx_J": [0.0 for _ in design.tracks],
             "n_rotor_panels_sector": 0,
             "n_stator_panels_sector": 0,
             "kappas_um_inv": [],
             "f_kappa_pN_um": [],
+            "e_kappa_hbar_c": [],
             "f_kappa_gen1_pN_um": [],
             "f_kappa_gen2_pN_um": [],
             "f_kappa_gen3_pN_um": [],
@@ -1297,50 +1399,7 @@ def evaluate_homothetic_3d_bem(
     weights = full_weights[:eval_count]
     K = len(kappas)
 
-    kap_sig = tuple(round(float(k), 10) for k in kappas)
-    d_hash = compute_design_fingerprint(design)
-    stator_key = (
-        d_hash,
-        round(float(delta_w_um), 9),
-        round(float(r_edge_um), 9),
-        n_phi_lobe,
-        n_z_lobe,
-        str(dev),
-        kap_sig,
-    )
-    # Rotor self-interaction is strictly invariant under rigid z_shift_um!
-    rotor_key = (
-        d_hash,
-        round(float(theta_deg), 9),
-        round(float(delta_w_um), 9),
-        round(float(delta_r_um), 9),
-        round(float(r_edge_um), 9),
-        n_r_lobe,
-        n_phi_lobe,
-        n_z_lobe,
-        str(dev),
-        kap_sig,
-    )
-
-    if use_lu_cache and stator_key in _STATOR_LU_CACHE:
-        lu_s_map = _STATOR_LU_CACHE[stator_key]
-    else:
-        lu_s_map = _same_body_lu_factors(stator, kappas, built.corner_self_area_um2, dev)
-        if use_lu_cache:
-            if len(_STATOR_LU_CACHE) >= 16:
-                _STATOR_LU_CACHE.clear()
-            _STATOR_LU_CACHE[stator_key] = lu_s_map
-
-    if use_lu_cache and rotor_key in _ROTOR_LU_CACHE:
-        lu_r_map = _ROTOR_LU_CACHE[rotor_key]
-    else:
-        lu_r_map = _same_body_lu_factors(rotor, kappas, built.corner_self_area_um2, dev)
-        if use_lu_cache:
-            if len(_ROTOR_LU_CACHE) >= 16:
-                _ROTOR_LU_CACHE.clear()
-            _ROTOR_LU_CACHE[rotor_key] = lu_r_map
-
-    # Cross-body blocks (rotor <- stator) across 4 sectors
+    # Cross-body geometry precomputation across 4 sectors (shared across wavenumber batches)
     Nt, Ns = rotor.count, stator.count
     M = Nt * Ns
     sub_var = torch.as_tensor(
@@ -1354,71 +1413,9 @@ def evaluate_homothetic_3d_bem(
     qw = torch.as_tensor(
         rotor.quad_weights[:, None] * stator.quad_weights[None, :], dtype=torch.float64, device=dev
     ).reshape(16)
-    rs_sec = torch.empty((K, 4, 2 * Nt, 2 * Ns), dtype=torch.float64, device=dev)
-    dz_sec = torch.empty((K, 4, 2 * Nt, 2 * Ns), dtype=torch.float64, device=dev)
     u_z = torch.as_tensor(rotor.tangents[:, :, 2][:, None, :, None], dtype=torch.float64, device=dev)
     tgt_q = torch.as_tensor(rotor.quad_points.transpose(1, 0, 2)[:, :, None, :], dtype=torch.float64, device=dev)
     tgt_tan_t = torch.as_tensor(rotor.tangents, dtype=torch.float64, device=dev)
-
-    for sec in range(4):
-        rot = _rotation(sec)
-        src_pts = stator.quad_points @ rot.T
-        src_tan = np.einsum("ab,jmb->jma", rot, stator.tangents)
-        src_tan_t = torch.as_tensor(src_tan, dtype=torch.float64, device=dev)
-        t_dot_t = torch.as_tensor(
-            np.einsum("ima,jna->ijmn", rotor.tangents, src_tan, optimize=True), dtype=torch.float64, device=dev
-        )
-        v_z = src_tan_t[:, :, 2][None, :, None, :]
-        src_q = torch.as_tensor(src_pts.transpose(1, 0, 2)[None, :, :, :], dtype=torch.float64, device=dev)
-        delta = (tgt_q[:, None, :, :, :] - src_q[:, :, None, :, :]).reshape(16, Nt, Ns, 3)
-        eff_d = torch.sqrt(torch.sum(delta**2, dim=3) + sub_var[None, :, :])
-        inv_d = 1.0 / eff_d
-        scale = (area_scale[None, :, :] * qw[:, None, None]) * inv_d
-        dz_over_d = delta[:, :, :, 2] * inv_d
-        u_R = torch.einsum("ima,qija->qijm", tgt_tan_t, delta)
-        v_R = torch.einsum("jna,qija->qijn", src_tan_t, delta)
-        R_inv2 = (inv_d**2)[:, :, :, None, None]
-        Z = delta[:, :, :, 2][:, :, :, None, None]
-        D_raw = u_R[:, :, :, :, None] * v_R[:, :, :, None, :] * R_inv2
-        D_m = D_raw.reshape(16, M, 4).permute(1, 2, 0).contiguous()
-        dD_m = (
-            (u_z[None] * v_R[:, :, :, None, :] + u_R[:, :, :, :, None] * v_z[None]) * R_inv2
-            - 2.0 * Z * D_raw * R_inv2
-        ).reshape(16, M, 4).permute(1, 2, 0).contiguous()
-
-        eff_d_f = eff_d.reshape(16, M)
-        inv_d_f = inv_d.reshape(16, M)
-        scale_f = scale.reshape(16, M)
-        dz_d_f = dz_over_d.reshape(16, M)
-
-        W_D = torch.empty((K, 16, M), dtype=torch.float64, device=dev)
-        W_dz_D = torch.empty((K, 16, M), dtype=torch.float64, device=dev)
-        s_t_all = torch.empty((K, Nt, Ns, 1, 1), dtype=torch.float64, device=dev)
-        dz_t_all = torch.empty((K, Nt, Ns, 1, 1), dtype=torch.float64, device=dev)
-
-        for qk, kap_val in enumerate(kappas):
-            kap = float(kap_val)
-            x = kap * eff_d_f
-            ker = torch.exp(-x) * scale_f
-            rad_deriv = -ker * (kap + inv_d_f)
-            sc_dz = rad_deriv * dz_d_f
-            inv = 1.0 / (1.0 + x)
-            denom = 1.0 - inv + inv**2
-            c_dir = (1.0 + inv + inv**2) / denom
-            dc_dir_dx = -2.0 * inv**2 * (1.0 - inv**2) / denom**2
-            s_t_all[qk] = (0.5 * torch.sum(ker, dim=0)).reshape(Nt, Ns, 1, 1)
-            dz_t_all[qk] = (0.5 * torch.sum(sc_dz, dim=0)).reshape(Nt, Ns, 1, 1)
-            W_D[qk] = -0.25 * ker * c_dir
-            W_dz_D[qk] = -0.25 * sc_dz * c_dir - 0.25 * ker * dc_dir_dx * kap * dz_d_f
-
-        W_D_m = W_D.permute(2, 1, 0).contiguous()
-        W_dz_m = W_dz_D.permute(2, 1, 0).contiguous()
-        s_D_all = torch.bmm(D_m, W_D_m).permute(2, 0, 1).reshape(K, Nt, Ns, 2, 2)
-        dz_D_all = (torch.bmm(D_m, W_dz_m) + torch.bmm(dD_m, W_D_m)).permute(2, 0, 1).reshape(K, Nt, Ns, 2, 2)
-        single_all = s_t_all * t_dot_t[None] + s_D_all
-        dz_all = dz_t_all * t_dot_t[None] + dz_D_all
-        rs_sec[:, sec] = single_all.permute(0, 1, 3, 2, 4).reshape(K, 2 * Nt, 2 * Ns)
-        dz_sec[:, sec] = dz_all.permute(0, 1, 3, 2, 4).reshape(K, 2 * Nt, 2 * Ns)
 
     nr_dof = 2 * Nt
     eye_r = torch.eye(nr_dof, dtype=torch.float64, device=dev)
@@ -1431,74 +1428,206 @@ def evaluate_homothetic_3d_bem(
     f_kappa_by_gen = {1: np.zeros(K, dtype=np.float64), 2: np.zeros(K, dtype=np.float64), 3: np.zeros(K, dtype=np.float64)}
     energy_total_hbar_c_per_um = 0.0
 
-    for qk in range(K):
-        kap = float(kappas[qk])
-        w_q = float(weights[qk])
-        tm, te, _ = mat_model.channel_weights(kap, k_eff=k_eff)
-        q_dof = np.zeros(nr_dof, dtype=np.float64)
-        e_dof = np.zeros(nr_dof, dtype=np.float64)
-        q_logdet = 0.0
-        rs_q = rs_sec[qk]
-        dz_q = dz_sec[qk]
+    d_hash = compute_design_fingerprint(design)
+    is_large_mesh = max(Nt, Ns) > 500
+    max_cache_entries = 2 if is_large_mesh else 16
+    max_k_batch = 28
+    cache_ok = bool(use_lu_cache and K <= max_k_batch)
 
-        for mode, mult in ((0, 1.0), (2, 1.0), (1, 2.0)):
-            lu_r, piv_r = lu_r_map[(qk, mode)]
-            lu_s, piv_s = lu_s_map[(qk, mode)]
-            if mode == 0:
-                g = rs_q[0] + rs_q[1] + rs_q[2] + rs_q[3]
-                dg = dz_q[0] + dz_q[1] + dz_q[2] + dz_q[3]
-                sr, dsr = g.T.contiguous(), dg.T.contiguous()
-                eye = eye_r
-            elif mode == 2:
-                g = rs_q[0] - rs_q[1] + rs_q[2] - rs_q[3]
-                dg = dz_q[0] - dz_q[1] + dz_q[2] - dz_q[3]
-                sr, dsr = g.T.contiguous(), dg.T.contiguous()
-                eye = eye_r
-            else:
-                g = torch.complex(rs_q[0] - rs_q[2], rs_q[1] - rs_q[3])
-                dg = torch.complex(dz_q[0] - dz_q[2], dz_q[1] - dz_q[3])
-                sr, dsr = g.mH.contiguous(), dg.mH.contiguous()
-                eye = eye_c
+    for q_start in range(0, K, max_k_batch):
+        q_end = min(K, q_start + max_k_batch)
+        k_batch = kappas[q_start:q_end]
+        w_batch = weights[q_start:q_end]
+        Kb = len(k_batch)
+        kap_sig = tuple(round(float(k), 10) for k in k_batch)
 
-            x = torch.linalg.lu_solve(lu_r, piv_r, g)
-            ns_col = sr.shape[1]
-            z_all = torch.linalg.lu_solve(lu_s, piv_s, torch.cat((sr, dsr), dim=1))
-            z, dz = z_all[:, :ns_col], z_all[:, ns_col:]
-            coupling = x @ z
-            B, C = dg @ z, x @ dz
+        stator_key = (
+            d_hash,
+            round(float(delta_w_um), 9),
+            round(float(r_edge_um), 9),
+            eff_n_phi,
+            eff_n_z,
+            eff_n_col,
+            str(dev),
+            kap_sig,
+        )
+        # Rotor self-interaction is strictly invariant under rigid z_shift_um!
+        rotor_key = (
+            d_hash,
+            round(float(theta_deg), 9),
+            round(float(delta_w_um), 9),
+            round(float(delta_r_um), 9),
+            round(float(r_edge_um), 9),
+            eff_n_r,
+            eff_n_phi,
+            eff_n_z,
+            str(dev),
+            kap_sig,
+        )
 
-            tm_cached: tuple[np.ndarray, float, np.ndarray] | None = None
-            for ch_idx, ch_w in enumerate((tm, te)):
-                if ch_idx == 1 and tm_cached is not None and math.isclose(tm**2, te**2, rel_tol=1.0e-14):
-                    per_dof, ch_ld, coup_diag = tm_cached
+        if cache_ok and stator_key in _STATOR_LU_CACHE:
+            lu_s_map = _STATOR_LU_CACHE[stator_key]
+        else:
+            lu_s_map = _same_body_lu_factors(stator, k_batch, built.corner_self_area_um2, dev)
+            if cache_ok:
+                if len(_STATOR_LU_CACHE) >= max_cache_entries:
+                    _STATOR_LU_CACHE.clear()
+                    if dev.type == "cuda":
+                        torch.cuda.empty_cache()
+                _STATOR_LU_CACHE[stator_key] = lu_s_map
+
+        if cache_ok and rotor_key in _ROTOR_LU_CACHE:
+            lu_r_map = _ROTOR_LU_CACHE[rotor_key]
+        else:
+            lu_r_map = _same_body_lu_factors(rotor, k_batch, built.corner_self_area_um2, dev)
+            if cache_ok:
+                if len(_ROTOR_LU_CACHE) >= max_cache_entries:
+                    _ROTOR_LU_CACHE.clear()
+                    if dev.type == "cuda":
+                        torch.cuda.empty_cache()
+                _ROTOR_LU_CACHE[rotor_key] = lu_r_map
+
+        rs_sec = torch.empty((Kb, 4, 2 * Nt, 2 * Ns), dtype=torch.float64, device=dev)
+        dz_sec = torch.empty((Kb, 4, 2 * Nt, 2 * Ns), dtype=torch.float64, device=dev)
+
+        for sec in range(4):
+            rot = _rotation(sec)
+            src_pts = stator.quad_points @ rot.T
+            src_tan = np.einsum("ab,jmb->jma", rot, stator.tangents)
+            src_tan_t = torch.as_tensor(src_tan, dtype=torch.float64, device=dev)
+            t_dot_t = torch.as_tensor(
+                np.einsum("ima,jna->ijmn", rotor.tangents, src_tan, optimize=True), dtype=torch.float64, device=dev
+            )
+            v_z = src_tan_t[:, :, 2][None, :, None, :]
+            src_q = torch.as_tensor(src_pts.transpose(1, 0, 2)[None, :, :, :], dtype=torch.float64, device=dev)
+            delta = (tgt_q[:, None, :, :, :] - src_q[:, :, None, :, :]).reshape(16, Nt, Ns, 3)
+            eff_d = torch.sqrt(torch.sum(delta**2, dim=3) + sub_var[None, :, :])
+            inv_d = 1.0 / eff_d
+            scale = (area_scale[None, :, :] * qw[:, None, None]) * inv_d
+            dz_over_d = delta[:, :, :, 2] * inv_d
+            u_R = torch.einsum("ima,qija->qijm", tgt_tan_t, delta)
+            v_R = torch.einsum("jna,qija->qijn", src_tan_t, delta)
+            R_inv2 = (inv_d**2)[:, :, :, None, None]
+            Z = delta[:, :, :, 2][:, :, :, None, None]
+            D_raw = u_R[:, :, :, :, None] * v_R[:, :, :, None, :] * R_inv2
+            D_m = D_raw.reshape(16, M, 4).permute(1, 2, 0).contiguous()
+            dD_m = (
+                (u_z[None] * v_R[:, :, :, None, :] + u_R[:, :, :, :, None] * v_z[None]) * R_inv2
+                - 2.0 * Z * D_raw * R_inv2
+            ).reshape(16, M, 4).permute(1, 2, 0).contiguous()
+
+            eff_d_f = eff_d.reshape(16, M)
+            inv_d_f = inv_d.reshape(16, M)
+            scale_f = scale.reshape(16, M)
+            dz_d_f = dz_over_d.reshape(16, M)
+
+            W_D = torch.empty((Kb, 16, M), dtype=torch.float64, device=dev)
+            W_dz_D = torch.empty((Kb, 16, M), dtype=torch.float64, device=dev)
+            s_t_all = torch.empty((Kb, Nt, Ns, 1, 1), dtype=torch.float64, device=dev)
+            dz_t_all = torch.empty((Kb, Nt, Ns, 1, 1), dtype=torch.float64, device=dev)
+
+            for qk, kap_val in enumerate(k_batch):
+                kap = float(kap_val)
+                x = kap * eff_d_f
+                ker = torch.exp(-x) * scale_f
+                rad_deriv = -ker * (kap + inv_d_f)
+                sc_dz = rad_deriv * dz_d_f
+                inv = 1.0 / (1.0 + x)
+                denom = 1.0 - inv + inv**2
+                c_dir = (1.0 + inv + inv**2) / denom
+                dc_dir_dx = -2.0 * inv**2 * (1.0 - inv**2) / denom**2
+                s_t_all[qk] = (0.5 * torch.sum(ker, dim=0)).reshape(Nt, Ns, 1, 1)
+                dz_t_all[qk] = (0.5 * torch.sum(sc_dz, dim=0)).reshape(Nt, Ns, 1, 1)
+                W_D[qk] = -0.25 * ker * c_dir
+                W_dz_D[qk] = -0.25 * sc_dz * c_dir - 0.25 * ker * dc_dir_dx * kap * dz_d_f
+
+            W_D_m = W_D.permute(2, 1, 0).contiguous()
+            W_dz_m = W_dz_D.permute(2, 1, 0).contiguous()
+            s_D_all = torch.bmm(D_m, W_D_m).permute(2, 0, 1).reshape(Kb, Nt, Ns, 2, 2)
+            dz_D_all = (torch.bmm(D_m, W_dz_m) + torch.bmm(dD_m, W_D_m)).permute(2, 0, 1).reshape(Kb, Nt, Ns, 2, 2)
+            single_all = s_t_all * t_dot_t[None] + s_D_all
+            dz_all = dz_t_all * t_dot_t[None] + dz_D_all
+            rs_sec[:, sec] = single_all.permute(0, 1, 3, 2, 4).reshape(Kb, 2 * Nt, 2 * Ns)
+            dz_sec[:, sec] = dz_all.permute(0, 1, 3, 2, 4).reshape(Kb, 2 * Nt, 2 * Ns)
+
+        for qk in range(Kb):
+            q_global = q_start + qk
+            kap = float(k_batch[qk])
+            w_q = float(w_batch[qk])
+            tm, te, _ = mat_model.channel_weights(kap, k_eff=k_eff)
+            q_dof = np.zeros(nr_dof, dtype=np.float64)
+            e_dof = np.zeros(nr_dof, dtype=np.float64)
+            q_logdet = 0.0
+            rs_q = rs_sec[qk]
+            dz_q = dz_sec[qk]
+
+            for mode, mult in ((0, 1.0), (2, 1.0), (1, 2.0)):
+                lu_r, piv_r = lu_r_map[(qk, mode)]
+                lu_s, piv_s = lu_s_map[(qk, mode)]
+                if mode == 0:
+                    g = rs_q[0] + rs_q[1] + rs_q[2] + rs_q[3]
+                    dg = dz_q[0] + dz_q[1] + dz_q[2] + dz_q[3]
+                    sr, dsr = g.T.contiguous(), dg.T.contiguous()
+                    eye = eye_r
+                elif mode == 2:
+                    g = rs_q[0] - rs_q[1] + rs_q[2] - rs_q[3]
+                    dg = dz_q[0] - dz_q[1] + dz_q[2] - dz_q[3]
+                    sr, dsr = g.T.contiguous(), dg.T.contiguous()
+                    eye = eye_r
                 else:
-                    pw = ch_w**2
-                    y = eye - pw * coupling
-                    lu_y, piv_y = torch.linalg.lu_factor(y)
-                    U = torch.linalg.lu_solve(lu_y, piv_y, C)
-                    V = torch.linalg.lu_solve(lu_r, piv_r, torch.linalg.lu_solve(lu_y, piv_y, B, left=False), left=False)
-                    per_dof = (-pw * (torch.diagonal(V).real + torch.diagonal(U).real)).detach().cpu().numpy()
-                    sign_y, slog_y = torch.linalg.slogdet(y)
-                    if abs(complex(sign_y.item())) == 0.0:
-                        raise linalg.LinAlgError("Singular scattering determinant Y.")
-                    ch_ld = float(slog_y.item())
-                    # First-order diagonal partition of logdet(I - pw*coupling) for per-track energy attribution
-                    coup_diag = (-pw * torch.diagonal(coupling).real).detach().cpu().numpy()
-                    if ch_idx == 0:
-                        tm_cached = (per_dof, ch_ld, coup_diag)
+                    g = torch.complex(rs_q[0] - rs_q[2], rs_q[1] - rs_q[3])
+                    dg = torch.complex(dz_q[0] - dz_q[2], dz_q[1] - dz_q[3])
+                    sr, dsr = g.mH.contiguous(), dg.mH.contiguous()
+                    eye = eye_c
 
-                q_dof += mult * (-per_dof / (2.0 * math.pi))
-                q_logdet += mult * ch_ld
-                e_dof += mult * (coup_diag / (2.0 * math.pi))
+                x = torch.linalg.lu_solve(lu_r, piv_r, g)
+                ns_col = sr.shape[1]
+                z_all = torch.linalg.lu_solve(lu_s, piv_s, torch.cat((sr, dsr), dim=1))
+                z, dz = z_all[:, :ns_col], z_all[:, ns_col:]
+                coupling = x @ z
+                B, C = dg @ z, x @ dz
 
-        f_kappa_pN_um[qk] = float(np.sum(q_dof) * MEEP_FORCE_TO_SI * 1.0e12)
-        e_kappa_hbar_c[qk] = float(q_logdet / (2.0 * math.pi))
-        for gen_lvl in (1, 2, 3):
-            f_kappa_by_gen[gen_lvl][qk] = float(np.sum(q_dof[dof_gens == gen_lvl]) * MEEP_FORCE_TO_SI * 1.0e12)
-        if kappas_override is None:
-            dof_forces += w_q * q_dof
-            dof_energies += w_q * e_dof
-            energy_total_hbar_c_per_um += w_q * float(q_logdet / (2.0 * math.pi))
+                tm_cached: tuple[np.ndarray, float, np.ndarray] | None = None
+                for ch_idx, ch_w in enumerate((tm, te)):
+                    if ch_idx == 1 and tm_cached is not None and math.isclose(tm**2, te**2, rel_tol=1.0e-14):
+                        per_dof, ch_ld, coup_diag = tm_cached
+                    else:
+                        pw = ch_w**2
+                        y = eye - pw * coupling
+                        lu_y, piv_y = torch.linalg.lu_factor(y)
+                        U = torch.linalg.lu_solve(lu_y, piv_y, C)
+                        V = torch.linalg.lu_solve(
+                            lu_r, piv_r, torch.linalg.lu_solve(lu_y, piv_y, B, left=False), left=False
+                        )
+                        per_dof = (-pw * (torch.diagonal(V).real + torch.diagonal(U).real)).detach().cpu().numpy()
+                        sign_y, slog_y = torch.linalg.slogdet(y)
+                        if abs(complex(sign_y.item())) == 0.0:
+                            raise linalg.LinAlgError("Singular scattering determinant Y.")
+                        ch_ld = float(slog_y.item())
+                        coup_diag = (-pw * torch.diagonal(coupling).real).detach().cpu().numpy()
+                        if ch_idx == 0:
+                            tm_cached = (per_dof, ch_ld, coup_diag)
+
+                    q_dof += mult * (-per_dof / (2.0 * math.pi))
+                    q_logdet += mult * ch_ld
+                    e_dof += mult * (coup_diag / (2.0 * math.pi))
+
+            f_kappa_pN_um[q_global] = float(np.sum(q_dof) * MEEP_FORCE_TO_SI * 1.0e12)
+            e_kappa_hbar_c[q_global] = float(q_logdet / (2.0 * math.pi))
+            for gen_lvl in (1, 2, 3):
+                f_kappa_by_gen[gen_lvl][q_global] = float(
+                    np.sum(q_dof[dof_gens == gen_lvl]) * MEEP_FORCE_TO_SI * 1.0e12
+                )
+            if kappas_override is None:
+                dof_forces += w_q * q_dof
+                dof_energies += w_q * e_dof
+                energy_total_hbar_c_per_um += w_q * float(q_logdet / (2.0 * math.pi))
+
+        del rs_sec, dz_sec
+        if not cache_ok:
+            del lu_r_map, lu_s_map
+            if dev.type == "cuda":
+                torch.cuda.empty_cache()
 
     f_tracks_pN = [
         float(np.sum(dof_forces[dof_track_ids == trk.track_index]) * MEEP_FORCE_TO_SI * 1.0e12)

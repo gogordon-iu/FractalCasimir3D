@@ -390,3 +390,7 @@
 ### [BUG-261111-03] 2026-11-11 | execution/run_unified_fractal_robustness_study.py | scope=infra
 - **Bug**: Post-processing failed after 497/497 BEM tasks with TypeError because save_plot_provenance lacked required columns_used argument.
 - **Solution**: Passed data_source and columns_used to save_plot_provenance, enabled immediate log_metric saving, and preserved code_hash 9c65828d1361e664.
+
+### [BUG-261111-04] 2026-11-11 | execution/homothetic_3d_robust_architecture.py | scope=model model=H3_Cantor_Sym_2x2x2
+- **Bug**: 2x2x2 BEM mesh with n_phi_collar=3 produced 59:1 collar strips (min LU pivot 1.1e-5) and >40 GB unbatched kappas VRAM.
+- **Solution**: Set bem_n_phi_collar=9 on H3_Cantor_Sym_2x2x2 (min pivot 1.3e-3) and cap GPU LU cache to 2 with max_k_batch=28 (<18 GB).
