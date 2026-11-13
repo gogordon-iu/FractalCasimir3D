@@ -30,6 +30,7 @@ from fractal_casimir_gravity.solvers.bem_scattering import (  # noqa: E402
 )
 from fractal_casimir_gravity.solvers.cpsc_geometry import CPSCSpec, build_radial_tracks  # noqa: E402
 from fractal_casimir_gravity.solvers.linearized_gravity import (  # noqa: E402
+    evaluate_compact_support_worldline_qei,
     evaluate_ford_roman_worldline_qei,
     integrate_raychaudhuri_geodesics,
 )
@@ -184,12 +185,19 @@ def run_simulation(
     dphi_vane = 0.28 * (2.0 * math.pi / spec_n3.m_up)
     tau_causal = 0.5 * spec_n3.d_0
     qei_saturations = []
+    compact_qei_saturations = []
     for om in omega_list:
         tau_pass = dphi_vane / (spec_n3.m_up * float(om))
         tau_eff = 1.0 / math.hypot(1.0 / tau_pass, 1.0 / tau_causal)
         qei_res = evaluate_ford_roman_worldline_qei(t_qei_ring, phi_ring, float(om), tau_eff, field_model="em_pec")
         qei_saturations.append(float(qei_res["saturation_ratio"]))
+
+        # Strictly compactly supported Fewster-Eveson window supp(g) = [-tau_c, tau_c] subset (-d_wall, +d_wall)
+        tau_c = min(tau_pass, 0.90 * tau_causal)
+        comp_res = evaluate_compact_support_worldline_qei(t_qei_ring, phi_ring, float(om), tau_c, field_model="em_pec")
+        compact_qei_saturations.append(float(comp_res["saturation_ratio"]))
     max_qei_sat = float(np.max(qei_saturations))
+    max_compact_qei_sat = float(np.max(compact_qei_saturations))
 
     log_metric("fcg_ec_nec_z_min_facing_phase", nec_min_face, step_id="sim4_ec", metrics_path=metrics_path)
     log_metric("fcg_ec_nec_z_max_open_phase", nec_max_open, step_id="sim4_ec", metrics_path=metrics_path)
@@ -197,6 +205,7 @@ def run_simulation(
     log_metric("fcg_ec_raychaudhuri_null_switch_delta", null_switch_delta, step_id="sim4_ec", metrics_path=metrics_path)
     log_metric("fcg_ec_raychaudhuri_time_trace_share", trace_share_min, step_id="sim4_ec", metrics_path=metrics_path)
     log_metric("fcg_ec_ford_roman_qei_saturation_ratio", max_qei_sat, step_id="sim4_ec", metrics_path=metrics_path)
+    log_metric("fcg_ec_compact_qei_saturation_ratio", max_compact_qei_sat, step_id="sim4_ec", metrics_path=metrics_path)
 
     payload = {
         "theta_deg_scan": np.degrees(theta_scan).tolist(),
@@ -214,6 +223,7 @@ def run_simulation(
         "sec_face": sec_face.tolist(),
         "omega_qei_list": omega_list.tolist(),
         "qei_saturation_ratios": qei_saturations,
+        "compact_qei_saturation_ratios": compact_qei_saturations,
     }
     out_json = out_dir / "sim4_nec_sec_raychaudhuri_qei.json"
     save_simulation_json(out_json, "Sim4_NEC_SEC_Raychaudhuri_QEI", "CPSC_Breathing44_N3", payload)

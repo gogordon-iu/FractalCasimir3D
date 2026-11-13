@@ -320,17 +320,25 @@ def generate_all(
     axes[1, 0].set_title("(c) Rotary Geodesic Focusing/Defocusing Switch")
     axes[1, 0].legend()
 
-    axes[1, 1].semilogx(sim4["omega_qei_list"], sim4["qei_saturation_ratios"], "o-", ms=3.5, color="#0f766e")
-    axes[1, 1].axhline(1.0, color="#dc2626", ls="--", label="Ford-Roman QFT Ceiling (=1)")
+    axes[1, 1].semilogx(
+        sim4["omega_qei_list"], sim4["qei_saturation_ratios"], "o-", ms=3.5, color="#0f766e",
+        label="Lorentzian (Ford-Roman)",
+    )
+    if "compact_qei_saturation_ratios" in sim4:
+        axes[1, 1].semilogx(
+            sim4["omega_qei_list"], sim4["compact_qei_saturation_ratios"], "s--", ms=3.3, color="#1d4ed8",
+            label=r"Compact $C^2_0$ (Fewster-Eveson)",
+        )
+    axes[1, 1].axhline(1.0, color="#dc2626", ls=":", label="QFT QEI Ceiling (=1)")
     axes[1, 1].set_xlabel(r"Dimensionless rotation rate $\tilde{\Omega}$")
-    axes[1, 1].set_ylabel(r"$|\tilde{\mathcal{I}}_{\mathrm{QEI}}| / (C_{\mathrm{FR}}/\tilde{\tau}^4)$")
-    axes[1, 1].set_title("(d) Worldline Ford-Roman QEI Compliance")
-    axes[1, 1].legend()
+    axes[1, 1].set_ylabel(r"Normalized QEI saturation $|\tilde{\mathcal{I}}_{\mathrm{QEI}}| / B_{\mathrm{QEI}}$")
+    axes[1, 1].set_title("(d) Sub-Reflection Worldline QEI Compliance")
+    axes[1, 1].legend(fontsize=6.8)
     fig.tight_layout()
     _save_fig_with_provenance(
         fig, "fig5_nec_sec_raychaudhuri_qei", fig_dirs,
         res_path / "sim4_nec_sec_raychaudhuri_qei.json",
-        ["nec_z_face", "nec_z_open", "delta_theta_null_em", "qei_saturation_ratios"],
+        ["nec_z_face", "nec_z_open", "delta_theta_null_em", "qei_saturation_ratios", "compact_qei_saturation_ratios"],
     )
 
     # Fig 6: Gravitomagnetic Frame Dragging

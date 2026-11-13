@@ -29,6 +29,7 @@ from fractal_casimir_gravity.solvers.cpsc_geometry import (
 from fractal_casimir_gravity.solvers.linearized_gravity import (
     compute_scalaron_monopole_waveform,
     construct_covariant_virial_and_quadrupole,
+    evaluate_compact_support_worldline_qei,
     evaluate_ford_roman_worldline_qei,
     fit_log_periodic_metric_comb,
     solve_isolated_poisson_3d,
@@ -46,7 +47,7 @@ CODE_DIR = WORKTREE_ROOT / "fractal_casimir_gravity"
 
 def test_symbolic_analytical_identities() -> None:
     checks = verify_symbolic_identities()
-    assert len(checks) == 7
+    assert len(checks) == 11
     assert all(checks.values()), f"Symbolic identity check failed: {checks}"
     eps2 = epsilon_planck_sq(1.0e-6)
     assert 2.6e-58 < eps2 < 2.7e-58
@@ -63,7 +64,7 @@ def test_manuscript_code_macro_and_figure_bijection() -> None:
         if m not in STANDARD_LATEX_COMMANDS
     }
     defined_macros = set(re.findall(r"\\newcommand\{\\([A-Z][a-zA-Z]+)\}", macros_text))
-    assert len(defined_macros) == 43
+    assert len(defined_macros) == 45
     assert used_upper == defined_macros, (
         f"Mismatch between .tex usage and macros_gravity.tex:\n"
         f"  Only in .tex: {used_upper - defined_macros}\n"
@@ -81,8 +82,8 @@ def test_manuscript_code_macro_and_figure_bijection() -> None:
                 assert isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str)
                 logged_keys.append(node.args[0].value)
 
-    assert len(logged_keys) == 43, f"Expected 43 logged metrics, found {len(logged_keys)}"
-    assert len(set(logged_keys)) == 43, "Duplicate metric keys detected across sim1..sim6"
+    assert len(logged_keys) == 45, f"Expected 45 logged metrics, found {len(logged_keys)}"
+    assert len(set(logged_keys)) == 45, "Duplicate metric keys detected across sim1..sim6"
     sanitized_from_code = {_sanitize_macro_name(k) for k in logged_keys}
     assert sanitized_from_code == defined_macros, (
         f"Macro bijection mismatch:\n"
@@ -110,8 +111,10 @@ def test_manuscript_code_macro_and_figure_bijection() -> None:
     assert len(tex_figs) == 7
     assert tex_figs == code_figs
 
-    # 4. PRD compliance checks: longbibliography, Data Availability, Contact author, and no "effective trace anomaly"
+    # 4. PRD compliance checks: longbibliography, showkeys/PhySH, Data Availability, Contact author, and no "effective trace anomaly"
     assert "longbibliography" in tex_text
+    assert "showkeys" in tex_text
+    assert r"\keywords{PhySH:" in tex_text
     assert r"\bibliographystyle" not in tex_text
     assert "Data Availability" in tex_text
     assert "Contact author:" in tex_text
@@ -127,6 +130,7 @@ def test_manuscript_code_macro_and_figure_bijection() -> None:
         import json
         sim6_data = json.loads((CODE_DIR / "results" / "sim6_convergence_and_error_bounds.json").read_text(encoding="utf-8"))
         assert float(sim6_data["planar_scalar_limit_rel_err"]) < 1.0e-3
+        assert float(sim6_data["bem_flat_annulus_pfa_rel_diff"]) < 0.12
         assert float(sim6_data["interior_div_rel_residual"]) < 1.0e-7
     else:
         for line in macros_text.splitlines():
@@ -264,12 +268,16 @@ def test_poisson_virial_qei_and_dsi_comb_recovery() -> None:
     assert float(vir["virial_rel_err"]) < 1.0e-13
     assert float(vir["p_gw_tilde"]) > 0.0
 
-    # 3. Ford-Roman QEI bound test on planar Brown-Maclay negative energy
+    # 3. Ford-Roman Lorentzian & Fewster-Eveson compact-support QEI bound tests on planar Brown-Maclay negative energy
     bm = brown_maclay_tensor_covariant(gap_tilde=0.5, field_model="em_pec")
     t00_ring = np.full(32, bm[0, 0])
-    qei = evaluate_ford_roman_worldline_qei(t00_ring, np.linspace(0, 2 * math.pi, 32, endpoint=False), 0.1, 0.15)
+    phi_r = np.linspace(0, 2 * math.pi, 32, endpoint=False)
+    qei = evaluate_ford_roman_worldline_qei(t00_ring, phi_r, 0.1, 0.15)
     assert qei["compliant"] is True
     assert 0.0 < qei["saturation_ratio"] < 1.0
+    qei_comp = evaluate_compact_support_worldline_qei(t00_ring, phi_r, 0.1, 0.22)
+    assert qei_comp["compliant"] is True
+    assert 0.0 < qei_comp["saturation_ratio"] < 1.0
 
     # 4. DSI log-periodic comb frequency recovery for b = 3.0
     x_ln = np.linspace(0.0, 4.0, 60)

@@ -13,6 +13,8 @@ import numpy as np
 import torch
 
 from fractal_casimir_gravity.analytics.units_and_identities import (
+    FEWSTER_EVESON_C_EM,
+    FEWSTER_EVESON_C_SCALAR,
     FORD_ROMAN_C_EM,
     FORD_ROMAN_C_SCALAR,
     minkowski_trace,
@@ -505,6 +507,53 @@ def evaluate_ford_roman_worldline_qei(
     return {
         "min_sampled_t00": min_sampled,
         "ford_roman_bound": qei_bound,
+        "saturation_ratio": saturation_ratio,
+        "compliant": bool(min_sampled >= qei_bound),
+    }
+
+
+def evaluate_compact_support_worldline_qei(
+    t00_phi_ring: np.ndarray,
+    phi_grid: np.ndarray,
+    omega_tilde: float,
+    tau_c_tilde: float,
+    field_model: str = "em_pec",
+) -> Dict[str, float]:
+    """Evaluate Fewster-Eveson compact-support worldline QEI for a stationary observer
+    sampling T_{00}(t) = T_{00}(phi_0 - omega_tilde * t) strictly inside t in [-tau_c, tau_c]
+    (tau_c < d_wall, no boundary reflections) using C^2_0([-tau_c, tau_c]) amplitude:
+        g(t) = sqrt(8 / (5 * tau_c)) * cos^3(pi * t / (2 * tau_c)) * Theta(tau_c - |t|),
+        int_{-tau_c}^{tau_c} g(t)^2 dt = 1,
+        bound = - C_FE / tau_c^4,   C_FE^{scalar} = 9*pi^2 / 256,   C_FE^{EM} = 9*pi^2 / 128.
+    """
+    if tau_c_tilde <= 0.0:
+        raise ValueError("tau_c_tilde must be positive.")
+    c_fe = FEWSTER_EVESON_C_EM if field_model == "em_pec" else FEWSTER_EVESON_C_SCALAR
+    qei_bound = -c_fe / (tau_c_tilde**4)
+
+    n_p = len(phi_grid)
+    c_hat = np.fft.fft(t00_phi_ring) / n_p
+    m_modes = np.fft.fftfreq(n_p, d=1.0 / n_p)
+    dphi = float(phi_grid[1] - phi_grid[0])
+    phi_period = dphi * n_p
+    k_ang = m_modes * (2.0 * math.pi / phi_period)
+
+    # Exact 64-node Gauss-Legendre integration of smooth compact-support filter on u = t/tau_c in [-1, 1]
+    u_gl, w_gl = np.polynomial.legendre.leggauss(64)
+    weight_u = (8.0 / 5.0) * (np.cos(0.5 * math.pi * u_gl) ** 6)
+    alpha_tau = np.abs(k_ang * omega_tilde) * tau_c_tilde  # (N_p,)
+    compact_filter = np.sum(
+        (w_gl * weight_u)[None, :] * np.cos(alpha_tau[:, None] * u_gl[None, :]),
+        axis=1,
+    )
+
+    sampled_vs_phi0 = np.real(np.fft.ifft(c_hat * compact_filter) * n_p)
+    min_sampled = float(np.min(sampled_vs_phi0))
+    saturation_ratio = float(max(0.0, -min_sampled) / abs(qei_bound))
+
+    return {
+        "min_sampled_t00": min_sampled,
+        "fewster_eveson_bound": qei_bound,
         "saturation_ratio": saturation_ratio,
         "compliant": bool(min_sampled >= qei_bound),
     }

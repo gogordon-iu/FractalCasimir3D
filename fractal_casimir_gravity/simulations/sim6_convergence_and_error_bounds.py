@@ -485,24 +485,25 @@ def run_simulation(
         geometry_kind="flat_annulus",
         generation_n=1,
         fill_chi=1.0,
-        d_0=0.12,
-        z_vane_0=-0.04,
+        d_0=0.10,
+        z_vane_0=-0.02,
     )
     a_ann_full = math.pi * (spec_flat_full.r_out**2 - spec_flat_full.r_in**2)
     e_flat_bem_scalar = compute_casimir_energy_bem(
         spec_flat_full,
         theta_rad=0.0,
         field_model="scalar_conformal",
-        z_vane_override=-0.04,
-        n_kappa=n_kappa_base,
-        n_rad=3 if fast_mode else 5,
-        n_phi=3 if fast_mode else 5,
+        z_vane_override=-0.02,
+        n_kappa=16 if not fast_mode else n_kappa_base,
+        n_rad=3 if fast_mode else 7,
+        n_phi=3 if fast_mode else 7,
         n_z=1,
         use_bloch=True,
         device=device,
     )
-    e_flat_exact_scalar = -a_ann_full * (math.pi**2) / (1440.0 * (0.12**3))
+    e_flat_exact_scalar = -a_ann_full * (math.pi**2) / (1440.0 * (0.10**3))
     bem_flat_annulus_to_planar_ratio = float(e_flat_bem_scalar / e_flat_exact_scalar)
+    bem_flat_annulus_pfa_rel_diff = float(abs(e_flat_bem_scalar - e_flat_exact_scalar) / abs(e_flat_exact_scalar))
 
     # Interior flat-space stress-energy conservation check: d_j T^{ji}_{vac} = 0 across all 3 QFT models
     h_fd = 1.0e-4
@@ -654,6 +655,7 @@ def run_simulation(
     log_metric("fcg_conv_interior_em_trace_null_residual", interior_em_trace_residual, step_id="sim6_local_trace_check", metrics_path=metrics_path)
     log_metric("fcg_conv_interior_scalar_min_trace_ratio", interior_scalar_min_trace_ratio, step_id="sim6_local_trace_check", metrics_path=metrics_path)
     log_metric("fcg_conv_planar_scalar_limit_rel_err", planar_scalar_limit_rel_err, step_id="sim6_consistency_limits", metrics_path=metrics_path)
+    log_metric("fcg_conv_bem_flat_annulus_pfa_rel_diff", bem_flat_annulus_pfa_rel_diff, step_id="sim6_consistency_limits", metrics_path=metrics_path)
     log_metric("fcg_conv_interior_div_rel_residual", interior_div_rel_residual, step_id="sim6_consistency_limits", metrics_path=metrics_path)
     log_metric("fcg_conv_poisson_voxel_rel_uncertainty", poisson_voxel_rel_unc, step_id="sim6_voxel_convergence", metrics_path=metrics_path)
     log_metric("fcg_conv_scalaron_yukawa_suppression_heavy", yukawa_heavy_ratio, step_id="sim6_scalaron_dispersion", metrics_path=metrics_path)
@@ -693,6 +695,7 @@ def run_simulation(
         "interior_scalar_min_trace_ratio": interior_scalar_min_trace_ratio,
         "planar_scalar_limit_rel_err": planar_scalar_limit_rel_err,
         "bem_flat_annulus_to_planar_ratio": bem_flat_annulus_to_planar_ratio,
+        "bem_flat_annulus_pfa_rel_diff": bem_flat_annulus_pfa_rel_diff,
         "interior_div_ratios": interior_div_ratios,
         "interior_div_rel_residual": interior_div_rel_residual,
         "voxel_grids": [list(vg) for vg in voxel_grids],
