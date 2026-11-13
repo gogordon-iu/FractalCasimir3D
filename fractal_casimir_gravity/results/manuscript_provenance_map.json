@@ -1,7 +1,7 @@
 {
   "model": "FractalCasimirGravity_ManuscriptAudit",
   "dataset": "CPSC_3D_QFT",
-  "executed_at": "2026-11-12T23:42:48.295709+00:00",
+  "executed_at": "2026-11-13T19:08:29.888208+00:00",
   "macros": {
     "\\FcgConvBemPanelRelUncertainty": {
       "value": 0.053300342671579515,
@@ -27,6 +27,14 @@
       "intermediate_step_id": "sim6_gen_convergence",
       "provenance_artifact": "fractal_casimir_gravity/results/provenance_metrics.json"
     },
+    "\\FcgConvInteriorDivRelResidual": {
+      "value": 1.6792666104178962e-10,
+      "source_metric_key": "fcg_conv_interior_div_rel_residual",
+      "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "intermediate_step_id": "sim6_consistency_limits",
+      "provenance_artifact": "fractal_casimir_gravity/results/provenance_metrics.json"
+    },
     "\\FcgConvInteriorEmTraceNullResidual": {
       "value": 1.2450970998704062e-16,
       "source_metric_key": "fcg_conv_interior_em_trace_null_residual",
@@ -49,6 +57,14 @@
       "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
       "source_function": "log_metric",
       "intermediate_step_id": "sim6_bem_discretization",
+      "provenance_artifact": "fractal_casimir_gravity/results/provenance_metrics.json"
+    },
+    "\\FcgConvPlanarScalarLimitRelErr": {
+      "value": 5.596817857724955e-05,
+      "source_metric_key": "fcg_conv_planar_scalar_limit_rel_err",
+      "source_file": "fractal_casimir_gravity/utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "intermediate_step_id": "sim6_consistency_limits",
       "provenance_artifact": "fractal_casimir_gravity/results/provenance_metrics.json"
     },
     "\\FcgConvPoissonVoxelRelUncertainty": {
@@ -379,7 +395,7 @@
       "figure_file": "fractal_casimir_gravity/figures/fig7_convergence_and_error_analysis.pdf",
       "sidecar_artifact": "Papers/Fractal_Casimir_Gravity/figures/fig7_convergence_and_error_analysis.provenance.json",
       "source_data": "fractal_casimir_gravity/results/sim6_convergence_and_error_bounds.json",
-      "source_sha256": "83093c8495f098693d1616ca02a2382a4c489aea274bb4254e4008e990979bd4",
+      "source_sha256": "8a98ea5f7fa7cd7975138d9fc02aeb2040e17242aa9c17d3579fcd6971f8607c",
       "generating_function": "save_plot_provenance"
     }
   },

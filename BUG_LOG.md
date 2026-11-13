@@ -422,3 +422,7 @@
 ### [BUG-261112-07] 2026-11-12T21:44:00Z | fractal_casimir_gravity/simulations/sim6_convergence_and_error_bounds.py | scope=eval model=Sim6_Convergence_ErrorBounds dataset=CPSC_Convergence_N1_to_N4
 - **Bug**: Coarse 5-deg root scan skipped the primary 25.3-deg crossover, and moving z-slice masks inflated voxel convergence variance.
 - **Solution**: Bracketed [15, 30] deg at 1.5-deg spacing and evaluated isotropic BEM and smooth multi-slot 3D GEM grids.
+
+### [BUG-261113-01] 2026-11-13T18:50:00Z | fractal_casimir_gravity/solvers/bem_scattering.py | scope=eval model=Sim6_Convergence_ErrorBounds dataset=CPSC_Convergence_N1_to_N4
+- **Bug**: Scalar compute_casimir_energy_bem set sigma_field=0.5 on positive kappa, halving scalar log-det energies vs -pi^2/(1440 d^3).
+- **Solution**: Set universal folded Wick prefactor sigma_field=1.0/(2*pi) since M(kappa) DOF count already encodes polarization multiplicity.

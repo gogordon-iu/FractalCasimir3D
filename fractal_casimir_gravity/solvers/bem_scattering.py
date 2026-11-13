@@ -191,7 +191,9 @@ def compute_casimir_energy_bem(
         fundamental_sector_only=use_bloch,
     )
     m_gcd = spec.m_gcd if use_bloch else 1
-    sigma_field = 1.0 if field_model == "em_pec" else 0.5
+    # Folding xi in (-inf, +inf) -> 2 * int_0^inf d_xi cancels the 1/2 zero-point factor universally;
+    # polarization multiplicity (1 for scalar, 2 for PEC EM) is carried by dof_mult in M(kappa).
+    sigma_field = 1.0
     kappas, weights = gauss_legendre_kappa_grid(n_kappa, kappa_min=kappa_min, kappa_max=kappa_max)
 
     mask_u = mesh.body_id == 0

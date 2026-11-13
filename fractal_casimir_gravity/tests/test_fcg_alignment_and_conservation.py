@@ -46,6 +46,7 @@ CODE_DIR = WORKTREE_ROOT / "fractal_casimir_gravity"
 
 def test_symbolic_analytical_identities() -> None:
     checks = verify_symbolic_identities()
+    assert len(checks) == 7
     assert all(checks.values()), f"Symbolic identity check failed: {checks}"
     eps2 = epsilon_planck_sq(1.0e-6)
     assert 2.6e-58 < eps2 < 2.7e-58
@@ -54,6 +55,7 @@ def test_symbolic_analytical_identities() -> None:
 def test_manuscript_code_macro_and_figure_bijection() -> None:
     tex_text = (PAPER_DIR / "fractal_casimir_gravity.tex").read_text(encoding="utf-8")
     macros_text = (PAPER_DIR / "macros_gravity.tex").read_text(encoding="utf-8")
+    bib_text = (PAPER_DIR / "references_gravity.bib").read_text(encoding="utf-8")
 
     # 1. Extract all custom uppercase macros referenced in fractal_casimir_gravity.tex
     used_upper = {
@@ -61,7 +63,7 @@ def test_manuscript_code_macro_and_figure_bijection() -> None:
         if m not in STANDARD_LATEX_COMMANDS
     }
     defined_macros = set(re.findall(r"\\newcommand\{\\([A-Z][a-zA-Z]+)\}", macros_text))
-    assert len(defined_macros) == 41
+    assert len(defined_macros) == 43
     assert used_upper == defined_macros, (
         f"Mismatch between .tex usage and macros_gravity.tex:\n"
         f"  Only in .tex: {used_upper - defined_macros}\n"
@@ -79,13 +81,26 @@ def test_manuscript_code_macro_and_figure_bijection() -> None:
                 assert isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str)
                 logged_keys.append(node.args[0].value)
 
-    assert len(logged_keys) == 41, f"Expected 41 logged metrics, found {len(logged_keys)}"
-    assert len(set(logged_keys)) == 41, "Duplicate metric keys detected across sim1..sim6"
+    assert len(logged_keys) == 43, f"Expected 43 logged metrics, found {len(logged_keys)}"
+    assert len(set(logged_keys)) == 43, "Duplicate metric keys detected across sim1..sim6"
     sanitized_from_code = {_sanitize_macro_name(k) for k in logged_keys}
     assert sanitized_from_code == defined_macros, (
         f"Macro bijection mismatch:\n"
         f"  Code - Paper: {sanitized_from_code - defined_macros}\n"
         f"  Paper - Code: {defined_macros - sanitized_from_code}"
+    )
+
+    # 2b. Verify exact citation bijection between references_gravity.bib and fractal_casimir_gravity.tex
+    bib_keys = set(re.findall(r"@\w+\{\s*([^,\s]+)\s*,", bib_text))
+    cited_keys = {
+        k.strip()
+        for grp in re.findall(r"\\cite\{([^}]+)\}", tex_text)
+        for k in grp.split(",")
+    }
+    assert bib_keys == cited_keys, (
+        f"Citation bijection mismatch:\n"
+        f"  In .bib but uncited: {bib_keys - cited_keys}\n"
+        f"  Cited in .tex but missing in .bib: {cited_keys - bib_keys}"
     )
 
     # 3. Check all 7 figure stems match between manuscript and figure generator
@@ -109,6 +124,10 @@ def test_manuscript_code_macro_and_figure_bijection() -> None:
         for line in macros_text.splitlines():
             if line.strip().startswith(r"\newcommand"):
                 assert r"{\pendingval}" not in line, f"Unresolved placeholder in macros_gravity.tex: {line}"
+        import json
+        sim6_data = json.loads((CODE_DIR / "results" / "sim6_convergence_and_error_bounds.json").read_text(encoding="utf-8"))
+        assert float(sim6_data["planar_scalar_limit_rel_err"]) < 1.0e-3
+        assert float(sim6_data["interior_div_rel_residual"]) < 1.0e-7
     else:
         for line in macros_text.splitlines():
             if line.strip().startswith(r"\newcommand"):

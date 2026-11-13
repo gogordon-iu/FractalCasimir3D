@@ -97,9 +97,37 @@ def verify_symbolic_identities() -> Dict[str, bool]:
         and sp.simplify(vernier_quad - sp.pi * sp.cos(6 * theta) / 2) == 0
     )
 
+    # Exact Wick trace-log planar limit: (1 / (2*pi)) * (1 / (2*pi)) * int_0^inf q^2 ln(1 - e^{-2*q*d}) dq
+    # = -pi^2 / (1440 * d^3) for 1 scalar DOF (=> -pi^2 / (1440 * d^4) energy density; 2x for PEC EM)
+    u = sp.Symbol("u", positive=True)
+    n_idx = sp.Symbol("n", integer=True, positive=True)
+    term_n = sp.integrate(u**2 * (-sp.exp(-n_idx * u) / n_idx), (u, 0, sp.oo))
+    planar_wick_per_area = (1 / (2 * sp.pi)) * (1 / (2 * sp.pi)) * (1 / (2 * d) ** 3) * sp.summation(term_n, (n_idx, 1, sp.oo))
+    planar_scalar_density = planar_wick_per_area / d
+    planar_wick_limit_ok = (
+        sp.simplify(planar_scalar_density - (-sp.pi**2 / (1440 * d**4))) == 0
+        and sp.simplify(2 * planar_scalar_density - (-sp.pi**2 / (720 * d**4))) == 0
+    )
+
+    # Weak-gravity first-order redshift profile: average across z in [0, d] has zero O(Y*d) correction
+    z_sym, y_grav = sp.symbols("z Y", real=True)
+    eps_weak_grav = (-sp.pi**2 / (1440 * d**4)) * (1 + 2 * y_grav * (z_sym - d / 2))
+    avg_weak_grav = sp.integrate(eps_weak_grav, (z_sym, 0, d)) / d
+    weak_gravity_avg_ok = sp.simplify(avg_weak_grav - (-sp.pi**2 / (1440 * d**4))) == 0
+
+    # Starobinsky f(R) = R + alpha * R^2 trace identity: 3*Box f'(R) + f'(R)*R - 2*f(R) = 6*alpha*Box R - R
+    r_curv, alpha_s, box_r = sp.symbols("R alpha BoxR", real=True)
+    f_r = r_curv + alpha_s * r_curv**2
+    fp_r = sp.diff(f_r, r_curv)
+    trace_lhs = 3 * (2 * alpha_s * box_r) + fp_r * r_curv - 2 * f_r
+    scalaron_trace_ok = sp.simplify(trace_lhs - (6 * alpha_s * box_r - r_curv)) == 0
+
     return {
         "brown_maclay_traceless": bool(bm_traceless),
         "brown_maclay_boost_invariant": bool(bm_boost_invariant),
         "force_free_scale_locking": bool(force_free_locking_ok),
         "vernier_quadrupole_selection_rule": bool(vernier_selection_ok),
+        "planar_scalar_1440_and_em_720_wick_limit": bool(planar_wick_limit_ok),
+        "weak_gravity_first_order_average_null": bool(weak_gravity_avg_ok),
+        "starobinsky_scalaron_trace_reduction": bool(scalaron_trace_ok),
     }

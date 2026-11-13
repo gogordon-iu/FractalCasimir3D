@@ -38,6 +38,7 @@ from fractal_casimir_gravity.solvers.bem_scattering import (  # noqa: E402
     compute_casimir_energy_bem,
     compute_cavity_thermodynamics,
     compute_four_pass_stress_tensor,
+    gauss_legendre_kappa_grid,
     get_torch_device,
 )
 from fractal_casimir_gravity.solvers.cpsc_geometry import (  # noqa: E402
@@ -464,6 +465,89 @@ def run_simulation(
     interior_em_trace_residual = float(interior_local_trace_ratios["em_pec"])
     interior_scalar_min_trace_ratio = float(interior_local_trace_ratios["scalar_minimal"])
 
+    # Non-fractal planar parallel-plate scalar limit (-pi^2 / (1440 * d^4)) & 3D BEM flat annulus check
+    d_planar = 0.05
+    ks_pl, ws_pl = gauss_legendre_kappa_grid(28, 1.0e-3, 5.0e2)
+    qp_pl, wp_pl = gauss_legendre_kappa_grid(44, 1.0e-3, 6.0e2)
+    wick_planar_per_area = 0.0
+    for k_v, w_kv in zip(ks_pl, ws_pl):
+        q_rad = np.sqrt(k_v * k_v + qp_pl * qp_pl)
+        integrand_pl = (qp_pl / (2.0 * math.pi)) * np.log1p(-np.exp(-2.0 * q_rad * d_planar))
+        wick_planar_per_area += (w_kv / (2.0 * math.pi)) * float(np.sum(wp_pl * integrand_pl))
+    wick_planar_density = wick_planar_per_area / d_planar
+    exact_planar_scalar_density = -(math.pi**2) / (1440.0 * (d_planar**4))
+    planar_scalar_limit_rel_err = abs(wick_planar_density - exact_planar_scalar_density) / abs(exact_planar_scalar_density)
+
+    spec_flat_full = CPSCSpec(
+        name="Ctrl_FlatAnnulus_FullWidth",
+        constellation="breathing_4_4",
+        staging="coplanar",
+        geometry_kind="flat_annulus",
+        generation_n=1,
+        fill_chi=1.0,
+        d_0=0.12,
+        z_vane_0=-0.04,
+    )
+    a_ann_full = math.pi * (spec_flat_full.r_out**2 - spec_flat_full.r_in**2)
+    e_flat_bem_scalar = compute_casimir_energy_bem(
+        spec_flat_full,
+        theta_rad=0.0,
+        field_model="scalar_conformal",
+        z_vane_override=-0.04,
+        n_kappa=n_kappa_base,
+        n_rad=3 if fast_mode else 5,
+        n_phi=3 if fast_mode else 5,
+        n_z=1,
+        use_bloch=True,
+        device=device,
+    )
+    e_flat_exact_scalar = -a_ann_full * (math.pi**2) / (1440.0 * (0.12**3))
+    bem_flat_annulus_to_planar_ratio = float(e_flat_bem_scalar / e_flat_exact_scalar)
+
+    # Interior flat-space stress-energy conservation check: d_j T^{ji}_{vac} = 0 across all 3 QFT models
+    h_fd = 1.0e-4
+    x0_div, y0_div, z0_div = 0.50, 0.02, -0.11
+    div_stencil = np.array(
+        [
+            [x0_div, y0_div, z0_div],
+            [x0_div + h_fd, y0_div, z0_div],
+            [x0_div - h_fd, y0_div, z0_div],
+            [x0_div + 2.0 * h_fd, y0_div, z0_div],
+            [x0_div - 2.0 * h_fd, y0_div, z0_div],
+            [x0_div, y0_div + h_fd, z0_div],
+            [x0_div, y0_div - h_fd, z0_div],
+            [x0_div, y0_div + 2.0 * h_fd, z0_div],
+            [x0_div, y0_div - 2.0 * h_fd, z0_div],
+            [x0_div, y0_div, z0_div + h_fd],
+            [x0_div, y0_div, z0_div - h_fd],
+            [x0_div, y0_div, z0_div + 2.0 * h_fd],
+            [x0_div, y0_div, z0_div - 2.0 * h_fd],
+        ],
+        dtype=np.float64,
+    )
+    interior_div_ratios: Dict[str, float] = {}
+    for fm in field_models_check:
+        t_st = compute_four_pass_stress_tensor(
+            spec_n3,
+            theta_rad=0.0,
+            eval_points=div_stencil,
+            field_model=fm,  # type: ignore[arg-type]
+            n_kappa=n_kappa_base,
+            n_rad=2,
+            n_phi=2,
+            n_z=1,
+            min_wall_dist=0.003,
+            fundamental_sector_only=True,
+            device=device,
+        )["t_total_ren"]
+        dx_t4 = (-t_st[3, 1:, 1:] + 8.0 * t_st[1, 1:, 1:] - 8.0 * t_st[2, 1:, 1:] + t_st[4, 1:, 1:]) / (12.0 * h_fd)
+        dy_t4 = (-t_st[7, 1:, 1:] + 8.0 * t_st[5, 1:, 1:] - 8.0 * t_st[6, 1:, 1:] + t_st[8, 1:, 1:]) / (12.0 * h_fd)
+        dz_t4 = (-t_st[11, 1:, 1:] + 8.0 * t_st[9, 1:, 1:] - 8.0 * t_st[10, 1:, 1:] + t_st[12, 1:, 1:]) / (12.0 * h_fd)
+        div_v = dx_t4[0, :] + dy_t4[1, :] + dz_t4[2, :]
+        grad_norm = float(np.linalg.norm(dx_t4) + np.linalg.norm(dy_t4) + np.linalg.norm(dz_t4))
+        interior_div_ratios[fm] = float(np.linalg.norm(div_v) / max(grad_norm, 1.0e-30))
+    interior_div_rel_residual = float(max(interior_div_ratios.values()))
+
     # -------------------------------------------------------------------------
     # 3. 3D Spectral FFT Poisson Voxel Grid Refinement (Chiral GEM Vorticity)
     # -------------------------------------------------------------------------
@@ -569,6 +653,8 @@ def run_simulation(
     log_metric("fcg_conv_bem_panel_rel_uncertainty", bem_panel_rel_unc, step_id="sim6_bem_discretization", metrics_path=metrics_path)
     log_metric("fcg_conv_interior_em_trace_null_residual", interior_em_trace_residual, step_id="sim6_local_trace_check", metrics_path=metrics_path)
     log_metric("fcg_conv_interior_scalar_min_trace_ratio", interior_scalar_min_trace_ratio, step_id="sim6_local_trace_check", metrics_path=metrics_path)
+    log_metric("fcg_conv_planar_scalar_limit_rel_err", planar_scalar_limit_rel_err, step_id="sim6_consistency_limits", metrics_path=metrics_path)
+    log_metric("fcg_conv_interior_div_rel_residual", interior_div_rel_residual, step_id="sim6_consistency_limits", metrics_path=metrics_path)
     log_metric("fcg_conv_poisson_voxel_rel_uncertainty", poisson_voxel_rel_unc, step_id="sim6_voxel_convergence", metrics_path=metrics_path)
     log_metric("fcg_conv_scalaron_yukawa_suppression_heavy", yukawa_heavy_ratio, step_id="sim6_scalaron_dispersion", metrics_path=metrics_path)
 
@@ -605,6 +691,10 @@ def run_simulation(
         "macroscopic_eff_trace_ratios": macroscopic_eff_trace_ratios,
         "interior_em_trace_residual": interior_em_trace_residual,
         "interior_scalar_min_trace_ratio": interior_scalar_min_trace_ratio,
+        "planar_scalar_limit_rel_err": planar_scalar_limit_rel_err,
+        "bem_flat_annulus_to_planar_ratio": bem_flat_annulus_to_planar_ratio,
+        "interior_div_ratios": interior_div_ratios,
+        "interior_div_rel_residual": interior_div_rel_residual,
         "voxel_grids": [list(vg) for vg in voxel_grids],
         "voxel_counts": voxel_counts,
         "voxel_rms_lt": voxel_rms_lt,
