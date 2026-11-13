@@ -1,0 +1,195 @@
+{
+  "F_2pass": null,
+  "F_both": null,
+  "F_net": null,
+  "F_rotor": null,
+  "F_sector0_both": null,
+  "F_sector0_rotor": null,
+  "F_sector0_self": null,
+  "F_sector0_stator": null,
+  "F_sector0_vac": null,
+  "F_self": null,
+  "F_stator": null,
+  "F_stator_only": null,
+  "F_vac": null,
+  "MEEP_FORCE_TO_SI_N": 3.16152649e-14,
+  "N_fractal": 3,
+  "Sigma": 12.5,
+  "active_moment": {
+    "configuration": "both",
+    "moment": "Ez:b0_xmin:0"
+  },
+  "cache_version": 6,
+  "completed_by_config": {
+    "both": 3,
+    "rotor": 0,
+    "stator": 0,
+    "vac": 0
+  },
+  "completed_moments": 3,
+  "config_file": "/N/project/gorengor_werewolf/FractalCasimir3D/sweep_configs_h3_single_setup_fdtd/config_003.json",
+  "dataset": "h3_single_setup_fdtd_progress_task_3",
+  "dt": 0.0025,
+  "elapsed_seconds": 774.4073499226943,
+  "executed_at": "2026-11-13T22:49:13.997332+00:00",
+  "f_net_N": null,
+  "f_net_fN": null,
+  "f_net_pN": null,
+  "fingerprint": "9b1f8a758faaf0e38b590cf0f05f93404648bde0524ae999e3ae830864d7ed13",
+  "force_component": "z",
+  "max_steps": 0,
+  "model": "Meep_3D_FDTD_PEC_v6",
+  "num_tasks_per_config": 144,
+  "output_file": "results/h3_single_setup_fdtd/task_3_meep.json",
+  "parameters": {
+    "aperture_arc_deg": 36.0,
+    "bridge_arc_deg": 54.0,
+    "cell_buffer_um": 0.08,
+    "courant": 0.5,
+    "d_eff": 0.04,
+    "elements": [
+      {
+        "W_slot": 0.1,
+        "h_teeth": 0.04,
+        "level": 3,
+        "r_center": 3.55,
+        "r_inner": 3.5,
+        "r_outer": 3.6,
+        "r_tooth_in": 3.53,
+        "r_tooth_out": 3.57,
+        "track_index": 0,
+        "w_tooth": 0.04,
+        "z_tip": -0.08
+      }
+    ],
+    "eps_averaging": false,
+    "epsilon_inf": 1.0,
+    "explicit_cell_center": [
+      0.0,
+      0.0,
+      -0.06
+    ],
+    "explicit_phys_bounds": [
+      [
+        -0.08,
+        0.08
+      ],
+      [
+        -0.12,
+        0.12
+      ],
+      [
+        -0.18,
+        0.06
+      ]
+    ],
+    "explicit_rotor_boxes": [
+      [
+        -0.02,
+        0.02,
+        -0.04,
+        0.04,
+        -0.08,
+        -0.04
+      ]
+    ],
+    "explicit_stator_boxes": [
+      [
+        -0.08,
+        -0.06,
+        -0.12,
+        0.12,
+        -0.06,
+        -0.02
+      ],
+      [
+        0.06,
+        0.08,
+        -0.12,
+        0.12,
+        -0.06,
+        -0.02
+      ]
+    ],
+    "explicit_stress_boxes": [
+      [
+        -0.04,
+        0.04,
+        -0.08,
+        0.08,
+        -0.1,
+        -0.02
+      ]
+    ],
+    "fixed_stress_box_margin_um": 0.02,
+    "force_complex_fields": true,
+    "gamma": 0.04274738474121455,
+    "geometry_mode": "explicit_boxes_3d",
+    "h_teeth": 0.04,
+    "l_domain": 0.64,
+    "material": "PEC",
+    "n_fractal": 3,
+    "nmax": 2,
+    "num_sectors": 4,
+    "plasma_frequency": 7.2831864945880636,
+    "pml_thickness": 0.16,
+    "r_edge_nm": 0.0,
+    "resolution": 200,
+    "sector0_crop": false,
+    "stress_box_mode": "per_tooth_rotor_frame",
+    "t_landing_pad": 0.04,
+    "t_membrane": 0.04,
+    "t_run": 4.0,
+    "theta_deg": 3.0,
+    "tooth_arc_deg": 12.0,
+    "tooth_center_offset_deg": 15.0,
+    "z_pad_top": -0.12,
+    "z_tip": -0.08
+  },
+  "requested_config": "all",
+  "solver": "meep",
+  "solver_parameters": {
+    "cell_center_um": [
+      0.0,
+      0.0,
+      -0.06
+    ],
+    "cell_dimensions_um": [
+      0.64,
+      0.72,
+      0.72
+    ],
+    "configurations": [
+      "both",
+      "rotor",
+      "stator",
+      "vac"
+    ],
+    "courant": 0.5,
+    "dt": 0.0025,
+    "dx_um": 0.005,
+    "eps_averaging": false,
+    "fixed_stress_box_margin_um": 0.02,
+    "force_complex_fields": true,
+    "geometry_mode": "explicit_boxes_3d",
+    "inclusion_exclusion_passes": 4,
+    "max_steps": 0,
+    "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+    "moments_per_config": 144,
+    "nmax": 2,
+    "pml_thickness": 0.16,
+    "r_edge_nm": 0.0,
+    "resolution": 200,
+    "sector0_crop": false,
+    "sigma": 12.5,
+    "solver": "meep",
+    "t_run": 4.0,
+    "timesteps_per_last_moment": 1600
+  },
+  "status": "running",
+  "symmetry_multiplier": 4.0,
+  "task_id": 3,
+  "theta_deg": 3.0,
+  "time_truncated": false,
+  "timesteps_per_last_moment": 1600
+}

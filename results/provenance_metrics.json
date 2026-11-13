@@ -1,6 +1,6 @@
 {
   "dataset": "fractal_casimir_3d",
-  "executed_at": "2026-11-12T18:56:33.968341+00:00",
+  "executed_at": "2026-11-13T22:48:45.285715+00:00",
   "intermediate_steps": {
     "0": {
       "data_summary": {
@@ -98227,20 +98227,53 @@
       }
     },
     "quant_fdtd_n2_aggregation": {
-      "timestamp": "2026-11-12T01:16:15.067007+00:00",
+      "timestamp": "2026-11-13T07:04:12.311436+00:00",
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_step",
       "line_number": 389,
       "data_summary": {
         "configured_tasks": 8,
-        "completed_tasks": 4,
-        "output_path": "C:\\Users\\gorengor\\Goren\\IUB\\Research\\FractalCasimirEffect\\Code\\3Dsimulations\\results\\quant_fdtd_n2_summary.json"
+        "completed_tasks": 8,
+        "output_path": "/N/project/gorengor_werewolf/FractalCasimir3D/results/quant_fdtd_n2_summary.json"
       },
-      "solver": "blender_visual_audit",
+      "solver": "meep",
       "solver_parameters": {
-        "benchmark": "unified_fractal_robustness_blender",
-        "n_configurations": 7,
-        "executed_at": "2026-11-12T00:07:07.557406+00:00"
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
       }
     },
     "unified_fractal_robustness_3d_study": {
@@ -304319,26 +304352,92 @@
       "source_function": "log_metric",
       "line_number": 423,
       "step_id": "quant_fdtd_n2_aggregation",
-      "recorded_at": "2026-11-12T01:16:15.536554+00:00",
-      "solver": "blender_visual_audit",
+      "recorded_at": "2026-11-13T07:04:12.833331+00:00",
+      "solver": "meep",
       "solver_parameters": {
-        "benchmark": "unified_fractal_robustness_blender",
-        "n_configurations": 7,
-        "executed_at": "2026-11-12T00:07:07.557406+00:00"
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
       }
     },
     "quant_fdtd_n2_completed_tasks": {
-      "value": 4,
+      "value": 8,
       "source_file": "utils/metrics_logger.py",
       "source_function": "log_metric",
       "line_number": 423,
       "step_id": "quant_fdtd_n2_aggregation",
-      "recorded_at": "2026-11-12T01:16:15.979775+00:00",
-      "solver": "blender_visual_audit",
+      "recorded_at": "2026-11-13T07:04:13.328328+00:00",
+      "solver": "meep",
       "solver_parameters": {
-        "benchmark": "unified_fractal_robustness_blender",
-        "n_configurations": 7,
-        "executed_at": "2026-11-12T00:07:07.557406+00:00"
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
       }
     },
     "h3_robust_Fz_op_pN": {
@@ -304777,12 +304876,45 @@
       "source_function": "log_metric",
       "line_number": 423,
       "step_id": "quant_fdtd_n2_aggregation",
-      "recorded_at": "2026-11-12T01:16:16.404855+00:00",
-      "solver": "blender_visual_audit",
+      "recorded_at": "2026-11-13T07:04:13.825131+00:00",
+      "solver": "meep",
       "solver_parameters": {
-        "benchmark": "unified_fractal_robustness_blender",
-        "n_configurations": 7,
-        "executed_at": "2026-11-12T00:07:07.557406+00:00"
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
       }
     },
     "quant_fdtd_n2_task1_rel_diff_bem_ultra_pct": {
@@ -304791,12 +304923,45 @@
       "source_function": "log_metric",
       "line_number": 423,
       "step_id": "quant_fdtd_n2_aggregation",
-      "recorded_at": "2026-11-12T01:16:16.837480+00:00",
-      "solver": "blender_visual_audit",
+      "recorded_at": "2026-11-13T07:04:14.326724+00:00",
+      "solver": "meep",
       "solver_parameters": {
-        "benchmark": "unified_fractal_robustness_blender",
-        "n_configurations": 7,
-        "executed_at": "2026-11-12T00:07:07.557406+00:00"
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
       }
     },
     "quant_fdtd_n2_task2_fz_pn": {
@@ -304805,12 +304970,45 @@
       "source_function": "log_metric",
       "line_number": 423,
       "step_id": "quant_fdtd_n2_aggregation",
-      "recorded_at": "2026-11-12T01:16:17.269372+00:00",
-      "solver": "blender_visual_audit",
+      "recorded_at": "2026-11-13T07:04:14.839600+00:00",
+      "solver": "meep",
       "solver_parameters": {
-        "benchmark": "unified_fractal_robustness_blender",
-        "n_configurations": 7,
-        "executed_at": "2026-11-12T00:07:07.557406+00:00"
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
       }
     },
     "quant_fdtd_n2_task2_rel_diff_bem_ultra_pct": {
@@ -304819,12 +305017,45 @@
       "source_function": "log_metric",
       "line_number": 423,
       "step_id": "quant_fdtd_n2_aggregation",
-      "recorded_at": "2026-11-12T01:16:17.696540+00:00",
-      "solver": "blender_visual_audit",
+      "recorded_at": "2026-11-13T07:04:15.333084+00:00",
+      "solver": "meep",
       "solver_parameters": {
-        "benchmark": "unified_fractal_robustness_blender",
-        "n_configurations": 7,
-        "executed_at": "2026-11-12T00:07:07.557406+00:00"
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
       }
     },
     "quant_fdtd_n2_task3_fz_pn": {
@@ -304833,12 +305064,45 @@
       "source_function": "log_metric",
       "line_number": 423,
       "step_id": "quant_fdtd_n2_aggregation",
-      "recorded_at": "2026-11-12T01:16:18.129061+00:00",
-      "solver": "blender_visual_audit",
+      "recorded_at": "2026-11-13T07:04:15.848752+00:00",
+      "solver": "meep",
       "solver_parameters": {
-        "benchmark": "unified_fractal_robustness_blender",
-        "n_configurations": 7,
-        "executed_at": "2026-11-12T00:07:07.557406+00:00"
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
       }
     },
     "quant_fdtd_n2_task3_rel_diff_bem_ultra_pct": {
@@ -304847,12 +305111,45 @@
       "source_function": "log_metric",
       "line_number": 423,
       "step_id": "quant_fdtd_n2_aggregation",
-      "recorded_at": "2026-11-12T01:16:18.575762+00:00",
-      "solver": "blender_visual_audit",
+      "recorded_at": "2026-11-13T07:04:16.366744+00:00",
+      "solver": "meep",
       "solver_parameters": {
-        "benchmark": "unified_fractal_robustness_blender",
-        "n_configurations": 7,
-        "executed_at": "2026-11-12T00:07:07.557406+00:00"
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
       }
     },
     "quant_fdtd_n2_task4_fz_pn": {
@@ -304861,12 +305158,45 @@
       "source_function": "log_metric",
       "line_number": 423,
       "step_id": "quant_fdtd_n2_aggregation",
-      "recorded_at": "2026-11-12T01:16:19.023782+00:00",
-      "solver": "blender_visual_audit",
+      "recorded_at": "2026-11-13T07:04:16.857007+00:00",
+      "solver": "meep",
       "solver_parameters": {
-        "benchmark": "unified_fractal_robustness_blender",
-        "n_configurations": 7,
-        "executed_at": "2026-11-12T00:07:07.557406+00:00"
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
       }
     },
     "quant_fdtd_n2_task4_rel_diff_bem_ultra_pct": {
@@ -304875,12 +305205,45 @@
       "source_function": "log_metric",
       "line_number": 423,
       "step_id": "quant_fdtd_n2_aggregation",
-      "recorded_at": "2026-11-12T01:16:19.491593+00:00",
-      "solver": "blender_visual_audit",
+      "recorded_at": "2026-11-13T07:04:17.366792+00:00",
+      "solver": "meep",
       "solver_parameters": {
-        "benchmark": "unified_fractal_robustness_blender",
-        "n_configurations": 7,
-        "executed_at": "2026-11-12T00:07:07.557406+00:00"
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
       }
     },
     "quant_fdtd_n2_r100_nmax2_cantor_to_uniform_ratio": {
@@ -304889,12 +305252,45 @@
       "source_function": "log_metric",
       "line_number": 423,
       "step_id": "quant_fdtd_n2_aggregation",
-      "recorded_at": "2026-11-12T01:16:19.994030+00:00",
-      "solver": "blender_visual_audit",
+      "recorded_at": "2026-11-13T07:04:21.980828+00:00",
+      "solver": "meep",
       "solver_parameters": {
-        "benchmark": "unified_fractal_robustness_blender",
-        "n_configurations": 7,
-        "executed_at": "2026-11-12T00:07:07.557406+00:00"
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
       }
     },
     "quant_fdtd_n2_r150_nmax2_cantor_to_uniform_ratio": {
@@ -304903,12 +305299,45 @@
       "source_function": "log_metric",
       "line_number": 423,
       "step_id": "quant_fdtd_n2_aggregation",
-      "recorded_at": "2026-11-12T01:16:20.476734+00:00",
-      "solver": "blender_visual_audit",
+      "recorded_at": "2026-11-13T07:04:22.473323+00:00",
+      "solver": "meep",
       "solver_parameters": {
-        "benchmark": "unified_fractal_robustness_blender",
-        "n_configurations": 7,
-        "executed_at": "2026-11-12T00:07:07.557406+00:00"
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
       }
     },
     "h3_sym_Fz_op_pN": {
@@ -305130,18 +305559,521 @@
         "monte_carlo_samples_per_design": 2000,
         "code_hash": "df6a5fee001a9823"
       }
+    },
+    "quant_fdtd_n2_task7_fz_pn": {
+      "value": 9.783083079031694,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "quant_fdtd_n2_aggregation",
+      "recorded_at": "2026-11-13T07:04:19.856588+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
+      }
+    },
+    "quant_fdtd_n2_task7_rel_diff_bem_ultra_pct": {
+      "value": 596.7684740476784,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "quant_fdtd_n2_aggregation",
+      "recorded_at": "2026-11-13T07:04:20.336968+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
+      }
+    },
+    "quant_fdtd_n2_task8_fz_pn": {
+      "value": 6.880832214394782,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "quant_fdtd_n2_aggregation",
+      "recorded_at": "2026-11-13T07:04:20.835405+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
+      }
+    },
+    "quant_fdtd_n2_task8_rel_diff_bem_ultra_pct": {
+      "value": 583.7703347522362,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "quant_fdtd_n2_aggregation",
+      "recorded_at": "2026-11-13T07:04:21.311837+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
+      }
+    },
+    "quant_fdtd_n2_r150_nmax3_cantor_to_uniform_ratio": {
+      "value": 1.4217877684279774,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "quant_fdtd_n2_aggregation",
+      "recorded_at": "2026-11-13T07:04:23.475727+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
+      }
+    },
+    "quant_fdtd_n2_task6_fz_pn": {
+      "value": 4.249331004226652,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "quant_fdtd_n2_aggregation",
+      "recorded_at": "2026-11-13T07:04:18.866066+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
+      }
+    },
+    "quant_fdtd_n2_task6_rel_diff_bem_ultra_pct": {
+      "value": 322.2696314487416,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "quant_fdtd_n2_aggregation",
+      "recorded_at": "2026-11-13T07:04:19.358463+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
+      }
+    },
+    "quant_fdtd_n2_task5_fz_pn": {
+      "value": 4.973636602396039,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "quant_fdtd_n2_aggregation",
+      "recorded_at": "2026-11-13T07:04:17.843481+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
+      }
+    },
+    "quant_fdtd_n2_task5_rel_diff_bem_ultra_pct": {
+      "value": 254.2311925518445,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "quant_fdtd_n2_aggregation",
+      "recorded_at": "2026-11-13T07:04:18.365232+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
+      }
+    },
+    "quant_fdtd_n2_r200_nmax2_cantor_to_uniform_ratio": {
+      "value": 1.1704516775579372,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "quant_fdtd_n2_aggregation",
+      "recorded_at": "2026-11-13T07:04:22.982003+00:00",
+      "solver": "meep",
+      "solver_parameters": {
+        "solver": "meep",
+        "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+        "resolution": 200,
+        "dx_um": 0.005,
+        "courant": 0.5,
+        "t_run": 3.0,
+        "sigma": 33.333333333333336,
+        "nmax": 2,
+        "moments_per_config": 432,
+        "configurations": [
+          "both",
+          "rotor",
+          "stator",
+          "vac"
+        ],
+        "inclusion_exclusion_passes": 4,
+        "pml_thickness": 0.2,
+        "force_complex_fields": true,
+        "fixed_stress_box_margin_um": 0.0075,
+        "eps_averaging": false,
+        "geometry_mode": "cylindrical",
+        "r_edge_nm": 5.0,
+        "sector0_crop": true,
+        "cell_dimensions_um": [
+          1.7161865668324379,
+          1.6081436188956983,
+          0.98
+        ],
+        "cell_center_um": [
+          0.7827400499171145,
+          0.0,
+          -0.1325
+        ],
+        "max_steps": 0,
+        "timesteps_per_last_moment": 1200,
+        "dt": 0.0025
+      }
     }
   },
-  "model": "blender_visual_audit",
+  "model": "meep",
   "run_metadata": {
     "created_at": "2026-10-15T18:15:22.084634+00:00",
     "entry_point": "execution/casimir_bem_solver.py",
     "environment": "Windows",
-    "solver": "blender_visual_audit",
+    "solver": "meep",
     "solver_parameters": {
-      "benchmark": "unified_fractal_robustness_blender",
-      "n_configurations": 7,
-      "executed_at": "2026-11-12T18:56:29.545022+00:00"
+      "solver": "meep",
+      "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+      "resolution": 100,
+      "dx_um": 0.01,
+      "courant": 0.5,
+      "t_run": 4.0,
+      "sigma": 12.5,
+      "nmax": 2,
+      "moments_per_config": 144,
+      "configurations": [
+        "both",
+        "rotor",
+        "stator",
+        "vac"
+      ],
+      "inclusion_exclusion_passes": 4,
+      "pml_thickness": 0.16,
+      "force_complex_fields": true,
+      "fixed_stress_box_margin_um": 0.02,
+      "eps_averaging": false,
+      "geometry_mode": "explicit_boxes_3d",
+      "r_edge_nm": 0.0,
+      "sector0_crop": false,
+      "cell_dimensions_um": [
+        0.64,
+        0.72,
+        0.72
+      ],
+      "cell_center_um": [
+        0.0,
+        0.0,
+        -0.06
+      ],
+      "max_steps": 0,
+      "timesteps_per_last_moment": 800,
+      "dt": 0.005
     },
     "solver_runs": [
       {
@@ -314514,9 +315446,219 @@
           "executed_at": "2026-11-12T18:56:29.545022+00:00"
         },
         "timestamp": "2026-11-12T18:56:29.790758+00:00"
+      },
+      {
+        "solver": "meep",
+        "solver_parameters": {
+          "solver": "meep",
+          "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+          "resolution": 150,
+          "dx_um": 0.006666666666666667,
+          "courant": 0.5,
+          "t_run": 3.0,
+          "sigma": 33.333333333333336,
+          "nmax": 3,
+          "moments_per_config": 972,
+          "configurations": [
+            "both",
+            "rotor",
+            "stator",
+            "vac"
+          ],
+          "inclusion_exclusion_passes": 4,
+          "pml_thickness": 0.2,
+          "force_complex_fields": true,
+          "fixed_stress_box_margin_um": 0.0075,
+          "eps_averaging": false,
+          "geometry_mode": "cylindrical",
+          "r_edge_nm": 5.0,
+          "sector0_crop": true,
+          "cell_dimensions_um": [
+            1.7161865668324379,
+            1.6081436188956983,
+            0.98
+          ],
+          "cell_center_um": [
+            0.7827400499171145,
+            0.0,
+            -0.1325
+          ],
+          "max_steps": 0,
+          "timesteps_per_last_moment": 899,
+          "dt": 0.0033333333333333335
+        },
+        "timestamp": "2026-11-12T23:14:29.529097+00:00"
+      },
+      {
+        "solver": "meep",
+        "solver_parameters": {
+          "solver": "meep",
+          "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+          "resolution": 150,
+          "dx_um": 0.006666666666666667,
+          "courant": 0.5,
+          "t_run": 3.0,
+          "sigma": 33.333333333333336,
+          "nmax": 3,
+          "moments_per_config": 972,
+          "configurations": [
+            "both",
+            "rotor",
+            "stator",
+            "vac"
+          ],
+          "inclusion_exclusion_passes": 4,
+          "pml_thickness": 0.2,
+          "force_complex_fields": true,
+          "fixed_stress_box_margin_um": 0.0075,
+          "eps_averaging": false,
+          "geometry_mode": "cylindrical",
+          "r_edge_nm": 5.0,
+          "sector0_crop": true,
+          "cell_dimensions_um": [
+            1.7161865668324379,
+            1.6081436188956983,
+            0.98
+          ],
+          "cell_center_um": [
+            0.7827400499171145,
+            0.0,
+            -0.1325
+          ],
+          "max_steps": 0,
+          "timesteps_per_last_moment": 899,
+          "dt": 0.0033333333333333335
+        },
+        "timestamp": "2026-11-12T23:37:34.734077+00:00"
+      },
+      {
+        "solver": "meep",
+        "solver_parameters": {
+          "solver": "meep",
+          "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+          "resolution": 200,
+          "dx_um": 0.005,
+          "courant": 0.5,
+          "t_run": 3.0,
+          "sigma": 33.333333333333336,
+          "nmax": 2,
+          "moments_per_config": 432,
+          "configurations": [
+            "both",
+            "rotor",
+            "stator",
+            "vac"
+          ],
+          "inclusion_exclusion_passes": 4,
+          "pml_thickness": 0.2,
+          "force_complex_fields": true,
+          "fixed_stress_box_margin_um": 0.0075,
+          "eps_averaging": false,
+          "geometry_mode": "cylindrical",
+          "r_edge_nm": 5.0,
+          "sector0_crop": true,
+          "cell_dimensions_um": [
+            1.7161865668324379,
+            1.6081436188956983,
+            0.98
+          ],
+          "cell_center_um": [
+            0.7827400499171145,
+            0.0,
+            -0.1325
+          ],
+          "max_steps": 0,
+          "timesteps_per_last_moment": 1200,
+          "dt": 0.0025
+        },
+        "timestamp": "2026-11-13T06:30:13.919947+00:00"
+      },
+      {
+        "solver": "meep",
+        "solver_parameters": {
+          "solver": "meep",
+          "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+          "resolution": 200,
+          "dx_um": 0.005,
+          "courant": 0.5,
+          "t_run": 3.0,
+          "sigma": 33.333333333333336,
+          "nmax": 2,
+          "moments_per_config": 432,
+          "configurations": [
+            "both",
+            "rotor",
+            "stator",
+            "vac"
+          ],
+          "inclusion_exclusion_passes": 4,
+          "pml_thickness": 0.2,
+          "force_complex_fields": true,
+          "fixed_stress_box_margin_um": 0.0075,
+          "eps_averaging": false,
+          "geometry_mode": "cylindrical",
+          "r_edge_nm": 5.0,
+          "sector0_crop": true,
+          "cell_dimensions_um": [
+            1.7161865668324379,
+            1.6081436188956983,
+            0.98
+          ],
+          "cell_center_um": [
+            0.7827400499171145,
+            0.0,
+            -0.1325
+          ],
+          "max_steps": 0,
+          "timesteps_per_last_moment": 1200,
+          "dt": 0.0025
+        },
+        "timestamp": "2026-11-13T07:04:07.231809+00:00"
+      },
+      {
+        "solver": "meep",
+        "solver_parameters": {
+          "solver": "meep",
+          "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+          "resolution": 100,
+          "dx_um": 0.01,
+          "courant": 0.5,
+          "t_run": 4.0,
+          "sigma": 12.5,
+          "nmax": 2,
+          "moments_per_config": 144,
+          "configurations": [
+            "both",
+            "rotor",
+            "stator",
+            "vac"
+          ],
+          "inclusion_exclusion_passes": 4,
+          "pml_thickness": 0.16,
+          "force_complex_fields": true,
+          "fixed_stress_box_margin_um": 0.02,
+          "eps_averaging": false,
+          "geometry_mode": "explicit_boxes_3d",
+          "r_edge_nm": 0.0,
+          "sector0_crop": false,
+          "cell_dimensions_um": [
+            0.64,
+            0.72,
+            0.72
+          ],
+          "cell_center_um": [
+            0.0,
+            0.0,
+            -0.06
+          ],
+          "max_steps": 0,
+          "timesteps_per_last_moment": 800,
+          "dt": 0.005
+        },
+        "timestamp": "2026-11-13T22:48:45.285639+00:00"
       }
     ],
-    "updated_at": "2026-11-12T18:56:33.968307+00:00"
+    "updated_at": "2026-11-13T22:48:45.285639+00:00"
   },
   "status": "completed"
 }
