@@ -398,3 +398,11 @@
 ### [BUG-261112-01] 2026-11-12 | execution/homothetic_3d_robust_architecture.py | scope=infra
 - **Bug**: Job 8978226 OOMed A100-40GB (37.4 GiB) on 2x2x2 BEM because Kb=26<=28 was unbatched and sec=0 temporaries stayed live into sec=1.
 - **Solution**: Set max_k_batch=6 for Nt,Ns>500, track 1 active large-mesh LU geometry, and explicitly del sector loop temporaries (<14 GiB peak).
+
+### [BUG-261113-01] 2026-11-13 | execution/run_unified_fractal_robustness_study.py | scope=eval model=BEM_vector_dyadic_3D_Gold300K_and_Hermite_FEM dataset=h3_cantor_robust_unified_5pillar_benchmark
+- **Bug**: Hardcoded n_phi_collar=3 during 2x2x2 lobe refinement created 59:1 collar strips and left controls on 1x1x1 vs 2x2x2 H3-Cantor.
+- **Solution**: Standardized all 17 designs on balanced (2,2,2,9) BEM meshes and scaled n_phi_collar=(3,9,14) across the 3-tier mesh ladder.
+
+### [BUG-261113-02] 2026-11-13 | execution/run_scoped_clutch_meep.py | scope=infra
+- **Bug**: CLI --material Gold_Drude override mapped non-pec values to multi-Lorentzian Gold instead of preserving Gold_Drude.
+- **Solution**: Preserved Gold_Drude explicitly when normalizing args.material in execute().

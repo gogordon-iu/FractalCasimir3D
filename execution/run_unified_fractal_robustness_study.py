@@ -67,6 +67,7 @@ from execution.homothetic_3d_robust_architecture import (
     RobustClutchDesign3D,
     active_tooth_area_um2,
     build_all_robustness_study_designs,
+    build_h3_mechanistic_ablation_designs,
     build_homothetic_sector_bem_mesh,
     clear_bem_lu_caches,
     compute_design_fingerprint,
@@ -83,6 +84,7 @@ from execution.run_clutch_log_periodicity_probe import (
     sweep_free_frequency_spectrum,
 )
 from utils.metrics_logger import (
+    _sanitize_macro_name,
     export_macros,
     log_metric,
     log_step,
@@ -94,9 +96,15 @@ DEFAULT_OUTPUT_JSON = REPOSITORY_ROOT / "results" / "unified_fractal_robustness_
 DEFAULT_PROBE_JSON = REPOSITORY_ROOT / ".tmp" / "robustness_micro_probe.json"
 DEFAULT_FIGURE_PDF = REPOSITORY_ROOT / "figures" / "fig_unified_fractal_robustness.pdf"
 DEFAULT_FIGURE_PNG = REPOSITORY_ROOT / "figures" / "fig_unified_fractal_robustness.png"
+DEFAULT_ABLATION_FIG_PDF = REPOSITORY_ROOT / "figures" / "fig_h3_mechanistic_ablations.pdf"
+DEFAULT_ABLATION_FIG_PNG = REPOSITORY_ROOT / "figures" / "fig_h3_mechanistic_ablations.png"
 DEFAULT_LATEX_TABLE = (
     REPOSITORY_ROOT / "Papers" / "FCE_Nature_ver01" / "tables" / "table_unified_fractal_robustness.tex"
 )
+DEFAULT_ABLATION_LATEX_TABLE = (
+    REPOSITORY_ROOT / "Papers" / "FCE_Nature_ver01" / "tables" / "table_h3_mechanistic_ablations.tex"
+)
+MANUSCRIPT_MACROS_PATH = REPOSITORY_ROOT / "Papers" / "FCE_Nature_ver01" / "macros_results.tex"
 
 # Benchmark sweep grids (all coordinates in um or deg)
 STROKE_Z_GRID_UM: tuple[float, ...] = tuple(
@@ -138,9 +146,12 @@ def _wilson_ci_95_pct(k_pass: int, n_tot: int) -> tuple[float, float]:
     return (100.0 * max(0.0, center - half), 100.0 * min(1.0, center + half))
 
 
-def _build_bem_task_list(designs: Sequence[RobustClutchDesign3D]) -> list[dict[str, Any]]:
-    """Construct the deterministic ordered list of all 3D BEM evaluations across Benchmarks 1-5."""
-    by_code = {d.code: d for d in designs}
+def _build_bem_task_list(
+    designs: Sequence[RobustClutchDesign3D],
+    ablation_designs: Sequence[RobustClutchDesign3D] = (),
+) -> list[dict[str, Any]]:
+    """Construct the deterministic ordered list of all 3D BEM evaluations across Benchmarks 1-6."""
+    by_code = {d.code: d for d in (*designs, *ablation_designs)}
     tasks: list[dict[str, Any]] = []
 
     # 1. Benchmark 1: 36-point axial stroke sweep (300 K Gold) across all 6 designs
@@ -338,27 +349,75 @@ def _build_bem_task_list(designs: Sequence[RobustClutchDesign3D]) -> list[dict[s
                 }
             )
 
-    # 9. Benchmark 5C: Mesh-refinement convergence verification on H3-Cantor-Robust
-    tasks.append(
-        {
-            "task_key": "B5_mesh_refined_H3_Cantor_Robust",
-            "benchmark": "B5_mesh_convergence",
-            "design_code": "H3_Cantor_Robust",
-            "z_shift_um": H3_ROBUST_NOMINAL_OP_Z_UM,
-            "theta_deg": DISENGAGED_THETA_DEG,
-            "delta_w_um": 0.0,
-            "delta_r_um": 0.0,
-            "r_edge_um": 0.0,
-            "material": "Gold",
-            "temperature_K": 300.0,
-            "spectral_91": False,
-            "refined_mesh": True,
-        }
-    )
+    # 9. Benchmark 5C: 3-tier balanced mesh-refinement ladder (n_phi_collar scaled proportionally!)
+    mesh_ladder_specs = [
+        ("B5_mesh_tier1_H3_Cantor_Sym", "H3_Cantor_Sym_2x2x2", DISENGAGED_THETA_DEG, (1, 1, 1, 3), 0),
+        ("B5_mesh_tier3_H3_Cantor_Sym", "H3_Cantor_Sym_2x2x2", DISENGAGED_THETA_DEG, (3, 3, 3, 14), 6),
+        ("B5_mesh_tier1_eng_H3_Cantor_Sym", "H3_Cantor_Sym_2x2x2", ENGAGED_THETA_DEG, (1, 1, 1, 3), 0),
+        ("B5_mesh_tier3_eng_H3_Cantor_Sym", "H3_Cantor_Sym_2x2x2", ENGAGED_THETA_DEG, (3, 3, 3, 14), 6),
+        ("B5_mesh_tier1_H3_Cantor_Robust", "H3_Cantor_Robust", DISENGAGED_THETA_DEG, (1, 1, 1, 3), 0),
+    ]
+    for t_key, d_code, th_deg, mesh_ov, extra_xi in mesh_ladder_specs:
+        if d_code in by_code:
+            tasks.append(
+                {
+                    "task_key": t_key,
+                    "benchmark": "B5_mesh_convergence",
+                    "design_code": d_code,
+                    "z_shift_um": H3_ROBUST_NOMINAL_OP_Z_UM,
+                    "theta_deg": th_deg,
+                    "delta_w_um": 0.0,
+                    "delta_r_um": 0.0,
+                    "r_edge_um": 0.0,
+                    "material": "Gold",
+                    "temperature_K": 300.0,
+                    "spectral_91": False,
+                    "refined_mesh": extra_xi > 0,
+                    "mesh_override": list(mesh_ov),
+                    "extra_n_xi": int(extra_xi),
+                }
+            )
+
+    # 10. Benchmark 6: Mechanistic Ablations (2^3 orthogonal factorial + N=1,2,3 depth + micro-bridge isolation)
+    for abl in ablation_designs:
+        for suffix, th_deg, dr_nm in (
+            ("dis3deg", DISENGAGED_THETA_DEG, 0.0),
+            ("eng48deg", ENGAGED_THETA_DEG, 0.0),
+            ("th2.5deg", 2.5, 0.0),
+            ("th3.5deg", 3.5, 0.0),
+            ("dr-8.0nm", DISENGAGED_THETA_DEG, -8.0),
+            ("dr+8.0nm", DISENGAGED_THETA_DEG, +8.0),
+        ):
+            tasks.append(
+                {
+                    "task_key": f"B6_abl_{abl.code}_{suffix}",
+                    "benchmark": "B6_mechanistic_ablations",
+                    "design_code": abl.code,
+                    "z_shift_um": H3_ROBUST_NOMINAL_OP_Z_UM,
+                    "theta_deg": th_deg,
+                    "delta_w_um": 0.0,
+                    "delta_r_um": dr_nm * 1.0e-3,
+                    "r_edge_um": 0.0,
+                    "material": "Gold",
+                    "temperature_K": 300.0,
+                    "spectral_91": False,
+                    "refined_mesh": False,
+                }
+            )
     return tasks
 
 
 VERIFIED_V1_6DESIGN_CODE_HASH = "9c65828d1361e664"
+VERIFIED_V2_SYM_CODE_HASH = "df6a5fee001a9823"
+
+
+def _resolve_task_mesh_override(task: Mapping[str, Any]) -> tuple[int | None, int | None, int | None, int | None]:
+    raw_ov = task.get("mesh_override")
+    if isinstance(raw_ov, (list, tuple)) and len(raw_ov) == 4:
+        return (int(raw_ov[0]), int(raw_ov[1]), int(raw_ov[2]), int(raw_ov[3]))
+    if bool(task.get("refined_mesh", False)):
+        return (2, 2, 2, 9)
+    return (None, None, None, None)
 
 
 def _checkpoint_matches_task(
@@ -382,7 +441,7 @@ def _checkpoint_matches_task(
                 return False
             if by_code is not None and d_code in by_code:
                 des = by_code[d_code]
-                is_ref = bool(task.get("refined_mesh", False))
+                nr_ov, nphi_ov, nz_ov, ncol_ov = _resolve_task_mesh_override(task)
                 built = build_homothetic_sector_bem_mesh(
                     des,
                     z_shift_um=float(task["z_shift_um"]),
@@ -390,10 +449,10 @@ def _checkpoint_matches_task(
                     delta_w_um=float(task["delta_w_um"]),
                     delta_r_um=float(task["delta_r_um"]),
                     r_edge_um=float(task["r_edge_um"]),
-                    n_r_lobe=2 if is_ref else None,
-                    n_phi_lobe=2 if is_ref else None,
-                    n_z_lobe=2 if is_ref else None,
-                    n_phi_collar=3 if is_ref else None,
+                    n_r_lobe=nr_ov,
+                    n_phi_lobe=nphi_ov,
+                    n_z_lobe=nz_ov,
+                    n_phi_collar=ncol_ov,
                 )
                 if built.mesh is not None:
                     if int(cached.get("n_rotor_panels_sector", -1)) != built.mesh.sector_arrays("rotor").count:
@@ -414,7 +473,9 @@ def _execute_single_task(
 ) -> dict[str, Any]:
     des = by_code[str(task["design_code"])]
     is_spec = bool(task.get("spectral_91", False))
-    is_ref = bool(task.get("refined_mesh", False))
+    extra_xi = int(task.get("extra_n_xi", 6 if task.get("refined_mesh", False) else 0))
+    nr_ov, nphi_ov, nz_ov, ncol_ov = _resolve_task_mesh_override(task)
+    has_explicit_ov = task.get("mesh_override") is not None or bool(task.get("refined_mesh", False))
     return evaluate_homothetic_3d_bem(
         des,
         z_shift_um=float(task["z_shift_um"]),
@@ -424,14 +485,14 @@ def _execute_single_task(
         r_edge_um=float(task["r_edge_um"]),
         material=str(task["material"]),
         temperature_K=float(task["temperature_K"]),
-        n_xi=(n_xi + 6) if is_ref else n_xi,
+        n_xi=n_xi + extra_xi,
         kappas_override=SPECTRAL_KAPPA_GRID_UM_INV if is_spec else None,
         device=device,
-        use_lu_cache=not is_ref,
-        n_r_lobe=2 if is_ref else None,
-        n_phi_lobe=2 if is_ref else None,
-        n_z_lobe=2 if is_ref else None,
-        n_phi_collar=3 if is_ref else None,
+        use_lu_cache=not has_explicit_ov,
+        n_r_lobe=nr_ov,
+        n_phi_lobe=nphi_ov,
+        n_z_lobe=nz_ov,
+        n_phi_collar=ncol_ov,
     )
 
 
@@ -838,27 +899,246 @@ def _analyze_spectral_and_ln3_scaling(
             "scaled_force_plateau": [round(float(v), 5) for v in scaled_plateau],
         }
 
-    # Mesh convergence check
-    nom_std = float(
-        task_results[f"B1_stroke_H3_Cantor_Robust_z{H3_ROBUST_NOMINAL_OP_Z_UM:.6f}"]["F_z_pN"]
-    )
-    nom_ref = float(task_results["B5_mesh_refined_H3_Cantor_Robust"]["F_z_pN"])
-    rel_diff_pct = 100.0 * abs(nom_ref - nom_std) / max(abs(nom_ref), 1e-9)
+    # 3-tier balanced mesh convergence ladder (1x1x1 col=3 -> 2x2x2 col=9 -> 3x3x3 col=14)
+    f_sym_t1 = float(task_results["B5_mesh_tier1_H3_Cantor_Sym"]["F_z_pN"])
+    f_sym_t2 = float(task_results[f"B1_stroke_H3_Cantor_Sym_2x2x2_z{H3_ROBUST_NOMINAL_OP_Z_UM:.6f}"]["F_z_pN"])
+    f_sym_t3 = float(task_results["B5_mesh_tier3_H3_Cantor_Sym"]["F_z_pN"])
+    f_sym_rich = (9.0 * f_sym_t3 - 4.0 * f_sym_t2) / 5.0
+
+    f_eng_t1 = float(task_results["B5_mesh_tier1_eng_H3_Cantor_Sym"]["F_z_pN"])
+    f_eng_t2 = float(task_results[f"B2_theta_H3_Cantor_Sym_2x2x2_th{ENGAGED_THETA_DEG:.3f}"]["F_z_pN"])
+    f_eng_t3 = float(task_results["B5_mesh_tier3_eng_H3_Cantor_Sym"]["F_z_pN"])
+    f_eng_rich = (9.0 * f_eng_t3 - 4.0 * f_eng_t2) / 5.0
+
+    f_rob_t1 = float(task_results["B5_mesh_tier1_H3_Cantor_Robust"]["F_z_pN"])
+    f_rob_t2 = float(task_results[f"B1_stroke_H3_Cantor_Robust_z{H3_ROBUST_NOMINAL_OP_Z_UM:.6f}"]["F_z_pN"])
+    rel_diff_t2_t3_pct = 100.0 * abs(f_sym_t3 - f_sym_t2) / max(abs(f_sym_t3), 1e-9)
+    rel_diff_t3_rich_pct = 100.0 * abs(f_sym_rich - f_sym_t3) / max(abs(f_sym_rich), 1e-9)
 
     return {
         "wavenumber_subbands": spectral_out,
         "stroke_log_periodicity": stroke_lomb_out,
         "mesh_convergence": {
-            "F_z_standard_mesh_pN": nom_std,
-            "F_z_refined_2x2x2_mesh_pN": nom_ref,
-            "relative_difference_pct": float(rel_diff_pct),
+            "F_z_sym_tier1_1x1x1_pN": f_sym_t1,
+            "F_z_sym_tier2_2x2x2_pN": f_sym_t2,
+            "F_z_sym_tier3_3x3x3_pN": f_sym_t3,
+            "F_z_sym_richardson_pN": f_sym_rich,
+            "F_z_sym_eng_tier1_pN": f_eng_t1,
+            "F_z_sym_eng_tier2_pN": f_eng_t2,
+            "F_z_sym_eng_tier3_pN": f_eng_t3,
+            "F_z_sym_eng_richardson_pN": f_eng_rich,
+            "F_z_rob_tier1_1x1x1_pN": f_rob_t1,
+            "F_z_rob_tier2_2x2x2_pN": f_rob_t2,
+            "F_z_standard_mesh_pN": f_sym_t2,
+            "F_z_refined_2x2x2_mesh_pN": f_sym_t3,
+            "relative_difference_pct": float(rel_diff_t2_t3_pct),
+            "tier3_vs_richardson_pct": float(rel_diff_t3_rich_pct),
+            "tier2_rotor_panels_sector": int(
+                task_results[f"B1_stroke_H3_Cantor_Sym_2x2x2_z{H3_ROBUST_NOMINAL_OP_Z_UM:.6f}"]["n_rotor_panels_sector"]
+            ),
+            "tier2_stator_panels_sector": int(
+                task_results[f"B1_stroke_H3_Cantor_Sym_2x2x2_z{H3_ROBUST_NOMINAL_OP_Z_UM:.6f}"]["n_stator_panels_sector"]
+            ),
             "refined_rotor_panels_sector": int(
-                task_results["B5_mesh_refined_H3_Cantor_Robust"]["n_rotor_panels_sector"]
+                task_results["B5_mesh_tier3_H3_Cantor_Sym"]["n_rotor_panels_sector"]
             ),
             "refined_stator_panels_sector": int(
-                task_results["B5_mesh_refined_H3_Cantor_Robust"]["n_stator_panels_sector"]
+                task_results["B5_mesh_tier3_H3_Cantor_Sym"]["n_stator_panels_sector"]
             ),
         },
+    }
+
+
+def _analyze_mechanistic_ablations(
+    ablation_designs: Sequence[RobustClutchDesign3D],
+    designs_summary: Mapping[str, Any],
+    task_results: Mapping[str, dict[str, Any]],
+) -> dict[str, Any]:
+    """Evaluate 2^3 (r, theta, z) factorial contrasts, N=1..3 depth ladder, and bridge/Vernier ablations."""
+    abl_records: dict[str, dict[str, Any]] = {}
+    for abl in ablation_designs:
+        rec_dis = task_results[f"B6_abl_{abl.code}_dis3deg"]
+        rec_eng = task_results[f"B6_abl_{abl.code}_eng48deg"]
+        rec_th_m = task_results[f"B6_abl_{abl.code}_th2.5deg"]
+        rec_th_p = task_results[f"B6_abl_{abl.code}_th3.5deg"]
+        rec_dr_m = task_results[f"B6_abl_{abl.code}_dr-8.0nm"]
+        rec_dr_p = task_results[f"B6_abl_{abl.code}_dr+8.0nm"]
+
+        e0 = float(rec_dis["energy_J"])
+        dth_rad = math.radians(0.5)
+        d2E_dth2_Jm = (float(rec_th_p["energy_J"]) - 2.0 * e0 + float(rec_th_m["energy_J"])) / (dth_rad**2)
+        tau_3deg_pN_um = -(float(rec_th_p["energy_J"]) - float(rec_th_m["energy_J"])) / (2.0 * dth_rad) * 1.0e18
+
+        dr8_m = 8.0e-9
+        d2E_dr2_N_per_m = (float(rec_dr_p["energy_J"]) - 2.0 * e0 + float(rec_dr_m["energy_J"])) / (dr8_m**2)
+        r_mean_um = 0.5 * (abl.R_min_um + abl.R_max_um)
+        k_cas_lat = max(0.0, -0.5 * d2E_dr2_N_per_m - 0.5 * d2E_dth2_Jm / ((r_mean_um * 1.0e-6) ** 2))
+
+        etrk_m = np.asarray(rec_dr_m["e_tracks_approx_J"], dtype=np.float64)
+        etrk_0 = np.asarray(rec_dis["e_tracks_approx_J"], dtype=np.float64)
+        etrk_p = np.asarray(rec_dr_p["e_tracks_approx_J"], dtype=np.float64)
+        k_tracks = [
+            float(max(0.0, -(ep - 2.0 * ec + em) / (dr8_m**2)))
+            for em, ec, ep in zip(etrk_m, etrk_0, etrk_p)
+        ]
+        rib_res = compute_stator_rib_elastostatic_safety(
+            abl,
+            track_radial_stiffness_N_per_m=k_tracks,
+            v_patch_rms_mv=20.0,
+            overlay_eccentricity_nm=5.0,
+        )
+        f_dis = float(rec_dis["F_z_pN"])
+        f_eng = float(rec_eng["F_z_pN"])
+        cap_res = evaluate_laplace_capacitance_and_vcrit(
+            abl,
+            f_z_nominal_pN=f_dis,
+            z_shift_um=H3_ROBUST_NOMINAL_OP_Z_UM,
+            theta_deg=DISENGAGED_THETA_DEG,
+        )
+        abl_records[abl.code] = {
+            "code": abl.code,
+            "name": abl.name,
+            "family_role": abl.family_role,
+            "description": abl.description,
+            "n_tracks": len(abl.tracks),
+            "A_tooth_um2": float(active_tooth_area_um2(abl)),
+            "n_rotor_panels_sector": int(rec_dis["n_rotor_panels_sector"]),
+            "n_stator_panels_sector": int(rec_dis["n_stator_panels_sector"]),
+            "F_z_disengaged_3deg_pN": f_dis,
+            "F_z_engaged_48deg_pN": f_eng,
+            "switching_force_swing_pN": float(f_dis - f_eng),
+            "reversible_sign_switch": bool(f_dis > 0.0 and f_eng < 0.0),
+            "local_torque_3deg_pN_um": float(abs(tau_3deg_pN_um)),
+            "K_cas_lateral_mN_per_m": float(k_cas_lat * 1.0e3),
+            "SF_rib": float(rib_res["SF_rib"]),
+            "max_rib_deflection_nm": float(rib_res["max_rib_deflection_nm"]),
+            "V_crit_mV": float(cap_res["V_crit_mV"]),
+        }
+
+    sym = designs_summary["H3_Cantor_Sym_2x2x2"]
+    rob = designs_summary["H3_Cantor_Robust"]
+    f111_entry = {
+        "code": "H3_Cantor_Sym_2x2x2",
+        "name": sym["name"],
+        "bits": "111",
+        "I_r": 1,
+        "I_theta": 1,
+        "I_z": 1,
+        "F_z_disengaged_3deg_pN": float(sym["benchmark_1_axial_stroke"]["F_z_op_pN"]),
+        "F_z_engaged_48deg_pN": float(sym["benchmark_2_angular_lateral"]["F_z_engaged_48deg_pN"]),
+        "switching_force_swing_pN": float(sym["benchmark_2_angular_lateral"]["switching_force_swing_pN"]),
+        "SF_rib": float(sym["benchmark_3_rib_and_vcrit"]["rib_elastostatics"]["SF_rib"]),
+        "V_crit_mV": float(sym["benchmark_3_rib_and_vcrit"]["laplace_electrostatics"]["V_crit_mV"]),
+    }
+
+    cells_by_bits: dict[str, dict[str, Any]] = {"111": f111_entry}
+    for bits in ("000", "001", "010", "011", "100", "101", "110"):
+        rec = abl_records[f"Abl_F{bits}"]
+        cells_by_bits[bits] = {
+            "code": rec["code"],
+            "name": rec["name"],
+            "bits": bits,
+            "I_r": int(bits[0]),
+            "I_theta": int(bits[1]),
+            "I_z": int(bits[2]),
+            "F_z_disengaged_3deg_pN": rec["F_z_disengaged_3deg_pN"],
+            "F_z_engaged_48deg_pN": rec["F_z_engaged_48deg_pN"],
+            "switching_force_swing_pN": rec["switching_force_swing_pN"],
+            "SF_rib": rec["SF_rib"],
+            "V_crit_mV": rec["V_crit_mV"],
+        }
+
+    def _yates_effects(metric_key: str) -> dict[str, float]:
+        y = {(int(b[0]), int(b[1]), int(b[2])): float(cells_by_bits[b][metric_key]) for b in cells_by_bits}
+        d_r = 0.25 * sum(y[(1, j, k)] - y[(0, j, k)] for j in (0, 1) for k in (0, 1))
+        d_th = 0.25 * sum(y[(i, 1, k)] - y[(i, 0, k)] for i in (0, 1) for k in (0, 1))
+        d_z = 0.25 * sum(y[(i, j, 1)] - y[(i, j, 0)] for i in (0, 1) for j in (0, 1))
+        i_rth = 0.25 * sum((y[(1, 1, k)] - y[(0, 1, k)]) - (y[(1, 0, k)] - y[(0, 0, k)]) for k in (0, 1))
+        i_rz = 0.25 * sum((y[(1, j, 1)] - y[(0, j, 1)]) - (y[(1, j, 0)] - y[(0, j, 0)]) for j in (0, 1))
+        i_thz = 0.25 * sum((y[(i, 1, 1)] - y[(i, 0, 1)]) - (y[(i, 1, 0)] - y[(i, 0, 0)]) for i in (0, 1))
+        i_rthz = 0.25 * (
+            ((y[(1, 1, 1)] - y[(0, 1, 1)]) - (y[(1, 0, 1)] - y[(0, 0, 1)]))
+            - ((y[(1, 1, 0)] - y[(0, 1, 0)]) - (y[(1, 0, 0)] - y[(0, 0, 0)]))
+        )
+        return {
+            "baseline_000": y[(0, 0, 0)],
+            "full_111": y[(1, 1, 1)],
+            "net_gain_111_minus_000": y[(1, 1, 1)] - y[(0, 0, 0)],
+            "main_effect_r": d_r,
+            "main_effect_theta": d_th,
+            "main_effect_z": d_z,
+            "interaction_r_theta": i_rth,
+            "interaction_r_z": i_rz,
+            "interaction_theta_z": i_thz,
+            "synergy_3way_r_theta_z": i_rthz,
+        }
+
+    depth_ladder = [
+        {
+            "N_depth": 1,
+            "code": "Abl_Depth_N1",
+            "n_tracks": abl_records["Abl_Depth_N1"]["n_tracks"],
+            "F_z_disengaged_3deg_pN": abl_records["Abl_Depth_N1"]["F_z_disengaged_3deg_pN"],
+            "F_z_engaged_48deg_pN": abl_records["Abl_Depth_N1"]["F_z_engaged_48deg_pN"],
+            "switching_force_swing_pN": abl_records["Abl_Depth_N1"]["switching_force_swing_pN"],
+            "SF_rib": abl_records["Abl_Depth_N1"]["SF_rib"],
+            "V_crit_mV": abl_records["Abl_Depth_N1"]["V_crit_mV"],
+        },
+        {
+            "N_depth": 2,
+            "code": "Abl_Depth_N2",
+            "n_tracks": abl_records["Abl_Depth_N2"]["n_tracks"],
+            "F_z_disengaged_3deg_pN": abl_records["Abl_Depth_N2"]["F_z_disengaged_3deg_pN"],
+            "F_z_engaged_48deg_pN": abl_records["Abl_Depth_N2"]["F_z_engaged_48deg_pN"],
+            "switching_force_swing_pN": abl_records["Abl_Depth_N2"]["switching_force_swing_pN"],
+            "SF_rib": abl_records["Abl_Depth_N2"]["SF_rib"],
+            "V_crit_mV": abl_records["Abl_Depth_N2"]["V_crit_mV"],
+        },
+        {
+            "N_depth": 3,
+            "code": "H3_Cantor_Sym_2x2x2",
+            "n_tracks": 7,
+            "F_z_disengaged_3deg_pN": f111_entry["F_z_disengaged_3deg_pN"],
+            "F_z_engaged_48deg_pN": f111_entry["F_z_engaged_48deg_pN"],
+            "switching_force_swing_pN": f111_entry["switching_force_swing_pN"],
+            "SF_rib": f111_entry["SF_rib"],
+            "V_crit_mV": f111_entry["V_crit_mV"],
+        },
+    ]
+
+    no_br = abl_records["Abl_NoBridges"]
+    sym_defl = float(sym["benchmark_3_rib_and_vcrit"]["rib_elastostatics"]["max_rib_deflection_nm"])
+    bridge_isolation = {
+        "bridged_code": "H3_Cantor_Sym_2x2x2",
+        "unbridged_code": "Abl_NoBridges",
+        "bridged_Fz_3deg_pN": f111_entry["F_z_disengaged_3deg_pN"],
+        "unbridged_Fz_3deg_pN": no_br["F_z_disengaged_3deg_pN"],
+        "bridged_SF_rib": f111_entry["SF_rib"],
+        "unbridged_SF_rib": no_br["SF_rib"],
+        "SF_rib_gain_ratio": f111_entry["SF_rib"] / max(no_br["SF_rib"], 1e-9),
+        "bridged_max_deflection_nm": sym_defl,
+        "unbridged_max_deflection_nm": no_br["max_rib_deflection_nm"],
+    }
+
+    vernier_isolation = {
+        "in_phase_code": "H3_Cantor_Sym_2x2x2",
+        "vernier_code": "H3_Cantor_Robust",
+        "in_phase_Fz_3deg_pN": f111_entry["F_z_disengaged_3deg_pN"],
+        "vernier_Fz_3deg_pN": float(rob["benchmark_1_axial_stroke"]["F_z_op_pN"]),
+        "in_phase_R_tau": float(sym["benchmark_2_angular_lateral"]["torque_ripple_R_tau"]),
+        "vernier_R_tau": float(rob["benchmark_2_angular_lateral"]["torque_ripple_R_tau"]),
+        "in_phase_Y_lab_pct": float(sym["benchmark_4_cleanroom_yield"]["cleanroom_yield_Y_lab_pct"]),
+        "vernier_Y_lab_pct": float(rob["benchmark_4_cleanroom_yield"]["cleanroom_yield_Y_lab_pct"]),
+    }
+
+    return {
+        "ablation_designs": abl_records,
+        "factorial_2x2x2_cells": [cells_by_bits[b] for b in ("000", "001", "010", "011", "100", "101", "110", "111")],
+        "yates_effects_open_Fz_pN": _yates_effects("F_z_disengaged_3deg_pN"),
+        "yates_effects_switching_swing_pN": _yates_effects("switching_force_swing_pN"),
+        "recursion_depth_ladder": depth_ladder,
+        "micro_bridge_isolation": bridge_isolation,
+        "vernier_phase_isolation": vernier_isolation,
     }
 
 
@@ -1050,13 +1330,155 @@ def _render_summary_figure(
     )
 
 
+def _mref(metric_key: str) -> str:
+    """Return a clean LaTeX macro invocation `\\MacroName{}` for `metric_key`."""
+    return f"\\{_sanitize_macro_name(metric_key)}{{}}"
+
+
+def _fmt_sf_tex(sf_val: float) -> str:
+    val = float(sf_val)
+    if val < 999.0:
+        return f"{val:.1f}"
+    exp = int(math.floor(math.log10(abs(val))))
+    mant = val / (10.0**exp)
+    return f"{mant:.2f}\\times 10^{{{exp}}}"
+
+
+def _render_ablation_figure(
+    summary: Mapping[str, Any],
+    pdf_path: Path,
+    png_path: Path,
+    code_hash: str,
+) -> None:
+    """Render 4-panel mechanistic ablation figure (2^3 factorial, Yates contrasts, depth N=1..3, bridges/Vernier)."""
+    pdf_path.parent.mkdir(parents=True, exist_ok=True)
+    b6 = summary["benchmark_6_mechanistic_ablations"]
+    cells = b6["factorial_2x2x2_cells"]
+    yates = b6["yates_effects_open_Fz_pN"]
+    depth = b6["recursion_depth_ladder"]
+    br = b6["micro_bridge_isolation"]
+    vn = b6["vernier_phase_isolation"]
+
+    plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "axes.labelsize": 9})
+    fig, axes = plt.subplots(2, 2, figsize=(13.2, 8.6), constrained_layout=True)
+
+    # Panel (a): 2^3 (I_r, I_theta, I_z) Factorial Open Repulsion & Engaged Latch
+    ax = axes[0, 0]
+    x_idx = np.arange(len(cells))
+    w_bar = 0.37
+    f_open = [c["F_z_disengaged_3deg_pN"] for c in cells]
+    f_eng_abs = [abs(c["F_z_engaged_48deg_pN"]) for c in cells]
+    ax.bar(x_idx - 0.5 * w_bar, f_open, width=w_bar, color="#B22222", edgecolor="#222222", lw=0.7, label="Open repulsion $F_z(3^\\circ)$")
+    ax.bar(x_idx + 0.5 * w_bar, f_eng_abs, width=w_bar, color="#0072B2", edgecolor="#222222", lw=0.7, label="Engaged latch $|F_z(48^\\circ)|$")
+    ax.axhline(0.0, color="#333333", lw=0.9, ls="--")
+    ax.set_xticks(x_idx)
+    ax.set_xticklabels([f"$({c['I_r']},{c['I_theta']},{c['I_z']})$" for c in cells], fontsize=8.3)
+    ax.set_xlabel("Factorial cell $(I_r, I_\\theta, I_z)$")
+    ax.set_ylabel("Axial Casimir force magnitude (pN)")
+    ax.set_title("a  $2^3$ Homothetic $(r,\\theta,z)$ Factorial Switching")
+    ax.legend(fontsize=8.0, loc="upper left")
+    ax.grid(True, axis="y", alpha=0.25)
+
+    # Panel (b): Orthogonal Yates Main Effects & Multi-Axis Synergy on F_z(3 deg)
+    ax = axes[0, 1]
+    eff_labels = [
+        "$\\Delta_r$",
+        "$\\Delta_\\theta$",
+        "$\\Delta_z$",
+        "$\\mathcal{I}_{r\\theta}$",
+        "$\\mathcal{I}_{rz}$",
+        "$\\mathcal{I}_{\\theta z}$",
+        "$\\mathcal{I}_{r\\theta z}$",
+    ]
+    eff_vals = [
+        yates["main_effect_r"],
+        yates["main_effect_theta"],
+        yates["main_effect_z"],
+        yates["interaction_r_theta"],
+        yates["interaction_r_z"],
+        yates["interaction_theta_z"],
+        yates["synergy_3way_r_theta_z"],
+    ]
+    eff_cols = ["#B22222" if v >= 0.0 else "#D55E00" for v in eff_vals]
+    bars = ax.bar(np.arange(len(eff_vals)), eff_vals, color=eff_cols, width=0.58, edgecolor="#222222", lw=0.7)
+    ax.axhline(0.0, color="#333333", lw=0.9, ls="--")
+    ax.set_xticks(np.arange(len(eff_vals)))
+    ax.set_xticklabels(eff_labels, fontsize=9.0)
+    ax.set_ylabel("Orthogonal Yates contrast on $F_z(3^\\circ)$ (pN)")
+    ax.set_title("b  Exact Yates Main-Effect & Synergy Decomposition")
+    for b_rect, v in zip(bars, eff_vals):
+        va = "bottom" if v >= 0.0 else "top"
+        off = 0.02 if v >= 0.0 else -0.02
+        ax.text(b_rect.get_x() + 0.5 * b_rect.get_width(), v + off, f"{v:+.2f}", ha="center", va=va, fontsize=7.6)
+    ax.grid(True, axis="y", alpha=0.25)
+
+    # Panel (c): Recursion-Depth Ladder N = 1 -> 2 -> 3 at Constant Active Tooth Area
+    ax = axes[1, 0]
+    ns = [row["N_depth"] for row in depth]
+    fz_n = [row["F_z_disengaged_3deg_pN"] for row in depth]
+    sw_n = [row["switching_force_swing_pN"] for row in depth]
+    ax.plot(ns, fz_n, marker="o", ms=6.5, lw=2.3, color="#B22222", label="Open levitation $F_z(3^\\circ)$")
+    ax.plot(ns, sw_n, marker="s", ms=6.0, lw=2.1, ls="--", color="#0072B2", label="Switching swing $\\Delta F_z$")
+    ax.set_xticks(ns)
+    ax.set_xticklabels([f"$N={n}$ ({row['n_tracks']} trk)" for n, row in zip(ns, depth)])
+    ax.set_ylabel("Force (pN)")
+    ax.set_title("c  Area-Matched Cantor Recursion Ladder ($N=1,2,3$)")
+    ax.legend(fontsize=8.0, loc="upper left")
+    ax.grid(True, alpha=0.25)
+
+    # Panel (d): Stator Micro-Bridge & Vernier Phase Isolations
+    ax = axes[1, 1]
+    cat_labels = [
+        "No Bridges\n($\\mathrm{SF}_{\\mathrm{rib}}$)",
+        "Bridged H3\n($\\mathrm{SF}_{\\mathrm{rib}}$)",
+        "Vernier\n($10^2\\mathcal{R}_\\tau$)",
+        "Symmetric $\\Delta\\phi=0$\n($10^2\\mathcal{R}_\\tau$)",
+    ]
+    cat_vals = [
+        max(br["unbridged_SF_rib"], 1.0e-3),
+        max(br["bridged_SF_rib"], 1.0e-3),
+        max(100.0 * vn["vernier_R_tau"], 1.0e-3),
+        max(100.0 * vn["in_phase_R_tau"], 1.0e-3),
+    ]
+    cat_cols = ["#D55E00", "#009E73", "#0072B2", "#B22222"]
+    ax.bar(np.arange(4), cat_vals, color=cat_cols, width=0.56, edgecolor="#222222", lw=0.7)
+    ax.axhline(1.0, color="#333333", lw=1.1, ls="--", label="Collapse threshold $\\mathrm{SF}_{\\mathrm{rib}}=1$")
+    ax.set_yscale("log")
+    ax.set_xticks(np.arange(4))
+    ax.set_xticklabels(cat_labels, fontsize=8.2)
+    ax.set_ylabel("Dimensionless metric (log scale)")
+    ax.set_title("d  Stator Micro-Bridge & Angular Phase Ablations")
+    ax.legend(fontsize=8.0, loc="best")
+    ax.grid(True, axis="y", alpha=0.25)
+
+    fig.savefig(pdf_path, dpi=300)
+    fig.savefig(png_path, dpi=220)
+    plt.close(fig)
+
+    cols = [
+        "benchmark_6_mechanistic_ablations.factorial_2x2x2_cells",
+        "benchmark_6_mechanistic_ablations.yates_effects_open_Fz_pN",
+        "benchmark_6_mechanistic_ablations.recursion_depth_ladder",
+        "benchmark_6_mechanistic_ablations.micro_bridge_isolation",
+        "benchmark_6_mechanistic_ablations.vernier_phase_isolation",
+    ]
+    for p in (pdf_path, png_path):
+        save_plot_provenance(
+            str(p),
+            str(DEFAULT_OUTPUT_JSON),
+            cols,
+            solver_name="vector_dyadic_bem_3d_plus_hermite_fem",
+            solver_parameters={"code_hash": code_hash},
+        )
+
+
 def _write_latex_summary_table(summary: Mapping[str, Any], out_tex: Path) -> None:
-    """Write manuscript-ready LaTeX benchmark table directly from solved BEM/FEM data."""
+    """Write 100% macro-driven LaTeX benchmark table from solved 2x2x2 BEM/FEM metrics."""
     out_tex.parent.mkdir(parents=True, exist_ok=True)
     designs_data = summary["designs"]
     all_order = [
-        ("H3_Cantor_Sym_2x2x2", "\\textbf{H3-Cantor-Sym-2x2x2 ($b=3$, $\\Delta\\phi=0^\\circ$)}"),
-        ("H3_Cantor_Robust", "\\textbf{H3-Cantor-Robust ($b=3$, Vernier)}"),
+        ("H3_Cantor_Sym_2x2x2", "\\textbf{H3-Cantor ($\\Delta\\phi=0^\\circ$)}"),
+        ("H3_Cantor_Robust", "H3-Cantor-Vernier ($\\Delta\\phi_k\\neq 0$)"),
         ("Ctrl_KnifeEdge_g27", "Ctrl-KnifeEdge-g27"),
         ("Ctrl_Uni_7Trk", "Ctrl-Uni-7Trk"),
         ("Ctrl_Lin_3Stage", "Ctrl-Lin-3Stage"),
@@ -1068,58 +1490,108 @@ def _write_latex_summary_table(summary: Mapping[str, Any], out_tex: Path) -> Non
         "% Auto-generated by execution/run_unified_fractal_robustness_study.py -- DO NOT EDIT BY HAND",
         "\\begin{table*}[t]",
         "\\centering",
-        "\\caption{Multi-perturbation nanomechanical and cleanroom fabrication robustness benchmark comparing \\texttt{H3-Cantor-Sym-2x2x2} ($b=3.0$, $\\Delta\\phi=0^\\circ$, $2\\times 2\\times 2$ mesh) and \\texttt{H3-Cantor-Robust} ($b=3.0$, $N=3$, $g_{\\min}=27\\,\\mathrm{nm}$, $A_{\\mathrm{tooth}}=3.103\\,\\mu\\mathrm{m}^2$) against five strictly matched non-fractal controls in 3D Vector-Dyadic BEM ($300\\,\\mathrm{K}$ Drude--Lorentz Gold) and 32-element Hermite curved-beam FEM.}",
+        f"\\caption{{Multi-perturbation nanomechanical and cleanroom fabrication benchmark comparing the primary \\texttt{{H3-Cantor}} architecture ($b=3$, $N=3$, $g_{{\\min}}={_mref('rob_gmin_nm_disp')}\\,\\mathrm{{nm}}$, $A_{{\\mathrm{{tooth}}}}={_mref('rob_atooth_um2_disp')}\\,\\mu\\mathrm{{m}}^2$), its Vernier phase variant, and five strictly area- and $g_{{\\min}}$-matched non-fractal controls on the unified $2\\times 2\\times 2$ 3D BEM mesh ($300\\,\\mathrm{{K}}$ Drude--Lorentz Gold) and 32-element Hermite curved-beam FEM.}}",
         "\\label{tab:unified_fractal_robustness}",
         "\\small",
         "\\begin{tabular}{lcccccccc}",
         "\\hline\\hline",
-        "Design & $F_z(3^\\circ)$ & $F_z(48^\\circ)$ & Stroke Basin $\\mathcal{B}_z$ & Min Stroke $F_z$ & Torque Ripple & Rib Safety & $V_{\\mathrm{crit}}$ & Lab Yield \\\\",
-        " & (pN) & (pN) & $\\ln(z_{\\max}/z_{\\min})$ & $[45,360]\\,\\mathrm{nm}$ (pN) & $\\mathcal{R}_\\tau$ & $\\mathrm{SF}_{\\mathrm{rib}}$ & (mV) & $Y_{\\mathrm{lab}}$ (\\%) \\\\",
+        "Design & $F_z(\\theta_{\\mathrm{open}})$ & $F_z(\\theta_{\\mathrm{eng}})$ & Stroke Basin $\\mathcal{B}_z$ & Min Stroke $F_z$ & Torque Ripple & Rib Safety & $V_{\\mathrm{crit}}$ & Lab Yield \\\\",
+        " & (pN) & (pN) & $\\ln(z_{\\max}/z_{\\min})$ & (pN) & $\\mathcal{R}_\\tau$ & $\\mathrm{SF}_{\\mathrm{rib}}$ & (mV) & $Y_{\\mathrm{lab}}$ (\\%) \\\\",
         "\\hline",
     ]
     for code, tex_name in order:
-        d = designs_data[code]
-        b1 = d["benchmark_1_axial_stroke"]
-        b2 = d["benchmark_2_angular_lateral"]
-        b3 = d["benchmark_3_rib_and_vcrit"]
-        b4 = d["benchmark_4_cleanroom_yield"]
-        sf = b3["rib_elastostatics"]["SF_rib"]
-        sf_str = f"{sf:.1f}" if sf < 999.0 else f"{sf:.2e}"
-        vc_mv = b3["laplace_electrostatics"]["V_crit_mV"]
+        p = f"rob_tbl_{code}"
         lines.append(
-            f"{tex_name} & {b1['F_z_op_pN']:+.2f} & {b2['F_z_engaged_48deg_pN']:+.2f} & "
-            f"{b1['log_stroke_basin_Bz']:.2f} & {b1['min_Fz_working_window_45_360nm_pN']:+.2f} & "
-            f"{b2['torque_ripple_R_tau']:.4f} & {sf_str} & {vc_mv:.1f} & {b4['cleanroom_yield_Y_lab_pct']:.1f} \\\\"
+            f"{tex_name} & {_mref(p + '_fz_open')} & {_mref(p + '_fz_eng')} & "
+            f"{_mref(p + '_bz')} & {_mref(p + '_min_fz')} & "
+            f"{_mref(p + '_rtau')} & ${{{_mref(p + '_sf')}}}$ & {_mref(p + '_vcrit')} & {_mref(p + '_ylab')} \\\\"
         )
     lines.extend(["\\hline\\hline", "\\end{tabular}", "\\end{table*}", ""])
     out_tex.write_text("\n".join(lines), encoding="utf-8")
 
 
+def _write_ablation_latex_table(summary: Mapping[str, Any], out_tex: Path) -> None:
+    """Write 100% macro-driven LaTeX table for the 2^3 factorial, recursion-depth ladder, and structural ablations."""
+    out_tex.parent.mkdir(parents=True, exist_ok=True)
+    b6 = summary["benchmark_6_mechanistic_ablations"]
+    lines = [
+        "% Auto-generated by execution/run_unified_fractal_robustness_study.py -- DO NOT EDIT BY HAND",
+        "\\begin{table*}[t]",
+        "\\centering",
+        f"\\caption{{Mechanistic decomposition of \\texttt{{H3-Cantor}} on the matched $2\\times 2\\times 2$ 3D BEM mesh: orthogonal $2^3$ $(I_r, I_\\theta, I_z)$ homothetic staging factorial, area-matched Cantor recursion-depth ladder ($N=1,2,3$ at $A_{{\\mathrm{{tooth}}}}={_mref('rob_atooth_um2_disp')}\\,\\mu\\mathrm{{m}}^2$), and suspended stator micro-bridge isolation.}}",
+        "\\label{tab:h3_mechanistic_ablations}",
+        "\\small",
+        "\\begin{tabular}{llccccc}",
+        "\\hline\\hline",
+        "Group & Configuration & $F_z(\\theta_{\\mathrm{open}})$ (pN) & $F_z(\\theta_{\\mathrm{eng}})$ (pN) & Swing $\\Delta F_z$ (pN) & $\\mathrm{SF}_{\\mathrm{rib}}$ & $V_{\\mathrm{crit}}$ (mV) \\\\",
+        "\\hline",
+    ]
+    cell_desc = {
+        "000": "Uniform baseline $(0,0,0)$",
+        "001": "$z$-staging only $(0,0,1)$",
+        "010": "$\\theta$-subdivision only $(0,1,0)$",
+        "011": "$(\\theta,z)$ staging $(0,1,1)$",
+        "100": "$r$-Cantor only $(1,0,0)$",
+        "101": "$(r,z)$ staging $(1,0,1)$",
+        "110": "$(r,\\theta)$ staging $(1,1,0)$",
+        "111": "\\textbf{Full H3-Cantor $(1,1,1)$}",
+    }
+    for c in b6["factorial_2x2x2_cells"]:
+        bits = c["bits"]
+        p = f"abl_f{bits}"
+        lines.append(
+            f"$2^3$ Factorial & {cell_desc[bits]} & {_mref(p + '_fz_open')} & {_mref(p + '_fz_eng')} & "
+            f"{_mref(p + '_swing')} & ${{{_mref(p + '_sf')}}}$ & {_mref(p + '_vcrit')} \\\\"
+        )
+    lines.append("\\hline")
+    for row in b6["recursion_depth_ladder"]:
+        n_d = int(row["N_depth"])
+        p = f"abl_depth_n{n_d}"
+        lines.append(
+            f"Depth Ladder & Generation $N={n_d}$ ({_mref(p + '_ntrk')} tracks) & {_mref(p + '_fz_open')} & "
+            f"{_mref(p + '_fz_eng')} & {_mref(p + '_swing')} & ${{{_mref(p + '_sf')}}}$ & {_mref(p + '_vcrit')} \\\\"
+        )
+    lines.append("\\hline")
+    lines.append(
+        f"Bridge Ablation & Unbridged stator (\\texttt{{Abl-NoBridges}}) & {_mref('abl_nobr_fz_open')} & "
+        f"{_mref('abl_nobr_fz_eng')} & {_mref('abl_nobr_swing')} & ${{{_mref('abl_nobr_sf')}}}$ & {_mref('abl_nobr_vcrit')} \\\\"
+    )
+    lines.extend(["\\hline\\hline", "\\end{tabular}", "\\end{table*}", ""])
+    out_tex.write_text("\n".join(lines), encoding="utf-8")
+
+
 def _log_grounded_provenance_metrics(summary: Mapping[str, Any], solver_params: Mapping[str, Any]) -> None:
-    """Export key robustness & ln(3) metrics to results/provenance_metrics.json and results/macros_results.tex."""
+    """Export all robustness, ln(3), mesh-convergence, and mechanistic ablation macros to provenance_metrics.json."""
     set_solver_provenance("vector_dyadic_bem_3d_plus_hermite_fem", dict(solver_params))
     step_id = "unified_fractal_robustness_3d_study"
     h3 = summary["designs"]["H3_Cantor_Robust"]
-    h3_sym = summary["designs"].get("H3_Cantor_Sym_2x2x2")
+    h3_sym = summary["designs"]["H3_Cantor_Sym_2x2x2"]
     ke = summary["designs"]["Ctrl_KnifeEdge_g27"]
     sp_pec = summary["benchmark_5_ln3_scale_covering"]["wavenumber_subbands"]["H3_Cantor_Robust_PEC"]
     sp_gold = summary["benchmark_5_ln3_scale_covering"]["wavenumber_subbands"]["H3_Cantor_Robust_Gold300K"]
+    sp_sym_pec = summary["benchmark_5_ln3_scale_covering"]["wavenumber_subbands"]["H3_Cantor_Sym_2x2x2_PEC"]
+    sp_sym_gold = summary["benchmark_5_ln3_scale_covering"]["wavenumber_subbands"]["H3_Cantor_Sym_2x2x2_Gold300K"]
+    mc_mesh = summary["benchmark_5_ln3_scale_covering"]["mesh_convergence"]
+    b6 = summary["benchmark_6_mechanistic_ablations"]
 
     step_summary: dict[str, Any] = {
         "status": "completed",
         "executed_at": summary["executed_at"],
+        "h3_sym_2x2x2_Fz_op_pN": h3_sym["benchmark_1_axial_stroke"]["F_z_op_pN"],
+        "h3_sym_2x2x2_R_tau": h3_sym["benchmark_2_angular_lateral"]["torque_ripple_R_tau"],
+        "h3_sym_2x2x2_Y_lab_pct": h3_sym["benchmark_4_cleanroom_yield"]["cleanroom_yield_Y_lab_pct"],
         "h3_Fz_op_pN": h3["benchmark_1_axial_stroke"]["F_z_op_pN"],
-        "h3_Bz": h3["benchmark_1_axial_stroke"]["log_stroke_basin_Bz"],
         "h3_Y_lab_pct": h3["benchmark_4_cleanroom_yield"]["cleanroom_yield_Y_lab_pct"],
         "knife_edge_Y_lab_pct": ke["benchmark_4_cleanroom_yield"]["cleanroom_yield_Y_lab_pct"],
     }
-    if h3_sym is not None:
-        step_summary["h3_sym_2x2x2_Fz_op_pN"] = h3_sym["benchmark_1_axial_stroke"]["F_z_op_pN"]
-        step_summary["h3_sym_2x2x2_R_tau"] = h3_sym["benchmark_2_angular_lateral"]["torque_ripple_R_tau"]
-        step_summary["h3_sym_2x2x2_Y_lab_pct"] = h3_sym["benchmark_4_cleanroom_yield"]["cleanroom_yield_Y_lab_pct"]
     log_step(step_id, step_summary)
 
-    metrics_map = {
+    scalar_entries: dict[str, int | float | str] = {
+        "rob_gmin_nm_disp": f"{h3_sym['geometry_descriptors']['g_r_min_nm']:.0f}",
+        "rob_atooth_um2_disp": f"{h3_sym['geometry_descriptors']['A_tooth_um2']:.3f}",
+        "rob_ntotal_bem_tasks": int(summary["total_bem_tasks_evaluated"]),
+        "rob_mc_chips_per_design": int(h3_sym["benchmark_4_cleanroom_yield"]["monte_carlo_n_chips"]),
+        # Raw floats
         "h3_robust_Fz_op_pN": h3["benchmark_1_axial_stroke"]["F_z_op_pN"],
         "h3_robust_Fz_engaged_pN": h3["benchmark_2_angular_lateral"]["F_z_engaged_48deg_pN"],
         "h3_robust_stroke_span_nm": h3["benchmark_1_axial_stroke"]["sign_safe_span_nm"],
@@ -1130,34 +1602,136 @@ def _log_grounded_provenance_metrics(summary: Mapping[str, Any], solver_params: 
         "h3_robust_SF_rib": h3["benchmark_3_rib_and_vcrit"]["rib_elastostatics"]["SF_rib"],
         "h3_robust_V_crit_mV": h3["benchmark_3_rib_and_vcrit"]["laplace_electrostatics"]["V_crit_mV"],
         "h3_robust_yield_pct": h3["benchmark_4_cleanroom_yield"]["cleanroom_yield_Y_lab_pct"],
-        "ctrl_knife_Fz_op_pN": ke["benchmark_1_axial_stroke"]["F_z_op_pN"],
-        "ctrl_knife_SF_rib": ke["benchmark_3_rib_and_vcrit"]["rib_elastostatics"]["SF_rib"],
-        "ctrl_knife_V_crit_mV": ke["benchmark_3_rib_and_vcrit"]["laplace_electrostatics"]["V_crit_mV"],
-        "ctrl_knife_yield_pct": ke["benchmark_4_cleanroom_yield"]["cleanroom_yield_Y_lab_pct"],
+        "h3_sym_Fz_op_pN": h3_sym["benchmark_1_axial_stroke"]["F_z_op_pN"],
+        "h3_sym_Fz_engaged_pN": h3_sym["benchmark_2_angular_lateral"]["F_z_engaged_48deg_pN"],
+        "h3_sym_stroke_span_nm": h3_sym["benchmark_1_axial_stroke"]["sign_safe_span_nm"],
+        "h3_sym_stroke_basin_Bz": h3_sym["benchmark_1_axial_stroke"]["log_stroke_basin_Bz"],
+        "h3_sym_min_stroke_Fz_pN": h3_sym["benchmark_1_axial_stroke"]["min_Fz_working_window_45_360nm_pN"],
+        "h3_sym_escape_work_kBT": h3_sym["benchmark_1_axial_stroke"]["escape_work_kBT_300K"],
+        "h3_sym_torque_ripple": h3_sym["benchmark_2_angular_lateral"]["torque_ripple_R_tau"],
+        "h3_sym_SF_rib": h3_sym["benchmark_3_rib_and_vcrit"]["rib_elastostatics"]["SF_rib"],
+        "h3_sym_V_crit_mV": h3_sym["benchmark_3_rib_and_vcrit"]["laplace_electrostatics"]["V_crit_mV"],
+        "h3_sym_yield_pct": h3_sym["benchmark_4_cleanroom_yield"]["cleanroom_yield_Y_lab_pct"],
+        "h3_sym_median_mc_Fz_pN": h3_sym["benchmark_4_cleanroom_yield"]["median_mc_Fz_net_pN"],
+        #Formatted prose macros for H3-Cantor (Sym 2x2x2) & controls
+        "h3_sym_fz_peak_disp": f"{h3_sym['benchmark_1_axial_stroke']['F_z_peak_pN']:+.2f}",
+        "h3_sym_z_peak_nm_disp": f"{h3_sym['benchmark_1_axial_stroke']['z_peak_nm']:.0f}",
+        "h3_sym_z_safe_min_nm_disp": f"{h3_sym['benchmark_1_axial_stroke']['sign_safe_z_min_nm']:.1f}",
+        "h3_sym_z_safe_max_nm_disp": f"{h3_sym['benchmark_1_axial_stroke']['sign_safe_z_max_nm']:.0f}",
+        "h3_sym_span_nm_disp": f"{h3_sym['benchmark_1_axial_stroke']['sign_safe_span_nm']:.1f}",
+        "h3_sym_escape_kbt_disp": f"{h3_sym['benchmark_1_axial_stroke']['escape_work_kBT_300K']:.2f}",
+        "h3_sym_swing_pn_disp": f"{h3_sym['benchmark_2_angular_lateral']['switching_force_swing_pN']:.2f}",
+        "h3_sym_switch_ratio_disp": f"{h3_sym['benchmark_2_angular_lateral']['switching_ratio_abs']:.2f}",
+        "h3_sym_klat_mn_disp": f"{h3_sym['benchmark_2_angular_lateral']['K_cas_lateral_mN_per_m']:.3f}",
+        "h3_sym_rib_defl_nm_disp": f"{h3_sym['benchmark_3_rib_and_vcrit']['rib_elastostatics']['max_rib_deflection_nm']:.3f}",
+        "h3_sym_r5_ret_pct_disp": f"{h3_sym['benchmark_4_cleanroom_yield']['r5nm_retention_pct']:.1f}",
+        "h3_sym_r10_ret_pct_disp": f"{h3_sym['benchmark_4_cleanroom_yield']['r10nm_retention_pct']:.1f}",
+        "h3_sym_overetch_z160_disp": f"{h3_sym['benchmark_4_cleanroom_yield']['severe_overetch_m40nm_stage2_z160nm_Fz_pN']:+.2f}",
+        "h3_sym_ci_lo_disp": f"{h3_sym['benchmark_4_cleanroom_yield']['cleanroom_yield_95ci_pct'][0]:.1f}",
+        "h3_sym_ci_hi_disp": f"{h3_sym['benchmark_4_cleanroom_yield']['cleanroom_yield_95ci_pct'][1]:.1f}",
+        # Spectral sub-band spacing & Lomb-Scargle
         "h3_pec_dlnk_21": sp_pec["spacing_comparison"]["delta_ln_kappa_21"],
         "h3_pec_dlnk_32": sp_pec["spacing_comparison"]["delta_ln_kappa_32"],
         "h3_gold_dlnk_21": sp_gold["spacing_comparison"]["delta_ln_kappa_21"],
         "h3_gold_dlnk_32": sp_gold["spacing_comparison"]["delta_ln_kappa_32"],
+        "h3_sym_pec_dlnk_21_disp": f"{sp_sym_pec['spacing_comparison']['delta_ln_kappa_21']:.2f}",
+        "h3_sym_pec_dlnk_32_disp": f"{sp_sym_pec['spacing_comparison']['delta_ln_kappa_32']:.2f}",
+        "h3_sym_gold_dlnk_21_disp": f"{sp_sym_gold['spacing_comparison']['delta_ln_kappa_21']:.2f}",
+        "h3_sym_gold_dlnk_32_disp": f"{sp_sym_gold['spacing_comparison']['delta_ln_kappa_32']:.2f}",
+        "h3_sym_gold_k1_disp": f"{sp_sym_gold['peaks_by_generation']['1']['kappa_peak_um_inv']:.2f}",
+        "h3_sym_gold_k2_disp": f"{sp_sym_gold['peaks_by_generation']['2']['kappa_peak_um_inv']:.2f}",
+        "h3_sym_gold_k3_disp": f"{sp_sym_gold['peaks_by_generation']['3']['kappa_peak_um_inv']:.2f}",
+        # 3-tier panel-mesh ladder
+        "h3_mesh_t1_open_disp": f"{mc_mesh['F_z_sym_tier1_1x1x1_pN']:+.2f}",
+        "h3_mesh_t2_open_disp": f"{mc_mesh['F_z_sym_tier2_2x2x2_pN']:+.2f}",
+        "h3_mesh_t3_open_disp": f"{mc_mesh['F_z_sym_tier3_3x3x3_pN']:+.2f}",
+        "h3_mesh_rich_open_disp": f"{mc_mesh['F_z_sym_richardson_pN']:+.2f}",
+        "h3_mesh_t1_eng_disp": f"{mc_mesh['F_z_sym_eng_tier1_pN']:+.2f}",
+        "h3_mesh_t2_eng_disp": f"{mc_mesh['F_z_sym_eng_tier2_pN']:+.2f}",
+        "h3_mesh_t3_eng_disp": f"{mc_mesh['F_z_sym_eng_tier3_pN']:+.2f}",
+        "h3_mesh_rich_eng_disp": f"{mc_mesh['F_z_sym_eng_richardson_pN']:+.2f}",
+        "h3_mesh_t2_t3_diff_pct_disp": f"{mc_mesh['relative_difference_pct']:.1f}",
+        "h3_mesh_t3_rich_diff_pct_disp": f"{mc_mesh['tier3_vs_richardson_pct']:.1f}",
+        "h3_mesh_t2_nr": int(mc_mesh["tier2_rotor_panels_sector"]),
+        "h3_mesh_t2_ns": int(mc_mesh["tier2_stator_panels_sector"]),
+        "h3_mesh_t3_nr": int(mc_mesh["refined_rotor_panels_sector"]),
+        "h3_mesh_t3_ns": int(mc_mesh["refined_stator_panels_sector"]),
     }
-    if h3_sym is not None:
-        metrics_map.update(
-            {
-                "h3_sym_Fz_op_pN": h3_sym["benchmark_1_axial_stroke"]["F_z_op_pN"],
-                "h3_sym_Fz_engaged_pN": h3_sym["benchmark_2_angular_lateral"]["F_z_engaged_48deg_pN"],
-                "h3_sym_stroke_span_nm": h3_sym["benchmark_1_axial_stroke"]["sign_safe_span_nm"],
-                "h3_sym_stroke_basin_Bz": h3_sym["benchmark_1_axial_stroke"]["log_stroke_basin_Bz"],
-                "h3_sym_min_stroke_Fz_pN": h3_sym["benchmark_1_axial_stroke"]["min_Fz_working_window_45_360nm_pN"],
-                "h3_sym_escape_work_kBT": h3_sym["benchmark_1_axial_stroke"]["escape_work_kBT_300K"],
-                "h3_sym_torque_ripple": h3_sym["benchmark_2_angular_lateral"]["torque_ripple_R_tau"],
-                "h3_sym_SF_rib": h3_sym["benchmark_3_rib_and_vcrit"]["rib_elastostatics"]["SF_rib"],
-                "h3_sym_V_crit_mV": h3_sym["benchmark_3_rib_and_vcrit"]["laplace_electrostatics"]["V_crit_mV"],
-                "h3_sym_yield_pct": h3_sym["benchmark_4_cleanroom_yield"]["cleanroom_yield_Y_lab_pct"],
-                "h3_sym_median_mc_Fz_pN": h3_sym["benchmark_4_cleanroom_yield"]["median_mc_Fz_net_pN"],
-            }
-        )
-    for key, val in metrics_map.items():
-        log_metric(key, float(val), step_id=step_id, defer_save=False)
+
+    st_lomb_sym = summary["benchmark_5_ln3_scale_covering"]["stroke_log_periodicity"].get(
+        "H3_Cantor_Sym_2x2x2_Gold300K", {}
+    )
+    ls_sym = st_lomb_sym.get("free_frequency_lomb_scargle", {})
+    if not ls_sym.get("underdetermined", True):
+        scalar_entries["h3_sym_lomb_omega_peak_disp"] = f"{ls_sym['omega_hat_1h']:.2f}"
+        scalar_entries["h3_sym_lomb_r2_peak_disp"] = f"{ls_sym['r2_peak_1h']:.3f}"
+        scalar_entries["h3_sym_lomb_b_hat_disp"] = f"{ls_sym['b_hat_1h']:.2f}"
+
+    # All 7 main-table rows
+    for code, d in summary["designs"].items():
+        p = f"rob_tbl_{code}"
+        b1 = d["benchmark_1_axial_stroke"]
+        b2 = d["benchmark_2_angular_lateral"]
+        b3 = d["benchmark_3_rib_and_vcrit"]
+        b4 = d["benchmark_4_cleanroom_yield"]
+        scalar_entries[p + "_fz_open"] = f"{b1['F_z_op_pN']:+.2f}"
+        scalar_entries[p + "_fz_eng"] = f"{b2['F_z_engaged_48deg_pN']:+.2f}"
+        scalar_entries[p + "_bz"] = f"{b1['log_stroke_basin_Bz']:.2f}"
+        scalar_entries[p + "_min_fz"] = f"{b1['min_Fz_working_window_45_360nm_pN']:+.2f}"
+        scalar_entries[p + "_rtau"] = f"{b2['torque_ripple_R_tau']:.4f}"
+        scalar_entries[p + "_sf"] = _fmt_sf_tex(b3["rib_elastostatics"]["SF_rib"])
+        scalar_entries[p + "_vcrit"] = f"{b3['laplace_electrostatics']['V_crit_mV']:.1f}"
+        scalar_entries[p + "_ylab"] = f"{b4['cleanroom_yield_Y_lab_pct']:.1f}"
+        scalar_entries[p + "_span_nm"] = f"{b1['sign_safe_span_nm']:.1f}"
+
+    # All 8 factorial cells + Yates effects + Depth ladder + Bridge isolation
+    for c in b6["factorial_2x2x2_cells"]:
+        p = f"abl_f{c['bits']}"
+        scalar_entries[p + "_fz_open"] = f"{c['F_z_disengaged_3deg_pN']:+.2f}"
+        scalar_entries[p + "_fz_eng"] = f"{c['F_z_engaged_48deg_pN']:+.2f}"
+        scalar_entries[p + "_swing"] = f"{c['switching_force_swing_pN']:.2f}"
+        scalar_entries[p + "_sf"] = _fmt_sf_tex(c["SF_rib"])
+        scalar_entries[p + "_vcrit"] = f"{c['V_crit_mV']:.1f}"
+
+    y_open = b6["yates_effects_open_Fz_pN"]
+    y_sw = b6["yates_effects_switching_swing_pN"]
+    for short_k, dict_k in (
+        ("dr", "main_effect_r"),
+        ("dth", "main_effect_theta"),
+        ("dz", "main_effect_z"),
+        ("irth", "interaction_r_theta"),
+        ("irz", "interaction_r_z"),
+        ("ithz", "interaction_theta_z"),
+        ("irthz", "synergy_3way_r_theta_z"),
+        ("net", "net_gain_111_minus_000"),
+    ):
+        scalar_entries[f"abl_yates_open_{short_k}"] = f"{y_open[dict_k]:+.2f}"
+        scalar_entries[f"abl_yates_swing_{short_k}"] = f"{y_sw[dict_k]:+.2f}"
+
+    for row in b6["recursion_depth_ladder"]:
+        n_d = int(row["N_depth"])
+        p = f"abl_depth_n{n_d}"
+        scalar_entries[p + "_ntrk"] = int(row["n_tracks"])
+        scalar_entries[p + "_fz_open"] = f"{row['F_z_disengaged_3deg_pN']:+.2f}"
+        scalar_entries[p + "_fz_eng"] = f"{row['F_z_engaged_48deg_pN']:+.2f}"
+        scalar_entries[p + "_swing"] = f"{row['switching_force_swing_pN']:.2f}"
+        scalar_entries[p + "_sf"] = _fmt_sf_tex(row["SF_rib"])
+        scalar_entries[p + "_vcrit"] = f"{row['V_crit_mV']:.1f}"
+
+    no_br = b6["ablation_designs"]["Abl_NoBridges"]
+    scalar_entries["abl_nobr_fz_open"] = f"{no_br['F_z_disengaged_3deg_pN']:+.2f}"
+    scalar_entries["abl_nobr_fz_eng"] = f"{no_br['F_z_engaged_48deg_pN']:+.2f}"
+    scalar_entries["abl_nobr_swing"] = f"{no_br['switching_force_swing_pN']:.2f}"
+    scalar_entries["abl_nobr_sf"] = _fmt_sf_tex(no_br["SF_rib"])
+    scalar_entries["abl_nobr_vcrit"] = f"{no_br['V_crit_mV']:.1f}"
+    scalar_entries["abl_nobr_defl_nm"] = f"{no_br['max_rib_deflection_nm']:.1f}"
+    scalar_entries["abl_bridge_sf_gain_ratio"] = _fmt_sf_tex(b6["micro_bridge_isolation"]["SF_rib_gain_ratio"])
+
+    keys_list = list(scalar_entries.items())
+    for i_k, (key, val) in enumerate(keys_list):
+        log_metric(key, val, step_id=step_id, defer_save=(i_k < len(keys_list) - 1))
     export_macros()
+    export_macros(output_path=str(MANUSCRIPT_MACROS_PATH))
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -1201,12 +1775,13 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     t_start = time.perf_counter()
     designs = build_all_robustness_study_designs()
-    by_code = {d.code: d for d in designs}
+    ablation_designs = build_h3_mechanistic_ablation_designs()
+    by_code = {d.code: d for d in (*designs, *ablation_designs)}
     code_hash = _compute_combined_code_hash()
 
     # Pre-flight geometric & 3D collision verification across stroke and rotational switching
     collision_audit: dict[str, Any] = {}
-    for des in designs:
+    for des in (*designs, *ablation_designs):
         chk_dis = verify_design_3d_non_intersection(
             des, z_shift_um=H3_ROBUST_NOMINAL_OP_Z_UM, theta_deg=DISENGAGED_THETA_DEG
         )
@@ -1225,21 +1800,21 @@ def main(argv: Sequence[str] | None = None) -> int:
             "engaged_48deg_zop": chk_eng["collision_free"],
         }
 
-    all_tasks = _build_bem_task_list(designs)
+    all_tasks = _build_bem_task_list(designs, ablation_designs)
 
     # Micro-probe mode (`--max-steps > 0`) for hpc-workload-gate empirical profiling
     if args.max_steps > 0:
         clear_bem_lu_caches()
         n_run = min(int(args.max_steps), len(all_tasks))
-        # Representative cold-LU (~30%) + cached-sweep (~70%) task mix matching the 487-task queue across 7-trk & 19-trk designs
+        # Representative cold-LU (~30%) + cached-sweep (~70%) task mix across 2x2x2 designs & ablations
         n_stroke_per_design = len(STROKE_Z_GRID_UM)
-        if n_run == 5 and len(all_tasks) >= 2 * n_stroke_per_design:
+        if n_run == 5 and len(all_tasks) >= 3 * n_stroke_per_design:
             probe_tasks = [
-                all_tasks[0],                      # H3_Cantor_Robust (7-trk, cold LU)
-                all_tasks[1],                      # H3_Cantor_Robust (7-trk, cached LU)
-                all_tasks[2],                      # H3_Cantor_Robust (7-trk, cached LU)
-                all_tasks[n_stroke_per_design],    # Ctrl_KnifeEdge_g27 (19-trk, cold LU)
-                all_tasks[n_stroke_per_design + 1],  # Ctrl_KnifeEdge_g27 (19-trk, cached LU)
+                all_tasks[0],                          # H3_Cantor_Robust (2x2x2, cold LU)
+                all_tasks[1],                          # H3_Cantor_Robust (2x2x2, cached LU)
+                all_tasks[2],                          # H3_Cantor_Robust (2x2x2, cached LU)
+                all_tasks[2 * n_stroke_per_design],    # Ctrl_Uni_7Trk (2x2x2, cold LU)
+                all_tasks[-1],                         # Abl_Depth_N2 (2x2x2 ablation)
             ]
         else:
             probe_tasks = all_tasks[:n_run]
@@ -1259,8 +1834,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         out_probe = args.output_json if args.output_json is not None else DEFAULT_PROBE_JSON
         out_probe.parent.mkdir(parents=True, exist_ok=True)
         probe_payload = {
-            "model": "BEM_vector_dyadic_Gold_300K_probe",
-            "dataset": "h3_cantor_robust_vs_5_matched_controls",
+            "model": "BEM_vector_dyadic_Gold_300K_2x2x2_probe",
+            "dataset": "h3_cantor_2x2x2_controls_and_ablations",
             "status": "probe_completed",
             "executed_at": datetime.now(timezone.utc).isoformat(),
             "code_hash": code_hash,
@@ -1278,15 +1853,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     out_json = args.output_json if args.output_json is not None else DEFAULT_OUTPUT_JSON
     ckpt_dir = args.checkpoint_dir / f"hash_{code_hash}_nxi{args.n_xi}"
     ckpt_dir.mkdir(parents=True, exist_ok=True)
-    verified_v1_ckpt_dir = args.checkpoint_dir / f"hash_{VERIFIED_V1_6DESIGN_CODE_HASH}_nxi{args.n_xi}"
-    unchanged_legacy_codes = {
-        "H3_Cantor_Robust",
-        "Ctrl_KnifeEdge_g27",
-        "Ctrl_Uni_7Trk",
-        "Ctrl_Lin_3Stage",
-        "Ctrl_Mono_3Stage",
-        "Ctrl_Shuf_OutPhase",
-    }
+    verified_v2_ckpt_dir = args.checkpoint_dir / f"hash_{VERIFIED_V2_SYM_CODE_HASH}_nxi{args.n_xi}"
 
     task_results: dict[str, dict[str, Any]] = {}
     n_total = len(all_tasks)
@@ -1295,7 +1862,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     for idx, tsk in enumerate(all_tasks, start=1):
         t_key = str(tsk["task_key"])
         d_code = str(tsk["design_code"])
-        des_cur = by_code[d_code]
         ckpt_file = ckpt_dir / f"{t_key}.json"
         loaded_ckpt: dict[str, Any] | None = None
         if not args.no_cache_ckpt and ckpt_file.is_file():
@@ -1305,13 +1871,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         if (
             loaded_ckpt is None
             and not args.no_cache_ckpt
-            and d_code in unchanged_legacy_codes
-            and (des_cur.bem_n_r_lobe, des_cur.bem_n_phi_lobe, des_cur.bem_n_z_lobe, des_cur.bem_n_phi_collar)
-            == (1, 1, 1, 3)
-            and verified_v1_ckpt_dir.is_dir()
-            and verified_v1_ckpt_dir.resolve() != ckpt_dir.resolve()
+            and d_code == "H3_Cantor_Sym_2x2x2"
+            and tsk.get("mesh_override") is None
+            and verified_v2_ckpt_dir.is_dir()
+            and verified_v2_ckpt_dir.resolve() != ckpt_dir.resolve()
         ):
-            prev_file = verified_v1_ckpt_dir / f"{t_key}.json"
+            prev_file = verified_v2_ckpt_dir / f"{t_key}.json"
             if prev_file.is_file():
                 candidate_ckpt = json.loads(prev_file.read_text(encoding="utf-8"))
                 if _checkpoint_matches_task(candidate_ckpt, tsk, by_code=by_code):
@@ -1382,6 +1947,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         }
 
     b5_res = _analyze_spectral_and_ln3_scaling(task_results)
+    b6_res = _analyze_mechanistic_ablations(ablation_designs, designs_summary, task_results)
 
     # Ranking & head-to-head comparison summary
     rankings = {
@@ -1429,6 +1995,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     solver_params = {
         "formulation": "vector_dyadic",
         "symmetry": "C4_Bloch_4_sectors",
+        "bem_mesh_parity": "2x2x2_lobe_9_collar_all_designs",
         "material_primary": "Gold_Drude_Lorentz_300K",
         "material_reference": "PEC_0K",
         "n_xi_tail": int(args.n_xi),
@@ -1440,8 +2007,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     executed_iso = datetime.now(timezone.utc).isoformat()
     full_summary: dict[str, Any] = {
-        "model": "BEM_vector_dyadic_3D_Gold300K_and_Hermite_FEM",
-        "dataset": "h3_cantor_robust_unified_5pillar_benchmark",
+        "model": "BEM_vector_dyadic_3D_2x2x2_Gold300K_and_Hermite_FEM",
+        "dataset": "h3_cantor_2x2x2_unified_robustness_and_ablations",
         "status": "completed",
         "executed_at": executed_iso,
         "code_hash": code_hash,
@@ -1451,6 +2018,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "rankings": rankings,
         "designs": designs_summary,
         "benchmark_5_ln3_scale_covering": b5_res,
+        "benchmark_6_mechanistic_ablations": b6_res,
     }
 
     out_json.parent.mkdir(parents=True, exist_ok=True)
@@ -1466,15 +2034,18 @@ def main(argv: Sequence[str] | None = None) -> int:
 
         _log_grounded_provenance_metrics(full_summary, solver_params)
         _render_summary_figure(full_summary, DEFAULT_FIGURE_PDF, DEFAULT_FIGURE_PNG, code_hash)
-        summary_fig_audit = inspect_rendered_png_quality(
-            DEFAULT_FIGURE_PNG, min_fg_fraction=0.04, max_fg_fraction=0.96
-        )
-        if summary_fig_audit["status"] != "PASS":
-            raise RuntimeError(f"Summary benchmark figure visual inspection failed: {summary_fig_audit}")
+        _render_ablation_figure(full_summary, DEFAULT_ABLATION_FIG_PDF, DEFAULT_ABLATION_FIG_PNG, code_hash)
+        for fig_png in (DEFAULT_FIGURE_PNG, DEFAULT_ABLATION_FIG_PNG):
+            fig_audit = inspect_rendered_png_quality(
+                fig_png, min_fg_fraction=0.04, max_fg_fraction=0.96
+            )
+            if fig_audit["status"] != "PASS":
+                raise RuntimeError(f"Figure visual inspection failed ({fig_png.name}): {fig_audit}")
         _write_latex_summary_table(full_summary, DEFAULT_LATEX_TABLE)
-        print(f"[UNIFIED-ROBUSTNESS] Saved summary JSON -> {out_json}")
-        print(f"[UNIFIED-ROBUSTNESS] Saved figure       -> {DEFAULT_FIGURE_PDF}")
-        print(f"[UNIFIED-ROBUSTNESS] Saved LaTeX table  -> {DEFAULT_LATEX_TABLE}")
+        _write_ablation_latex_table(full_summary, DEFAULT_ABLATION_LATEX_TABLE)
+        print(f"[UNIFIED-ROBUSTNESS] Saved summary JSON   -> {out_json}")
+        print(f"[UNIFIED-ROBUSTNESS] Saved figures        -> {DEFAULT_FIGURE_PDF}, {DEFAULT_ABLATION_FIG_PDF}")
+        print(f"[UNIFIED-ROBUSTNESS] Saved LaTeX tables   -> {DEFAULT_LATEX_TABLE}, {DEFAULT_ABLATION_LATEX_TABLE}")
 
         if not args.skip_blender:
             blender_render_dir = REPOSITORY_ROOT / "results" / "unified_fractal_robustness_blender"

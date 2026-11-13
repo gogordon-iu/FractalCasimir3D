@@ -119,6 +119,11 @@ class Parameters:
     cell_buffer_um: float = DEFAULT_CELL_BUFFER_UM
     r_edge_nm: float = 0.0
     sector0_crop: bool = False
+    explicit_rotor_boxes: tuple[tuple[float, float, float, float, float, float], ...] = ()
+    explicit_stator_boxes: tuple[tuple[float, float, float, float, float, float], ...] = ()
+    explicit_stress_boxes: tuple[tuple[float, float, float, float, float, float], ...] = ()
+    explicit_cell_center: tuple[float, float, float] | None = None
+    explicit_phys_bounds: tuple[tuple[float, float], tuple[float, float], tuple[float, float]] | None = None
 
     @property
     def sigma(self) -> float:
@@ -253,7 +258,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--eps-averaging", action="store_true", default=None)
     parser.add_argument(
         "--geometry-mode",
-        choices=("cylindrical", "rectilinear_xz"),
+        choices=("cylindrical", "rectilinear_xz", "explicit_boxes_3d"),
         default=None,
     )
     parser.add_argument("--r-edge-nm", type=float, default=None)
@@ -554,8 +559,92 @@ def parse_parameters(
     if not isinstance(geometry_mode, str) or geometry_mode not in (
         "cylindrical",
         "rectilinear_xz",
+        "explicit_boxes_3d",
     ):
-        raise ValueError("geometry_mode must be 'cylindrical' or 'rectilinear_xz'")
+        raise ValueError("geometry_mode must be 'cylindrical', 'rectilinear_xz', or 'explicit_boxes_3d'")
+
+    def _parse_box_list(key_name: str) -> tuple[tuple[float, float, float, float, float, float], ...]:
+        raw_boxes = get(key_name, [])
+        if not isinstance(raw_boxes, list) or not raw_boxes:
+            raise ValueError(f"{key_name} must be a non-empty list of [x0, x1, y0, y1, z0, z1] boxes")
+        parsed_boxes: list[tuple[float, float, float, float, float, float]] = []
+        for b_idx, box in enumerate(raw_boxes):
+            if not isinstance(box, (list, tuple)) or len(box) != 6:
+                raise ValueError(f"{key_name}[{b_idx}] must have 6 coordinates [x0, x1, y0, y1, z0, z1]")
+            coords = tuple(finite_number(c, f"{key_name}[{b_idx}][{c_idx}]") for c_idx, c in enumerate(box))
+            if not (coords[0] < coords[1] and coords[2] < coords[3] and coords[4] < coords[5]):
+                raise ValueError(f"{key_name}[{b_idx}] requires x0 < x1, y0 < y1, z0 < z1")
+            parsed_boxes.append(coords)
+        return tuple(parsed_boxes)
+
+    explicit_rotor_boxes: tuple[tuple[float, float, float, float, float, float], ...] = ()
+    explicit_stator_boxes: tuple[tuple[float, float, float, float, float, float], ...] = ()
+    explicit_stress_boxes: tuple[tuple[float, float, float, float, float, float], ...] = ()
+    explicit_cell_center: tuple[float, float, float] | None = None
+    explicit_phys_bounds: tuple[tuple[float, float], tuple[float, float], tuple[float, float]] | None = None
+
+    if geometry_mode == "explicit_boxes_3d":
+        explicit_rotor_boxes = _parse_box_list("explicit_rotor_boxes")
+        explicit_stator_boxes = _parse_box_list("explicit_stator_boxes")
+        explicit_stress_boxes = _parse_box_list("explicit_stress_boxes")
+        d_eff_override = get("d_eff_um", None)
+        if d_eff_override is not None:
+            d_eff = finite_number(d_eff_override, "d_eff_um", positive=True)
+
+        # Enforce strict vacuum clearance between rotor, stress boxes, and stator!
+        tol_um = 1.0e-3  # >= 1 nm strict separation
+        for r_idx, rb in enumerate(explicit_rotor_boxes):
+            inside_any = any(
+                sb[0] + tol_um <= rb[0] and rb[1] <= sb[1] - tol_um
+                and sb[2] + tol_um <= rb[2] and rb[3] <= sb[3] - tol_um
+                and sb[4] + tol_um <= rb[4] and rb[5] <= sb[5] - tol_um
+                for sb in explicit_stress_boxes
+            )
+            if not inside_any:
+                raise ValueError(f"explicit_rotor_boxes[{r_idx}] must lie strictly inside an explicit_stress_box")
+        for s_idx, stb in enumerate(explicit_stator_boxes):
+            for sb_idx, sb in enumerate(explicit_stress_boxes):
+                separated = (
+                    stb[1] <= sb[0] - tol_um or stb[0] >= sb[1] + tol_um
+                    or stb[3] <= sb[2] - tol_um or stb[2] >= sb[3] + tol_um
+                    or stb[5] <= sb[4] - tol_um or stb[4] >= sb[5] + tol_um
+                )
+                if not separated:
+                    raise ValueError(
+                        f"explicit_stator_boxes[{s_idx}] intersects or touches explicit_stress_boxes[{sb_idx}]"
+                    )
+
+        raw_cc = get("explicit_cell_center", None)
+        if raw_cc is not None:
+            if not isinstance(raw_cc, (list, tuple)) or len(raw_cc) != 3:
+                raise ValueError("explicit_cell_center must be [cx, cy, cz]")
+            explicit_cell_center = (
+                finite_number(raw_cc[0], "explicit_cell_center[0]"),
+                finite_number(raw_cc[1], "explicit_cell_center[1]"),
+                finite_number(raw_cc[2], "explicit_cell_center[2]"),
+            )
+        raw_pb = get("explicit_phys_bounds", None)
+        if raw_pb is not None:
+            if not isinstance(raw_pb, (list, tuple)) or len(raw_pb) != 3:
+                raise ValueError("explicit_phys_bounds must be [[xmin, xmax], [ymin, ymax], [zmin, zmax]]")
+            pb_parsed: list[tuple[float, float]] = []
+            for a_idx, pair in enumerate(raw_pb):
+                if not isinstance(pair, (list, tuple)) or len(pair) != 2:
+                    raise ValueError(f"explicit_phys_bounds[{a_idx}] must be [min, max]")
+                lo = finite_number(pair[0], f"explicit_phys_bounds[{a_idx}][0]")
+                hi = finite_number(pair[1], f"explicit_phys_bounds[{a_idx}][1]")
+                if lo >= hi:
+                    raise ValueError(f"explicit_phys_bounds[{a_idx}] requires min < max")
+                pb_parsed.append((lo, hi))
+            explicit_phys_bounds = (pb_parsed[0], pb_parsed[1], pb_parsed[2])
+        else:
+            all_b = (*explicit_rotor_boxes, *explicit_stator_boxes, *explicit_stress_boxes)
+            explicit_phys_bounds = (
+                (min(b[0] for b in all_b), max(b[1] for b in all_b)),
+                (min(b[2] for b in all_b), max(b[3] for b in all_b)),
+                (min(b[4] for b in all_b), max(b[5] for b in all_b)),
+            )
+
     r_edge_nm, _ = _extract_r_edge_nm(raw)
     sector0_crop = get("sector0_crop", False)
     if not isinstance(sector0_crop, bool):
@@ -599,6 +688,11 @@ def parse_parameters(
         cell_buffer_um=cell_buffer_um,
         r_edge_nm=r_edge_nm,
         sector0_crop=sector0_crop,
+        explicit_rotor_boxes=explicit_rotor_boxes,
+        explicit_stator_boxes=explicit_stator_boxes,
+        explicit_stress_boxes=explicit_stress_boxes,
+        explicit_cell_center=explicit_cell_center,
+        explicit_phys_bounds=explicit_phys_bounds,
     )
 
 
@@ -672,6 +766,12 @@ def _sector0_phys_bounds(
 
 
 def cell_center(parameters: Parameters) -> tuple[float, float, float]:
+    if parameters.geometry_mode == "explicit_boxes_3d":
+        if parameters.explicit_cell_center is not None:
+            return parameters.explicit_cell_center
+        assert parameters.explicit_phys_bounds is not None
+        (x_min, x_max), (y_min, y_max), (z_min, z_max) = parameters.explicit_phys_bounds
+        return (0.5 * (x_min + x_max), 0.5 * (y_min + y_max), 0.5 * (z_min + z_max))
     if not parameters.sector0_crop:
         return (0.0, 0.0, 0.0)
     (x_min, x_max), (y_min, y_max), (z_min, z_max) = _sector0_phys_bounds(parameters)
@@ -680,6 +780,14 @@ def cell_center(parameters: Parameters) -> tuple[float, float, float]:
 
 def cell_dimensions(parameters: Parameters) -> tuple[float, float, float]:
     buffer = parameters.cell_buffer_um
+    if parameters.geometry_mode == "explicit_boxes_3d":
+        assert parameters.explicit_phys_bounds is not None
+        centers = cell_center(parameters)
+        dims_list: list[float] = []
+        for (lo, hi), cc in zip(parameters.explicit_phys_bounds, centers):
+            half_extent = max(cc - lo, hi - cc) + buffer + parameters.pml_thickness
+            dims_list.append(round(2.0 * half_extent, 12))
+        return (dims_list[0], dims_list[1], dims_list[2])
     if parameters.sector0_crop:
         (x_min, x_max), (y_min, y_max), (z_min, z_max) = _sector0_phys_bounds(parameters)
         pad = 2.0 * (buffer + parameters.pml_thickness)
@@ -715,13 +823,14 @@ def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
         length / 2.0 - parameters.pml_thickness
         for length in dims
     )
-    stator_depth = (
-        abs(parameters.z_pad_top) + parameters.t_landing_pad
-        if parameters.z_pad_top is not None
-        else parameters.t_membrane + parameters.t_landing_pad
-    )
-    if -stator_depth <= centers[2] - interiors[2]:
-        raise ValueError("The stator thickness reaches the lower PML")
+    if parameters.geometry_mode != "explicit_boxes_3d":
+        stator_depth = (
+            abs(parameters.z_pad_top) + parameters.t_landing_pad
+            if parameters.z_pad_top is not None
+            else parameters.t_membrane + parameters.t_landing_pad
+        )
+        if -stator_depth <= centers[2] - interiors[2]:
+            raise ValueError("The stator thickness reaches the lower PML")
 
     def box_faces(
         lower: list[float], upper: list[float], prefix: str = ""
@@ -758,6 +867,19 @@ def stress_faces(parameters: Parameters) -> tuple[Face, ...]:
                     )
                 )
         return faces
+
+    if parameters.geometry_mode == "explicit_boxes_3d":
+        for box_group in (parameters.explicit_rotor_boxes, parameters.explicit_stator_boxes):
+            for bx in box_group:
+                for axis_i, (lo_c, hi_c) in enumerate(((bx[0], bx[1]), (bx[2], bx[3]), (bx[4], bx[5]))):
+                    if lo_c <= centers[axis_i] - interiors[axis_i] or hi_c >= centers[axis_i] + interiors[axis_i]:
+                        raise ValueError("An explicit solid box intersects the PML; increase cell_buffer_um")
+        explicit_faces: list[Face] = []
+        for idx, sb in enumerate(parameters.explicit_stress_boxes):
+            explicit_faces.extend(
+                box_faces([sb[0], sb[2], sb[4]], [sb[1], sb[3], sb[5]], prefix=f"b{idx}_")
+            )
+        return tuple(explicit_faces)
 
     if parameters.z_tip < 0 or parameters.stress_box_mode == "per_tooth_rotor_frame":
         alpha = math.radians(parameters.tooth_arc_deg / 2.0)
@@ -1110,35 +1232,55 @@ def run_moment(
     dims = cell_dimensions(parameters)
     centers = cell_center(parameters)
     geometry: list[Any] = []
-    if configuration in ("both", "stator"):
-        geometry.extend(
-            stator_generator(
-                elements=list(parameters.elements),
-                L_plate=parameters.l_domain,
-                t_membrane=parameters.t_membrane,
-                t_landing_pad=parameters.t_landing_pad,
-                plate_material=material,
-                void_material=background,
-                num_sectors=parameters.num_sectors,
-                aperture_arc_deg=parameters.aperture_arc_deg,
-                bridge_arc_deg=parameters.bridge_arc_deg,
-                **stator_options,
+    if parameters.geometry_mode == "explicit_boxes_3d":
+        if configuration in ("both", "stator"):
+            for bx in parameters.explicit_stator_boxes:
+                geometry.append(
+                    mp.Block(
+                        size=mp.Vector3(bx[1] - bx[0], bx[3] - bx[2], bx[5] - bx[4]),
+                        center=mp.Vector3(0.5 * (bx[0] + bx[1]), 0.5 * (bx[2] + bx[3]), 0.5 * (bx[4] + bx[5])),
+                        material=material,
+                    )
+                )
+        if configuration in ("both", "rotor", "self"):
+            for bx in parameters.explicit_rotor_boxes:
+                geometry.append(
+                    mp.Block(
+                        size=mp.Vector3(bx[1] - bx[0], bx[3] - bx[2], bx[5] - bx[4]),
+                        center=mp.Vector3(0.5 * (bx[0] + bx[1]), 0.5 * (bx[2] + bx[3]), 0.5 * (bx[4] + bx[5])),
+                        material=material,
+                    )
+                )
+    else:
+        if configuration in ("both", "stator"):
+            geometry.extend(
+                stator_generator(
+                    elements=list(parameters.elements),
+                    L_plate=parameters.l_domain,
+                    t_membrane=parameters.t_membrane,
+                    t_landing_pad=parameters.t_landing_pad,
+                    plate_material=material,
+                    void_material=background,
+                    num_sectors=parameters.num_sectors,
+                    aperture_arc_deg=parameters.aperture_arc_deg,
+                    bridge_arc_deg=parameters.bridge_arc_deg,
+                    **stator_options,
+                )
             )
-        )
-    if configuration in ("both", "rotor", "self"):
-        geometry.extend(
-            rotor_generator(
-                elements=list(parameters.elements),
-                H_teeth=parameters.h_teeth,
-                z_tip=parameters.z_tip,
-                rotor_material=material,
-                num_sectors=parameters.num_sectors,
-                tooth_arc_deg=parameters.tooth_arc_deg,
-                theta_rotor_deg=0.0 if rotor_frame else parameters.theta_deg,
-                **rotor_options,
+        if configuration in ("both", "rotor", "self"):
+            geometry.extend(
+                rotor_generator(
+                    elements=list(parameters.elements),
+                    H_teeth=parameters.h_teeth,
+                    z_tip=parameters.z_tip,
+                    rotor_material=material,
+                    num_sectors=parameters.num_sectors,
+                    tooth_arc_deg=parameters.tooth_arc_deg,
+                    theta_rotor_deg=0.0 if rotor_frame else parameters.theta_deg,
+                    **rotor_options,
+                )
             )
-        )
-    if parameters.sector0_crop and geometry:
+    if parameters.sector0_crop and parameters.geometry_mode != "explicit_boxes_3d" and geometry:
         (x_min, x_max), (y_min, y_max), _ = _sector0_phys_bounds(parameters)
 
         def _overlaps_sector0(obj: Any) -> bool:
@@ -1592,7 +1734,8 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
     if getattr(args, "nmax", None) is not None:
         raw["nmax"] = int(args.nmax)
     if getattr(args, "material", None) is not None:
-        raw["material"] = "PEC" if str(args.material).lower() == "pec" else "Gold"
+        mat_low = str(args.material).lower()
+        raw["material"] = "PEC" if mat_low == "pec" else ("Gold_Drude" if mat_low == "gold_drude" else "Gold")
     if getattr(args, "fixed_stress_box_margin_um", None) is not None:
         raw["fixed_stress_box_margin_um"] = float(args.fixed_stress_box_margin_um)
     if getattr(args, "eps_averaging", None) is not None:
@@ -1707,6 +1850,15 @@ def execute(args: argparse.Namespace, raw: dict[str, Any], started: float) -> in
         canonical_parameters.pop("r_edge_nm", None)
     if canonical_parameters.get("sector0_crop") is False:
         canonical_parameters.pop("sector0_crop", None)
+    if canonical_parameters.get("geometry_mode") != "explicit_boxes_3d":
+        for exp_k in (
+            "explicit_rotor_boxes",
+            "explicit_stator_boxes",
+            "explicit_stress_boxes",
+            "explicit_cell_center",
+            "explicit_phys_bounds",
+        ):
+            canonical_parameters.pop(exp_k, None)
     canonical = {
         "version": CACHE_VERSION,
         "parameters": canonical_parameters,

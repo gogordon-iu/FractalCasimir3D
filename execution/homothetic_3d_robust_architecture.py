@@ -200,10 +200,10 @@ class RobustClutchDesign3D:
     has_micro_bridges: bool
     tracks: tuple[HomotheticTrack3D, ...]
     ribs: tuple[StatorRibSpan3D, ...]
-    bem_n_r_lobe: int = 1
-    bem_n_phi_lobe: int = 1
-    bem_n_z_lobe: int = 1
-    bem_n_phi_collar: int = 3
+    bem_n_r_lobe: int = 2
+    bem_n_phi_lobe: int = 2
+    bem_n_z_lobe: int = 2
+    bem_n_phi_collar: int = 9
 
 
 def active_tooth_area_um2(design: RobustClutchDesign3D) -> float:
@@ -799,10 +799,296 @@ def build_five_matched_robustness_controls(
 
 
 def build_all_robustness_study_designs() -> list[RobustClutchDesign3D]:
-    """Return `[H3-Cantor-Robust, *5 matched controls, H3-Cantor-Sym-2x2x2]`."""
+    """Return `[H3-Cantor-Robust, *5 matched controls, H3-Cantor-Sym-2x2x2]` on matched 2x2x2 BEM mesh."""
     h3 = build_h3_cantor_robust_design()
     h3_sym_ref = build_h3_cantor_sym_2x2x2_design()
     return [h3, *build_five_matched_robustness_controls(h3), h3_sym_ref]
+
+
+def build_h3_mechanistic_ablation_designs() -> list[RobustClutchDesign3D]:
+    """Build orthogonal 2^3 (r, theta, z) factorial, bridge-isolation, and N=1,2 depth ablations on H3-Cantor.
+
+    Note: `Abl_111` (and `Depth_N3`) equals `H3_Cantor_Sym_2x2x2` directly, so this helper returns
+    the 10 distinct auxiliary ablation designs to evaluate alongside `H3_Cantor_Sym_2x2x2`.
+    Every ablation resides inside the identical [3.50, 6.20] um annulus, matches A_tooth = 3.103 um^2
+    to machine precision, and uses the strictly matched 2x2x2 + n_phi_collar=9 BEM discretization.
+    """
+    h3_sym = build_h3_cantor_sym_2x2x2_design()
+    target_a = active_tooth_area_um2(h3_sym)
+    total_open_um = sum(t.slot_width_um for t in h3_sym.tracks)
+    gens_cantor = H3_ROBUST_CANTOR_GENERATIONS
+    rib_widths_cantor_um = [w_nm * 1.0e-3 for w_nm in H3_ROBUST_CANTOR_RIB_WIDTHS_NM]
+
+    w_uni = total_open_um / 7.0
+    span_um = H3_ROBUST_R_MAX_UM - H3_ROBUST_R_MIN_UM
+    rib_w_uni = (span_um - total_open_um) / 8.0
+
+    ablations: list[RobustClutchDesign3D] = []
+
+    # 1. Seven non-111 members of the 2^3 orthogonal (I_r, I_theta, I_z) factorial
+    for ir in (0, 1):
+        for ith in (0, 1):
+            for iz in (0, 1):
+                if (ir, ith, iz) == (1, 1, 1):
+                    continue
+                code = f"Abl_F{ir}{ith}{iz}"
+                name = f"Abl-F({ir},{ith},{iz})"
+                cursor_r = H3_ROBUST_R_MIN_UM + (rib_widths_cantor_um[0] if ir == 1 else rib_w_uni)
+                tracks: list[HomotheticTrack3D] = []
+                for idx, gen_r in enumerate(gens_cantor):
+                    w_slot = (H3_ROBUST_SLOT_FINE_UM * _homothetic_scale_for_gen(gen_r)) if ir == 1 else w_uni
+                    w_tooth = H3_ROBUST_W_RATIO * w_slot
+                    r_s_in = cursor_r
+                    r_s_out = cursor_r + w_slot
+                    r_c = 0.5 * (r_s_in + r_s_out)
+                    r_t_in = r_c - 0.5 * w_tooth
+                    r_t_out = r_c + 0.5 * w_tooth
+
+                    if iz == 1:
+                        sc_z = _homothetic_scale_for_gen(gen_r)
+                        z_st = H3_ROBUST_Z_STAGE_FINE_UM * sc_z
+                        h_st = H3_ROBUST_HEIGHT_TO_STAGE_RATIO * abs(z_st)
+                    else:
+                        z_st = H3_ROBUST_Z_STAGE_FINE_UM
+                        h_st = H3_ROBUST_HEIGHT_TO_STAGE_RATIO * abs(z_st)
+                    z_pad_top = -H3_ROBUST_NOMINAL_OP_Z_UM - 0.5 * h_st - H3_ROBUST_ENGAGED_PAD_GAP_UM
+
+                    if ith == 1:
+                        g_th = gen_r if ir == 1 else 2
+                        n_lobes = int(H3_ROBUST_LOBES_BY_GEN[g_th])
+                        chord_um = H3_ROBUST_LOBE_CHORD_FINE_UM * _homothetic_scale_for_gen(g_th)
+                        gap_deg = float(H3_ROBUST_INTER_LOBE_GAP_BY_GEN_DEG[g_th])
+                        br_arc = float(H3_ROBUST_BRIDGE_ARC_WIDTH_BY_GEN_DEG[g_th])
+                        br_thk = min(float(H3_ROBUST_BRIDGE_THICKNESS_BY_GEN_UM[g_th]), 0.85 * h_st)
+                        enable_br = True
+                    else:
+                        n_lobes = 1
+                        chord_um = 0.65 * r_c * math.radians(20.0)
+                        gap_deg = 0.0
+                        br_arc = 1.0
+                        br_thk = 0.013
+                        enable_br = False
+
+                    col_w = (
+                        float(H3_ROBUST_BRIDGE_THICKNESS_BY_GEN_UM[gen_r])
+                        if ir == 1
+                        else min(0.039, 0.45 * rib_w_uni)
+                    )
+                    lobes, bridges = _build_lobe_train_and_bridges(
+                        r_center_um=r_c,
+                        n_lobes=n_lobes,
+                        lobe_chord_um=chord_um,
+                        inter_lobe_gap_deg=gap_deg,
+                        vernier_phase_deg=0.0,
+                        z_stage_center_um=z_st,
+                        h_stage_um=h_st,
+                        bridge_arc_width_deg=br_arc,
+                        bridge_thickness_um=br_thk,
+                        enable_bridges=enable_br,
+                    )
+                    tracks.append(
+                        HomotheticTrack3D(
+                            track_index=idx,
+                            generation=gen_r if (ir == 1 or iz == 1) else 2,
+                            r_slot_in_um=float(r_s_in),
+                            r_slot_out_um=float(r_s_out),
+                            r_tooth_in_um=float(r_t_in),
+                            r_tooth_out_um=float(r_t_out),
+                            collar_width_um=float(col_w),
+                            z_stage_center_um=float(z_st),
+                            h_stage_um=float(h_st),
+                            z_pad_top_um=float(z_pad_top),
+                            lobe_offsets_deg=lobes,
+                            vernier_phase_deg=0.0,
+                            micro_bridges=bridges,
+                        )
+                    )
+                    cursor_r = r_s_out + (rib_widths_cantor_um[idx + 1] if ir == 1 else rib_w_uni)
+
+                ribs = _assemble_ribs_for_tracks(
+                    tracks, H3_ROBUST_R_MIN_UM, H3_ROBUST_R_MAX_UM, H3_ROBUST_APERTURE_ARC_DEG
+                )
+                raw_abl = RobustClutchDesign3D(
+                    name=name,
+                    code=code,
+                    family_role="ablation_factorial_r_theta_z",
+                    description=f"Orthogonal 2^3 factorial ablation (I_r={ir}, I_theta={ith}, I_z={iz}) on H3-Cantor.",
+                    R_min_um=H3_ROBUST_R_MIN_UM,
+                    R_max_um=H3_ROBUST_R_MAX_UM,
+                    aperture_arc_deg=H3_ROBUST_APERTURE_ARC_DEG,
+                    pad_thickness_um=H3_ROBUST_PAD_THICKNESS_UM,
+                    nominal_op_z_um=H3_ROBUST_NOMINAL_OP_Z_UM,
+                    is_fractal=bool(ir == 1 and ith == 1 and iz == 1),
+                    has_micro_bridges=bool(ith == 1),
+                    tracks=tuple(tracks),
+                    ribs=ribs,
+                )
+                scaled_abl = _scale_design_lobe_arcs_to_target_area(raw_abl, target_a)
+                # Rebuild micro-bridges so bridge centers align strictly with post-scaled inter-lobe gaps!
+                if ith == 1:
+                    rebuilt_tracks: list[HomotheticTrack3D] = []
+                    for trk in scaled_abl.tracks:
+                        n_l = len(trk.lobe_offsets_deg)
+                        arc_d = trk.lobe_offsets_deg[0][1]
+                        gap_d = (trk.lobe_offsets_deg[1][0] - trk.lobe_offsets_deg[0][0] - arc_d) if n_l > 1 else 0.0
+                        r_c_t = 0.5 * (trk.r_slot_in_um + trk.r_slot_out_um)
+                        g_th = trk.generation if ir == 1 else 2
+                        br_arc = min(float(H3_ROBUST_BRIDGE_ARC_WIDTH_BY_GEN_DEG[g_th]), 0.45 * max(gap_d, 0.4))
+                        br_thk = min(float(H3_ROBUST_BRIDGE_THICKNESS_BY_GEN_UM[g_th]), 0.85 * trk.h_stage_um)
+                        lobes_new, bridges_new = _build_lobe_train_and_bridges(
+                            r_center_um=r_c_t,
+                            n_lobes=n_l,
+                            lobe_chord_um=r_c_t * math.radians(arc_d),
+                            inter_lobe_gap_deg=gap_d,
+                            vernier_phase_deg=0.0,
+                            z_stage_center_um=trk.z_stage_center_um,
+                            h_stage_um=trk.h_stage_um,
+                            bridge_arc_width_deg=br_arc,
+                            bridge_thickness_um=br_thk,
+                            enable_bridges=True,
+                        )
+                        rebuilt_tracks.append(
+                            dataclasses.replace(trk, lobe_offsets_deg=lobes_new, micro_bridges=bridges_new)
+                        )
+                    rebuilt_ribs = _assemble_ribs_for_tracks(
+                        rebuilt_tracks, H3_ROBUST_R_MIN_UM, H3_ROBUST_R_MAX_UM, H3_ROBUST_APERTURE_ARC_DEG
+                    )
+                    scaled_abl = dataclasses.replace(scaled_abl, tracks=tuple(rebuilt_tracks), ribs=rebuilt_ribs)
+                ablations.append(scaled_abl)
+
+    # 2. Micro-bridge isolation ablation: exact H3-Cantor-Sym-2x2x2 without stator micro-bridges
+    nb_tracks = tuple(dataclasses.replace(t, micro_bridges=()) for t in h3_sym.tracks)
+    nb_ribs = _assemble_ribs_for_tracks(
+        nb_tracks, H3_ROBUST_R_MIN_UM, H3_ROBUST_R_MAX_UM, H3_ROBUST_APERTURE_ARC_DEG
+    )
+    ablations.append(
+        dataclasses.replace(
+            h3_sym,
+            name="Abl-NoBridges",
+            code="Abl_NoBridges",
+            family_role="ablation_no_micro_bridges",
+            description="Exact H3-Cantor-Sym-2x2x2 geometry with homothetic stator micro-bridges removed.",
+            has_micro_bridges=False,
+            tracks=nb_tracks,
+            ribs=nb_ribs,
+        )
+    )
+
+    # 3. Cantor recursion-depth ladder N=1 (1 track: gen 1) and N=2 (3 tracks: gens 2, 1, 2) on [3.50, 6.20] um
+    # Depth N=1 uses 1 middle-third slot (W=0.90 um, w=0.36 um) and N=2 uses 3 Cantor slots (0.27, 0.81, 0.27 um)
+    depth_specs = [
+        (
+            "Abl-Depth-N1",
+            "Abl_Depth_N1",
+            "Cantor recursion depth N=1 (single primary generation slot, matched A_tooth=3.103 um^2).",
+            [0.900],
+            [1],
+            [2],
+            [-0.120],
+            [0.084],
+            [0.117],
+        ),
+        (
+            "Abl-Depth-N2",
+            "Abl_Depth_N2",
+            "Cantor recursion depth N=2 (3 homothetic tracks: gens 2,1,2, matched A_tooth=3.103 um^2).",
+            [0.270, 0.810, 0.270],
+            [2, 1, 2],
+            [4, 2, 4],
+            [-0.040, -0.120, -0.040],
+            [0.028, 0.084, 0.028],
+            [0.039, 0.117, 0.039],
+        ),
+    ]
+    for d_name, d_code, d_desc, w_slots, d_gens, l_cnts, z_sts, h_sts, col_ws in depth_specs:
+        n_t = len(w_slots)
+        rib_d = (span_um - sum(w_slots)) / float(n_t + 1)
+        cur_r = H3_ROBUST_R_MIN_UM + rib_d
+        d_tracks: list[HomotheticTrack3D] = []
+        for idx_d in range(n_t):
+            ws = w_slots[idx_d]
+            wt = H3_ROBUST_W_RATIO * ws
+            r_in = cur_r
+            r_out = cur_r + ws
+            rc = 0.5 * (r_in + r_out)
+            z_s = z_sts[idx_d]
+            h_s = h_sts[idx_d]
+            zp = -H3_ROBUST_NOMINAL_OP_Z_UM - 0.5 * h_s - H3_ROBUST_ENGAGED_PAD_GAP_UM
+            nl = l_cnts[idx_d]
+            lobes_d, br_d = _build_lobe_train_and_bridges(
+                r_center_um=rc,
+                n_lobes=nl,
+                lobe_chord_um=0.45 * rc * math.radians(20.0 / nl),
+                inter_lobe_gap_deg=2.4 if nl == 2 else 1.8,
+                vernier_phase_deg=0.0,
+                z_stage_center_um=z_s,
+                h_stage_um=h_s,
+                bridge_arc_width_deg=1.0,
+                bridge_thickness_um=min(col_ws[idx_d], 0.85 * h_s),
+                enable_bridges=True,
+            )
+            d_tracks.append(
+                HomotheticTrack3D(
+                    track_index=idx_d,
+                    generation=d_gens[idx_d],
+                    r_slot_in_um=float(r_in),
+                    r_slot_out_um=float(r_out),
+                    r_tooth_in_um=float(rc - 0.5 * wt),
+                    r_tooth_out_um=float(rc + 0.5 * wt),
+                    collar_width_um=float(min(col_ws[idx_d], 0.45 * rib_d)),
+                    z_stage_center_um=float(z_s),
+                    h_stage_um=float(h_s),
+                    z_pad_top_um=float(zp),
+                    lobe_offsets_deg=lobes_d,
+                    vernier_phase_deg=0.0,
+                    micro_bridges=br_d,
+                )
+            )
+            cur_r = r_out + rib_d
+        d_ribs = _assemble_ribs_for_tracks(
+            d_tracks, H3_ROBUST_R_MIN_UM, H3_ROBUST_R_MAX_UM, H3_ROBUST_APERTURE_ARC_DEG
+        )
+        raw_d = RobustClutchDesign3D(
+            name=d_name,
+            code=d_code,
+            family_role="ablation_recursion_depth",
+            description=d_desc,
+            R_min_um=H3_ROBUST_R_MIN_UM,
+            R_max_um=H3_ROBUST_R_MAX_UM,
+            aperture_arc_deg=H3_ROBUST_APERTURE_ARC_DEG,
+            pad_thickness_um=H3_ROBUST_PAD_THICKNESS_UM,
+            nominal_op_z_um=H3_ROBUST_NOMINAL_OP_Z_UM,
+            is_fractal=True,
+            has_micro_bridges=True,
+            tracks=tuple(d_tracks),
+            ribs=d_ribs,
+        )
+        scaled_d = _scale_design_lobe_arcs_to_target_area(raw_d, target_a)
+        re_d_tracks: list[HomotheticTrack3D] = []
+        for trk in scaled_d.tracks:
+            nl = len(trk.lobe_offsets_deg)
+            arc_d = trk.lobe_offsets_deg[0][1]
+            gap_d = (trk.lobe_offsets_deg[1][0] - trk.lobe_offsets_deg[0][0] - arc_d) if nl > 1 else 0.0
+            rc_t = 0.5 * (trk.r_slot_in_um + trk.r_slot_out_um)
+            lobes_n, br_n = _build_lobe_train_and_bridges(
+                r_center_um=rc_t,
+                n_lobes=nl,
+                lobe_chord_um=rc_t * math.radians(arc_d),
+                inter_lobe_gap_deg=gap_d,
+                vernier_phase_deg=0.0,
+                z_stage_center_um=trk.z_stage_center_um,
+                h_stage_um=trk.h_stage_um,
+                bridge_arc_width_deg=min(1.0, 0.45 * max(gap_d, 0.5)),
+                bridge_thickness_um=min(trk.collar_width_um, 0.85 * trk.h_stage_um),
+                enable_bridges=True,
+            )
+            re_d_tracks.append(dataclasses.replace(trk, lobe_offsets_deg=lobes_n, micro_bridges=br_n))
+        re_d_ribs = _assemble_ribs_for_tracks(
+            re_d_tracks, H3_ROBUST_R_MIN_UM, H3_ROBUST_R_MAX_UM, H3_ROBUST_APERTURE_ARC_DEG
+        )
+        ablations.append(dataclasses.replace(scaled_d, tracks=tuple(re_d_tracks), ribs=re_d_ribs))
+
+    return ablations
 
 
 def compute_design_fingerprint(design: RobustClutchDesign3D) -> str:
@@ -1270,15 +1556,27 @@ def _same_body_lu_factors(
         t_dot_t = torch.as_tensor(
             np.einsum("ima,jna->ijmn", body.tangents, src_tan, optimize=True), dtype=torch.float64, device=dev
         )
-        src_q = torch.as_tensor(src_pts.transpose(1, 0, 2)[None, :, :, :], dtype=torch.float64, device=dev)
-        delta = (tgt_q[:, None, :, :, :] - src_q[:, :, None, :, :]).reshape(16, M, 3)
-        eff_d = torch.sqrt(torch.sum(delta**2, dim=2) + sub_var)
-        del src_q, delta
-        scale_q = (area_scale * qw) / eff_d
-        ker_sum = torch.empty((K, N, N), dtype=torch.float64, device=dev)
-        for qk in range(K):
-            ker_sum[qk] = torch.sum(torch.exp(-float(kappas[qk]) * eff_d) * scale_q, dim=0).reshape(N, N)
-        del eff_d, scale_q
+        src_q = torch.as_tensor(src_pts.transpose(1, 0, 2), dtype=torch.float64, device=dev)
+        ker_sum = torch.zeros((K, N, N), dtype=torch.float64, device=dev)
+        if M > 1_500_000:
+            qw_2d = qw.reshape(4, 4, 1)
+            for qt_idx in range(4):
+                delta_sub = (tgt_q[qt_idx : qt_idx + 1, None, :, :, :] - src_q[None, :, None, :, :]).reshape(4, M, 3)
+                eff_d_sub = torch.sqrt(torch.sum(delta_sub**2, dim=2) + sub_var)
+                del delta_sub
+                scale_sub = (area_scale * qw_2d[qt_idx]) / eff_d_sub
+                for qk in range(K):
+                    ker_sum[qk] += torch.sum(torch.exp(-float(kappas[qk]) * eff_d_sub) * scale_sub, dim=0).reshape(N, N)
+                del eff_d_sub, scale_sub
+            del src_q
+        else:
+            delta = (tgt_q[:, None, :, :, :] - src_q[None, :, None, :, :]).reshape(16, M, 3)
+            eff_d = torch.sqrt(torch.sum(delta**2, dim=2) + sub_var)
+            del src_q, delta
+            scale_q = (area_scale * qw) / eff_d
+            for qk in range(K):
+                ker_sum[qk] = torch.sum(torch.exp(-float(kappas[qk]) * eff_d) * scale_q, dim=0).reshape(N, N)
+            del eff_d, scale_q
         single = ker_sum[:, :, :, None, None] * t_dot_t[None, :, :, :, :]
         del ker_sum, t_dot_t
         if sec == 0:
@@ -1445,7 +1743,7 @@ def evaluate_homothetic_3d_bem(
     global _ACTIVE_LARGE_STATOR_GEOM, _ACTIVE_LARGE_ROTOR_GEOM
     d_hash = compute_design_fingerprint(design)
     is_large_mesh = max(Nt, Ns) > 500
-    max_k_batch = 6 if is_large_mesh else 28
+    max_k_batch = 3 if max(Nt, Ns) > 1500 else (6 if is_large_mesh else 28)
     cache_ok = bool(use_lu_cache and K <= 32)
     max_cache_entries = max(6, math.ceil(K / max_k_batch)) if is_large_mesh else 16
 
