@@ -1,0 +1,156 @@
+{
+  "run_metadata": {
+    "created_at": "2026-11-13T07:07:06.559066+00:00",
+    "updated_at": "2026-11-13T07:07:07.495432+00:00",
+    "environment": "Linux",
+    "entry_point": "fractal_casimir_engine/run_ultrafine_6dof_and_rounding.py",
+    "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+    "solver_parameters": {
+      "n_r": 4,
+      "n_phi_tooth": 6,
+      "n_phi_arc": 18,
+      "n_z": 3,
+      "n_xi": 24,
+      "quad_order": 3,
+      "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+    },
+    "solver_runs": [
+      {
+        "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+        "solver_parameters": {
+          "n_r": 4,
+          "n_phi_tooth": 6,
+          "n_phi_arc": 18,
+          "n_z": 3,
+          "n_xi": 24,
+          "quad_order": 3,
+          "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+        },
+        "timestamp": "2026-11-13T07:07:07.080378+00:00"
+      }
+    ]
+  },
+  "intermediate_steps": {
+    "uf4_6dof_and_ebl_rounding": {
+      "timestamp": "2026-11-13T07:07:07.101166+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 389,
+      "data_summary": {
+        "max_c4_lateral_force_residual_pN": 8.881784197001252e-13,
+        "max_k_lat_destab_uN_m": 1529.1088095706064,
+        "max_k_tilt_destab_pN_um_rad": 736.3254713205758,
+        "lateral_bearing_safety_factor": 163.4939243272055,
+        "tilt_bearing_safety_factor": 33.95237700410297,
+        "config_d_15nm_tau_retention_stroke1_pct": 131.311799451764,
+        "config_d_15nm_tau_retention_stroke3_pct": 95.0273164082796
+      },
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    }
+  },
+  "metrics": {
+    "engine_uf4_max_k_lat_un_m": {
+      "value": 1529.11,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf4_6dof_and_ebl_rounding",
+      "recorded_at": "2026-11-13T07:07:07.141687+00:00",
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    },
+    "engine_uf4_lat_safety_factor": {
+      "value": 163.5,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf4_6dof_and_ebl_rounding",
+      "recorded_at": "2026-11-13T07:07:07.382691+00:00",
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    },
+    "engine_uf4_tilt_safety_factor": {
+      "value": 34.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf4_6dof_and_ebl_rounding",
+      "recorded_at": "2026-11-13T07:07:07.426498+00:00",
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    },
+    "engine_uf4_retain_stroke1_pct": {
+      "value": 131.3,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf4_6dof_and_ebl_rounding",
+      "recorded_at": "2026-11-13T07:07:07.476805+00:00",
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    },
+    "engine_uf4_retain_stroke3_pct": {
+      "value": 95.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf4_6dof_and_ebl_rounding",
+      "recorded_at": "2026-11-13T07:07:07.495425+00:00",
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    }
+  },
+  "model": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+  "dataset": "fractal_casimir_3d",
+  "status": "completed",
+  "executed_at": "2026-11-13T07:07:07.495461+00:00"
+}
