@@ -434,3 +434,11 @@
 ### [BUG-261114-01] 2026-11-14 | fractal_casimir_engine/run_ultrafine_mesh_convergence.py | scope=infra
 - **Bug**: UF1 post-serialization and figure plotting read net_advance_deg/history/t_us instead of simulate_coupled_dynamics keys.
 - **Solution**: Aligned UF1 summary and Panel D plotting keys with simulate_coupled_dynamics schema and added an end-to-end checkpoint post-processing regression test.
+
+### [BUG-261114-02] 2026-11-14 | fractal_casimir_engine/run_ultrafine_active_switching.py | scope=ui
+- **Bug**: Legend label in fig_uf3_active_switching hardcoded a leading '+' before formatted net_advance_deg, rendering negative advance as '+-35.2 deg'.
+- **Solution**: Replaced '+{...:.1f}' with Python signed format '{...:+.1f}' inside extracted generate_uf3_figure helper and re-rendered fig_uf3_active_switching.
+
+### [BUG-261114-03] 2026-11-14 | fractal_casimir_engine/aggregate_ultrafine_campaigns.py | scope=docs
+- **Bug**: Deduplicating derived macros against merged_manifest['metrics'] omitted derived LaTeX macros on repeated runs after persistence.
+- **Solution**: Deduplicated derived macros against emitted \\newcommand names in base_text and macro_blocks, deduplicated solver_runs, and added an idempotency test.

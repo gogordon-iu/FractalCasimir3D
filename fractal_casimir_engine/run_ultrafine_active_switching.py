@@ -471,8 +471,26 @@ def run_full_campaign(args: argparse.Namespace) -> int:
         metrics_path=str(metrics_path),
     )
     export_macros(metrics_path=str(metrics_path), output_path=str(macros_path))
+    generate_uf3_figure(
+        report,
+        ENGINE_FIGURES_DIR / "fig_uf3_active_switching.png",
+        ENGINE_FIGURES_DIR / "fig_uf3_active_switching.pdf",
+        report_path,
+        solver_params,
+    )
+    print(f"[UF3 COMPLETE] Saved {report_path} and figures.", flush=True)
+    return 0
 
-    # Plot Suite 3 figure
+
+def generate_uf3_figure(
+    report: dict[str, Any],
+    out_png: Path,
+    out_pdf: Path,
+    report_path: Path,
+    solver_params: dict[str, Any],
+) -> None:
+    """Render Suite 3 active switching trajectories with signed net-advance labels."""
+    designs_out = report["designs"]
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 5.0), dpi=300)
     palette = {
         "Sym_Baseline_CantorN2": "#5f6368",
@@ -484,19 +502,21 @@ def run_full_campaign(args: argparse.Namespace) -> int:
         h_vo2 = designs_out[dname]["vo2_switching_engine"]["history"]
         h_si = designs_out[dname]["silicon_photodoped_engine"]["history"]
         short = dname.split("_")[1]
+        adv_vo2 = float(designs_out[dname]["vo2_switching_engine"]["net_advance_deg"])
+        adv_si = float(designs_out[dname]["silicon_photodoped_engine"]["net_advance_deg"])
         axes[0].plot(
             [r["t_us"] for r in h_vo2],
             [r["theta_deg"] - 9.0 for r in h_vo2],
             lw=2.0,
             color=palette[dname],
-            label=f"{short} (VO$_2$: +{designs_out[dname]['vo2_switching_engine']['net_advance_deg']:.1f}$^\\circ$)",
+            label=f"{short} (VO$_2$: {adv_vo2:+.1f}$^\\circ$)",
         )
         axes[1].plot(
             [r["t_us"] for r in h_si],
             [r["theta_deg"] - 9.0 for r in h_si],
             lw=2.0,
             color=palette[dname],
-            label=f"{short} (Photo-Si: +{designs_out[dname]['silicon_photodoped_engine']['net_advance_deg']:.1f}$^\\circ$)",
+            label=f"{short} (Photo-Si: {adv_si:+.1f}$^\\circ$)",
         )
     for ax, title in (
         (axes[0], "A. Physical Au–VO$_2$ (Metal $\\leftrightarrow$ Insulator) Spin-Up"),
@@ -509,8 +529,6 @@ def run_full_campaign(args: argparse.Namespace) -> int:
         ax.grid(True, alpha=0.25)
 
     fig.tight_layout()
-    out_png = ENGINE_FIGURES_DIR / "fig_uf3_active_switching.png"
-    out_pdf = ENGINE_FIGURES_DIR / "fig_uf3_active_switching.pdf"
     out_png.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_png, dpi=300)
     fig.savefig(out_pdf)
@@ -524,8 +542,6 @@ def run_full_campaign(args: argparse.Namespace) -> int:
             solver_name="BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
             solver_parameters=solver_params,
         )
-    print(f"[UF3 COMPLETE] Saved {report_path} and figures.", flush=True)
-    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:

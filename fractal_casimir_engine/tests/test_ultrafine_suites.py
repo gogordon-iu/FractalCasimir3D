@@ -286,10 +286,30 @@ def test_pec_te_sign_and_end_to_end_provenance_aggregation(tmp_path: Path) -> No
 
     for idx, (suite_id, rep_name, met_name, mac_name, fig_stem) in enumerate(REQUIRED_SUITES, start=1):
         rep_path = uf_dir / rep_name
-        rep_path.write_text(
-            json.dumps({"suite": suite_id, "status": "completed", "time_truncated": False}),
-            encoding="utf-8",
-        )
+        rep_payload: dict[str, object] = {
+            "suite": suite_id,
+            "status": "completed",
+            "time_truncated": False,
+        }
+        if suite_id == "eng_uf2":
+            rep_payload["dx_nm"] = 10.0
+            rep_payload["summary"] = {"total_states": 8, "chiral_states": 6}
+            rep_payload["comparisons"] = [
+                {
+                    "design_name": dname,
+                    "stroke": st,
+                    "meep_f_z_pN": 5.0,
+                    "meep_tau_theta_pN_um": 0.25,
+                }
+                for dname in (
+                    "Sym_Baseline_CantorN2",
+                    "Config_B_Manhattan_Vernier",
+                    "Config_C_Helical_Turbine",
+                    "Config_D_DualStator_PushPull",
+                )
+                for st in ("Stroke_I_Repulsive", "Stroke_III_Attractive")
+            ]
+        rep_path.write_text(json.dumps(rep_payload), encoding="utf-8")
         met_path = uf_dir / met_name
         mac_path = uf_dir / mac_name
         set_solver_provenance(f"Solver_{suite_id}", {"suite_idx": idx}, metrics_path=str(met_path))
@@ -342,6 +362,19 @@ def test_pec_te_sign_and_end_to_end_provenance_aggregation(tmp_path: Path) -> No
     )
     assert full["ready"] is True and full["ledger"]["audit_status"] == "PASS"
     assert (paper_dir / "figures" / "fig_uf1_mesh_convergence.pdf.provenance.json").is_file()
+    macros_first = (paper_dir / "macros_results.tex").read_text(encoding="utf-8")
+    assert r"\newcommand{\EngineUftwoTotalStates}{8}" in macros_first
+
+    full_second = aggregate_campaigns(
+        uf_results_dir=uf_dir,
+        engine_figures_dir=fig_dir,
+        base_metrics_path=base_metrics,
+        paper_dir=paper_dir,
+        cluster_safe=False,
+    )
+    assert full_second["ready"] is True and full_second["ledger"]["audit_status"] == "PASS"
+    macros_second = (paper_dir / "macros_results.tex").read_text(encoding="utf-8")
+    assert macros_first == macros_second
 
 
 def test_uf1_full_campaign_postprocess_from_checkpoints(
