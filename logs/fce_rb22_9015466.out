@@ -1,0 +1,49 @@
+=== [BigRed200 fce_rb22 Started: Sat Nov 14 02:29:24 AM EST 2026 on x1000c1s4b0n1] ===
+Python binary: /N/project/gorengor_werewolf/werewolfGameAnalysis/.venv/bin/python
+CUDA available: True
+[UNIFIED-ROBUSTNESS] Executing 675 grounded 3D BEM tasks (n_xi=20, code_hash=186003f986907fbd)...
+  [ 50/675] elapsed=623.9s | last=B1_stroke_Ctrl_KnifeEdge_g27_z0.072969 -> F_z=+26.110 pN
+  [100/675] elapsed=1109.6s | last=B1_stroke_Ctrl_Uni_7Trk_z0.254607 -> F_z=+2.873 pN
+  [150/675] elapsed=1526.8s | last=B1_stroke_Ctrl_Mono_3Stage_z0.039064 -> F_z=-1.764 pN
+  [200/675] elapsed=1877.2s | last=B1_stroke_Ctrl_Shuf_OutPhase_z0.124663 -> F_z=-1.088 pN
+  [250/675] elapsed=1963.1s | last=B1_stroke_H3_Cantor_Sym_2x2x2_z0.434981 -> F_z=+0.436 pN
+  [300/675] elapsed=2481.6s | last=B2_theta_Ctrl_Mono_3Stage_th2.500 -> F_z=+8.529 pN
+  [350/675] elapsed=2835.2s | last=B2_radial_Ctrl_Mono_3Stage_dr-16.0nm -> F_z=+18.808 pN
+  [400/675] elapsed=3204.9s | last=B4_etch_Ctrl_Shuf_OutPhase_dw-40.0nm_z160 -> F_z=+0.093 pN
+  [450/675] elapsed=3734.8s | last=B4_mcgrid_Ctrl_KnifeEdge_g27_dw+24.0nm_z0.085 -> F_z=+64.629 pN
+  [500/675] elapsed=4202.1s | last=B4_mcgrid_Ctrl_Mono_3Stage_dw+24.0nm_z0.180 -> F_z=+3.130 pN
+  [550/675] elapsed=4483.4s | last=B5_pec_stroke_H3_Cantor_Robust_z0.061039 -> F_z=+35.725 pN
+  [600/675] elapsed=4619.2s | last=B5_pec_stroke_H3_Cantor_Sym_2x2x2_z0.212979 -> F_z=+2.005 pN
+  [650/675] elapsed=4887.9s | last=B6_abl_Abl_F101_dr-8.0nm -> F_z=+8.370 pN
+  [675/675] elapsed=5017.5s | last=B6_abl_Abl_Depth_N2_dr+8.0nm -> F_z=+0.590 pN
+[UNIFIED-ROBUSTNESS] Saved summary JSON   -> /N/project/gorengor_werewolf/FractalCasimir3D/results/unified_fractal_robustness_study.json
+[UNIFIED-ROBUSTNESS] Saved figures        -> /N/project/gorengor_werewolf/FractalCasimir3D/figures/fig_unified_fractal_robustness.pdf, /N/project/gorengor_werewolf/FractalCasimir3D/figures/fig_h3_mechanistic_ablations.pdf
+[UNIFIED-ROBUSTNESS] Saved LaTeX tables   -> /N/project/gorengor_werewolf/FractalCasimir3D/Papers/FCE_Nature_ver01/tables/table_unified_fractal_robustness.tex, /N/project/gorengor_werewolf/FractalCasimir3D/Papers/FCE_Nature_ver01/tables/table_h3_mechanistic_ablations.tex
+{"event": "blender_visual_audit_done", "n_configs": 7, "n_renders_inspected": 11, "atlas_png": "/N/project/gorengor_werewolf/FractalCasimir3D/figures/fig_unified_fractal_robustness_blender_atlas.png", "hero_png": "/N/project/gorengor_werewolf/FractalCasimir3D/figures/fig_h3_cantor_robust_blender_hero.png", "manifest": "/N/project/gorengor_werewolf/FractalCasimir3D/results/unified_fractal_robustness_blender/unified_fractal_robustness_blender_manifest.json"}
+[UNIFIED-ROBUSTNESS] Built & visually verified 3D Blender atlas and hero figures.
+=== Running Exact 3D Maxwell RWG BEM Convergence Suite on device=cuda ===
+--- [A] Canonical Parallel-Slab Consistency (d = 50 nm) ---
+  Slab d=50nm: EFIE PEC=-11.28233 pN | PMCHWT(eps=1e8)=-11.27052 pN (diff=0.105%) | PMCHWT Gold=-4.49282 pN (Lifshitz inf-plate eta=0.2822)
+--- [B] 4-Tier RWG Mesh Convergence Ladder on H3-Cantor Single Setup ---
+  Tier 1 | open_pec     | RWG= 96+ 240 (h=18.52 nm) | F_z = +1.39203 pN (0.21s)
+  Tier 1 | engaged_pec  | RWG= 96+ 186 (h=21.83 nm) | F_z = -5.72981 pN (0.20s)
+  Tier 1 | open_gold    | RWG= 96+ 240 (h=18.52 nm) | F_z = +0.43632 pN (0.40s)
+  Tier 1 | engaged_gold | RWG= 96+ 186 (h=21.83 nm) | F_z = -1.89242 pN (0.42s)
+  Tier 2 | open_pec     | RWG=198+ 552 (h=12.39 nm) | F_z = +1.49122 pN (0.25s)
+  Tier 2 | engaged_pec  | RWG=198+ 264 (h=17.06 nm) | F_z = -6.23894 pN (0.21s)
+  Tier 2 | open_gold    | RWG=198+ 552 (h=12.39 nm) | F_z = +0.46016 pN (0.83s)
+  Tier 2 | engaged_gold | RWG=198+ 264 (h=17.06 nm) | F_z = -2.01117 pN (0.57s)
+  Tier 3 | open_pec     | RWG=324+ 672 (h=10.75 nm) | F_z = +1.51982 pN (0.28s)
+  Tier 3 | engaged_pec  | RWG=324+ 474 (h=12.98 nm) | F_z = -6.50210 pN (0.25s)
+  Tier 3 | open_gold    | RWG=324+ 672 (h=10.75 nm) | F_z = +0.46664 pN (0.69s)
+  Tier 3 | engaged_gold | RWG=324+ 474 (h=12.98 nm) | F_z = -2.07766 pN (0.53s)
+  Tier 4 | open_pec     | RWG=552+1152 (h= 8.22 nm) | F_z = +1.54351 pN (0.60s)
+  Tier 4 | engaged_pec  | RWG=552+ 648 (h=10.58 nm) | F_z = -6.64080 pN (0.32s)
+  Tier 4 | open_gold    | RWG=552+1152 (h= 8.22 nm) | F_z = +0.47386 pN (1.58s)
+  Tier 4 | engaged_gold | RWG=552+ 648 (h=10.58 nm) | F_z = -2.10758 pN (0.87s)
+  [BEM Continuum] open_pec    : F_inf = +1.66547 +/- 0.02251 pN (Tier 4 = +1.54351 pN)
+  [BEM Continuum] engaged_pec : F_inf = -7.46846 +/- 0.11466 pN (Tier 4 = -6.64080 pN)
+  [BEM Continuum] open_gold   : F_inf = +0.50395 +/- 0.00333 pN (Tier 4 = +0.47386 pN)
+  [BEM Continuum] engaged_gold: F_inf = -2.30502 +/- 0.03262 pN (Tier 4 = -2.10758 pN)
+--- [C] Imaginary-Frequency Gauss-Legendre Quadrature Ladder (Tier 2) ---
+--- [D] Cross-Calibration: Exact RWG BEM vs Fast Tangential Vector-Dyadic BEM ---
