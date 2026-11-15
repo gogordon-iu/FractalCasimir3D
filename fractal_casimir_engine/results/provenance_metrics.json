@@ -1,7 +1,7 @@
 {
   "run_metadata": {
     "created_at": "2026-11-12T13:08:27.443722+00:00",
-    "updated_at": "2026-11-12T13:21:00.286789+00:00",
+    "updated_at": "2026-11-15T00:27:20.213534+00:00",
     "environment": "Windows",
     "entry_point": "fractal_casimir_engine/run_engine_cycle_mapping.py",
     "solver": "BEM_EngineCycle_3D",
@@ -34,6 +34,71 @@
           "eps_bg": 1.0
         },
         "timestamp": "2026-11-12T13:21:00.213738+00:00"
+      },
+      {
+        "solver": "BEM_UltraFine_3D_Suite1",
+        "solver_parameters": {
+          "solver": "BEM_EngineCycle_3D",
+          "design_name": "Config_D_DualStator_PushPull",
+          "formulation": "vector_dyadic",
+          "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+          "material": "Gold",
+          "stator_material": "Gold",
+          "temperature_K": 0.0,
+          "device": "cuda",
+          "n_r": 3,
+          "n_phi_tooth": 8,
+          "n_phi_bridge": 8,
+          "n_phi_arc": 24,
+          "n_z": 4,
+          "n_xi": 28,
+          "quad_order": 3,
+          "quad_points_per_panel": 9,
+          "sub_var_scale": 1.0,
+          "r_edge_nm": 0.0,
+          "n_panels_rotor": 1632,
+          "n_panels_stator": 25920,
+          "n_panels_total": 27552,
+          "n_dofs_total": 55104,
+          "kappa_0_um_inv": 11.76470588235294,
+          "k_eff_um_inv": 40.0,
+          "dataset": "fractal_casimir_engine_cycle"
+        },
+        "timestamp": "2026-11-15T00:25:02.049431+00:00"
+      },
+      {
+        "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+        "solver_parameters": {
+          "resolution": 100,
+          "dx_nm": 10.0,
+          "nmax": 2
+        },
+        "timestamp": "2026-11-12T21:22:11.021592+00:00"
+      },
+      {
+        "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
+        "solver_parameters": {
+          "n_r": 3,
+          "n_phi_tooth": 6,
+          "n_phi_arc": 18,
+          "n_z": 3,
+          "n_xi": 24,
+          "quad_order": 3
+        },
+        "timestamp": "2026-11-14T08:38:42.947520+00:00"
+      },
+      {
+        "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+        "solver_parameters": {
+          "n_r": 4,
+          "n_phi_tooth": 6,
+          "n_phi_arc": 18,
+          "n_z": 3,
+          "n_xi": 24,
+          "quad_order": 3,
+          "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+        },
+        "timestamp": "2026-11-13T07:07:07.080378+00:00"
       }
     ]
   },
@@ -60,6 +125,117 @@
         "formulation": "vector_dyadic_and_scalar_yukawa",
         "material": "Gold",
         "eps_bg": 1.0
+      }
+    },
+    "uf1_ultrafine_mesh_convergence": {
+      "timestamp": "2026-11-15T00:25:02.079193+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 389,
+      "data_summary": {
+        "max_dofs_evaluated": 55104,
+        "config_d_l4_vs_l5_tau_shift_pct": 47.190754006240745,
+        "config_d_l4_vs_l5_fz_shift_pct": 13.110935981170844,
+        "config_d_uf_spinup_deg": 1066.2645275362495,
+        "sym_uf_spinup_deg": 9.594834238042889
+      },
+      "solver": "BEM_UltraFine_3D_Suite1",
+      "solver_parameters": {
+        "solver": "BEM_EngineCycle_3D",
+        "design_name": "Config_D_DualStator_PushPull",
+        "formulation": "vector_dyadic",
+        "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+        "material": "Gold",
+        "stator_material": "Gold",
+        "temperature_K": 0.0,
+        "device": "cuda",
+        "n_r": 3,
+        "n_phi_tooth": 8,
+        "n_phi_bridge": 8,
+        "n_phi_arc": 24,
+        "n_z": 4,
+        "n_xi": 28,
+        "quad_order": 3,
+        "quad_points_per_panel": 9,
+        "sub_var_scale": 1.0,
+        "r_edge_nm": 0.0,
+        "n_panels_rotor": 1632,
+        "n_panels_stator": 25920,
+        "n_panels_total": 27552,
+        "n_dofs_total": 55104,
+        "kappa_0_um_inv": 11.76470588235294,
+        "k_eff_um_inv": 40.0,
+        "dataset": "fractal_casimir_engine_cycle"
+      }
+    },
+    "uf2_meep_fdtd_verification": {
+      "timestamp": "2026-11-12T21:22:11.052533+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 389,
+      "data_summary": {
+        "fz_sign_matches": 8,
+        "total_states": 8,
+        "chiral_forward_torque_matches": 5,
+        "chiral_states": 6,
+        "config_d_stroke1_meep_tau_pN_um": 0.3654483252018816,
+        "config_d_stroke3_meep_tau_pN_um": 0.37467743153453276,
+        "config_d_stroke1_meep_fz_pN": 7.819498502968682,
+        "config_d_stroke3_meep_fz_pN": -11.925152355210706
+      },
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "uf3_active_permittivity_switching": {
+      "timestamp": "2026-11-14T08:38:42.965437+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 389,
+      "data_summary": {
+        "config_d_vo2_advance_deg": -35.17145733634942,
+        "config_d_si_advance_deg": 227.38528658753484,
+        "sym_vo2_advance_deg": 22.072289105248917,
+        "config_d_vo2_mod_depth_pct": 8.249599994195556,
+        "config_d_vo2_efficiency_pct": 45.86824710216685,
+        "max_first_law_residual_aJ": 0.1256403743506073
+      },
+      "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
+      "solver_parameters": {
+        "n_r": 3,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3
+      }
+    },
+    "uf4_6dof_and_ebl_rounding": {
+      "timestamp": "2026-11-13T07:07:07.101166+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 389,
+      "data_summary": {
+        "max_c4_lateral_force_residual_pN": 8.881784197001252e-13,
+        "max_k_lat_destab_uN_m": 1529.1088095706064,
+        "max_k_tilt_destab_pN_um_rad": 736.3254713205758,
+        "lateral_bearing_safety_factor": 163.4939243272055,
+        "tilt_bearing_safety_factor": 33.95237700410297,
+        "config_d_15nm_tau_retention_stroke1_pct": 131.311799451764,
+        "config_d_15nm_tau_retention_stroke3_pct": 95.0273164082796
+      },
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
       }
     }
   },
@@ -1886,6 +2062,431 @@
         "formulation": "vector_dyadic_and_scalar_yukawa",
         "material": "Gold",
         "eps_bg": 1.0
+      }
+    },
+    "engine_uf1_max_dofs": {
+      "value": 55104,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf1_ultrafine_mesh_convergence",
+      "recorded_at": "2026-11-15T00:25:02.140213+00:00",
+      "solver": "BEM_UltraFine_3D_Suite1",
+      "solver_parameters": {
+        "solver": "BEM_EngineCycle_3D",
+        "design_name": "Config_D_DualStator_PushPull",
+        "formulation": "vector_dyadic",
+        "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+        "material": "Gold",
+        "stator_material": "Gold",
+        "temperature_K": 0.0,
+        "device": "cuda",
+        "n_r": 3,
+        "n_phi_tooth": 8,
+        "n_phi_bridge": 8,
+        "n_phi_arc": 24,
+        "n_z": 4,
+        "n_xi": 28,
+        "quad_order": 3,
+        "quad_points_per_panel": 9,
+        "sub_var_scale": 1.0,
+        "r_edge_nm": 0.0,
+        "n_panels_rotor": 1632,
+        "n_panels_stator": 25920,
+        "n_panels_total": 27552,
+        "n_dofs_total": 55104,
+        "kappa_0_um_inv": 11.76470588235294,
+        "k_eff_um_inv": 40.0,
+        "dataset": "fractal_casimir_engine_cycle"
+      }
+    },
+    "engine_uf1_config_d_tau_shift_pct": {
+      "value": 47.19,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf1_ultrafine_mesh_convergence",
+      "recorded_at": "2026-11-15T00:25:02.160762+00:00",
+      "solver": "BEM_UltraFine_3D_Suite1",
+      "solver_parameters": {
+        "solver": "BEM_EngineCycle_3D",
+        "design_name": "Config_D_DualStator_PushPull",
+        "formulation": "vector_dyadic",
+        "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+        "material": "Gold",
+        "stator_material": "Gold",
+        "temperature_K": 0.0,
+        "device": "cuda",
+        "n_r": 3,
+        "n_phi_tooth": 8,
+        "n_phi_bridge": 8,
+        "n_phi_arc": 24,
+        "n_z": 4,
+        "n_xi": 28,
+        "quad_order": 3,
+        "quad_points_per_panel": 9,
+        "sub_var_scale": 1.0,
+        "r_edge_nm": 0.0,
+        "n_panels_rotor": 1632,
+        "n_panels_stator": 25920,
+        "n_panels_total": 27552,
+        "n_dofs_total": 55104,
+        "kappa_0_um_inv": 11.76470588235294,
+        "k_eff_um_inv": 40.0,
+        "dataset": "fractal_casimir_engine_cycle"
+      }
+    },
+    "engine_uf1_config_d_fz_shift_pct": {
+      "value": 13.11,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf1_ultrafine_mesh_convergence",
+      "recorded_at": "2026-11-15T00:25:02.198873+00:00",
+      "solver": "BEM_UltraFine_3D_Suite1",
+      "solver_parameters": {
+        "solver": "BEM_EngineCycle_3D",
+        "design_name": "Config_D_DualStator_PushPull",
+        "formulation": "vector_dyadic",
+        "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+        "material": "Gold",
+        "stator_material": "Gold",
+        "temperature_K": 0.0,
+        "device": "cuda",
+        "n_r": 3,
+        "n_phi_tooth": 8,
+        "n_phi_bridge": 8,
+        "n_phi_arc": 24,
+        "n_z": 4,
+        "n_xi": 28,
+        "quad_order": 3,
+        "quad_points_per_panel": 9,
+        "sub_var_scale": 1.0,
+        "r_edge_nm": 0.0,
+        "n_panels_rotor": 1632,
+        "n_panels_stator": 25920,
+        "n_panels_total": 27552,
+        "n_dofs_total": 55104,
+        "kappa_0_um_inv": 11.76470588235294,
+        "k_eff_um_inv": 40.0,
+        "dataset": "fractal_casimir_engine_cycle"
+      }
+    },
+    "engine_uf1_config_d_spin_up_deg": {
+      "value": 1066.3,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf1_ultrafine_mesh_convergence",
+      "recorded_at": "2026-11-15T00:25:02.232658+00:00",
+      "solver": "BEM_UltraFine_3D_Suite1",
+      "solver_parameters": {
+        "solver": "BEM_EngineCycle_3D",
+        "design_name": "Config_D_DualStator_PushPull",
+        "formulation": "vector_dyadic",
+        "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+        "material": "Gold",
+        "stator_material": "Gold",
+        "temperature_K": 0.0,
+        "device": "cuda",
+        "n_r": 3,
+        "n_phi_tooth": 8,
+        "n_phi_bridge": 8,
+        "n_phi_arc": 24,
+        "n_z": 4,
+        "n_xi": 28,
+        "quad_order": 3,
+        "quad_points_per_panel": 9,
+        "sub_var_scale": 1.0,
+        "r_edge_nm": 0.0,
+        "n_panels_rotor": 1632,
+        "n_panels_stator": 25920,
+        "n_panels_total": 27552,
+        "n_dofs_total": 55104,
+        "kappa_0_um_inv": 11.76470588235294,
+        "k_eff_um_inv": 40.0,
+        "dataset": "fractal_casimir_engine_cycle"
+      }
+    },
+    "engine_uf1_sym_spin_up_deg": {
+      "value": 9.59,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf1_ultrafine_mesh_convergence",
+      "recorded_at": "2026-11-15T00:25:02.420501+00:00",
+      "solver": "BEM_UltraFine_3D_Suite1",
+      "solver_parameters": {
+        "solver": "BEM_EngineCycle_3D",
+        "design_name": "Config_D_DualStator_PushPull",
+        "formulation": "vector_dyadic",
+        "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+        "material": "Gold",
+        "stator_material": "Gold",
+        "temperature_K": 0.0,
+        "device": "cuda",
+        "n_r": 3,
+        "n_phi_tooth": 8,
+        "n_phi_bridge": 8,
+        "n_phi_arc": 24,
+        "n_z": 4,
+        "n_xi": 28,
+        "quad_order": 3,
+        "quad_points_per_panel": 9,
+        "sub_var_scale": 1.0,
+        "r_edge_nm": 0.0,
+        "n_panels_rotor": 1632,
+        "n_panels_stator": 25920,
+        "n_panels_total": 27552,
+        "n_dofs_total": 55104,
+        "kappa_0_um_inv": 11.76470588235294,
+        "k_eff_um_inv": 40.0,
+        "dataset": "fractal_casimir_engine_cycle"
+      }
+    },
+    "engine_uf2_resolution": {
+      "value": 100,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf2_meep_fdtd_verification",
+      "recorded_at": "2026-11-12T21:22:11.100037+00:00",
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "engine_uf2_fz_sign_matches": {
+      "value": 8,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf2_meep_fdtd_verification",
+      "recorded_at": "2026-11-12T21:22:11.135834+00:00",
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "engine_uf2_chiral_tau_matches": {
+      "value": 5,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf2_meep_fdtd_verification",
+      "recorded_at": "2026-11-12T21:22:11.159615+00:00",
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "engine_uf2_config_d_stroke1_tau": {
+      "value": 0.365,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf2_meep_fdtd_verification",
+      "recorded_at": "2026-11-12T21:22:11.178945+00:00",
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "engine_uf2_config_d_stroke3_tau": {
+      "value": 0.375,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf2_meep_fdtd_verification",
+      "recorded_at": "2026-11-12T21:22:11.263884+00:00",
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "engine_uf3_config_d_vo2_adv_deg": {
+      "value": -35.2,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf3_active_permittivity_switching",
+      "recorded_at": "2026-11-14T08:38:42.997545+00:00",
+      "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
+      "solver_parameters": {
+        "n_r": 3,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3
+      }
+    },
+    "engine_uf3_config_d_si_adv_deg": {
+      "value": 227.4,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf3_active_permittivity_switching",
+      "recorded_at": "2026-11-14T08:38:43.051407+00:00",
+      "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
+      "solver_parameters": {
+        "n_r": 3,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3
+      }
+    },
+    "engine_uf3_sym_vo2_adv_deg": {
+      "value": 22.07,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf3_active_permittivity_switching",
+      "recorded_at": "2026-11-14T08:38:43.067812+00:00",
+      "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
+      "solver_parameters": {
+        "n_r": 3,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3
+      }
+    },
+    "engine_uf3_vo2_mod_depth_pct": {
+      "value": 8.2,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf3_active_permittivity_switching",
+      "recorded_at": "2026-11-14T08:38:43.083460+00:00",
+      "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
+      "solver_parameters": {
+        "n_r": 3,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3
+      }
+    },
+    "engine_uf3_first_law_max_res_aj": {
+      "value": 0.12564,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf3_active_permittivity_switching",
+      "recorded_at": "2026-11-14T08:38:43.120355+00:00",
+      "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
+      "solver_parameters": {
+        "n_r": 3,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3
+      }
+    },
+    "engine_uf4_max_k_lat_un_m": {
+      "value": 1529.11,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf4_6dof_and_ebl_rounding",
+      "recorded_at": "2026-11-13T07:07:07.141687+00:00",
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    },
+    "engine_uf4_lat_safety_factor": {
+      "value": 163.5,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf4_6dof_and_ebl_rounding",
+      "recorded_at": "2026-11-13T07:07:07.382691+00:00",
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    },
+    "engine_uf4_tilt_safety_factor": {
+      "value": 34.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf4_6dof_and_ebl_rounding",
+      "recorded_at": "2026-11-13T07:07:07.426498+00:00",
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    },
+    "engine_uf4_retain_stroke1_pct": {
+      "value": 131.3,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf4_6dof_and_ebl_rounding",
+      "recorded_at": "2026-11-13T07:07:07.476805+00:00",
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    },
+    "engine_uf4_retain_stroke3_pct": {
+      "value": 95.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf4_6dof_and_ebl_rounding",
+      "recorded_at": "2026-11-13T07:07:07.495425+00:00",
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
       }
     }
   },
