@@ -430,3 +430,7 @@
 ### [BUG-261112-09] 2026-11-12 | fractal_casimir_engine/aggregate_ultrafine_campaigns.py,fractal_casimir_engine/slurm | scope=infra
 - **Bug**: save_plot_provenance/generate_manuscript_map kwargs mismatched metrics_logger, and afterok/walltime/git lacked flock guards.
 - **Solution**: Aligned provenance signatures, added cluster-safe aggregation, flock git lock, explicit walltime sbatch args, and uf2a trigger.
+
+### [BUG-261114-01] 2026-11-14 | fractal_casimir_engine/run_ultrafine_mesh_convergence.py | scope=infra
+- **Bug**: UF1 post-serialization and figure plotting read net_advance_deg/history/t_us instead of simulate_coupled_dynamics keys.
+- **Solution**: Aligned UF1 summary and Panel D plotting keys with simulate_coupled_dynamics schema and added an end-to-end checkpoint post-processing regression test.

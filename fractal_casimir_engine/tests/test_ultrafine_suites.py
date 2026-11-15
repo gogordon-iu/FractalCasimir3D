@@ -343,3 +343,98 @@ def test_pec_te_sign_and_end_to_end_provenance_aggregation(tmp_path: Path) -> No
     assert full["ready"] is True and full["ledger"]["audit_status"] == "PASS"
     assert (paper_dir / "figures" / "fig_uf1_mesh_convergence.pdf.provenance.json").is_file()
 
+
+def test_uf1_full_campaign_postprocess_from_checkpoints(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """End-to-end UF1 post-processing from cached checkpoints must match simulate_coupled_dynamics schema."""
+    import json
+    from fractal_casimir_engine import ENGINE_DESIGN_NAMES
+    from fractal_casimir_engine import run_ultrafine_mesh_convergence as uf1
+    from fractal_casimir_engine.geometries import ENGINE_Z_TIP_MAX_UM, ENGINE_Z_TIP_MIN_UM
+
+    chk_dir = tmp_path / "ckpt_uf1"
+    uf_res_dir = tmp_path / "results" / "ultrafine"
+    fig_dir = tmp_path / "figures"
+    chk_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(uf1, "UF_RESULTS_DIR", uf_res_dir)
+    monkeypatch.setattr(uf1, "ENGINE_FIGURES_DIR", fig_dir)
+
+    state_stub = {"energy_aJ": -0.12, "f_z_pN": 5.0, "tau_theta_pN_um": 0.4}
+    for dname in ENGINE_DESIGN_NAMES:
+        for idx, tier_spec in enumerate(uf1.CONVERGENCE_LADDER):
+            row = {
+                "tier": tier_spec["tier"],
+                "n_panels_total": 100 * (idx + 1),
+                "n_dofs_total": 400 * (idx + 1),
+                "quad_order": tier_spec["quad_order"],
+                "n_xi": tier_spec["n_xi"],
+                "elapsed_seconds": 0.1,
+                "solver_metadata": {"tier": tier_spec["tier"], "quad_order": tier_spec["quad_order"]},
+                "states": {
+                    "Stroke_I_Repulsive": dict(state_stub),
+                    "Stroke_III_Attractive": {"energy_aJ": -0.18, "f_z_pN": -8.0, "tau_theta_pN_um": 0.5},
+                },
+            }
+            (chk_dir / f"ladder_{dname}_{tier_spec['tier']}.json").write_text(
+                json.dumps(row), encoding="utf-8"
+            )
+
+        th_1deg = np.linspace(0.0, SECTOR_DEG, 91, dtype=np.float64)
+        cyc = {
+            "design_name": dname,
+            "theta_deg": th_1deg.tolist(),
+            "z_tip_um": [-0.088 for _ in th_1deg],
+            "energy_aJ": (-0.12 + 0.01 * np.cos(4.0 * np.deg2rad(th_1deg))).tolist(),
+            "f_z_pN": [1.0 for _ in th_1deg],
+            "tau_theta_pN_um": (0.2 * np.sin(4.0 * np.deg2rad(th_1deg))).tolist(),
+            "periodic_closure_abs_error_aJ": 0.0,
+            "cogging_second_diff_roughness": 0.01,
+        }
+        (chk_dir / f"dense_cycle_1deg_{dname}.json").write_text(
+            json.dumps(cyc), encoding="utf-8"
+        )
+
+        z_grid = np.linspace(ENGINE_Z_TIP_MIN_UM, ENGINE_Z_TIP_MAX_UM, 7, dtype=np.float64)
+        th_grid = np.linspace(0.0, SECTOR_DEG, 60, endpoint=False, dtype=np.float64)
+        for iz, z_val in enumerate(z_grid):
+            row_data = {
+                "design_name": dname,
+                "iz": iz,
+                "z_tip_um": float(z_val),
+                "theta_deg": th_grid.tolist(),
+                "energy_aJ": (-0.12 + 0.01 * np.cos(4.0 * np.deg2rad(th_grid))).tolist(),
+                "f_z_pN": [0.5 for _ in th_grid],
+                "tau_theta_pN_um": (0.25 * np.sin(4.0 * np.deg2rad(th_grid))).tolist(),
+            }
+            (chk_dir / f"landscape_{dname}_zrow{iz:02d}.json").write_text(
+                json.dumps(row_data), encoding="utf-8"
+            )
+
+    for q_ord, sv_scale in ((2, 1.0), (3, 1.0), (4, 1.0), (3, 0.50), (3, 0.25)):
+        tag = f"q{q_ord}_sv{int(round(sv_scale * 100)):03d}"
+        rec = {
+            "tag": tag,
+            "quad_order": q_ord,
+            "sub_var_scale": sv_scale,
+            "Stroke_I_Repulsive": dict(state_stub),
+            "Stroke_III_Attractive": dict(state_stub),
+        }
+        (chk_dir / f"reg_audit_Config_D_{tag}.json").write_text(
+            json.dumps(rec), encoding="utf-8"
+        )
+
+    rc = uf1.main(["--max-steps", "0", "--device", "cpu", "--checkpoint-dir", str(chk_dir)])
+    assert rc == 0
+    rep_file = uf_res_dir / "uf1_mesh_convergence_report.json"
+    assert rep_file.is_file()
+    rep = json.loads(rep_file.read_text(encoding="utf-8"))
+    assert rep["status"] == "completed"
+    assert "config_d_uf_spinup_deg" in rep["summary"]
+    assert (uf_res_dir / "uf1_provenance_metrics.json").is_file()
+    assert (uf_res_dir / "uf1_macros_results.tex").is_file()
+    assert (fig_dir / "fig_uf1_mesh_convergence.png").is_file()
+    assert (fig_dir / "fig_uf1_mesh_convergence.pdf").is_file()
+    assert (fig_dir / "fig_uf1_mesh_convergence.pdf.provenance.json").is_file()
+
+

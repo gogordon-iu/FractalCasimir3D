@@ -213,9 +213,11 @@ def generate_uf1_figure(report: dict[str, Any], out_png: Path, out_pdf: Path, me
     ax = axes[1, 1]
     for dname in ENGINE_DESIGN_NAMES:
         dyn = report["ultrafine_dynamics"][dname]["pad_release_engine"]
-        t_us = [row["t_us"] for row in dyn["history"]]
-        th_deg = [row["theta_deg"] - 9.0 for row in dyn["history"]]
-        ax.plot(t_us, th_deg, color=palette[dname], lw=2.0, label=f"{labels[dname]} (+{dyn['net_advance_deg']:.1f}$^\\circ$)")
+        traj = dyn["trajectory"]
+        t_us = [row["time_us"] for row in traj]
+        th_deg = [row["theta_deg"] - 9.0 for row in traj]
+        net_rot_deg = float(dyn["net_rotation_deg"])
+        ax.plot(t_us, th_deg, color=palette[dname], lw=2.0, label=f"{labels[dname]} ({net_rot_deg:+.1f}$^\\circ$)")
     ax.axhline(360.0, color="#111111", lw=0.9, ls="--", label="Full $360^\\circ$ Revolution")
     ax.set_xlabel("Time $t$ ($\\mu$s)")
     ax.set_ylabel("Angular Advance $\\Delta\\theta(t)$ (deg)")
@@ -228,7 +230,7 @@ def generate_uf1_figure(report: dict[str, Any], out_png: Path, out_pdf: Path, me
     fig.savefig(out_pdf)
     plt.close(fig)
 
-    report_path = UF_RESULTS_DIR / "uf1_mesh_convergence_report.json"
+    report_path = metrics_path.parent / "uf1_mesh_convergence_report.json"
     solver_meta = report["ladder"]["Config_D_DualStator_PushPull"][-1]["solver_metadata"]
     for fig_path in (out_png, out_pdf):
         save_plot_provenance(
@@ -527,10 +529,10 @@ def run_full_campaign(args: argparse.Namespace) -> int:
             "config_d_l4_vs_l5_tau_shift_pct": float(rel_shift_tau_s1_pct),
             "config_d_l4_vs_l5_fz_shift_pct": float(rel_shift_fz_s1_pct),
             "config_d_uf_spinup_deg": float(
-                uf_dynamics["Config_D_DualStator_PushPull"]["pad_release_engine"]["net_advance_deg"]
+                uf_dynamics["Config_D_DualStator_PushPull"]["pad_release_engine"]["net_rotation_deg"]
             ),
             "sym_uf_spinup_deg": float(
-                uf_dynamics["Sym_Baseline_CantorN2"]["pad_release_engine"]["net_advance_deg"]
+                uf_dynamics["Sym_Baseline_CantorN2"]["pad_release_engine"]["net_rotation_deg"]
             ),
         },
         "ladder": ladder_results,
