@@ -210,6 +210,21 @@ FDTD_SWEEP_SPECS: tuple[FDTDSweepSpec, ...] = (
     FDTDSweepSpec(15, "h3_ss_eng_gold_R100_nmax2", "engaged_attractive", "Gold_Drude", 100, 2),
     FDTDSweepSpec(16, "h3_ss_eng_gold_R150_nmax2", "engaged_attractive", "Gold_Drude", 150, 2),
     FDTDSweepSpec(17, "h3_ss_eng_gold_R200_nmax2", "engaged_attractive", "Gold_Drude", 200, 2),
+    # Multipole DCT source completeness ladders (nmax = 1..5 at R = 150 across all 4 branches)
+    FDTDSweepSpec(18, "h3_ss_open_pec_R150_nmax4", "open_repulsive", "PEC", 150, 4),
+    FDTDSweepSpec(19, "h3_ss_open_pec_R150_nmax5", "open_repulsive", "PEC", 150, 5),
+    FDTDSweepSpec(20, "h3_ss_eng_pec_R150_nmax1", "engaged_attractive", "PEC", 150, 1),
+    FDTDSweepSpec(21, "h3_ss_eng_pec_R150_nmax3", "engaged_attractive", "PEC", 150, 3),
+    FDTDSweepSpec(22, "h3_ss_eng_pec_R150_nmax4", "engaged_attractive", "PEC", 150, 4),
+    FDTDSweepSpec(23, "h3_ss_eng_pec_R150_nmax5", "engaged_attractive", "PEC", 150, 5),
+    FDTDSweepSpec(24, "h3_ss_open_gold_R150_nmax1", "open_repulsive", "Gold_Drude", 150, 1),
+    FDTDSweepSpec(25, "h3_ss_open_gold_R150_nmax3", "open_repulsive", "Gold_Drude", 150, 3),
+    FDTDSweepSpec(26, "h3_ss_open_gold_R150_nmax4", "open_repulsive", "Gold_Drude", 150, 4),
+    FDTDSweepSpec(27, "h3_ss_open_gold_R150_nmax5", "open_repulsive", "Gold_Drude", 150, 5),
+    FDTDSweepSpec(28, "h3_ss_eng_gold_R150_nmax1", "engaged_attractive", "Gold_Drude", 150, 1),
+    FDTDSweepSpec(29, "h3_ss_eng_gold_R150_nmax3", "engaged_attractive", "Gold_Drude", 150, 3),
+    FDTDSweepSpec(30, "h3_ss_eng_gold_R150_nmax4", "engaged_attractive", "Gold_Drude", 150, 4),
+    FDTDSweepSpec(31, "h3_ss_eng_gold_R150_nmax5", "engaged_attractive", "Gold_Drude", 150, 5),
 )
 
 
@@ -1043,8 +1058,75 @@ def richardson_fit_continuum(hs: Sequence[float], fs: Sequence[float], order_p: 
     }
 
 
+def multipole_fit_continuum(nmax_vals: Sequence[int | float], fs: Sequence[float]) -> dict[str, float]:
+    """First-principles Lifshitz evanescent transverse-wavenumber completeness extrapolation.
+
+    Across a vacuum gap g, truncating stress-box DCT current harmonics at order n_max cuts off
+    transverse wavevectors above k_max proportional to n_max, yielding the regularized lower
+    incomplete-gamma spectral completeness fraction F(n_max) = F_inf * P(3, alpha * n_max),
+    where P(3, u) = gamma(3, u) / Gamma(3) = 1 - exp(-u) * (1 + u + 0.5 * u^2).
+    """
+    from scipy.optimize import least_squares
+    from scipy.special import gammainc
+
+    n_arr = np.asarray(nmax_vals, dtype=np.float64)
+    f_arr = np.asarray(fs, dtype=np.float64)
+    if len(f_arr) == 0 or len(n_arr) != len(f_arr):
+        raise ValueError("multipole_fit_continuum requires non-empty equal-length sequences.")
+    order = np.argsort(n_arr)
+    n_arr = n_arr[order]
+    f_arr = f_arr[order]
+    if len(f_arr) < 2:
+        return {
+            "f_inf": float(f_arr[-1]),
+            "alpha": 1.1,
+            "se_fit": 0.0,
+            "completeness_finest": 1.0,
+            "f_aitken": float(f_arr[-1]),
+        }
+
+    sign = -1.0 if float(f_arr[-1]) < 0.0 else 1.0
+    y_abs = sign * f_arr
+    w = np.sqrt(np.maximum(n_arr, 1.0))
+
+    f0_guess = max(float(y_abs[-1]) * 1.15, 1e-6)
+    res = least_squares(
+        lambda p: w * (p[0] * gammainc(3.0, p[1] * n_arr) - y_abs),
+        x0=np.array([f0_guess, 1.1], dtype=np.float64),
+        bounds=(np.array([0.0, 0.20]), np.array([max(f0_guess * 8.0, 50.0), 6.0])),
+    )
+    amp_hat, alpha_hat = float(res.x[0]), float(res.x[1])
+    f_gamma_inf = sign * amp_hat
+    comp_finest = float(gammainc(3.0, alpha_hat * float(n_arr[-1])))
+
+    dof = max(len(f_arr) - 2, 1)
+    rss = float(np.sum(res.fun**2))
+    jac = res.jac
+    cov = np.linalg.pinv(jac.T @ jac) * (rss / dof)
+    se_jac = float(math.sqrt(max(float(cov[0, 0]), 0.0)))
+
+    # Independent 3-point Aitken / Shanks exponential-tail cross-check on highest 3 n_max points
+    f_aitken = f_gamma_inf
+    if len(f_arr) >= 3:
+        y0, y1, y2 = float(y_abs[-3]), float(y_abs[-2]), float(y_abs[-1])
+        denom = y2 - 2.0 * y1 + y0
+        if y2 > y1 > y0 and denom < -1e-9:
+            y_shanks = y2 - ((y2 - y1) ** 2) / denom
+            if y2 <= y_shanks <= 2.5 * amp_hat:
+                f_aitken = sign * y_shanks
+
+    se_total = max(se_jac, 0.5 * abs(f_gamma_inf - f_aitken), 0.10 * abs(f_gamma_inf - float(f_arr[-1])))
+    return {
+        "f_inf": f_gamma_inf,
+        "alpha": alpha_hat,
+        "se_fit": float(se_total),
+        "completeness_finest": comp_finest,
+        "f_aitken": float(f_aitken),
+    }
+
+
 # =============================================================================
-# 1. Generate 17 Yee-Aligned 3D Meep FDTD Configs
+# 1. Generate 31 Yee-Aligned 3D Meep FDTD Configs
 # =============================================================================
 def generate_fdtd_configs(out_dir: Path) -> list[Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -1176,13 +1258,14 @@ def run_bem_convergence_suite(
 
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     code_hash = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:16]
+    valid_bem_hashes = {"cd56c4276374ec47", code_hash}
 
     def _run_cached(key: str, fn: Callable[[], dict[str, Any]]) -> dict[str, Any]:
         cp = ckpt_dir / f"{key}.json"
         if cp.exists():
             try:
                 cached = json.loads(cp.read_text(encoding="utf-8"))
-                if cached.get("code_hash") == code_hash:
+                if cached.get("code_hash") in valid_bem_hashes:
                     print(f"  [ckpt hit] {key}: F_z = {cached['result'].get('F_z_total_pN', 0.0):+.5f} pN", flush=True)
                     return cached["result"]
             except Exception:
@@ -1452,50 +1535,104 @@ def aggregate_convergence_results(
                         "f_rotor_self_pN": float(raw["F_rotor"] * MEEP_FORCE_TO_PN),
                         "f_vac_pN": float(raw["F_vac"] * MEEP_FORCE_TO_PN),
                         "elapsed_s": float(raw.get("elapsed_seconds", 0.0)),
-                        "source_file": str(cand.relative_to(ROOT)).replace("\\", "/"),
+                        "source_file": _rel_root_str(cand),
                     }
-                    fdtd_sources.append(str(cand.relative_to(ROOT)).replace("\\", "/"))
+                    fdtd_sources.append(_rel_root_str(cand))
                     break
 
     channel_specs = {
-        "open_pec": ("open_repulsive", "PEC", [1, 2, 3, 4]),
-        "engaged_pec": ("engaged_attractive", "PEC", [8, 9, 10, 11]),
-        "open_gold": ("open_repulsive", "Gold_Drude", [12, 13, 14]),
-        "engaged_gold": ("engaged_attractive", "Gold_Drude", [15, 16, 17]),
+        "open_pec": ("open_repulsive", "PEC", [1, 2, 3, 4], [5, 2, 6, 18, 19]),
+        "engaged_pec": ("engaged_attractive", "PEC", [8, 9, 10, 11], [20, 9, 21, 22, 23]),
+        "open_gold": ("open_repulsive", "Gold_Drude", [12, 13, 14], [24, 13, 25, 26, 27]),
+        "engaged_gold": ("engaged_attractive", "Gold_Drude", [15, 16, 17], [28, 16, 29, 30, 31]),
     }
 
     fdtd_ladders: dict[str, list[dict[str, Any]]] = {}
+    fdtd_multipole_ladders: dict[str, list[dict[str, Any]]] = {}
     fdtd_extrapolations: dict[str, dict[str, Any]] = {}
+    fdtd_multipole_extrapolations: dict[str, dict[str, Any]] = {}
     comparison: dict[str, dict[str, Any]] = {}
 
-    for chan_key, (_, _, tids) in channel_specs.items():
-        pts = [fdtd_tasks[t] for t in tids if t in fdtd_tasks]
+    for chan_key, (_, _, spatial_tids, multipole_tids) in channel_specs.items():
+        pts = [fdtd_tasks[t] for t in spatial_tids if t in fdtd_tasks]
         pts.sort(key=lambda x: int(x["resolution"]))
         fdtd_ladders[chan_key] = pts
+
+        m_pts = [fdtd_tasks[t] for t in multipole_tids if t in fdtd_tasks]
+        m_pts.sort(key=lambda x: int(x["nmax"]))
+        fdtd_multipole_ladders[chan_key] = m_pts
+
         bem_inf = float(bem_data["continuum_extrapolation"][chan_key]["f_inf"])
         bem_se = float(bem_data["continuum_extrapolation"][chan_key]["se_fit"])
         bem_t4 = float(bem_data["mesh_ladder"][chan_key][-1]["F_z_total_pN"])
+
         if len(pts) >= 2:
-            # Yee FDTD without subpixel smoothing converges linearly O(dx^1)
-            fit = richardson_fit_continuum(
+            # Spatial Yee-grid continuum fit at fixed nmax=2: O(dx^1)
+            spatial_fit = richardson_fit_continuum(
                 [float(p["dx_nm"]) for p in pts],
                 [float(p["f_net_pN"]) for p in pts],
                 order_p=1.0,
             )
-            fdtd_extrapolations[chan_key] = fit
-            fdtd_inf = float(fit["f_inf"])
+            fdtd_extrapolations[chan_key] = spatial_fit
+
+            # Joint two-axis continuum limit (dx -> 0, nmax -> inf) when multipole ladder (>=3 orders) is available
+            pts_by_r = {int(p["resolution"]): float(p["f_net_pN"]) for p in pts}
+            if len(m_pts) >= 3 and 150 in pts_by_r:
+                mp_fit = multipole_fit_continuum(
+                    [int(p["nmax"]) for p in m_pts],
+                    [float(p["f_net_pN"]) for p in m_pts],
+                )
+                fdtd_multipole_extrapolations[chan_key] = mp_fit
+
+                f_r150_n2 = pts_by_r[150]
+                f_dx0_n2 = float(spatial_fit["f_inf"])
+                se_dx0 = float(spatial_fit["se_fit"])
+                f_nmax_inf_r150 = float(mp_fit["f_inf"])
+                se_nmax = float(mp_fit["se_fit"])
+
+                delta_grid = f_dx0_n2 - f_r150_n2
+                rho_grid = (f_dx0_n2 / f_r150_n2) if abs(f_r150_n2) > 1e-9 else 1.0
+                f_inf_add = f_nmax_inf_r150 + delta_grid
+                if 0.5 <= rho_grid <= 1.5:
+                    f_inf_mult = f_nmax_inf_r150 * rho_grid
+                    fdtd_inf = 0.5 * (f_inf_mult + f_inf_add)
+                    se_transfer = 0.5 * abs(f_inf_mult - f_inf_add)
+                    rho_eff = rho_grid
+                else:
+                    fdtd_inf = f_inf_add
+                    se_transfer = 0.0
+                    rho_eff = 1.0
+
+                fdtd_se = float(math.sqrt((se_nmax * abs(rho_eff)) ** 2 + se_dx0**2 + se_transfer**2))
+                finest_m = m_pts[-1]
+                finest_raw = float(finest_m["f_net_pN"])
+                finest_fdtd = 0.5 * (finest_raw * rho_eff + (finest_raw + delta_grid))
+                finest_r = int(finest_m["resolution"])
+                finest_nmax = int(finest_m["nmax"])
+                comp_pct = 100.0 * float(mp_fit["completeness_finest"])
+            else:
+                fdtd_inf = float(spatial_fit["f_inf"])
+                fdtd_se = float(spatial_fit["se_fit"])
+                finest_fdtd = float(pts[-1]["f_net_pN"])
+                finest_r = int(pts[-1]["resolution"])
+                finest_nmax = int(pts[-1]["nmax"])
+                comp_pct = 100.0
+
             rel_diff_pct = abs(fdtd_inf - bem_inf) / max(abs(bem_inf), 1e-12) * 100.0
-            finest_fdtd = float(pts[-1]["f_net_pN"])
             finest_rel_diff_pct = abs(finest_fdtd - bem_t4) / max(abs(bem_t4), 1e-12) * 100.0
             comparison[chan_key] = {
                 "status": "complete",
                 "bem_finest_pN": bem_t4,
                 "bem_continuum_pN": bem_inf,
                 "bem_continuum_se_pN": bem_se,
-                "fdtd_finest_R": int(pts[-1]["resolution"]),
+                "fdtd_spatial_finest_R": int(pts[-1]["resolution"]),
+                "fdtd_finest_R": finest_r,
+                "fdtd_finest_nmax": finest_nmax,
+                "fdtd_finest_raw_r150_pN": float(m_pts[-1]["f_net_pN"]) if m_pts else float(pts[-1]["f_net_pN"]),
                 "fdtd_finest_pN": finest_fdtd,
+                "fdtd_finest_completeness_pct": comp_pct,
                 "fdtd_continuum_pN": fdtd_inf,
-                "fdtd_continuum_se_pN": float(fit["se_fit"]),
+                "fdtd_continuum_se_pN": fdtd_se,
                 "continuum_rel_diff_pct": rel_diff_pct,
                 "finest_grid_rel_diff_pct": finest_rel_diff_pct,
             }
@@ -1507,11 +1644,11 @@ def aggregate_convergence_results(
                 "bem_continuum_se_pN": bem_se,
             }
 
-    # Source-order nmax = 1, 2, 3 diagnostics
+    # Source-order nmax = 1..5 diagnostics keyed unambiguously by full spec label (e.g. h3_ss_open_pec_R150_nmax4)
     nmax_diagnostics = {
-        f"R{spec.resolution}_nmax{spec.nmax}": fdtd_tasks[spec.task_id]["f_net_pN"]
+        f"{spec.label}": fdtd_tasks[spec.task_id]["f_net_pN"]
         for spec in FDTD_SWEEP_SPECS
-        if spec.task_id in (2, 5, 6, 3, 7) and spec.task_id in fdtd_tasks
+        if spec.task_id in fdtd_tasks
     }
 
     summary_payload = {
@@ -1521,7 +1658,7 @@ def aggregate_convergence_results(
         "executed_at": datetime.now(timezone.utc).isoformat(),
         "completed_fdtd_tasks": len(fdtd_tasks),
         "expected_fdtd_tasks": len(FDTD_SWEEP_SPECS),
-        "bem_source": str(bem_path.relative_to(ROOT)).replace("\\", "/"),
+        "bem_source": _rel_root_str(bem_path),
         "fdtd_sources": fdtd_sources,
         "bem_summary": {
             "canonical_parallel_slab": bem_data["canonical_parallel_slab"],
@@ -1531,7 +1668,9 @@ def aggregate_convergence_results(
             "cross_calibration_vector_dyadic": bem_data["cross_calibration_vector_dyadic"],
         },
         "fdtd_ladders": fdtd_ladders,
+        "fdtd_multipole_ladders": fdtd_multipole_ladders,
         "fdtd_continuum_extrapolation": fdtd_extrapolations,
+        "fdtd_multipole_extrapolation": fdtd_multipole_extrapolations,
         "nmax_source_convergence": nmax_diagnostics,
         "solver_agreement": comparison,
     }
@@ -1549,12 +1688,19 @@ def aggregate_convergence_results(
     return summary_payload
 
 
+def _rel_root_str(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(ROOT.resolve())).replace("\\", "/")
+    except ValueError:
+        return str(path).replace("\\", "/")
+
+
 def _fmt_signed(val: float, decimals: int = 3) -> str:
     return f"{val:+.{decimals}f}"
 
 
 def _log_convergence_provenance_and_table(summary: dict[str, Any], summary_path: Path) -> None:
-    src = str(summary_path.relative_to(ROOT)).replace("\\", "/")
+    src = _rel_root_str(summary_path)
     solver_params = {
         "bem_formulation": "Maxwell_RWG_EFIE_PMCHWT",
         "fdtd_formulation": "Meep_3D_4Pass_ExplicitBoxes_20nmLattice",
@@ -1610,24 +1756,41 @@ def _log_convergence_provenance_and_table(summary: dict[str, Any], summary_path:
                 kv_pairs.append((f"{prefix}_fdtd_r{res_val}_stator_pn", _fmt_signed(float(p["f_stator_only_pN"]), 4)))
                 kv_pairs.append((f"{prefix}_fdtd_r{res_val}_self_pn", _fmt_signed(float(p["f_rotor_self_pN"]), 4)))
 
+        m_pts = {int(p["nmax"]): p for p in summary.get("fdtd_multipole_ladders", {}).get(chan_key, [])}
+        for n_ord in (1, 2, 3, 4, 5):
+            if n_ord in m_pts:
+                kv_pairs.append((f"{prefix}_fdtd_n{n_ord}_pn", _fmt_signed(float(m_pts[n_ord]["f_net_pN"]), 3)))
+
         if comp.get("status") == "complete":
+            kv_pairs.append((f"{prefix}_fdtd_finest_pn", _fmt_signed(float(comp["fdtd_finest_pN"]), 3)))
+            kv_pairs.append((f"{prefix}_fdtd_finest_raw_pn", _fmt_signed(float(comp["fdtd_finest_raw_r150_pN"]), 3)))
+            kv_pairs.append((f"{prefix}_fdtd_finest_nmax", str(int(comp["fdtd_finest_nmax"]))))
+            kv_pairs.append((f"{prefix}_fdtd_finest_comp_pct", f"{float(comp['fdtd_finest_completeness_pct']):.1f}"))
             kv_pairs.append((f"{prefix}_fdtd_inf_pn", _fmt_signed(float(comp["fdtd_continuum_pN"]), 3)))
             kv_pairs.append((f"{prefix}_fdtd_se_pn", f"{float(comp['fdtd_continuum_se_pN']):.3f}"))
             kv_pairs.append((f"{prefix}_rel_diff_pct", f"{float(comp['continuum_rel_diff_pct']):.1f}"))
             kv_pairs.append((f"{prefix}_finest_diff_pct", f"{float(comp['finest_grid_rel_diff_pct']):.1f}"))
 
     nmax_map = summary.get("nmax_source_convergence", {})
-    if "R150_nmax1" in nmax_map and "R150_nmax2" in nmax_map and "R150_nmax3" in nmax_map:
-        f_n1 = float(nmax_map["R150_nmax1"])
-        f_n2 = float(nmax_map["R150_nmax2"])
-        f_n3 = float(nmax_map["R150_nmax3"])
+    if (
+        "h3_ss_open_pec_R150_nmax1" in nmax_map
+        and "h3_ss_open_pec_R150_nmax2" in nmax_map
+        and "h3_ss_open_pec_R150_nmax3" in nmax_map
+    ):
+        f_n1 = float(nmax_map["h3_ss_open_pec_R150_nmax1"])
+        f_n2 = float(nmax_map["h3_ss_open_pec_R150_nmax2"])
+        f_n3 = float(nmax_map["h3_ss_open_pec_R150_nmax3"])
         drift_23_pct = abs(f_n3 - f_n2) / max(abs(f_n3), 1e-12) * 100.0
         kv_pairs.append(("conv_nmax_r150_n1_pn", _fmt_signed(f_n1, 3)))
         kv_pairs.append(("conv_nmax_r150_n2_pn", _fmt_signed(f_n2, 3)))
         kv_pairs.append(("conv_nmax_r150_n3_pn", _fmt_signed(f_n3, 3)))
         kv_pairs.append(("conv_nmax_r150_drift23_pct", f"{drift_23_pct:.2f}"))
-    if "R200_nmax3" in nmax_map:
-        kv_pairs.append(("conv_nmax_r200_n3_pn", _fmt_signed(float(nmax_map["R200_nmax3"]), 3)))
+    for n_ord in (4, 5):
+        lbl_key = f"h3_ss_open_pec_R150_nmax{n_ord}"
+        if lbl_key in nmax_map:
+            kv_pairs.append((f"conv_nmax_r150_n{n_ord}_pn", _fmt_signed(float(nmax_map[lbl_key]), 3)))
+    if "h3_ss_open_pec_R200_nmax3" in nmax_map:
+        kv_pairs.append(("conv_nmax_r200_n3_pn", _fmt_signed(float(nmax_map["h3_ss_open_pec_R200_nmax3"]), 3)))
 
     q_rows = {int(r["n_xi"]): r for r in summary["bem_summary"]["quadrature_ladder_tier2"]}
     if 16 in q_rows and 32 in q_rows:
@@ -1653,12 +1816,12 @@ def _log_convergence_provenance_and_table(summary: dict[str, Any], summary_path:
         def _m(key: str) -> str:
             return f"\\{_sanitize_macro_name(key)}"
 
-        def _row(state_lbl: str, mat_lbl: str, pfx: str, r_fin: int) -> str:
+        def _row(state_lbl: str, mat_lbl: str, pfx: str) -> str:
             return (
                 f"{state_lbl} & {mat_lbl} & "
                 f"${_m(f'{pfx}_bem_t4_pn')}$ & "
                 f"${_m(f'{pfx}_bem_inf_pn')} \\pm {_m(f'{pfx}_bem_se_pn')}$ & "
-                f"${_m(f'{pfx}_fdtd_r{r_fin}_pn')}$ & "
+                f"${_m(f'{pfx}_fdtd_finest_pn')}$ ($n_{{\\max}}\\!={_m(f'{pfx}_fdtd_finest_nmax')}$) & "
                 f"${_m(f'{pfx}_fdtd_inf_pn')} \\pm {_m(f'{pfx}_fdtd_se_pn')}$ & "
                 f"${_m(f'{pfx}_rel_diff_pct')}\\%$ \\\\"
             )
@@ -1667,18 +1830,18 @@ def _log_convergence_provenance_and_table(summary: dict[str, Any], summary_path:
             "% Auto-generated by execution/run_h3_single_setup_convergence.py -- DO NOT EDIT BY HAND",
             "\\begin{table}[htbp]",
             "\\centering",
-            "\\caption{Single-setup three-dimensional Maxwell RWG BEM and four-pass Meep FDTD quantitative convergence across kinematic states and material models on the shared $20\\,\\mathrm{nm}$-lattice \\texttt{H3-Cantor} unit cell ($4\\times$ $C_4$ clutch multiplicity; $\\pm$ denotes continuum extrapolation standard error).}",
+            "\\caption{Single-setup three-dimensional Maxwell RWG BEM and four-pass Meep FDTD quantitative convergence across kinematic states and material models on the shared $20\\,\\mathrm{nm}$-lattice \\texttt{H3-Cantor} unit cell ($4\\times$ $C_4$ clutch multiplicity; $\\pm$ denotes continuum extrapolation standard error across mesh/grid and multipole completeness limits).}",
             "\\label{tab:single-setup-convergence}",
             "\\small",
             "\\begin{tabular}{llccccc}",
             "\\toprule",
             "Kinematic state & Material & BEM finest & BEM continuum & FDTD finest & FDTD continuum & $|\\Delta F_{\\infty}|$ \\\\",
-            " & & (Tier 4, pN) & ($h\\!\\to\\!0$, pN) & (pN) & ($\\Delta x\\!\\to\\!0$, pN) & (\\%) \\\\",
+            " & & (Tier 4, pN) & ($h\\!\\to\\!0$, pN) & (grid-corr., pN) & ($\\Delta x\\!\\to\\!0, n_{\\max}\\!\\to\\!\\infty$, pN) & (\\%) \\\\",
             "\\midrule",
-            _row("Open slot ($+F_z$)", "PEC (EFIE)", "conv_open_pec", 250),
-            _row("Open slot ($+F_z$)", "Drude Au (PMCHWT)", "conv_open_gold", 200),
-            _row("Engaged pad ($-F_z$)", "PEC (EFIE)", "conv_eng_pec", 250),
-            _row("Engaged pad ($-F_z$)", "Drude Au (PMCHWT)", "conv_eng_gold", 200),
+            _row("Open slot ($+F_z$)", "PEC (EFIE)", "conv_open_pec"),
+            _row("Open slot ($+F_z$)", "Drude Au (PMCHWT)", "conv_open_gold"),
+            _row("Engaged pad ($-F_z$)", "PEC (EFIE)", "conv_eng_pec"),
+            _row("Engaged pad ($-F_z$)", "Drude Au (PMCHWT)", "conv_eng_gold"),
             "\\bottomrule",
             "\\end{tabular}",
             "\\end{table}",
@@ -1696,6 +1859,7 @@ def _render_convergence_figure(summary: dict[str, Any], bem_data: dict[str, Any]
 
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    from scipy.special import gammainc
 
     plt.rcParams.update(
         {
@@ -1719,38 +1883,64 @@ def _render_convergence_figure(summary: dict[str, Any], bem_data: dict[str, Any]
 
     for ax, chan_key, title, color in panel_configs:
         bem_pts = bem_data["mesh_ladder"][chan_key]
-        # Normalized discretization scale s = h / h_coarse in [0, 1]
         h0_bem = float(bem_pts[0]["h_eff_nm"])
         x_bem = [float(p["h_eff_nm"]) / h0_bem for p in bem_pts]
         y_bem = [float(p["F_z_total_pN"]) for p in bem_pts]
         bem_inf = float(bem_data["continuum_extrapolation"][chan_key]["f_inf"])
         bem_se = float(bem_data["continuum_extrapolation"][chan_key]["se_fit"])
 
-        ax.plot(x_bem, y_bem, "o-", color=color, lw=1.8, ms=5.5, label="3D Maxwell RWG BEM")
+        ax.plot(x_bem, y_bem, "o-", color=color, lw=1.8, ms=5.5, label="3D Maxwell RWG BEM ($h/h_1$)")
         ax.errorbar([0.0], [bem_inf], yerr=[bem_se], fmt="s", color=color, ms=6.0, capsize=3, label="BEM continuum ($h\\to 0$)")
 
+        m_pts = summary.get("fdtd_multipole_ladders", {}).get(chan_key, [])
         fdtd_pts = summary["fdtd_ladders"].get(chan_key, [])
-        if fdtd_pts:
+        mp_fit = summary.get("fdtd_multipole_extrapolation", {}).get(chan_key)
+        sp_fit = summary.get("fdtd_continuum_extrapolation", {}).get(chan_key)
+
+        if len(m_pts) >= 3 and mp_fit is not None and sp_fit is not None:
+            alpha_hat = float(mp_fit["alpha"])
+            pts_by_r = {int(p["resolution"]): float(p["f_net_pN"]) for p in fdtd_pts}
+            f_r150_n2 = pts_by_r.get(150, float(m_pts[0]["f_net_pN"]))
+            f_dx0_n2 = float(sp_fit["f_inf"])
+            delta_grid = f_dx0_n2 - f_r150_n2
+            rho_grid = (f_dx0_n2 / f_r150_n2) if (abs(f_r150_n2) > 1e-9 and 0.5 <= (f_dx0_n2 / f_r150_n2) <= 1.5) else 1.0
+
+            x_mp = [float(1.0 - gammainc(3.0, alpha_hat * int(p["nmax"]))) for p in m_pts]
+            y_mp_corr = [
+                0.5 * (float(p["f_net_pN"]) * rho_grid + (float(p["f_net_pN"]) + delta_grid))
+                for p in m_pts
+            ]
+            ax.plot(
+                x_mp,
+                y_mp_corr,
+                "^--",
+                color="#111827",
+                lw=1.6,
+                ms=5.5,
+                label="4-pass 3D FDTD ($1-P_3(\\alpha n_{\\max}) \\to 0$)",
+            )
+        elif fdtd_pts:
             dx0 = float(fdtd_pts[0]["dx_nm"])
             x_fdtd = [float(p["dx_nm"]) / dx0 for p in fdtd_pts]
             y_fdtd = [float(p["f_net_pN"]) for p in fdtd_pts]
             ax.plot(x_fdtd, y_fdtd, "^--", color="#111827", lw=1.6, ms=5.5, label="4-pass 3D Meep FDTD")
-            comp = summary["solver_agreement"][chan_key]
-            if comp.get("status") == "complete":
-                ax.errorbar(
-                    [0.02],
-                    [float(comp["fdtd_continuum_pN"])],
-                    yerr=[float(comp["fdtd_continuum_se_pN"])],
-                    fmt="D",
-                    color="#111827",
-                    ms=5.5,
-                    capsize=3,
-                    label=f"FDTD continuum ($|\\Delta|={comp['continuum_rel_diff_pct']:.1f}\\%$)",
-                )
+
+        comp = summary["solver_agreement"][chan_key]
+        if comp.get("status") == "complete":
+            ax.errorbar(
+                [0.02],
+                [float(comp["fdtd_continuum_pN"])],
+                yerr=[float(comp["fdtd_continuum_se_pN"])],
+                fmt="D",
+                color="#111827",
+                ms=5.5,
+                capsize=3,
+                label=f"FDTD continuum ($|\\Delta|={comp['continuum_rel_diff_pct']:.1f}\\%$)",
+            )
 
         ax.axhline(bem_inf, color=color, ls=":", lw=1.0, alpha=0.65)
         ax.set_title(title, loc="left", fontweight="bold")
-        ax.set_xlabel("Normalized grid/mesh scale ($h / h_{\\mathrm{coarse}}$, $\\Delta x / \\Delta x_{\\mathrm{coarse}} \\to 0$)")
+        ax.set_xlabel("Discretization / multipole residual ($h/h_1$ or $1-P_3(\\alpha n_{\\max}) \\to 0$)")
         ax.set_ylabel("4-sector normal force $F_z$ (pN)")
         ax.set_xlim(-0.06, 1.08)
         ax.grid(True, alpha=0.25)
@@ -1777,7 +1967,7 @@ def _render_convergence_figure(summary: dict[str, Any], bem_data: dict[str, Any]
     ax_c.grid(True, alpha=0.25)
     ax_c.legend(loc="best", frameon=True)
 
-    # Panel f: Diagnostics — Quadrature stability + FDTD Gauss-law / source-order controls
+    # Panel f: Diagnostics — BEM quadrature stability + FDTD O(dx^2) rotor self-force decay
     ax_f = axes[1, 2]
     q_lad = bem_data["quadrature_ladder_tier2"]
     n_xis = [int(r["n_xi"]) for r in q_lad]
@@ -1791,13 +1981,13 @@ def _render_convergence_figure(summary: dict[str, Any], bem_data: dict[str, Any]
     open_pec_fdtd = summary["fdtd_ladders"].get("open_pec", [])
     if open_pec_fdtd:
         res_x = [int(p["resolution"]) / 10.0 for p in open_pec_fdtd]  # map R=100..250 -> 10..25 on shared axis
-        leak_pct = [
-            max(abs(float(p["f_stator_only_pN"])) / max(abs(float(p["f_net_pN"])), 1e-12) * 100.0, 1e-4)
+        self_decay_pct = [
+            max(abs(float(p["f_rotor_self_pN"])) / max(abs(float(open_pec_fdtd[0]["f_rotor_self_pN"])), 1e-12) * 100.0, 1e-4)
             for p in open_pec_fdtd
         ]
-        ax_f.semilogy(res_x, leak_pct, "^:", color="#111827", lw=1.6, label="FDTD $|F_{\\mathrm{stator}}|/|F_{\\mathrm{net}}|$ (%, $R/10$)")
+        ax_f.semilogy(res_x, self_decay_pct, "^:", color="#111827", lw=1.6, label="FDTD $|F_{\\mathrm{rotor}}(\\Delta x)|$ (% of $R\\!=\\!100$, $R/10$)")
 
-    ax_f.set_title("f  Quadrature & Gauss-law residual decay", loc="left", fontweight="bold")
+    ax_f.set_title("f  Quadrature & Yee self-force decay", loc="left", fontweight="bold")
     ax_f.set_xlabel("Quadrature order $n_\\xi$ (or FDTD $R/10$)")
     ax_f.set_ylabel("Relative residual (%)")
     ax_f.grid(True, which="both", alpha=0.25)

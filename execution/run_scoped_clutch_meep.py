@@ -1466,10 +1466,15 @@ def log_metrics(result: Mapping[str, Any], master: bool) -> None:
     in_array_job = os.environ.get("SLURM_ARRAY_TASK_ID") is not None
     output_is_default = out_dir.resolve() == default_dir.resolve()
     log_directories = []
-    if not output_is_default or not in_array_job:
+    if in_array_job:
+        # Isolate per-task provenance files so concurrent Slurm array tasks
+        # sharing a subdirectory (e.g. results/h3_single_setup_fdtd/) never
+        # race or conflict on provenance_metrics.json during git pull --rebase.
+        log_directories.append(out_dir / f"provenance_task_{int(result['task_id']):03d}")
+    else:
         log_directories.append(out_dir)
-    if not output_is_default and not in_array_job:
-        log_directories.append(default_dir)
+        if not output_is_default:
+            log_directories.append(default_dir)
 
     for directory in log_directories:
         directory.mkdir(parents=True, exist_ok=True)

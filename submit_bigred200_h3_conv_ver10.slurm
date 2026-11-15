@@ -6,8 +6,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=16
 #SBATCH --cpus-per-task=8
-#SBATCH --time=06:00:00
-#SBATCH --array=1-17%8
+#SBATCH --time=08:30:00
+#SBATCH --array=4,7,11,16-31%10
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu
 #SBATCH --exclude=nid0394
@@ -1144,6 +1144,10 @@ run_user_job() (
 TASK_ID="${SLURM_ARRAY_TASK_ID:-1}"
 printf -v CFG_INDEX '%03d' "$TASK_ID"
 CONFIG_FILE="sweep_configs_h3_single_setup_fdtd/config_${CFG_INDEX}.json"
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "[ERROR] Config file not found for SLURM_ARRAY_TASK_ID=$TASK_ID: $CONFIG_FILE" >&2
+    exit 2
+fi
 mkdir -p -- .tmp logs results results/h3_single_setup_fdtd results_clutch_pilot results_h3_single_setup_fdtd figures
 OUTPUT_FILE="results/h3_single_setup_fdtd/task_${TASK_ID}_meep.json"
 
@@ -1203,15 +1207,33 @@ export PYTHONPATH="${SLURM_SUBMIT_DIR:-$PWD}:${PYTHONPATH:-}"
 echo "Starting single-setup Meep FDTD convergence task $TASK_ID with $CONFIG_FILE on $(hostname)"
 echo "Python binary: $PYTHON_BIN"
 
+ALREADY_COMPLETE=0
+if [[ -f "$OUTPUT_FILE" ]]; then
+    if "$PYTHON_BIN" -c "
+import json, math, sys
+try:
+    d = json.load(open(sys.argv[1], encoding='utf-8'))
+    v = d.get('f_net_pN')
+    ok = (d.get('status') == 'complete' and isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(float(v)))
+    sys.exit(0 if ok else 1)
+except Exception:
+    sys.exit(1)
+" "$OUTPUT_FILE" >/dev/null 2>&1; then
+        ALREADY_COMPLETE=1
+    fi
+fi
+
 MEEP_RC=0
-if command -v srun >/dev/null 2>&1 && [[ -n "${SLURM_JOB_ID:-}" ]]; then
+if (( ALREADY_COMPLETE == 1 )); then
+    echo "Task $TASK_ID already complete in $OUTPUT_FILE; skipping Meep recompute and publishing via telemetry."
+elif command -v srun >/dev/null 2>&1 && [[ -n "${SLURM_JOB_ID:-}" ]]; then
     srun --nodes=1 -n 16 --ntasks-per-node=16 -c 8 \
         "$PYTHON_BIN" execution/run_scoped_clutch_meep.py \
         --config-file "$CONFIG_FILE" \
         --task-id "$TASK_ID" \
         --config all \
         --checkpoint-prefix chk_moments_h3_ss_fdtd_task \
-        --max-walltime-hours 5.6 \
+        --max-walltime-hours 8.0 \
         --output-file "$OUTPUT_FILE" || MEEP_RC=$?
 else
     "$PYTHON_BIN" execution/run_scoped_clutch_meep.py \
@@ -1219,7 +1241,7 @@ else
         --task-id "$TASK_ID" \
         --config all \
         --checkpoint-prefix chk_moments_h3_ss_fdtd_task \
-        --max-walltime-hours 5.6 \
+        --max-walltime-hours 8.0 \
         --output-file "$OUTPUT_FILE" || MEEP_RC=$?
 fi
 
@@ -1227,41 +1249,61 @@ if [[ -f "$OUTPUT_FILE" ]]; then
     cp -f -- "$OUTPUT_FILE" "results_h3_single_setup_fdtd/task_${TASK_ID}_meep.json" || true
 fi
 
-if [[ -f "results/h3_single_setup_bem_convergence.json" ]]; then
-    TORCH_PY=""
-    for tcand in \
-        "${SLURM_SUBMIT_DIR:-$PWD}/.venv/bin/python" \
-        "$HOME/venvs/research/bin/python" \
-        "/N/slate/$USER/venvs/research/bin/python" \
-        "/N/u/gogordon/BigRed200/.conda/envs/pytorch/bin/python" \
-        "$PYTHON_BIN"
-    do
-        if [[ -n "$tcand" && -x "$tcand" ]]; then
-            if "$tcand" -c "import torch, scipy, matplotlib" >/dev/null 2>&1; then
-                TORCH_PY="$tcand"
-                break
+# Run final BEM+FDTD convergence aggregation ONLY when all 31 FDTD tasks are complete,
+# serialized via flock so concurrent intermediate array tasks never race on shared files.
+if [[ -f "results/h3_single_setup_bem_convergence.json" ]] && "$PYTHON_BIN" -c "
+import json, math, pathlib, sys
+d = pathlib.Path('results/h3_single_setup_fdtd')
+try:
+    for k in range(1, 32):
+        p = d / f'task_{k}_meep.json'
+        if not p.is_file():
+            sys.exit(1)
+        raw = json.loads(p.read_text(encoding='utf-8'))
+        v = raw.get('f_net_pN')
+        if raw.get('status') != 'complete' or not isinstance(v, (int, float)) or isinstance(v, bool) or not math.isfinite(float(v)):
+            sys.exit(1)
+except Exception:
+    sys.exit(1)
+sys.exit(0)
+" >/dev/null 2>&1; then
+    (
+        flock -n 9 || exit 0
+        TORCH_PY=""
+        for tcand in \
+            "${SLURM_SUBMIT_DIR:-$PWD}/.venv/bin/python" \
+            "$HOME/venvs/research/bin/python" \
+            "/N/slate/$USER/venvs/research/bin/python" \
+            "/N/u/gogordon/BigRed200/.conda/envs/pytorch/bin/python" \
+            "$PYTHON_BIN"
+        do
+            if [[ -n "$tcand" && -x "$tcand" ]]; then
+                if "$tcand" -c "import torch, scipy, matplotlib" >/dev/null 2>&1; then
+                    TORCH_PY="$tcand"
+                    break
+                fi
+            fi
+        done
+        if [[ -n "$TORCH_PY" ]]; then
+            MACROS_WAS_CLEAN=0
+            TBL_CONV_CLEAN=0
+            git diff --quiet -- "Papers/FCE_Nature_ver01/macros_results.tex" 2>/dev/null && MACROS_WAS_CLEAN=1 || true
+            git diff --quiet -- "Papers/FCE_Nature_ver01/tables/table_h3_single_setup_convergence.tex" 2>/dev/null && TBL_CONV_CLEAN=1 || true
+            "$TORCH_PY" execution/run_h3_single_setup_convergence.py --aggregate || true
+            if [[ -f "Papers/FCE_Nature_ver01/tables/table_h3_single_setup_convergence.tex" ]]; then
+                cp -f -- "Papers/FCE_Nature_ver01/tables/table_h3_single_setup_convergence.tex" "results/table_h3_single_setup_convergence.tex" || true
+                if [[ "$TBL_CONV_CLEAN" == "1" ]]; then
+                    git checkout -- "Papers/FCE_Nature_ver01/tables/table_h3_single_setup_convergence.tex" 2>/dev/null || true
+                fi
+            fi
+            if [[ -f "Papers/FCE_Nature_ver01/macros_results.tex" ]]; then
+                cp -f -- "Papers/FCE_Nature_ver01/macros_results.tex" "results/macros_results.tex" || true
+                if [[ "$MACROS_WAS_CLEAN" == "1" ]]; then
+                    git checkout -- "Papers/FCE_Nature_ver01/macros_results.tex" 2>/dev/null || true
+                fi
             fi
         fi
-    done
-    if [[ -n "$TORCH_PY" ]]; then
-        MACROS_WAS_CLEAN=0
-        TBL_CONV_CLEAN=0
-        git diff --quiet -- "Papers/FCE_Nature_ver01/macros_results.tex" 2>/dev/null && MACROS_WAS_CLEAN=1 || true
-        git diff --quiet -- "Papers/FCE_Nature_ver01/tables/table_h3_single_setup_convergence.tex" 2>/dev/null && TBL_CONV_CLEAN=1 || true
-        "$TORCH_PY" execution/run_h3_single_setup_convergence.py --aggregate || true
-        if [[ -f "Papers/FCE_Nature_ver01/tables/table_h3_single_setup_convergence.tex" ]]; then
-            cp -f -- "Papers/FCE_Nature_ver01/tables/table_h3_single_setup_convergence.tex" "results/table_h3_single_setup_convergence.tex" || true
-            if [[ "$TBL_CONV_CLEAN" == "1" ]]; then
-                git checkout -- "Papers/FCE_Nature_ver01/tables/table_h3_single_setup_convergence.tex" 2>/dev/null || true
-            fi
-        fi
-        if [[ -f "Papers/FCE_Nature_ver01/macros_results.tex" ]]; then
-            cp -f -- "Papers/FCE_Nature_ver01/macros_results.tex" "results/macros_results.tex" || true
-            if [[ "$MACROS_WAS_CLEAN" == "1" ]]; then
-                git checkout -- "Papers/FCE_Nature_ver01/macros_results.tex" 2>/dev/null || true
-            fi
-        fi
-    fi
+    ) 9>.tmp/conv_agg.lock || true
 fi
 
 exit "$MEEP_RC"

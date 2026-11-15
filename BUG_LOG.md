@@ -406,3 +406,7 @@
 ### [BUG-261113-02] 2026-11-13 | execution/run_scoped_clutch_meep.py | scope=infra
 - **Bug**: CLI --material Gold_Drude override mapped non-pec values to multi-Lorentzian Gold instead of preserving Gold_Drude.
 - **Solution**: Preserved Gold_Drude explicitly when normalizing args.material in execute().
+
+### [BUG-261114-01] 2026-11-14 | execution/run_scoped_clutch_meep.py | scope=infra
+- **Bug**: Concurrent Slurm array tasks sharing an output directory overwrote a single provenance_metrics.json, causing git pull --rebase conflicts.
+- **Solution**: Isolated array-task provenance output into per-task subdirectories provenance_task_<id> when SLURM_ARRAY_TASK_ID is set.
