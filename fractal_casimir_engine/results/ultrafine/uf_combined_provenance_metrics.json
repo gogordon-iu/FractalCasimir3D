@@ -1,0 +1,2497 @@
+{
+  "run_metadata": {
+    "created_at": "2026-11-12T13:08:27.443722+00:00",
+    "updated_at": "2026-11-15T00:25:09.950000+00:00",
+    "environment": "Windows",
+    "entry_point": "fractal_casimir_engine/run_engine_cycle_mapping.py",
+    "solver": "BEM_EngineCycle_3D",
+    "solver_parameters": {
+      "campaign": "fractal_casimir_engine_cycle",
+      "dataset": "fractal_casimir_engine_cycle",
+      "formulation": "vector_dyadic_and_scalar_yukawa",
+      "material": "Gold",
+      "eps_bg": 1.0
+    },
+    "solver_runs": [
+      {
+        "solver": "BEM_EngineCycle_3D",
+        "solver_parameters": {
+          "campaign": "fractal_casimir_engine_cycle",
+          "dataset": "fractal_casimir_engine_cycle",
+          "formulation": "vector_dyadic_and_scalar_yukawa",
+          "material": "Gold",
+          "eps_bg": 1.0
+        },
+        "timestamp": "2026-11-12T13:08:27.474495+00:00"
+      },
+      {
+        "solver": "BEM_EngineCycle_3D",
+        "solver_parameters": {
+          "campaign": "fractal_casimir_engine_cycle",
+          "dataset": "fractal_casimir_engine_cycle",
+          "formulation": "vector_dyadic_and_scalar_yukawa",
+          "material": "Gold",
+          "eps_bg": 1.0
+        },
+        "timestamp": "2026-11-12T13:21:00.213738+00:00"
+      },
+      {
+        "solver": "BEM_UltraFine_3D_Suite1",
+        "solver_parameters": {
+          "solver": "BEM_EngineCycle_3D",
+          "design_name": "Config_D_DualStator_PushPull",
+          "formulation": "vector_dyadic",
+          "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+          "material": "Gold",
+          "stator_material": "Gold",
+          "temperature_K": 0.0,
+          "device": "cuda",
+          "n_r": 3,
+          "n_phi_tooth": 8,
+          "n_phi_bridge": 8,
+          "n_phi_arc": 24,
+          "n_z": 4,
+          "n_xi": 28,
+          "quad_order": 3,
+          "quad_points_per_panel": 9,
+          "sub_var_scale": 1.0,
+          "r_edge_nm": 0.0,
+          "n_panels_rotor": 1632,
+          "n_panels_stator": 25920,
+          "n_panels_total": 27552,
+          "n_dofs_total": 55104,
+          "kappa_0_um_inv": 11.76470588235294,
+          "k_eff_um_inv": 40.0,
+          "dataset": "fractal_casimir_engine_cycle"
+        },
+        "timestamp": "2026-11-15T00:25:02.049431+00:00"
+      },
+      {
+        "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+        "solver_parameters": {
+          "resolution": 100,
+          "dx_nm": 10.0,
+          "nmax": 2
+        },
+        "timestamp": "2026-11-12T21:22:11.021592+00:00"
+      },
+      {
+        "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
+        "solver_parameters": {
+          "n_r": 3,
+          "n_phi_tooth": 6,
+          "n_phi_arc": 18,
+          "n_z": 3,
+          "n_xi": 24,
+          "quad_order": 3
+        },
+        "timestamp": "2026-11-14T08:38:42.947520+00:00"
+      },
+      {
+        "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+        "solver_parameters": {
+          "n_r": 4,
+          "n_phi_tooth": 6,
+          "n_phi_arc": 18,
+          "n_z": 3,
+          "n_xi": 24,
+          "quad_order": 3,
+          "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+        },
+        "timestamp": "2026-11-13T07:07:07.080378+00:00"
+      }
+    ]
+  },
+  "intermediate_steps": {
+    "engine_cycle_campaign_summary": {
+      "timestamp": "2026-11-12T13:21:00.221610+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 389,
+      "data_summary": {
+        "designs": [
+          "Sym_Baseline_CantorN2",
+          "Config_B_Manhattan_Vernier",
+          "Config_C_Helical_Turbine",
+          "Config_D_DualStator_PushPull"
+        ],
+        "time_truncated": false,
+        "n_xi": 12
+      },
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "uf1_ultrafine_mesh_convergence": {
+      "timestamp": "2026-11-15T00:25:02.079193+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 389,
+      "data_summary": {
+        "max_dofs_evaluated": 55104,
+        "config_d_l4_vs_l5_tau_shift_pct": 47.190754006240745,
+        "config_d_l4_vs_l5_fz_shift_pct": 13.110935981170844,
+        "config_d_uf_spinup_deg": 1066.2645275362495,
+        "sym_uf_spinup_deg": 9.594834238042889
+      },
+      "solver": "BEM_UltraFine_3D_Suite1",
+      "solver_parameters": {
+        "solver": "BEM_EngineCycle_3D",
+        "design_name": "Config_D_DualStator_PushPull",
+        "formulation": "vector_dyadic",
+        "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+        "material": "Gold",
+        "stator_material": "Gold",
+        "temperature_K": 0.0,
+        "device": "cuda",
+        "n_r": 3,
+        "n_phi_tooth": 8,
+        "n_phi_bridge": 8,
+        "n_phi_arc": 24,
+        "n_z": 4,
+        "n_xi": 28,
+        "quad_order": 3,
+        "quad_points_per_panel": 9,
+        "sub_var_scale": 1.0,
+        "r_edge_nm": 0.0,
+        "n_panels_rotor": 1632,
+        "n_panels_stator": 25920,
+        "n_panels_total": 27552,
+        "n_dofs_total": 55104,
+        "kappa_0_um_inv": 11.76470588235294,
+        "k_eff_um_inv": 40.0,
+        "dataset": "fractal_casimir_engine_cycle"
+      }
+    },
+    "uf2_meep_fdtd_verification": {
+      "timestamp": "2026-11-12T21:22:11.052533+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 389,
+      "data_summary": {
+        "fz_sign_matches": 8,
+        "total_states": 8,
+        "chiral_forward_torque_matches": 5,
+        "chiral_states": 6,
+        "config_d_stroke1_meep_tau_pN_um": 0.3654483252018816,
+        "config_d_stroke3_meep_tau_pN_um": 0.37467743153453276,
+        "config_d_stroke1_meep_fz_pN": 7.819498502968682,
+        "config_d_stroke3_meep_fz_pN": -11.925152355210706
+      },
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "uf3_active_permittivity_switching": {
+      "timestamp": "2026-11-14T08:38:42.965437+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 389,
+      "data_summary": {
+        "config_d_vo2_advance_deg": -35.17145733634942,
+        "config_d_si_advance_deg": 227.38528658753484,
+        "sym_vo2_advance_deg": 22.072289105248917,
+        "config_d_vo2_mod_depth_pct": 8.249599994195556,
+        "config_d_vo2_efficiency_pct": 45.86824710216685,
+        "max_first_law_residual_aJ": 0.1256403743506073
+      },
+      "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
+      "solver_parameters": {
+        "n_r": 3,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3
+      }
+    },
+    "uf4_6dof_and_ebl_rounding": {
+      "timestamp": "2026-11-13T07:07:07.101166+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 389,
+      "data_summary": {
+        "max_c4_lateral_force_residual_pN": 8.881784197001252e-13,
+        "max_k_lat_destab_uN_m": 1529.1088095706064,
+        "max_k_tilt_destab_pN_um_rad": 736.3254713205758,
+        "lateral_bearing_safety_factor": 163.4939243272055,
+        "tilt_bearing_safety_factor": 33.95237700410297,
+        "config_d_15nm_tau_retention_stroke1_pct": 131.311799451764,
+        "config_d_15nm_tau_retention_stroke3_pct": 95.0273164082796
+      },
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    }
+  },
+  "metrics": {
+    "engine_r_min_um": {
+      "value": 0.2,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.228823+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_r_max_um": {
+      "value": 1.1,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.229264+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_stroke_nm": {
+      "value": 32,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.229693+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sector_deg": {
+      "value": 90,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.230123+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_panels_total": {
+      "value": 2352,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.230596+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_stroke_one_fz_std_pn": {
+      "value": 1.3965,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.231043+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_stroke_one_tau_std_pn_um": {
+      "value": -0.3593,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.231469+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_stroke_one_fz_high_pn": {
+      "value": 1.6229,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.231898+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_stroke_one_tau_high_pn_um": {
+      "value": -0.2274,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.232330+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_stroke_one_tau_scalar_pn_um": {
+      "value": -0.3131,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.232780+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_stroke_one_tau_room_k_pn_um": {
+      "value": -0.3594,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.233249+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_stroke_three_fz_std_pn": {
+      "value": -2.5162,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.233696+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_stroke_three_tau_std_pn_um": {
+      "value": 0.01,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.234171+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_stroke_three_fz_high_pn": {
+      "value": -7.6201,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.234649+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_stroke_three_tau_high_pn_um": {
+      "value": -0.1847,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.235140+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_stroke_three_tau_scalar_pn_um": {
+      "value": 0.0072,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.235631+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_stroke_three_tau_room_k_pn_um": {
+      "value": 0.01,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.236138+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_peak_fz_rep_pn": {
+      "value": 1.6897,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.236706+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_peak_fz_attr_pn": {
+      "value": -3.164,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.237289+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_peak_tau_pos_pn_um": {
+      "value": 0.709,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.237874+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_work_up_aj": {
+      "value": -0.0373,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.238454+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_work_down_aj": {
+      "value": 0.0078,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.239023+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_work_power_strokes_aj": {
+      "value": -0.0295,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.239559+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_barrier_exit_aj": {
+      "value": 0.0264,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.240094+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_loop_residual_aj": {
+      "value": 0.0031,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.240630+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_codir_up_pct": {
+      "value": 46.7,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.241176+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_codir_down_pct": {
+      "value": 46.7,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.241723+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_ballistic_net_deg": {
+      "value": 1.1,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.242260+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_release_net_deg": {
+      "value": 1.2,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.242807+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_release_peak_omega_krad": {
+      "value": 9.46,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.243356+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_sym_ctrl_vibro_net_deg": {
+      "value": 1.9,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.243919+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_panels_total": {
+      "value": 3744,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.244430+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_stroke_one_fz_std_pn": {
+      "value": 3.034,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.244941+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_stroke_one_tau_std_pn_um": {
+      "value": 0.5031,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.245434+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_stroke_one_fz_high_pn": {
+      "value": 3.9264,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.245921+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_stroke_one_tau_high_pn_um": {
+      "value": 1.0244,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.246422+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_stroke_one_tau_scalar_pn_um": {
+      "value": 0.9126,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.246933+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_stroke_one_tau_room_k_pn_um": {
+      "value": 0.5034,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.247430+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_stroke_three_fz_std_pn": {
+      "value": -8.343,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.247919+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_stroke_three_tau_std_pn_um": {
+      "value": 0.1073,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.248414+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_stroke_three_fz_high_pn": {
+      "value": -13.3968,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.248913+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_stroke_three_tau_high_pn_um": {
+      "value": 0.3627,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.249410+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_stroke_three_tau_scalar_pn_um": {
+      "value": 0.2385,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.250546+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_stroke_three_tau_room_k_pn_um": {
+      "value": 0.1075,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.251152+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_peak_fz_rep_pn": {
+      "value": 2.7057,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.251698+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_peak_fz_attr_pn": {
+      "value": -13.8213,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.252225+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_peak_tau_pos_pn_um": {
+      "value": 1.5491,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.252762+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_work_up_aj": {
+      "value": 0.1145,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.253286+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_work_down_aj": {
+      "value": 0.2337,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.253790+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_work_power_strokes_aj": {
+      "value": 0.3482,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.254292+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_barrier_exit_aj": {
+      "value": 0.2508,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.254789+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_loop_residual_aj": {
+      "value": 0.0974,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.255341+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_codir_up_pct": {
+      "value": 73.3,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.255881+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_codir_down_pct": {
+      "value": 66.7,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.256385+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_ballistic_net_deg": {
+      "value": 7.5,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.256860+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_release_net_deg": {
+      "value": 323.8,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.257346+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_release_peak_omega_krad": {
+      "value": 50.52,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.257832+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_b_vibro_net_deg": {
+      "value": 78.9,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.258317+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_panels_total": {
+      "value": 3744,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.258790+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_stroke_one_fz_std_pn": {
+      "value": 3.152,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.259250+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_stroke_one_tau_std_pn_um": {
+      "value": 0.4673,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.259711+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_stroke_one_fz_high_pn": {
+      "value": 4.0429,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.260156+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_stroke_one_tau_high_pn_um": {
+      "value": 0.4849,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.260599+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_stroke_one_tau_scalar_pn_um": {
+      "value": 0.9507,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.261044+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_stroke_one_tau_room_k_pn_um": {
+      "value": 0.4674,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.261495+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_stroke_three_fz_std_pn": {
+      "value": -7.5041,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.261940+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_stroke_three_tau_std_pn_um": {
+      "value": 0.4124,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.262386+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_stroke_three_fz_high_pn": {
+      "value": -10.9562,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.262848+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_stroke_three_tau_high_pn_um": {
+      "value": 0.7061,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.263320+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_stroke_three_tau_scalar_pn_um": {
+      "value": 0.6897,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.263799+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_stroke_three_tau_room_k_pn_um": {
+      "value": 0.4128,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.264262+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_peak_fz_rep_pn": {
+      "value": 2.8786,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.264738+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_peak_fz_attr_pn": {
+      "value": -15.0535,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.265215+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_peak_tau_pos_pn_um": {
+      "value": 0.7109,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.265735+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_work_up_aj": {
+      "value": -0.0122,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.266278+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_work_down_aj": {
+      "value": 0.358,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.266821+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_work_power_strokes_aj": {
+      "value": 0.3458,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.267365+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_barrier_exit_aj": {
+      "value": 0.3075,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.268112+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_loop_residual_aj": {
+      "value": 0.0383,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.268696+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_codir_up_pct": {
+      "value": 60.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.269246+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_codir_down_pct": {
+      "value": 86.7,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.269791+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_ballistic_net_deg": {
+      "value": 5.2,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.270317+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_release_net_deg": {
+      "value": 366.8,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.270851+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_release_peak_omega_krad": {
+      "value": 65.96,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.271382+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_c_vibro_net_deg": {
+      "value": 2.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.271915+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_panels_total": {
+      "value": 4440,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.272416+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_stroke_one_fz_std_pn": {
+      "value": 6.3089,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.272909+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_stroke_one_tau_std_pn_um": {
+      "value": 0.5592,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.273405+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_stroke_one_fz_high_pn": {
+      "value": 9.5569,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.273896+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_stroke_one_tau_high_pn_um": {
+      "value": 1.1058,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.274383+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_stroke_one_tau_scalar_pn_um": {
+      "value": 0.966,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.274874+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_stroke_one_tau_room_k_pn_um": {
+      "value": 0.5597,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.275370+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_stroke_three_fz_std_pn": {
+      "value": -7.7037,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.275860+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_stroke_three_tau_std_pn_um": {
+      "value": 0.0763,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.276348+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_stroke_three_fz_high_pn": {
+      "value": -12.4084,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.276839+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_stroke_three_tau_high_pn_um": {
+      "value": 0.3455,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.277331+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_stroke_three_tau_scalar_pn_um": {
+      "value": 0.2866,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.277822+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_stroke_three_tau_room_k_pn_um": {
+      "value": 0.0764,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.278312+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_peak_fz_rep_pn": {
+      "value": 13.3255,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.278802+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_peak_fz_attr_pn": {
+      "value": -11.9371,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.279293+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_peak_tau_pos_pn_um": {
+      "value": 1.5855,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.279784+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_work_up_aj": {
+      "value": 0.1907,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.280283+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_work_down_aj": {
+      "value": 0.137,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.280816+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_work_power_strokes_aj": {
+      "value": 0.3276,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.281318+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_barrier_exit_aj": {
+      "value": 0.2293,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.281814+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_loop_residual_aj": {
+      "value": 0.0984,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.282311+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_codir_up_pct": {
+      "value": 73.3,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.282820+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_codir_down_pct": {
+      "value": 60.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.283602+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_ballistic_net_deg": {
+      "value": 60.8,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.284147+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_release_net_deg": {
+      "value": 379.6,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.284677+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_release_peak_omega_krad": {
+      "value": 58.86,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.285201+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_cfg_d_vibro_net_deg": {
+      "value": 51.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.285728+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_blender_video_frames": {
+      "value": 72,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.286280+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_campaign_design_count": {
+      "value": 4,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "engine_cycle_campaign_summary",
+      "recorded_at": "2026-11-12T13:21:00.286786+00:00",
+      "solver": "BEM_EngineCycle_3D",
+      "solver_parameters": {
+        "campaign": "fractal_casimir_engine_cycle",
+        "dataset": "fractal_casimir_engine_cycle",
+        "formulation": "vector_dyadic_and_scalar_yukawa",
+        "material": "Gold",
+        "eps_bg": 1.0
+      }
+    },
+    "engine_uf1_max_dofs": {
+      "value": 55104,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf1_ultrafine_mesh_convergence",
+      "recorded_at": "2026-11-15T00:25:02.140213+00:00",
+      "solver": "BEM_UltraFine_3D_Suite1",
+      "solver_parameters": {
+        "solver": "BEM_EngineCycle_3D",
+        "design_name": "Config_D_DualStator_PushPull",
+        "formulation": "vector_dyadic",
+        "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+        "material": "Gold",
+        "stator_material": "Gold",
+        "temperature_K": 0.0,
+        "device": "cuda",
+        "n_r": 3,
+        "n_phi_tooth": 8,
+        "n_phi_bridge": 8,
+        "n_phi_arc": 24,
+        "n_z": 4,
+        "n_xi": 28,
+        "quad_order": 3,
+        "quad_points_per_panel": 9,
+        "sub_var_scale": 1.0,
+        "r_edge_nm": 0.0,
+        "n_panels_rotor": 1632,
+        "n_panels_stator": 25920,
+        "n_panels_total": 27552,
+        "n_dofs_total": 55104,
+        "kappa_0_um_inv": 11.76470588235294,
+        "k_eff_um_inv": 40.0,
+        "dataset": "fractal_casimir_engine_cycle"
+      }
+    },
+    "engine_uf1_config_d_tau_shift_pct": {
+      "value": 47.19,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf1_ultrafine_mesh_convergence",
+      "recorded_at": "2026-11-15T00:25:02.160762+00:00",
+      "solver": "BEM_UltraFine_3D_Suite1",
+      "solver_parameters": {
+        "solver": "BEM_EngineCycle_3D",
+        "design_name": "Config_D_DualStator_PushPull",
+        "formulation": "vector_dyadic",
+        "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+        "material": "Gold",
+        "stator_material": "Gold",
+        "temperature_K": 0.0,
+        "device": "cuda",
+        "n_r": 3,
+        "n_phi_tooth": 8,
+        "n_phi_bridge": 8,
+        "n_phi_arc": 24,
+        "n_z": 4,
+        "n_xi": 28,
+        "quad_order": 3,
+        "quad_points_per_panel": 9,
+        "sub_var_scale": 1.0,
+        "r_edge_nm": 0.0,
+        "n_panels_rotor": 1632,
+        "n_panels_stator": 25920,
+        "n_panels_total": 27552,
+        "n_dofs_total": 55104,
+        "kappa_0_um_inv": 11.76470588235294,
+        "k_eff_um_inv": 40.0,
+        "dataset": "fractal_casimir_engine_cycle"
+      }
+    },
+    "engine_uf1_config_d_fz_shift_pct": {
+      "value": 13.11,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf1_ultrafine_mesh_convergence",
+      "recorded_at": "2026-11-15T00:25:02.198873+00:00",
+      "solver": "BEM_UltraFine_3D_Suite1",
+      "solver_parameters": {
+        "solver": "BEM_EngineCycle_3D",
+        "design_name": "Config_D_DualStator_PushPull",
+        "formulation": "vector_dyadic",
+        "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+        "material": "Gold",
+        "stator_material": "Gold",
+        "temperature_K": 0.0,
+        "device": "cuda",
+        "n_r": 3,
+        "n_phi_tooth": 8,
+        "n_phi_bridge": 8,
+        "n_phi_arc": 24,
+        "n_z": 4,
+        "n_xi": 28,
+        "quad_order": 3,
+        "quad_points_per_panel": 9,
+        "sub_var_scale": 1.0,
+        "r_edge_nm": 0.0,
+        "n_panels_rotor": 1632,
+        "n_panels_stator": 25920,
+        "n_panels_total": 27552,
+        "n_dofs_total": 55104,
+        "kappa_0_um_inv": 11.76470588235294,
+        "k_eff_um_inv": 40.0,
+        "dataset": "fractal_casimir_engine_cycle"
+      }
+    },
+    "engine_uf1_config_d_spin_up_deg": {
+      "value": 1066.3,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf1_ultrafine_mesh_convergence",
+      "recorded_at": "2026-11-15T00:25:02.232658+00:00",
+      "solver": "BEM_UltraFine_3D_Suite1",
+      "solver_parameters": {
+        "solver": "BEM_EngineCycle_3D",
+        "design_name": "Config_D_DualStator_PushPull",
+        "formulation": "vector_dyadic",
+        "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+        "material": "Gold",
+        "stator_material": "Gold",
+        "temperature_K": 0.0,
+        "device": "cuda",
+        "n_r": 3,
+        "n_phi_tooth": 8,
+        "n_phi_bridge": 8,
+        "n_phi_arc": 24,
+        "n_z": 4,
+        "n_xi": 28,
+        "quad_order": 3,
+        "quad_points_per_panel": 9,
+        "sub_var_scale": 1.0,
+        "r_edge_nm": 0.0,
+        "n_panels_rotor": 1632,
+        "n_panels_stator": 25920,
+        "n_panels_total": 27552,
+        "n_dofs_total": 55104,
+        "kappa_0_um_inv": 11.76470588235294,
+        "k_eff_um_inv": 40.0,
+        "dataset": "fractal_casimir_engine_cycle"
+      }
+    },
+    "engine_uf1_sym_spin_up_deg": {
+      "value": 9.59,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf1_ultrafine_mesh_convergence",
+      "recorded_at": "2026-11-15T00:25:02.420501+00:00",
+      "solver": "BEM_UltraFine_3D_Suite1",
+      "solver_parameters": {
+        "solver": "BEM_EngineCycle_3D",
+        "design_name": "Config_D_DualStator_PushPull",
+        "formulation": "vector_dyadic",
+        "physics_qualification": "Two-component tangential surface-current BEM with regularized dyadic cross coupling, scaled cross interactions, and single-layer self operators; an approximate model, not the complete electromagnetic FSC/PMCHWT equations. Use SCUFF-EM for first-principles electromagnetic results.",
+        "material": "Gold",
+        "stator_material": "Gold",
+        "temperature_K": 0.0,
+        "device": "cuda",
+        "n_r": 3,
+        "n_phi_tooth": 8,
+        "n_phi_bridge": 8,
+        "n_phi_arc": 24,
+        "n_z": 4,
+        "n_xi": 28,
+        "quad_order": 3,
+        "quad_points_per_panel": 9,
+        "sub_var_scale": 1.0,
+        "r_edge_nm": 0.0,
+        "n_panels_rotor": 1632,
+        "n_panels_stator": 25920,
+        "n_panels_total": 27552,
+        "n_dofs_total": 55104,
+        "kappa_0_um_inv": 11.76470588235294,
+        "k_eff_um_inv": 40.0,
+        "dataset": "fractal_casimir_engine_cycle"
+      }
+    },
+    "engine_uf2_resolution": {
+      "value": 100,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf2_meep_fdtd_verification",
+      "recorded_at": "2026-11-12T21:22:11.100037+00:00",
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "engine_uf2_fz_sign_matches": {
+      "value": 8,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf2_meep_fdtd_verification",
+      "recorded_at": "2026-11-12T21:22:11.135834+00:00",
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "engine_uf2_chiral_tau_matches": {
+      "value": 5,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf2_meep_fdtd_verification",
+      "recorded_at": "2026-11-12T21:22:11.159615+00:00",
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "engine_uf2_config_d_stroke1_tau": {
+      "value": 0.365,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf2_meep_fdtd_verification",
+      "recorded_at": "2026-11-12T21:22:11.178945+00:00",
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "engine_uf2_config_d_stroke3_tau": {
+      "value": 0.375,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf2_meep_fdtd_verification",
+      "recorded_at": "2026-11-12T21:22:11.263884+00:00",
+      "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
+      "solver_parameters": {
+        "resolution": 100,
+        "dx_nm": 10.0,
+        "nmax": 2
+      }
+    },
+    "engine_uf3_config_d_vo2_adv_deg": {
+      "value": -35.2,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf3_active_permittivity_switching",
+      "recorded_at": "2026-11-14T08:38:42.997545+00:00",
+      "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
+      "solver_parameters": {
+        "n_r": 3,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3
+      }
+    },
+    "engine_uf3_config_d_si_adv_deg": {
+      "value": 227.4,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf3_active_permittivity_switching",
+      "recorded_at": "2026-11-14T08:38:43.051407+00:00",
+      "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
+      "solver_parameters": {
+        "n_r": 3,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3
+      }
+    },
+    "engine_uf3_sym_vo2_adv_deg": {
+      "value": 22.07,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf3_active_permittivity_switching",
+      "recorded_at": "2026-11-14T08:38:43.067812+00:00",
+      "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
+      "solver_parameters": {
+        "n_r": 3,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3
+      }
+    },
+    "engine_uf3_vo2_mod_depth_pct": {
+      "value": 8.2,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf3_active_permittivity_switching",
+      "recorded_at": "2026-11-14T08:38:43.083460+00:00",
+      "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
+      "solver_parameters": {
+        "n_r": 3,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3
+      }
+    },
+    "engine_uf3_first_law_max_res_aj": {
+      "value": 0.12564,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf3_active_permittivity_switching",
+      "recorded_at": "2026-11-14T08:38:43.120355+00:00",
+      "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
+      "solver_parameters": {
+        "n_r": 3,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3
+      }
+    },
+    "engine_uf4_max_k_lat_un_m": {
+      "value": 1529.11,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf4_6dof_and_ebl_rounding",
+      "recorded_at": "2026-11-13T07:07:07.141687+00:00",
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    },
+    "engine_uf4_lat_safety_factor": {
+      "value": 163.5,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf4_6dof_and_ebl_rounding",
+      "recorded_at": "2026-11-13T07:07:07.382691+00:00",
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    },
+    "engine_uf4_tilt_safety_factor": {
+      "value": 34.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf4_6dof_and_ebl_rounding",
+      "recorded_at": "2026-11-13T07:07:07.426498+00:00",
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    },
+    "engine_uf4_retain_stroke1_pct": {
+      "value": 131.3,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf4_6dof_and_ebl_rounding",
+      "recorded_at": "2026-11-13T07:07:07.476805+00:00",
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    },
+    "engine_uf4_retain_stroke3_pct": {
+      "value": 95.0,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf4_6dof_and_ebl_rounding",
+      "recorded_at": "2026-11-13T07:07:07.495425+00:00",
+      "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
+      "solver_parameters": {
+        "n_r": 4,
+        "n_phi_tooth": 6,
+        "n_phi_arc": 18,
+        "n_z": 3,
+        "n_xi": 24,
+        "quad_order": 3,
+        "rounding_model": "2d_ebl_planform_vertical_corner_fillet"
+      }
+    }
+  },
+  "model": "BEM_EngineCycle_3D",
+  "dataset": "fractal_casimir_engine_cycle",
+  "status": "completed",
+  "executed_at": "2026-11-12T13:21:00.286799+00:00"
+}
