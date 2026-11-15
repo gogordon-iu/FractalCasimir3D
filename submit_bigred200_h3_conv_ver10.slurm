@@ -712,7 +712,7 @@ import time
 
 CONFIG = json.loads('{"auto_resubmit": "0", "figures_dir": "figures", "git_remote": "origin", "logs_dir": "logs", "proxy": "", "results_dir": "results", "strict_telemetry": "0"}')
 BLOCKED_SUFFIXES = (".pt", ".ckpt", ".bin", ".h5", ".safetensors", ".tar")
-GIT_TIMEOUT_SECONDS = 45
+GIT_TIMEOUT_SECONDS = 180
 SYNC_FAILURE_NOTICE = (
     "NOTICE: Workload completed successfully (exit 0), but remote Git sync "
     "failed. All results and logs are safely preserved on cluster disk."

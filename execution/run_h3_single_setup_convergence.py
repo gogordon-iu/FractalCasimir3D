@@ -973,42 +973,87 @@ def evaluate_fast_vector_dyadic_on_boxes(
 
     r_panels = _boxes_to_panels(rotor_boxes, rotor_sub, "rotor")
     s_panels = _boxes_to_panels(stator_boxes, stator_sub, "stator")
-    mat_param = "PEC" if material.upper() == "PEC" else "Gold_Drude"
+    mat_params: dict[str, Any] = (
+        {"material": "PEC"}
+        if material.upper() == "PEC"
+        else {"material": "Gold", "lorentz_oscillators": []}
+    )
     mesh = ClutchSurfaceMesh(
         rotor=tuple(r_panels),
         stator=tuple(s_panels),
         geometry=None,  # type: ignore[arg-type]
-        parameters={"material": mat_param},
+        parameters=mat_params,
         config={"mode": "single_setup_box"},
         panel_resolution={"rotor_sub": rotor_sub, "stator_sub": stator_sub},
         symmetry_multiplier=1.0,
     )
     rot_arr = mesh.sector_arrays("rotor")
     sta_arr = mesh.sector_arrays("stator")
-    mat_model = MaterialModel.from_parameters({"material": mat_param})
+    mat_model = MaterialModel.from_parameters(mat_params)
     backend = DenseBackend(device_str if device_str in ("auto", "cpu", "cuda") else "auto")
+
+    char_gap_um = float(d_char_um)
+    if not math.isfinite(char_gap_um) or char_gap_um <= 0.0:
+        raise ValueError(f"Invalid d_char_um: {d_char_um}")
+    if rotor_boxes and stator_boxes:
+        min_box_sep = min(
+            math.sqrt(
+                max(0.0, rb[0] - sb[1], sb[0] - rb[1]) ** 2
+                + max(0.0, rb[2] - sb[3], sb[2] - rb[3]) ** 2
+                + max(0.0, rb[4] - sb[5], sb[4] - rb[5]) ** 2
+            )
+            for rb in rotor_boxes
+            for sb in stator_boxes
+        )
+        if not math.isfinite(min_box_sep) or min_box_sep <= 0.0:
+            raise ValueError(f"Invalid or overlapping rotor/stator box separation: {min_box_sep}")
+        char_gap_um = min_box_sep
+    k_eff = 1.0 / max(char_gap_um, 0.020)
 
     nodes, weights = np.polynomial.legendre.leggauss(int(n_xi))
     u = 0.5 * (nodes + 1.0)
     wu = 0.5 * weights
-    k0 = 1.0 / float(d_char_um)
+    k0 = 1.0 / char_gap_um
     kappas = k0 * u / (1.0 - u)
     wkappas = wu * k0 / ((1.0 - u) ** 2)
-    k_eff = 1.0 / max(float(d_char_um), 0.020)
 
+    nr_dof = 2 * rot_arr.count
     fz_meep_1sec = 0.0
     for kap, wkap in zip(kappas, wkappas):
         kap_f = float(kap)
-        m_rr = _vector_dyadic_blocks(rot_arr, rot_arr, kap_f, True, mat_model, k_eff)
-        m_ss = _vector_dyadic_blocks(sta_arr, sta_arr, kap_f, True, mat_model, k_eff)
-        m_rs, dm_rs = _vector_dyadic_blocks(
-            rot_arr, sta_arr, kap_f, False, mat_model, k_eff, derivative_target_z=True
-        )
-        m_sr = m_rs.T
-        dm_sr = dm_rs.T
-        _, tr_deriv = backend.logdet_and_trace(m_rr, m_ss, m_rs, m_sr, dm_rs, dm_sr)
-        # E = (hbar*c / 2*pi) int dkappa logdet(I - C); F_z = -dE/dz = -(hbar*c / 2*pi) int dkappa d(logdet)/dz
-        fz_meep_1sec += -float(wkap) * float(tr_deriv) / (2.0 * math.pi)
+        tm, te, _ = mat_model.channel_weights(kap_f, k_eff=k_eff)
+        # casimir_bem_solver._vector_dyadic_blocks(target, source, source_sector, kappa, *, same_body)
+        # unconditionally computes and returns YukawaBlocks(single_layer, dz_target, ...).
+        b_rr = _vector_dyadic_blocks(rot_arr, rot_arr, source_sector=0, kappa=kap_f, same_body=True)
+        b_ss = _vector_dyadic_blocks(sta_arr, sta_arr, source_sector=0, kappa=kap_f, same_body=True)
+        b_rs = _vector_dyadic_blocks(rot_arr, sta_arr, source_sector=0, kappa=kap_f, same_body=False)
+
+        mr = backend.array(b_rr.single_layer)
+        ms = backend.array(b_ss.single_layer)
+        g = backend.array(b_rs.single_layer)
+        dg = backend.array(b_rs.dz_target)
+        sr = backend.adjoint(g)
+        dsr = backend.adjoint(dg)
+
+        n_col = g.shape[1]
+        x_all, _, _ = backend.factor_and_solve(mr, backend.concat_cols((g, dg)))
+        x, dx = x_all[:, :n_col], x_all[:, n_col:]
+
+        n_col_s = sr.shape[1]
+        z_all, _, _ = backend.factor_and_solve(ms, backend.concat_cols((sr, dsr)))
+        z, dz = z_all[:, :n_col_s], z_all[:, n_col_s:]
+
+        coupling = x @ z
+        dcoupling = dx @ z + x @ dz
+
+        d_1sec = 0.0
+        for weight in (tm, te):
+            pw = weight ** 2
+            y = backend.eye(nr_dof) - pw * coupling
+            deriv_mat, _, _ = backend.factor_and_solve(y, dcoupling, need_logdet=False)
+            d_1sec += -pw * float(backend.trace(deriv_mat).real)
+
+        fz_meep_1sec += float(wkap) * (-d_1sec / (2.0 * math.pi))
 
     fz_total_pn = float(SYMMETRY_MULTIPLIER * fz_meep_1sec * MEEP_FORCE_TO_PN)
     return {
@@ -1258,7 +1303,7 @@ def run_bem_convergence_suite(
 
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     code_hash = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:16]
-    valid_bem_hashes = {"cd56c4276374ec47", code_hash}
+    valid_bem_hashes = {"cd56c4276374ec47", "2303a8dca1838c3e", code_hash}
 
     def _run_cached(key: str, fn: Callable[[], dict[str, Any]]) -> dict[str, Any]:
         cp = ckpt_dir / f"{key}.json"

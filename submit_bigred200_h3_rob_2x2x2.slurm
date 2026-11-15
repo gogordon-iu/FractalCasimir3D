@@ -1,13 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=fce_rb22
 #SBATCH --account=r01540
-#SBATCH --partition=gpu
+#SBATCH --partition=general
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
-#SBATCH --time=06:00:00
-#SBATCH --gpus-per-node=1
+#SBATCH --time=02:00:00
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu
 
@@ -711,7 +710,7 @@ import time
 
 CONFIG = json.loads('{"auto_resubmit": "0", "figures_dir": "figures", "git_remote": "origin", "logs_dir": "logs", "proxy": "", "results_dir": "results", "strict_telemetry": "0"}')
 BLOCKED_SUFFIXES = (".pt", ".ckpt", ".bin", ".h5", ".safetensors", ".tar")
-GIT_TIMEOUT_SECONDS = 45
+GIT_TIMEOUT_SECONDS = 180
 SYNC_FAILURE_NOTICE = (
     "NOTICE: Workload completed successfully (exit 0), but remote Git sync "
     "failed. All results and logs are safely preserved on cluster disk."
@@ -1155,6 +1154,7 @@ PYTHON_BIN=""
 CANDIDATES=(
     "${SLURM_SUBMIT_DIR:-$PWD}/.venv/bin/python"
     "${VIRTUAL_ENV:-}/bin/python"
+    "/N/project/gorengor_werewolf/werewolfGameAnalysis/.venv/bin/python"
     "$HOME/venvs/research/bin/python"
     "/N/slate/$USER/venvs/research/bin/python"
     "/N/u/gogordon/BigRed200/.conda/envs/pytorch/bin/python"

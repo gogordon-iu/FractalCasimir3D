@@ -410,3 +410,7 @@
 ### [BUG-261114-01] 2026-11-14 | execution/run_scoped_clutch_meep.py | scope=infra
 - **Bug**: Concurrent Slurm array tasks sharing an output directory overwrote a single provenance_metrics.json, causing git pull --rebase conflicts.
 - **Solution**: Isolated array-task provenance output into per-task subdirectories provenance_task_<id> when SLURM_ARRAY_TASK_ID is set.
+
+### [BUG-261114-02] 2026-11-14 | execution/run_h3_single_setup_convergence.py | scope=model model=Maxwell_RWG_BEM_EFIE_PMCHWT dataset=H3_Cantor_SingleSetup_20nmLattice
+- **Bug**: `evaluate_fast_vector_dyadic_on_boxes` passed 6 positional arguments and `Gold_Drude` to `_vector_dyadic_blocks` / `MaterialModel`, raising `TypeError` in Section [D] after all 4 RWG BEM tiers completed.
+- **Solution**: Updated `evaluate_fast_vector_dyadic_on_boxes` to call `_vector_dyadic_blocks(target, source, 0, kap_f, same_body=...)` with single-pole Drude `MaterialModel` (`lorentz_oscillators=[]`) and `DenseBackend.factor_and_solve`.
