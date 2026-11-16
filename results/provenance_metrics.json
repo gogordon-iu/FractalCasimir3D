@@ -1,6 +1,6 @@
 {
   "dataset": "fractal_casimir_3d",
-  "executed_at": "2026-11-15T14:47:30.729590+00:00",
+  "executed_at": "2026-11-16T09:37:56.393683+00:00",
   "intermediate_steps": {
     "0": {
       "data_summary": {
@@ -312311,17 +312311,49 @@
       }
     }
   },
-  "model": "Maxwell_RWG_BEM_and_Meep_3D_FDTD",
+  "model": "meep",
   "run_metadata": {
     "created_at": "2026-10-15T18:15:22.084634+00:00",
     "entry_point": "execution/casimir_bem_solver.py",
     "environment": "Windows",
-    "solver": "Maxwell_RWG_BEM_and_Meep_3D_FDTD",
+    "solver": "meep",
     "solver_parameters": {
-      "bem_formulation": "Maxwell_RWG_EFIE_PMCHWT",
-      "fdtd_formulation": "Meep_3D_4Pass_ExplicitBoxes_20nmLattice",
-      "completed_fdtd_tasks": 31,
-      "expected_fdtd_tasks": 31
+      "solver": "meep",
+      "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+      "resolution": 150,
+      "dx_um": 0.006666666666666667,
+      "courant": 0.5,
+      "t_run": 8.0,
+      "sigma": 12.5,
+      "nmax": 3,
+      "moments_per_config": 324,
+      "configurations": [
+        "both",
+        "rotor",
+        "stator",
+        "vac"
+      ],
+      "inclusion_exclusion_passes": 4,
+      "pml_thickness": 0.16,
+      "force_complex_fields": true,
+      "fixed_stress_box_margin_um": 0.02,
+      "eps_averaging": false,
+      "geometry_mode": "explicit_boxes_3d",
+      "r_edge_nm": 0.0,
+      "sector0_crop": false,
+      "cell_dimensions_um": [
+        0.64,
+        0.72,
+        0.72
+      ],
+      "cell_center_um": [
+        0.0,
+        0.0,
+        -0.06
+      ],
+      "max_steps": 0,
+      "timesteps_per_last_moment": 2400,
+      "dt": 0.0033333333333333335
     },
     "solver_runs": [
       {
@@ -323267,9 +323299,51 @@
           "expected_fdtd_tasks": 31
         },
         "timestamp": "2026-11-15T14:47:29.615936+00:00"
+      },
+      {
+        "solver": "meep",
+        "solver_parameters": {
+          "solver": "meep",
+          "method": "3D_FDTD_Wick_Rotated_Stress_Tensor_DCT",
+          "resolution": 150,
+          "dx_um": 0.006666666666666667,
+          "courant": 0.5,
+          "t_run": 8.0,
+          "sigma": 12.5,
+          "nmax": 3,
+          "moments_per_config": 324,
+          "configurations": [
+            "both",
+            "rotor",
+            "stator",
+            "vac"
+          ],
+          "inclusion_exclusion_passes": 4,
+          "pml_thickness": 0.16,
+          "force_complex_fields": true,
+          "fixed_stress_box_margin_um": 0.02,
+          "eps_averaging": false,
+          "geometry_mode": "explicit_boxes_3d",
+          "r_edge_nm": 0.0,
+          "sector0_crop": false,
+          "cell_dimensions_um": [
+            0.64,
+            0.72,
+            0.72
+          ],
+          "cell_center_um": [
+            0.0,
+            0.0,
+            -0.06
+          ],
+          "max_steps": 0,
+          "timesteps_per_last_moment": 2400,
+          "dt": 0.0033333333333333335
+        },
+        "timestamp": "2026-11-16T09:37:56.393612+00:00"
       }
     ],
-    "updated_at": "2026-11-15T14:47:30.729576+00:00"
+    "updated_at": "2026-11-16T09:37:56.393612+00:00"
   },
   "status": "completed"
 }
