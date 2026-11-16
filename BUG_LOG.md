@@ -443,6 +443,6 @@
 - **Bug**: Deduplicating derived macros against merged_manifest['metrics'] omitted derived LaTeX macros on repeated runs after persistence.
 - **Solution**: Deduplicated derived macros against emitted \\newcommand names in base_text and macro_blocks, deduplicated solver_runs, and added an idempotency test.
 
-### [BUG-261116-01] 2026-11-16 | fractal_casimir_engine/run_ultrafine_langevin_and_tolerances.py | scope=eval model=BEM_Langevin_Patch_Roughness_Tolerance_Suite6
+### [BUG-261116-01] 2026-11-16T16:28:00Z | fractal_casimir_engine/run_ultrafine_langevin_and_tolerances.py | scope=eval model=BEM_Langevin_Patch_Roughness_Tolerance_Suite6
 - **Bug**: _perturb_mesh_roughness multiplied float dh by SurfacePanel.normal tuple, raising TypeError in UF6 Part B2.
 - **Solution**: Perturbed EngineBodyPanels float64 centroid/quad_point arrays directly, invalidated model.cache, and added roughness to UF6 micro-probe.
