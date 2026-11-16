@@ -1,0 +1,17 @@
+[W1116 05:53:35.923794949 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 16056320, total: 42405855232).
+[W1116 05:53:42.547443106 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 16056320, total: 42405855232).
+[W1116 05:53:42.692575260 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 16056320, total: 42405855232).
+[W1116 05:53:42.718065419 CUDACachingAllocator.cpp:528] expandable_segments: memory mapping failed with OOM on device 0 while trying to map 20971520 bytes (free: 16056320, total: 42405855232).
+Traceback (most recent call last):
+  File "/N/project/gorengor_werewolf/FractalCasimir3D/execution/run_h3_full_fractal_stability_suite.py", line 2025, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/N/project/gorengor_werewolf/FractalCasimir3D/execution/run_h3_full_fractal_stability_suite.py", line 2014, in main
+    run_stability_suite(
+  File "/N/project/gorengor_werewolf/FractalCasimir3D/execution/run_h3_full_fractal_stability_suite.py", line 1187, in run_stability_suite
+    out = evaluate_homothetic_3d_bem(
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/N/project/gorengor_werewolf/FractalCasimir3D/execution/homothetic_3d_robust_architecture.py", line 1846, in evaluate_homothetic_3d_bem
+    (u_z[None] * v_R[:, :, :, None, :] + u_R[:, :, :, :, None] * v_z[None]) * R_inv2
+     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 2.04 GiB. GPU 0 has a total capacity of 39.49 GiB of which 895.31 MiB is free. Including non-PyTorch memory, this process has 38.61 GiB memory in use. Of the allocated memory 37.50 GiB is allocated by PyTorch, and 618.11 MiB is reserved by PyTorch but unallocated.
