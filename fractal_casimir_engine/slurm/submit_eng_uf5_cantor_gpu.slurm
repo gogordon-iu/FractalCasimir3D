@@ -709,7 +709,7 @@ import subprocess
 import sys
 import time
 
-CONFIG = json.loads('{"auto_resubmit": "1", "figures_dir": "figures", "git_remote": "origin", "logs_dir": "logs", "proxy": "", "results_dir": "results", "strict_telemetry": "0"}')
+CONFIG = json.loads('{"auto_resubmit": "1", "figures_dir": "fractal_casimir_engine/figures", "git_remote": "origin", "logs_dir": "logs", "proxy": "", "results_dir": "fractal_casimir_engine/results/ultrafine", "strict_telemetry": "0"}')
 BLOCKED_SUFFIXES = (".pt", ".ckpt", ".bin", ".h5", ".safetensors", ".tar")
 GIT_TIMEOUT_SECONDS = 45
 SYNC_FAILURE_NOTICE = (

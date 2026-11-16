@@ -446,3 +446,7 @@
 ### [BUG-261116-01] 2026-11-16T16:28:00Z | fractal_casimir_engine/run_ultrafine_langevin_and_tolerances.py | scope=eval model=BEM_Langevin_Patch_Roughness_Tolerance_Suite6
 - **Bug**: _perturb_mesh_roughness multiplied float dh by SurfacePanel.normal tuple, raising TypeError in UF6 Part B2.
 - **Solution**: Perturbed EngineBodyPanels float64 centroid/quad_point arrays directly, invalidated model.cache, and added roughness to UF6 micro-probe.
+
+### [BUG-261116-02] 2026-11-16 | `fractal_casimir_engine/slurm/submit_eng_uf5_cantor_gpu.slurm`, `submit_eng_uf6_langevin_gpu.slurm` | scope=infra
+- **Bug**: Telemetry injection omitted --results-dir/--figures-dir, defaulting staging to root results/ instead of fractal_casimir_engine/results/ultrafine.
+- **Solution**: Re-injected submit_eng_uf5 and submit_eng_uf6 with explicit fractal_casimir_engine/results/ultrafine and fractal_casimir_engine/figures paths.
