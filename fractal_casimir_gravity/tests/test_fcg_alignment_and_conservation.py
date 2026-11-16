@@ -47,7 +47,7 @@ CODE_DIR = WORKTREE_ROOT / "fractal_casimir_gravity"
 
 def test_symbolic_analytical_identities() -> None:
     checks = verify_symbolic_identities()
-    assert len(checks) == 11
+    assert len(checks) == 12
     assert all(checks.values()), f"Symbolic identity check failed: {checks}"
     eps2 = epsilon_planck_sq(1.0e-6)
     assert 2.6e-58 < eps2 < 2.7e-58
@@ -120,6 +120,11 @@ def test_manuscript_code_macro_and_figure_bijection() -> None:
     assert "Contact author:" in tex_text
     assert "effective trace anomaly" not in tex_text.lower()
     assert "effective trace anomalies" not in tex_text.lower()
+    assert r"\usepackage{booktabs}" not in tex_text
+    assert r"\midrule" not in tex_text
+    assert r"\colrule" in tex_text
+    for banned_hardcoded in (r"3\times 10^{-5}", "0.17\\%", "0.18\\%", "5.7192", "46656"):
+        assert banned_hardcoded not in tex_text, f"Found hardcoded derived number {banned_hardcoded} in .tex"
 
     # 4. Verify macros_gravity.tex holds all \pendingval pre-run, or zero \pendingval post-sync
     map_path = CODE_DIR / "results" / "manuscript_provenance_map.json"

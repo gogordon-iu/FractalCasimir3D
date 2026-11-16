@@ -212,6 +212,42 @@ def verify_symbolic_identities() -> Dict[str, bool]:
     )
     rotating_continuity_ok = sp.simplify(continuity_lhs - beta_rot * corot_equil_phi) == 0
 
+    # 12. (6,4) Vernier Peters-Mathews luminosity (93312/5), Starobinsky f(R) Isaacson scalar flux
+    #     (-c^4/(8*pi*G) <d_t varphi d_r varphi> == radiation-reaction work), and dimensionful V_s = zeta_s L_s^{d_s}:
+    u_cos, om_tilde, q2_amp = sp.symbols("u_cos om_tilde q2_amp", positive=True)
+    # Time-averaged squared derivatives <dot_h_+^2 + dot_h_x^2> * r^2 for h_+, h_x in Eq. (22) with 72*om^2*q2:
+    amp_strain = 72 * om_tilde**2 * q2_amp
+    flux_ang_integrand = sp.Rational(1, 2) * (6 * om_tilde * amp_strain) ** 2 * (
+        ((1 + u_cos**2) / 2) ** 2 + u_cos**2
+    )
+    p_gw_isaacson = (1 / (16 * sp.pi)) * 2 * sp.pi * sp.integrate(flux_ang_integrand, (u_cos, -1, 1))
+    # Direct Peters-Mathews (1/5) <dddQ_{ij} dddQ_{ij}> for Q_xx = -Q_yy = q2*cos(6*om*t), Q_xy = Q_yx = q2*sin(6*om*t):
+    p_gw_pm = sp.Rational(1, 5) * 2 * ((6 * om_tilde) ** 3 * q2_amp) ** 2
+    vernier_lum_ok = (
+        sp.simplify(p_gw_isaacson - p_gw_pm) == 0
+        and sp.simplify(p_gw_pm - sp.Rational(93312, 5) * om_tilde**6 * q2_amp**2) == 0
+    )
+
+    # Starobinsky f(R) = R + alpha R^2 Isaacson scalar flux vs near-zone radiation-reaction power:
+    g_newt, c_si, w_freq, k_phi, t0_amp = sp.symbols("G c w k_phi T0", positive=True)
+    alpha_phi_sym = 1 / sp.sqrt(6)
+    # Far-zone wave amplitude varphi_amp = 2 * G * alpha_phi * T0 / (c^4 * r); <d_t varphi * d_r varphi> * r^2 = -(1/2)*w*k*varphi_amp^2
+    dt_dr_varphi_r2 = -sp.Rational(1, 2) * w_freq * k_phi * (2 * g_newt * alpha_phi_sym * t0_amp / c_si**4) ** 2
+    p_rad_isaacson_scalar = 4 * sp.pi * (-(c_si**4 / (8 * sp.pi * g_newt)) * dt_dr_varphi_r2)
+    # Near-zone radiation reaction: P_work = +(1/2) <T^mu_mu * (-sqrt(2/3) d_t varphi_RR)> with varphi_RR_amp = 2*G*alpha_phi*k*T0/c^4
+    p_rad_reaction_scalar = sp.Rational(1, 2) * sp.sqrt(sp.Rational(2, 3)) * sp.Rational(1, 2) * t0_amp * (
+        2 * g_newt * alpha_phi_sym * w_freq * k_phi * t0_amp / c_si**4
+    )
+    # Dimensionful fractal spectral volume V_s = zeta_s * L_s^{d_s}: exponent of meter [m] in U_th = V_s * (k_B T)^{d_s+1} / (hbar c)^{d_s}
+    ds_sym = sp.Symbol("d_s", positive=True)
+    meter_exp_uth = ds_sym + 2 * (ds_sym + 1) - 3 * ds_sym  # [J] = kg m^2 s^{-2} has meter exponent 2
+    isaacson_and_units_ok = (
+        vernier_lum_ok
+        and sp.simplify(p_rad_isaacson_scalar - p_rad_reaction_scalar) == 0
+        and sp.simplify(p_rad_isaacson_scalar - g_newt * w_freq * k_phi * t0_amp**2 / (6 * c_si**4)) == 0
+        and sp.simplify(meter_exp_uth - 2) == 0
+    )
+
     return {
         "brown_maclay_traceless": bool(bm_traceless),
         "brown_maclay_boost_invariant": bool(bm_boost_invariant),
@@ -224,4 +260,5 @@ def verify_symbolic_identities() -> Dict[str, bool]:
         "four_pass_inclusion_exclusion_and_cantor_disjointness": bool(inclusion_exclusion_ok),
         "fewster_eveson_compact_support_qei_constant": bool(compact_qei_ok),
         "rotating_vane_covariant_continuity_laue_balance": bool(rotating_continuity_ok),
+        "vernier_luminosity_and_starobinsky_isaacson_flux": bool(isaacson_and_units_ok),
     }
