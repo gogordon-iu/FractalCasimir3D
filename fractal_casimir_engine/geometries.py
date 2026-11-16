@@ -194,6 +194,15 @@ class CurvilinearPrism:
         return dataclasses.asdict(self)
 
 
+HIERARCHY_NAMES: tuple[str, ...] = (
+    "N0_Macro_Ring",
+    "Cantor_N1",
+    "Cantor_N2",
+    "Uniform_3Track",
+    "Cantor_N3",
+)
+
+
 def canonical_cantor_n2_tracks(*, vernier: bool = False) -> tuple[CantorTrackSpec, ...]:
     """Return the exact N=2 middle-third Cantor tracks on [0.20, 1.10] um."""
     span = ENGINE_R_MAX_UM - ENGINE_R_MIN_UM  # 0.90 um
@@ -219,6 +228,169 @@ def canonical_cantor_n2_tracks(*, vernier: bool = False) -> tuple[CantorTrackSpe
             )
         )
     return tuple(tracks)
+
+
+def build_hierarchy_tracks(
+    hierarchy: str = "Cantor_N2",
+    *,
+    vernier: bool = False,
+) -> tuple[CantorTrackSpec, ...]:
+    """Build concentric slot/tooth track specifications across Cantor generations and controls."""
+    if hierarchy == "Cantor_N2":
+        return canonical_cantor_n2_tracks(vernier=vernier)
+
+    span = ENGINE_R_MAX_UM - ENGINE_R_MIN_UM  # 0.90 um on [0.20, 1.10] um
+    raw_slots: list[tuple[int, int, float, float, float]] = []
+    if hierarchy == "N0_Macro_Ring":
+        # Single non-fractal chiral annulus matched to N=2 total slot width (sum W = 500 nm)
+        raw_slots = [(0, 0, 0.40, 0.90, 0.0)]
+    elif hierarchy == "Cantor_N1":
+        # 1st-generation middle-third lacuna (W = 300 nm)
+        raw_slots = [(0, 1, ENGINE_R_MIN_UM + 3.0 * span / 9.0, ENGINE_R_MIN_UM + 6.0 * span / 9.0, 0.0)]
+    elif hierarchy == "Uniform_3Track":
+        # Non-fractal periodic 3-ring grating matched in track count (3), envelope [0.30, 1.00] um,
+        # and total slot width (sum W = 500 nm -> W = 166.67 nm per track, 75 nm inter-track bridges)
+        w_u = 0.50 / 3.0
+        b_u = (0.70 - 0.50) / 2.0  # 0.100 um bridge between tracks inside [0.30, 1.00] um
+        for idx in range(3):
+            r_in = 0.30 + idx * (w_u + b_u)
+            r_out = r_in + w_u
+            v_deg = (-2.5 if idx == 0 else (+2.5 if idx == 2 else 0.0)) if vernier else 0.0
+            raw_slots.append((idx, 1, r_in, r_out, v_deg))
+    elif hierarchy == "Cantor_N3":
+        # Exact 3-generation middle-third Cantor lacunae (7 tracks: 1x300nm + 2x100nm + 4x33.33nm)
+        d = span / 27.0
+        n3_specs = (
+            (3, 1, 2, -3.5),
+            (2, 3, 6, -2.5),
+            (3, 7, 8, -1.2),
+            (1, 9, 18, 0.0),
+            (3, 19, 20, +1.2),
+            (2, 21, 24, +2.5),
+            (3, 25, 26, +3.5),
+        )
+        for idx, (gen, a, b, v_raw) in enumerate(n3_specs):
+            raw_slots.append(
+                (
+                    idx,
+                    gen,
+                    ENGINE_R_MIN_UM + a * d,
+                    ENGINE_R_MIN_UM + b * d,
+                    v_raw if vernier else 0.0,
+                )
+            )
+    else:
+        raise ValueError(f"Unknown hierarchy {hierarchy!r}; expected one of {HIERARCHY_NAMES}.")
+
+    out: list[CantorTrackSpec] = []
+    for idx, gen, r_in, r_out, v_deg in raw_slots:
+        w_slot = r_out - r_in
+        w_tooth = ENGINE_W_RATIO * w_slot
+        mid = 0.5 * (r_in + r_out)
+        out.append(
+            CantorTrackSpec(
+                index=idx,
+                generation=gen,
+                r_slot_in=round(r_in, 6),
+                r_slot_out=round(r_out, 6),
+                r_tooth_in=round(mid - 0.5 * w_tooth, 6),
+                r_tooth_out=round(mid + 0.5 * w_tooth, 6),
+                vernier_deg=v_deg,
+            )
+        )
+    return tuple(out)
+
+
+def _hierarchy_fractal_order(hierarchy: str) -> int:
+    mapping = {
+        "N0_Macro_Ring": 0,
+        "Cantor_N1": 1,
+        "Cantor_N2": 2,
+        "Uniform_3Track": 0,
+        "Cantor_N3": 3,
+    }
+    return mapping.get(hierarchy, 2)
+
+
+def _track_collar_dims(
+    design_name: str,
+    tr: CantorTrackSpec,
+    tracks: Sequence[CantorTrackSpec],
+    *,
+    hierarchy: str,
+) -> dict[str, float]:
+    """Compute radial collar/cheek dimensions with exact N=2 parity and Voronoi bridge safety."""
+    if hierarchy == "Cantor_N2":
+        is_g2 = tr.generation == 2
+        if design_name == "Sym_Baseline_CantorN2":
+            return {"wall_w": 0.028 if is_g2 else 0.045}
+        if design_name == "Config_B_Manhattan_Vernier":
+            return {
+                "g_entry": 0.038 if is_g2 else 0.068,
+                "g_exit": 0.017 if is_g2 else 0.024,
+                "wall_w": 0.028 if is_g2 else 0.045,
+                "g_cheek_in": 0.046 if is_g2 else 0.082,
+                "g_cheek_out": 0.015 if is_g2 else 0.018,
+            }
+        if design_name == "Config_C_Helical_Turbine":
+            return {
+                "g_entry": 0.038 if is_g2 else 0.068,
+                "g_exit": 0.017 if is_g2 else 0.024,
+                "wall_w": 0.028 if is_g2 else 0.045,
+                "g_cheek_in": 0.044 if is_g2 else 0.076,
+                "g_cheek_out": 0.016 if is_g2 else 0.019,
+            }
+        return {
+            "g_entry": 0.042 if is_g2 else 0.076,
+            "g_exit": 0.016 if is_g2 else 0.020,
+            "g_down_in": 0.048 if is_g2 else 0.084,
+            "g_down_out": 0.015 if is_g2 else 0.018,
+            "wall_w": 0.028 if is_g2 else 0.045,
+        }
+
+    # Compute available radial Voronoi half-cell outside [r_tooth_in, r_tooth_out]
+    idx = tr.index
+    r_bound_in = (
+        0.5 * (tracks[idx - 1].r_slot_out + tr.r_slot_in) + 0.0038
+        if idx > 0
+        else max(0.050, tr.r_slot_in - 0.120)
+    )
+    r_bound_out = (
+        0.5 * (tr.r_slot_out + tracks[idx + 1].r_slot_in) - 0.0038
+        if idx + 1 < len(tracks)
+        else tr.r_slot_out + 0.120
+    )
+    w_s = tr.w_slot
+
+    if design_name == "Sym_Baseline_CantorN2":
+        room_slot = min(tr.r_slot_in - r_bound_in, r_bound_out - tr.r_slot_out)
+        wall_w = min(max(0.0085, 0.15 * w_s + 0.010), max(0.0085, room_slot))
+        return {"wall_w": round(wall_w, 6)}
+
+    room_tooth = min(tr.r_tooth_in - r_bound_in, r_bound_out - tr.r_tooth_out)
+    wall_w = min(max(0.0085, 0.085 * w_s + 0.016), 0.055, 0.36 * room_tooth)
+    max_gap = max(0.012, room_tooth - wall_w)
+
+    g_exit = min(max(0.0085, 0.035 * w_s + 0.012), 0.032, 0.65 * max_gap)
+    g_out = min(max(0.0085, 0.025 * w_s + 0.011), 0.026, 0.65 * max_gap)
+    g_entry = min(max(g_exit + 0.0045, 0.19 * w_s + 0.016), max_gap)
+    g_in = min(max(g_out + 0.0055, 0.23 * w_s + 0.018), max_gap)
+
+    if design_name == "Config_D_DualStator_PushPull":
+        return {
+            "g_entry": round(g_entry, 6),
+            "g_exit": round(g_exit, 6),
+            "g_down_in": round(g_in, 6),
+            "g_down_out": round(g_out, 6),
+            "wall_w": round(wall_w, 6),
+        }
+    return {
+        "g_entry": round(g_entry, 6),
+        "g_exit": round(g_exit, 6),
+        "wall_w": round(wall_w, 6),
+        "g_cheek_in": round(g_in, 6),
+        "g_cheek_out": round(g_out, 6),
+    }
 
 
 def _corner_graded_nodes(count: int) -> np.ndarray:
@@ -352,6 +524,7 @@ def build_engine_prisms(
     n_z: int = BEM_TIER_STANDARD.n_z,
     n_phi_arc_override: int | None = None,
     r_edge_nm: float = 0.0,
+    hierarchy: str = "Cantor_N2",
 ) -> tuple[list[CurvilinearPrism], list[CurvilinearPrism], tuple[CantorTrackSpec, ...], float]:
     """Construct sector-0 rotor and stator curvilinear prisms for a given design."""
     if not math.isfinite(z_tip_um) or not math.isfinite(theta_deg):
@@ -360,7 +533,7 @@ def build_engine_prisms(
         raise ValueError("r_edge_nm must be finite and nonnegative.")
 
     use_vernier = design_name in ("Config_B_Manhattan_Vernier", "Config_D_DualStator_PushPull")
-    tracks = canonical_cantor_n2_tracks(vernier=use_vernier)
+    tracks = build_hierarchy_tracks(hierarchy, vernier=use_vernier)
     h_teeth = ENGINE_H_TEETH_DUAL_UM if design_name == "Config_D_DualStator_PushPull" else ENGINE_H_TEETH_STD_UM
     n_phi_arc = (
         int(n_phi_arc_override)
@@ -409,7 +582,8 @@ def build_engine_prisms(
         #   - Repulsive slot aperture: phi in [2.0, 40.0] deg (center = 21.0 deg)
         #   - Attractive landing pad:  phi in [47.0, 85.0] deg (center = 66.0 deg)
         for tr in tracks:
-            wall_w = 0.028 if tr.generation == 2 else 0.045
+            dims = _track_collar_dims(design_name, tr, tracks, hierarchy=hierarchy)
+            wall_w = dims["wall_w"]
             stator_prisms.append(
                 CurvilinearPrism(
                     body="stator",
@@ -483,9 +657,10 @@ def build_engine_prisms(
         #   cheek rails (z in [-0.106, -0.084] um, strictly above -0.115 um and strictly
         #   outside rotor tooth by >= 16 nm, below tooth midplane) -> F_z < 0, tau_theta > 0.
         for tr in tracks:
-            g_entry = 0.038 if tr.generation == 2 else 0.068
-            g_exit = 0.017 if tr.generation == 2 else 0.024
-            wall_w = 0.028 if tr.generation == 2 else 0.045
+            dims = _track_collar_dims(design_name, tr, tracks, hierarchy=hierarchy)
+            g_entry = dims["g_entry"]
+            g_exit = dims["g_exit"]
+            wall_w = dims["wall_w"]
 
             for suffix, r0_a, r1_a, r0_b, r1_b in (
                 (
@@ -550,8 +725,8 @@ def build_engine_prisms(
                 )
             )
 
-            g_cheek_in = 0.046 if tr.generation == 2 else 0.082
-            g_cheek_out = 0.015 if tr.generation == 2 else 0.018
+            g_cheek_in = dims["g_cheek_in"]
+            g_cheek_out = dims["g_cheek_out"]
             for suffix, r0_a, r1_a, r0_b, r1_b in (
                 (
                     "in",
@@ -594,9 +769,10 @@ def build_engine_prisms(
         # Helically twisted rotor teeth (+4.5 deg twist bottom-to-top) paired with
         # helically pitched stator louvers in both repulsive and attractive zones.
         for tr in tracks:
-            g_entry = 0.038 if tr.generation == 2 else 0.068
-            g_exit = 0.017 if tr.generation == 2 else 0.024
-            wall_w = 0.028 if tr.generation == 2 else 0.045
+            dims = _track_collar_dims(design_name, tr, tracks, hierarchy=hierarchy)
+            g_entry = dims["g_entry"]
+            g_exit = dims["g_exit"]
+            wall_w = dims["wall_w"]
 
             for suffix, r0_a, r1_a, r0_b, r1_b in (
                 (
@@ -660,8 +836,8 @@ def build_engine_prisms(
                     n_z=n_z,
                 )
             )
-            g_cheek_in = 0.044 if tr.generation == 2 else 0.076
-            g_cheek_out = 0.016 if tr.generation == 2 else 0.019
+            g_cheek_in = dims["g_cheek_in"]
+            g_cheek_out = dims["g_cheek_out"]
             for suffix, r0_a, r1_a, r0_b, r1_b in (
                 (
                     "in",
@@ -707,11 +883,12 @@ def build_engine_prisms(
         #   Down-Stroke Zone [44, 86.5] deg: low attractive cheek collar [-0.107, -0.062] um +
         #     lower attractive floor horn pad [-0.225, -0.115] um -> F_z < 0, tau_theta > 0.
         for tr in tracks:
-            g_entry = 0.042 if tr.generation == 2 else 0.076
-            g_exit = 0.016 if tr.generation == 2 else 0.020
-            g_down_in = 0.048 if tr.generation == 2 else 0.084
-            g_down_out = 0.015 if tr.generation == 2 else 0.018
-            wall_w = 0.028 if tr.generation == 2 else 0.045
+            dims = _track_collar_dims(design_name, tr, tracks, hierarchy=hierarchy)
+            g_entry = dims["g_entry"]
+            g_exit = dims["g_exit"]
+            g_down_in = dims["g_down_in"]
+            g_down_out = dims["g_down_out"]
+            wall_w = dims["wall_w"]
             mid_r = 0.5 * (tr.r_tooth_in + tr.r_tooth_out)
             half_pad_entry = 0.16 * tr.w_tooth
             half_pad_exit = 0.62 * tr.w_tooth
@@ -885,6 +1062,7 @@ def build_engine_surface_mesh(
     n_z: int = BEM_TIER_STANDARD.n_z,
     n_phi_arc_override: int | None = None,
     r_edge_nm: float = 0.0,
+    hierarchy: str = "Cantor_N2",
     min_clearance_um: float = 0.010,
 ) -> ClutchSurfaceMesh:
     """Build a validated ClutchSurfaceMesh for any Fractal Casimir Engine design."""
@@ -898,6 +1076,7 @@ def build_engine_surface_mesh(
         n_z=n_z,
         n_phi_arc_override=n_phi_arc_override,
         r_edge_nm=r_edge_nm,
+        hierarchy=hierarchy,
     )
     rotor_panels: list[SurfacePanel] = []
     for prism in rotor_prisms:
@@ -922,7 +1101,8 @@ def build_engine_surface_mesh(
     parameters: dict[str, Any] = {
         "design_name": design_name,
         "dataset": "fractal_casimir_engine_cycle",
-        "N_fractal": 2,
+        "hierarchy": hierarchy,
+        "N_fractal": _hierarchy_fractal_order(hierarchy),
         "material": material,
         "temperature_K": temperature_K,
         "R_min": ENGINE_R_MIN_UM,

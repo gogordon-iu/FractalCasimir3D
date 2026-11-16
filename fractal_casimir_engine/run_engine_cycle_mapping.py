@@ -43,6 +43,7 @@ from fractal_casimir_engine.geometries import (
     ENGINE_Z_TIP_MIN_UM,
     SECTOR_DEG,
     build_engine_prisms,
+    build_hierarchy_tracks,
     canonical_cantor_n2_tracks,
 )
 from utils.metrics_logger import (
@@ -101,10 +102,15 @@ def cycle_z_profile_um(theta_deg: float) -> tuple[float, float]:
     return float(z_val), float(dz_dth_rad)
 
 
-def rotor_inertia_properties(design_name: str) -> dict[str, float]:
+def rotor_inertia_properties(
+    design_name: str,
+    *,
+    hierarchy: str = "Cantor_N2",
+) -> dict[str, float]:
     """Compute physical mass (kg) and polar moment of inertia I_z (kg*m^2) of the 4-sector Gold rotor."""
-    tracks = canonical_cantor_n2_tracks(
-        vernier=design_name in ("Config_B_Manhattan_Vernier", "Config_D_DualStator_PushPull")
+    tracks = build_hierarchy_tracks(
+        hierarchy,
+        vernier=design_name in ("Config_B_Manhattan_Vernier", "Config_D_DualStator_PushPull"),
     )
     h_um = 0.130 if design_name == "Config_D_DualStator_PushPull" else 0.100
     hub_thick_um = 0.035
@@ -229,6 +235,7 @@ def simulate_coupled_dynamics(
     mode: str,
     n_steps: int = 7200,
     dt_us: float = 0.025,
+    hierarchy: str = "Cantor_N2",
 ) -> dict[str, Any]:
     """Integrate coupled 2-DOF rigid-body equations of motion (z(t), theta(t)) via RK4.
 
@@ -240,7 +247,7 @@ def simulate_coupled_dynamics(
       - ``vertical_vibro_engine``: Purely vertical stator base oscillation z_base(t) = A*sin(w*t)
         with zero external torque and zero permittivity gating.
     """
-    props = rotor_inertia_properties(design_name)
+    props = rotor_inertia_properties(design_name, hierarchy=hierarchy)
     mass_kg = props["mass_kg"]
     iz_kg_m2 = props["iz_kg_m2"]
 

@@ -797,6 +797,7 @@ class PreparedEngineBemModel:
         quad_order: int = 2,
         sub_var_scale: float = 1.0,
         r_edge_nm: float = 0.0,
+        hierarchy: str = "Cantor_N2",
         kappa_0_um_inv: float = ENGINE_KAPPA_0_REF_UM_INV,
         k_eff_um_inv: float = ENGINE_K_EFF_REF_UM_INV,
         device: Literal["auto", "cpu", "cuda"] = "auto",
@@ -823,6 +824,7 @@ class PreparedEngineBemModel:
         self.quad_order = int(quad_order)
         self.sub_var_scale = float(sub_var_scale)
         self.r_edge_nm = float(r_edge_nm)
+        self.hierarchy = str(hierarchy)
         self.kappa_0_um_inv = float(kappa_0_um_inv)
         self.k_eff_um_inv = float(k_eff_um_inv)
         self.condition_limit = float(condition_limit)
@@ -832,6 +834,7 @@ class PreparedEngineBemModel:
         self.z_ref_um = ENGINE_Z_TIP_MIN_UM
         # Use Gold placeholder in ClutchSurfaceMesh metadata when custom dispersive material is used
         mesh_mat = "PEC" if self.rotor_material_model.is_pec else "Gold"
+        min_clr_um = 0.006 if self.hierarchy == "Cantor_N3" else 0.008
         self.ref_mesh: ClutchSurfaceMesh = build_engine_surface_mesh(
             design_name,
             z_tip_um=self.z_ref_um,
@@ -844,7 +847,8 @@ class PreparedEngineBemModel:
             n_z=n_z,
             n_phi_arc_override=n_phi_arc_override,
             r_edge_nm=r_edge_nm,
-            min_clearance_um=0.008,
+            hierarchy=self.hierarchy,
+            min_clearance_um=min_clr_um,
         )
         self.rotor_ref = build_engine_body_panels(self.ref_mesh.rotor, quad_order=self.quad_order)
         self.stator_ref = build_engine_body_panels(self.ref_mesh.stator, quad_order=self.quad_order)

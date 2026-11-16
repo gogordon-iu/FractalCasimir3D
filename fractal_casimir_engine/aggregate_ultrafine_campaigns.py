@@ -71,6 +71,23 @@ REQUIRED_SUITES: tuple[tuple[str, str, str, str, str], ...] = (
     ),
 )
 
+EXTENDED_SUITES: tuple[tuple[str, str, str, str, str], ...] = (
+    (
+        "eng_uf5",
+        "uf5_cantor_ablation_report.json",
+        "uf5_provenance_metrics.json",
+        "uf5_macros_results.tex",
+        "fig_uf5_cantor_scaling",
+    ),
+    (
+        "eng_uf6",
+        "uf6_langevin_and_tolerances_report.json",
+        "uf6_provenance_metrics.json",
+        "uf6_macros_results.tex",
+        "fig_uf6_langevin_and_tolerances",
+    ),
+)
+
 
 def atomic_write_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -235,6 +252,75 @@ def _extract_derived_suite_metrics(
             fz_ret_pct = 100.0 * float(d_r15["Stroke_I_Repulsive"]["f_z_pN"]) / ref_fz_r0
             derived["engine_uf4_cfg_d_retain_fz_s1_pct"] = (round(fz_ret_pct, 1), "uf4_6dof_and_ebl_rounding", "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding")
 
+    r5 = suite_reports.get("eng_uf5", {})
+    if "matrix" in r5 and "summary" in r5:
+        m5 = r5["matrix"]
+        for d_short, d_full in (
+            ("sym", "Sym_Baseline_CantorN2"),
+            ("cfg_b", "Config_B_Manhattan_Vernier"),
+            ("cfg_d", "Config_D_DualStator_PushPull"),
+        ):
+            if d_full not in m5:
+                continue
+            for h_short, h_full in (
+                ("n0", "N0_Macro_Ring"),
+                ("n1", "Cantor_N1"),
+                ("n2", "Cantor_N2"),
+                ("uni", "Uniform_3Track"),
+                ("n3", "Cantor_N3"),
+            ):
+                if h_full not in m5[d_full]:
+                    continue
+                cell = m5[d_full][h_full]
+                derived[f"engine_uf5_{d_short}_{h_short}_mean_tau"] = (
+                    round(float(cell["benchmark_states"]["mean_dual_stroke_tau_pN_um"]), 3),
+                    "uf5_cantor_hierarchy_ablation",
+                    "BEM_UltraFine_3D_CantorHierarchyAblation",
+                )
+                derived[f"engine_uf5_{d_short}_{h_short}_work_aj"] = (
+                    round(float(cell["cycle_energetics"]["w_power_strokes_aJ"]), 3),
+                    "uf5_cantor_hierarchy_ablation",
+                    "BEM_UltraFine_3D_CantorHierarchyAblation",
+                )
+                derived[f"engine_uf5_{d_short}_{h_short}_spin_deg"] = (
+                    round(float(cell["gated_dynamics"]["net_rotation_deg"]), 1),
+                    "uf5_cantor_hierarchy_ablation",
+                    "BEM_UltraFine_3D_CantorHierarchyAblation",
+                )
+                derived[f"engine_uf5_{d_short}_{h_short}_fom"] = (
+                    round(float(cell["stability_6dof"]["torque_to_pullin_fom_nm_um"]), 3),
+                    "uf5_cantor_hierarchy_ablation",
+                    "BEM_UltraFine_3D_CantorHierarchyAblation",
+                )
+
+    r6 = suite_reports.get("eng_uf6", {})
+    if "summary" in r6:
+        s6 = r6["summary"]
+        if "eq_300K_se_deg" in s6:
+            derived["engine_uf6_eq_se_deg"] = (
+                round(float(s6["eq_300K_se_deg"]), 3),
+                "uf6_langevin_and_tolerances",
+                "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+            )
+        if "eq_300K_equipartition_th" in s6:
+            derived["engine_uf6_eq_equipartition_th"] = (
+                round(float(s6["eq_300K_equipartition_th"]), 3),
+                "uf6_langevin_and_tolerances",
+                "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+            )
+        if "config_b_vo2_300K_peclet" in s6:
+            derived["engine_uf6_cfg_b_vo2_peclet"] = (
+                round(float(s6["config_b_vo2_300K_peclet"]), 2),
+                "uf6_langevin_and_tolerances",
+                "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+            )
+        if "config_d_si_77K_mean_deg" in s6:
+            derived["engine_uf6_cfg_d_si_77k_deg"] = (
+                round(float(s6["config_d_si_77K_mean_deg"]), 1),
+                "uf6_langevin_and_tolerances",
+                "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+            )
+
     return derived
 
 
@@ -246,42 +332,54 @@ def aggregate_campaigns(
     paper_dir: Path = PAPER_DIR,
     check_only: bool = False,
     cluster_safe: bool = False,
+    require_extended: bool = False,
 ) -> dict[str, Any]:
     missing: list[str] = []
     macro_blocks: list[str] = []
     suite_manifests: list[dict[str, Any]] = []
     suite_reports: dict[str, dict[str, Any]] = {}
+    included_fig_stems: list[str] = []
 
-    for suite_id, rep_name, met_name, mac_name, fig_stem in REQUIRED_SUITES:
+    suite_specs: list[tuple[tuple[str, str, str, str, str], bool]] = [
+        (spec, True) for spec in REQUIRED_SUITES
+    ] + [(spec, require_extended) for spec in EXTENDED_SUITES]
+
+    for (suite_id, rep_name, met_name, mac_name, fig_stem), is_req in suite_specs:
         rep_path = uf_results_dir / rep_name
         met_path = uf_results_dir / met_name
         mac_path = uf_results_dir / mac_name
         if not rep_path.is_file():
-            missing.append(f"{suite_id}: missing {rep_path}")
+            if is_req:
+                missing.append(f"{suite_id}: missing {rep_path}")
             continue
         with rep_path.open("r", encoding="utf-8") as fh:
             rep = json.load(fh)
         if rep.get("time_truncated", False) or rep.get("status") != "completed":
-            missing.append(f"{suite_id}: incomplete or time-truncated ({rep.get('status')})")
+            if is_req:
+                missing.append(f"{suite_id}: incomplete or time-truncated ({rep.get('status')})")
             continue
+        if not met_path.is_file() or not mac_path.is_file():
+            if is_req:
+                missing.append(f"{suite_id}: missing provenance/macros ({met_path.name} / {mac_path.name})")
+            continue
+        figs_ok = all(
+            (engine_figures_dir / f"{fig_stem}{ext}").is_file()
+            and (engine_figures_dir / f"{fig_stem}{ext}.provenance.json").is_file()
+            for ext in (".png", ".pdf")
+        )
+        if not figs_ok:
+            if is_req:
+                missing.append(f"{suite_id}: missing figure/sidecar {fig_stem}")
+            continue
+
         suite_reports[suite_id] = rep
-        if not met_path.is_file():
-            missing.append(f"{suite_id}: missing {met_path}")
-            continue
         with met_path.open("r", encoding="utf-8") as fh:
             suite_manifests.append(json.load(fh))
-        if not mac_path.is_file():
-            missing.append(f"{suite_id}: missing {mac_path}")
-            continue
         macro_blocks.append(
             f"% --- {suite_id} Ultra-Fine Campaign Macros ---\n"
             + mac_path.read_text(encoding="utf-8").strip()
         )
-        for ext in (".png", ".pdf"):
-            fig_file = engine_figures_dir / f"{fig_stem}{ext}"
-            sidecar = engine_figures_dir / f"{fig_stem}{ext}.provenance.json"
-            if not fig_file.is_file() or not sidecar.is_file():
-                missing.append(f"{suite_id}: missing figure/sidecar {fig_file.name}")
+        included_fig_stems.append(fig_stem)
 
     if missing:
         return {"ready": False, "missing": missing}
@@ -390,7 +488,7 @@ def aggregate_campaigns(
         )
 
     paper_figures_dir.mkdir(parents=True, exist_ok=True)
-    for _, _, _, _, fig_stem in REQUIRED_SUITES:
+    for fig_stem in included_fig_stems:
         stem_sidecar = engine_figures_dir / f"{fig_stem}.provenance.json"
         if stem_sidecar.is_file():
             shutil.copy2(stem_sidecar, paper_figures_dir / stem_sidecar.name)
@@ -412,7 +510,13 @@ def aggregate_campaigns(
     )
     if ledger.get("audit_status") != "PASS":
         raise RuntimeError(f"Manuscript provenance audit did not PASS: {ledger}")
-    return {"ready": True, "cluster_safe": False, "ledger": ledger, "map_path": str(map_out)}
+    return {
+        "ready": True,
+        "cluster_safe": False,
+        "included_suites": sorted(suite_reports.keys()),
+        "ledger": ledger,
+        "map_path": str(map_out),
+    }
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -420,21 +524,30 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--check-only",
         action="store_true",
-        help="Report completion status of all 4 suites without mutating manuscript files.",
+        help="Report completion status of suites without mutating manuscript files.",
     )
     parser.add_argument(
         "--cluster-safe",
         action="store_true",
         help="Write merged artifacts strictly into results/ultrafine without touching Papers/.",
     )
+    parser.add_argument(
+        "--require-extended",
+        action="store_true",
+        help="Require eng_uf5 and eng_uf6 in addition to eng_uf1..eng_uf4.",
+    )
     args = parser.parse_args(argv)
-    res = aggregate_campaigns(check_only=args.check_only, cluster_safe=args.cluster_safe)
+    res = aggregate_campaigns(
+        check_only=args.check_only,
+        cluster_safe=args.cluster_safe,
+        require_extended=args.require_extended,
+    )
     if not res["ready"]:
         for item in res["missing"]:
             print(f"[PENDING] {item}", file=sys.stderr)
         return 1
     if args.check_only:
-        print("[READY] All 4 Ultra-Fine suites completed and verified.")
+        print("[READY] All requested Ultra-Fine suites completed and verified.")
     else:
         print(f"[AGGREGATED] Provenance map ready -> {res['map_path']}")
     return 0
