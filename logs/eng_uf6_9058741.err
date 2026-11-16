@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "/N/project/gorengor_werewolf/FractalCasimirEngine_UF/fractal_casimir_engine/run_ultrafine_langevin_and_tolerances.py", line 1211, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/N/project/gorengor_werewolf/FractalCasimirEngine_UF/fractal_casimir_engine/run_ultrafine_langevin_and_tolerances.py", line 1204, in main
+    return run_full_campaign(args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/N/project/gorengor_werewolf/FractalCasimirEngine_UF/fractal_casimir_engine/run_ultrafine_langevin_and_tolerances.py", line 1053, in run_full_campaign
+    rough_rows = evaluate_roughness_bem_sweep("Config_D_DualStator_PushPull", device=device, n_realizations=6)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/N/project/gorengor_werewolf/FractalCasimirEngine_UF/fractal_casimir_engine/run_ultrafine_langevin_and_tolerances.py", line 650, in evaluate_roughness_bem_sweep
+    rmesh = _perturb_mesh_roughness(model.ref_mesh, sig_nm, rng)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/N/project/gorengor_werewolf/FractalCasimirEngine_UF/fractal_casimir_engine/run_ultrafine_langevin_and_tolerances.py", line 610, in _perturb_mesh_roughness
+    rotor=shift_panels(mesh.rotor),
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/N/project/gorengor_werewolf/FractalCasimirEngine_UF/fractal_casimir_engine/run_ultrafine_langevin_and_tolerances.py", line 598, in shift_panels
+    shift = float(dh) * p.normal
+            ~~~~~~~~~~^~~~~~~~~~
+TypeError: can't multiply sequence by non-int of type 'float'
