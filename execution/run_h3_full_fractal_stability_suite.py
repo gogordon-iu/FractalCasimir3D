@@ -14,11 +14,11 @@ architecture, its Vernier variant (`H3_Cantor_Robust`), and strictly matched non
        F_z(theta), interaction energy landscape Delta E_C(theta), and switching torque tau_theta(theta).
   3. Thermal/Dielectric Dispersion, Surface Roughness, & 300 K Lock-In SNR:
      - 0 K PEC vs. 0 K 1-pole Drude Au vs. 300 K 1-pole Drude Au vs. 300 K 6-pole Rakic Lorentz-Drude Au,
-       plus direct T=300 K Matsubara pole-truncation check (N_Mat = 250 vs. 500),
+       plus direct T=300 K Matsubara pole-truncation check (N_Mat = 80 vs. 160),
      - Stochastic RMS surface-roughness sweep sigma_rough in [0, 3.0] nm,
      - Room-temperature (300 K) Brownian thermomechanical force noise and lock-in SNR(tau) at Q = 10^4, 10^5.
   4. Homothetic Scale-Ratio (`b`) Optimality & Full-Device Corner-Rounded (`r_edge = 5 nm`) Convergence:
-     - Iso-area, g_min-matched scale-ratio scan b in {1.5, 2.0, 2.5, 3.0, 3.5, 3.8},
+     - Iso-area, g_min-matched scale-ratio scan b in {2.50, 2.75, 3.00, 3.25, 3.50, 3.75},
      - Multi-tier (1,1,1,3) -> (2,2,2,9) -> (3,3,3,14) full-device convergence at physical EBL corner
        rounding r_edge = 5 nm across H3-Cantor and matched controls, plus n_xi quadrature and central
        finite-difference (-dE_C/dz) vs. analytical trace consistency.
@@ -29,6 +29,7 @@ from __future__ import annotations
 import argparse
 import dataclasses
 from datetime import datetime, timezone
+import gc
 import hashlib
 import json
 import math
@@ -38,7 +39,7 @@ import shutil
 import sys
 import tempfile
 import time
-from typing import Any, Literal, Mapping, Sequence
+from typing import Any, Callable, Literal, Mapping, Sequence
 
 import numpy as np
 from scipy import linalg
@@ -1172,6 +1173,55 @@ def run_stability_suite(
         flush=True,
     )
 
+    def _task_lu_cache_key(t_id_val: str, spec_val: Mapping[str, Any]) -> tuple[Any, ...]:
+        k_val = str(spec_val["kind"])
+        if k_val == "bem_std":
+            mo_val = spec_val.get("mesh_override")
+            return (
+                "bem_std",
+                str(spec_val["design_code"]),
+                round(float(spec_val["r_edge_um"]), 6),
+                tuple(mo_val) if mo_val is not None else None,
+                str(spec_val["material"]),
+                round(float(spec_val["temperature_K"]), 3),
+                int(spec_val["n_xi"]),
+            )
+        if k_val == "bem_bscan":
+            return (
+                "bem_bscan",
+                str(spec_val["b_key"]),
+                round(float(spec_val["delta_r_um"]), 6),
+                int(spec_val["n_xi"]),
+            )
+        return ("uncached", t_id_val)
+
+    def _release_cuda_bem_caches() -> None:
+        clear_bem_lu_caches()
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+    def _run_with_cuda_oom_fallback(
+        t_id_val: str,
+        req_dev: Literal["auto", "cpu", "cuda"],
+        eval_fn: Callable[[Literal["auto", "cpu", "cuda"]], dict[str, Any]],
+    ) -> dict[str, Any]:
+        try:
+            return eval_fn(req_dev)
+        except RuntimeError as exc:
+            is_oom = isinstance(exc, torch.cuda.OutOfMemoryError) or ("out of memory" in str(exc).lower())
+            if not is_oom or req_dev == "cpu":
+                raise
+            print(
+                f"  [VRAM FALLBACK] {t_id_val} exceeded GPU VRAM ({exc}); clearing LU cache and retrying on CPU RAM...",
+                flush=True,
+            )
+            _release_cuda_bem_caches()
+            res_cpu = eval_fn("cpu")
+            res_cpu["cuda_oom_cpu_fallback"] = True
+            return res_cpu
+
+    active_lu_key: tuple[Any, ...] | None = None
     for idx_t, (t_id, spec) in enumerate(tasks_to_execute, start=1):
         ckpt_file = ckpt_root / f"{t_id}.json"
         if not is_probe and ckpt_file.is_file():
@@ -1180,57 +1230,79 @@ def run_stability_suite(
                 results_map[t_id] = cached
                 continue
 
+        next_lu_key = _task_lu_cache_key(t_id, spec)
+        if active_lu_key is not None and next_lu_key != active_lu_key:
+            _release_cuda_bem_caches()
+        active_lu_key = next_lu_key
+
         kind = spec["kind"]
         if kind == "bem_std":
             des = all_designs[spec["design_code"]]
             mo = spec.get("mesh_override")
-            out = evaluate_homothetic_3d_bem(
-                des,
-                z_shift_um=spec["z_shift_um"],
-                theta_deg=spec["theta_deg"],
-                r_edge_um=spec["r_edge_um"],
-                material=spec["material"],
-                temperature_K=spec["temperature_K"],
-                n_xi=spec["n_xi"],
-                max_steps=max_steps,
-                device=device,
-                n_r_lobe=(mo[0] if mo else None),
-                n_phi_lobe=(mo[1] if mo else None),
-                n_z_lobe=(mo[2] if mo else None),
-                n_phi_collar=(mo[3] if mo else None),
+            # Route Tier-3 (3,3,3,14) corner-rounded full-device tasks directly via OOM-guarded runner
+            out = _run_with_cuda_oom_fallback(
+                t_id,
+                device,
+                lambda dev_choice: evaluate_homothetic_3d_bem(
+                    des,
+                    z_shift_um=spec["z_shift_um"],
+                    theta_deg=spec["theta_deg"],
+                    r_edge_um=spec["r_edge_um"],
+                    material=spec["material"],
+                    temperature_K=spec["temperature_K"],
+                    n_xi=spec["n_xi"],
+                    max_steps=max_steps,
+                    device=dev_choice,
+                    n_r_lobe=(mo[0] if mo else None),
+                    n_phi_lobe=(mo[1] if mo else None),
+                    n_z_lobe=(mo[2] if mo else None),
+                    n_phi_collar=(mo[3] if mo else None),
+                ),
             )
         elif kind == "bem_bscan":
             des = scale_b_designs[spec["b_key"]]
-            out = evaluate_homothetic_3d_bem(
-                des,
-                z_shift_um=spec["z_shift_um"],
-                theta_deg=spec["theta_deg"],
-                delta_r_um=spec["delta_r_um"],
-                material="Gold",
-                temperature_K=300.0,
-                n_xi=spec["n_xi"],
-                max_steps=max_steps,
-                device=device,
+            out = _run_with_cuda_oom_fallback(
+                t_id,
+                device,
+                lambda dev_choice: evaluate_homothetic_3d_bem(
+                    des,
+                    z_shift_um=spec["z_shift_um"],
+                    theta_deg=spec["theta_deg"],
+                    delta_r_um=spec["delta_r_um"],
+                    material="Gold",
+                    temperature_K=300.0,
+                    n_xi=spec["n_xi"],
+                    max_steps=max_steps,
+                    device=dev_choice,
+                ),
             )
         elif kind == "bem_drude_or_mat":
             des = all_designs[spec["design_code"]]
-            out = evaluate_single_pole_or_matsubara_bem(
-                des,
-                theta_deg=spec["theta_deg"],
-                single_pole_drude=spec["single_pole_drude"],
-                temperature_K=spec["temperature_K"],
-                n_xi=spec["n_xi"],
-                direct_matsubara_poles=spec["direct_matsubara_poles"],
-                max_steps=max_steps,
-                device=device,
+            out = _run_with_cuda_oom_fallback(
+                t_id,
+                device,
+                lambda dev_choice: evaluate_single_pole_or_matsubara_bem(
+                    des,
+                    theta_deg=spec["theta_deg"],
+                    single_pole_drude=spec["single_pole_drude"],
+                    temperature_K=spec["temperature_K"],
+                    n_xi=spec["n_xi"],
+                    direct_matsubara_poles=spec["direct_matsubara_poles"],
+                    max_steps=max_steps,
+                    device=dev_choice,
+                ),
             )
         elif kind == "bem_tilt_4sec":
             des = all_designs[spec["design_code"]]
-            out = evaluate_full_4sector_tilted_bem(
-                des,
-                alpha_tilt_mrad=spec["alpha_tilt_mrad"],
-                max_steps=max_steps,
-                device=device,
+            out = _run_with_cuda_oom_fallback(
+                t_id,
+                device,
+                lambda dev_choice: evaluate_full_4sector_tilted_bem(
+                    des,
+                    alpha_tilt_mrad=spec["alpha_tilt_mrad"],
+                    max_steps=max_steps,
+                    device=dev_choice,
+                ),
             )
         else:
             raise ValueError(f"Unknown task kind: {kind}")
@@ -1246,7 +1318,7 @@ def run_stability_suite(
                 flush=True,
             )
 
-    clear_bem_lu_caches()
+    _release_cuda_bem_caches()
     if is_probe:
         probe_out = output_json or (REPOSITORY_ROOT / ".tmp" / "probe_h3_stability.json")
         probe_payload = {

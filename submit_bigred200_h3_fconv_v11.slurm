@@ -6,8 +6,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=16
 #SBATCH --cpus-per-task=8
-#SBATCH --time=10:00:00
-#SBATCH --array=1-18%10
+#SBATCH --time=26:00:00
+#SBATCH --array=1-20%10
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu
 #SBATCH --exclude=nid0394
@@ -1233,7 +1233,7 @@ elif command -v srun >/dev/null 2>&1 && [[ -n "${SLURM_JOB_ID:-}" ]]; then
         --task-id "$TASK_ID" \
         --config all \
         --checkpoint-prefix chk_moments_h3_ext_fdtd_task \
-        --max-walltime-hours 9.4 \
+        --max-walltime-hours 25.4 \
         --output-file "$OUTPUT_FILE" || MEEP_RC=$?
 else
     "$PYTHON_BIN" execution/run_scoped_clutch_meep.py \
@@ -1241,16 +1241,16 @@ else
         --task-id "$TASK_ID" \
         --config all \
         --checkpoint-prefix chk_moments_h3_ext_fdtd_task \
-        --max-walltime-hours 9.4 \
+        --max-walltime-hours 25.4 \
         --output-file "$OUTPUT_FILE" || MEEP_RC=$?
 fi
 
-# Run final extended BEM+FDTD convergence aggregation ONLY when all 18 extended FDTD tasks are complete
+# Run final extended BEM+FDTD convergence aggregation ONLY when all 20 extended FDTD tasks are complete
 if [[ -f "results/h3_full_convergence_extension_bem.json" ]] && "$PYTHON_BIN" -c "
 import json, math, pathlib, sys
 d = pathlib.Path('results/h3_single_setup_fdtd_ext')
 try:
-    for k in range(1, 19):
+    for k in range(1, 21):
         p = d / f'task_{k}_meep.json'
         if not p.is_file():
             sys.exit(1)

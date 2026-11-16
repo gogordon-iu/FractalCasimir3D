@@ -5,8 +5,8 @@
 #SBATCH --gpus-per-node=1
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=64G
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=128G
 #SBATCH --time=02:30:00
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=gogordon@iu.edu

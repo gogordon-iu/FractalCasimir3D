@@ -14,10 +14,10 @@ completed 31-task baseline (`results/h3_single_setup_fdtd/task_1..31_meep.json` 
      T_run = 8.0 vs. 4.0 (PEC & dispersive Drude Au), expanded cell_buffer = 140 nm vs. 80 nm,
      and thickened PML = 240 nm vs. 160 nm.
   4. Multiscale 20 nm-Lattice Cantor Hierarchy vs. Iso-Area Uniform Grating Differential Benchmark
-     (Exact 3D RWG BEM Tiers 1..3 + 4-Pass 3D Meep FDTD Tasks 13..18):
+     (Exact 3D RWG BEM Tiers 1..3 + 4-Pass 3D Meep FDTD Tasks 13..20):
      Evaluates `Multiscale-Cantor-3Trk` (40/80/40 nm homothetic teeth in 120/240/120 nm slots) against
      iso-area, W_open-matched `Ctrl-Uniform-Coarse2` (two 80 nm teeth in 240 nm slots) in both
-     first-principles RWG BEM and 4-pass 3D FDTD across PEC and dispersive Drude Au.
+     first-principles RWG BEM and 4-pass 3D FDTD across PEC and dispersive Drude Au (R=100, 150).
 """
 
 from __future__ import annotations
@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import gc
 import hashlib
 import json
 import math
@@ -34,7 +35,7 @@ import shutil
 import sys
 import tempfile
 import time
-from typing import Any, Literal, Mapping, Sequence
+from typing import Any, Callable, Literal, Mapping, Sequence
 
 import numpy as np
 from scipy.optimize import curve_fit
@@ -192,13 +193,15 @@ EXT_FDTD_SWEEP_SPECS: tuple[ExtFDTDSpec, ...] = (
         3,
         pml_thickness_um=0.240,
     ),
-    # Group 3: Multiscale 20 nm-lattice Cantor vs. Iso-Area Uniform differential benchmark (Tasks 13..18)
+    # Group 3: Multiscale 20 nm-lattice Cantor vs. Iso-Area Uniform differential benchmark (Tasks 13..20)
     ExtFDTDSpec(13, "ext_ms_cantor_pec_R100_n3", "multiscale_differential", "ms_cantor", "PEC", 100, 3),
     ExtFDTDSpec(14, "ext_ms_uniform_pec_R100_n3", "multiscale_differential", "ms_uniform", "PEC", 100, 3),
     ExtFDTDSpec(15, "ext_ms_cantor_pec_R150_n3", "multiscale_differential", "ms_cantor", "PEC", 150, 3),
     ExtFDTDSpec(16, "ext_ms_uniform_pec_R150_n3", "multiscale_differential", "ms_uniform", "PEC", 150, 3),
     ExtFDTDSpec(17, "ext_ms_cantor_gold_R150_n3", "multiscale_differential", "ms_cantor", "Gold_Drude", 150, 3),
     ExtFDTDSpec(18, "ext_ms_uniform_gold_R150_n3", "multiscale_differential", "ms_uniform", "Gold_Drude", 150, 3),
+    ExtFDTDSpec(19, "ext_ms_cantor_gold_R100_n3", "multiscale_differential", "ms_cantor", "Gold_Drude", 100, 3),
+    ExtFDTDSpec(20, "ext_ms_uniform_gold_R100_n3", "multiscale_differential", "ms_uniform", "Gold_Drude", 100, 3),
 )
 
 
@@ -412,7 +415,8 @@ def write_extended_fdtd_configs(
             "geometry": {"elements": elems},
         }
         p_cfg = out_dir / f"config_{sp.task_id:03d}.json"
-        _atomic_write_json(p_cfg, cfg)
+        if not p_cfg.is_file() or json.loads(p_cfg.read_text(encoding="utf-8")) != cfg:
+            _atomic_write_json(p_cfg, cfg)
         written.append(p_cfg)
         manifest_entries.append(
             {
@@ -517,34 +521,86 @@ def run_extended_bem_convergence(
     ckpt_root = (checkpoint_dir / f"probe_{max_steps}") if is_probe else checkpoint_dir
     ckpt_root.mkdir(parents=True, exist_ok=True)
 
+    def _solve_rwg_guarded(
+        label_id: str,
+        build_meshes_fn: Callable[[torch.device], tuple[RWGMeshTorch, RWGMeshTorch]],
+        d_ch_um: float,
+        mat_name: str,
+    ) -> dict[str, Any]:
+        try:
+            rm, sm = build_meshes_fn(dev)
+            out_r = solve_rwg_casimir_fz_pn(
+                rm,
+                sm,
+                d_ch_um,
+                material=mat_name,
+                n_xi=n_xi,
+                max_steps=max_steps,
+            )
+            del rm, sm
+            gc.collect()
+            if dev.type == "cuda":
+                torch.cuda.empty_cache()
+            return out_r
+        except RuntimeError as exc:
+            is_oom = isinstance(exc, torch.cuda.OutOfMemoryError) or ("out of memory" in str(exc).lower())
+            if not is_oom or dev.type == "cpu":
+                raise
+            print(
+                f"  [VRAM FALLBACK] {label_id} exceeded GPU VRAM ({exc}); retrying RWG BEM on CPU RAM...",
+                flush=True,
+            )
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            cpu_dev = torch.device("cpu")
+            rm_c, sm_c = build_meshes_fn(cpu_dev)
+            out_c = solve_rwg_casimir_fz_pn(
+                rm_c,
+                sm_c,
+                d_ch_um,
+                material=mat_name,
+                n_xi=n_xi,
+                max_steps=max_steps,
+            )
+            out_c["cuda_oom_cpu_fallback"] = True
+            del rm_c, sm_c
+            gc.collect()
+            return out_c
+
     # 1. Tier-5 single-setup RWG BEM across all 4 channels
     r_sub = TIER5_BEM_SPEC["rotor_sub"]
     c_sub = TIER5_BEM_SPEC["collar_sub"]
     p_sub = TIER5_BEM_SPEC["pad_sub"]
-    rotor_t5 = make_closed_box_rwg_mesh(ROTOR_LOBE_BOX_UM, r_sub, device=dev)
-    open_stator_t5 = make_multi_box_rwg_mesh(OPEN_STATOR_COLLAR_BOXES_UM, c_sub, device=dev)
-    eng_stator_t5 = make_multi_box_rwg_mesh(ENGAGED_STATOR_PAD_BOXES_UM, p_sub, device=dev)
-    h_open_t5 = _compute_h_eff_nm(rotor_t5, open_stator_t5)
-    h_eng_t5 = _compute_h_eff_nm(rotor_t5, eng_stator_t5)
+    cpu_ref = torch.device("cpu")
+    h_open_t5 = _compute_h_eff_nm(
+        make_closed_box_rwg_mesh(ROTOR_LOBE_BOX_UM, r_sub, device=cpu_ref),
+        make_multi_box_rwg_mesh(OPEN_STATOR_COLLAR_BOXES_UM, c_sub, device=cpu_ref),
+    )
+    h_eng_t5 = _compute_h_eff_nm(
+        make_closed_box_rwg_mesh(ROTOR_LOBE_BOX_UM, r_sub, device=cpu_ref),
+        make_multi_box_rwg_mesh(ENGAGED_STATOR_PAD_BOXES_UM, p_sub, device=cpu_ref),
+    )
 
     tier5_results: dict[str, Any] = {}
-    for ch_key, st_lbl, st_mesh, mat, h_nm in (
-        ("open_pec", "open_repulsive", open_stator_t5, "PEC", h_open_t5),
-        ("engaged_pec", "engaged_attractive", eng_stator_t5, "PEC", h_eng_t5),
-        ("open_gold", "open_repulsive", open_stator_t5, "Gold_Drude", h_open_t5),
-        ("engaged_gold", "engaged_attractive", eng_stator_t5, "Gold_Drude", h_eng_t5),
+    for ch_key, st_lbl, st_boxes, st_sub, mat, h_nm in (
+        ("open_pec", "open_repulsive", OPEN_STATOR_COLLAR_BOXES_UM, c_sub, "PEC", h_open_t5),
+        ("engaged_pec", "engaged_attractive", ENGAGED_STATOR_PAD_BOXES_UM, p_sub, "PEC", h_eng_t5),
+        ("open_gold", "open_repulsive", OPEN_STATOR_COLLAR_BOXES_UM, c_sub, "Gold_Drude", h_open_t5),
+        ("engaged_gold", "engaged_attractive", ENGAGED_STATOR_PAD_BOXES_UM, p_sub, "Gold_Drude", h_eng_t5),
     ):
         ck_file = ckpt_root / f"tier5_{ch_key}.json"
         if not is_probe and ck_file.is_file():
             res = json.loads(ck_file.read_text(encoding="utf-8"))
         else:
-            res = solve_rwg_casimir_fz_pn(
-                rotor_t5,
-                st_mesh,
+            res = _solve_rwg_guarded(
+                f"tier5_{ch_key}",
+                lambda d_use, sb=st_boxes, ss=st_sub: (
+                    make_closed_box_rwg_mesh(ROTOR_LOBE_BOX_UM, r_sub, device=d_use),
+                    make_multi_box_rwg_mesh(sb, ss, device=d_use),
+                ),
                 D_EFF_SINGLE_SETUP_UM,
-                material=mat,
-                n_xi=n_xi,
-                max_steps=max_steps,
+                mat,
             )
             res.update({"tier": 5, "label": TIER5_BEM_SPEC["label"], "state": st_lbl, "h_eff_nm": h_nm})
             if not is_probe:
@@ -572,39 +628,61 @@ def run_extended_bem_convergence(
         k_sub = ts["coarse_sub"]
         w_sub = ts["wall_sub"]
 
-        cantor_rot = _make_heterogeneous_boxes_rwg_mesh(
-            [
-                (MULTISCALE_CANTOR_ROTOR_BOXES_UM[0], f_sub),
-                (MULTISCALE_CANTOR_ROTOR_BOXES_UM[1], k_sub),
-                (MULTISCALE_CANTOR_ROTOR_BOXES_UM[2], f_sub),
-            ],
-            dev,
+        h_cantor = _compute_h_eff_nm(
+            _make_heterogeneous_boxes_rwg_mesh(
+                [
+                    (MULTISCALE_CANTOR_ROTOR_BOXES_UM[0], f_sub),
+                    (MULTISCALE_CANTOR_ROTOR_BOXES_UM[1], k_sub),
+                    (MULTISCALE_CANTOR_ROTOR_BOXES_UM[2], f_sub),
+                ],
+                cpu_ref,
+            ),
+            make_multi_box_rwg_mesh(MULTISCALE_CANTOR_STATOR_BOXES_UM, w_sub, device=cpu_ref),
         )
-        cantor_sta = make_multi_box_rwg_mesh(MULTISCALE_CANTOR_STATOR_BOXES_UM, w_sub, device=dev)
-        h_cantor = _compute_h_eff_nm(cantor_rot, cantor_sta)
+        h_uni = _compute_h_eff_nm(
+            make_multi_box_rwg_mesh(UNIFORM_COARSE2_ROTOR_BOXES_UM, k_sub, device=cpu_ref),
+            make_multi_box_rwg_mesh(UNIFORM_COARSE2_STATOR_BOXES_UM, w_sub, device=cpu_ref),
+        )
 
-        uni_rot = make_multi_box_rwg_mesh(UNIFORM_COARSE2_ROTOR_BOXES_UM, k_sub, device=dev)
-        uni_sta = make_multi_box_rwg_mesh(UNIFORM_COARSE2_STATOR_BOXES_UM, w_sub, device=dev)
-        h_uni = _compute_h_eff_nm(uni_rot, uni_sta)
+        def _build_cantor_pair(
+            d_use: torch.device,
+            fs: tuple[int, int, int] = f_sub,
+            ks: tuple[int, int, int] = k_sub,
+            ws: tuple[int, int, int] = w_sub,
+        ) -> tuple[RWGMeshTorch, RWGMeshTorch]:
+            return (
+                _make_heterogeneous_boxes_rwg_mesh(
+                    [
+                        (MULTISCALE_CANTOR_ROTOR_BOXES_UM[0], fs),
+                        (MULTISCALE_CANTOR_ROTOR_BOXES_UM[1], ks),
+                        (MULTISCALE_CANTOR_ROTOR_BOXES_UM[2], fs),
+                    ],
+                    d_use,
+                ),
+                make_multi_box_rwg_mesh(MULTISCALE_CANTOR_STATOR_BOXES_UM, ws, device=d_use),
+            )
 
-        for m_key, r_m, s_m, mat, d_ch, h_nm in (
-            ("cantor_pec", cantor_rot, cantor_sta, "PEC", 0.040, h_cantor),
-            ("uniform_pec", uni_rot, uni_sta, "PEC", 0.080, h_uni),
-            ("cantor_gold", cantor_rot, cantor_sta, "Gold_Drude", 0.040, h_cantor),
-            ("uniform_gold", uni_rot, uni_sta, "Gold_Drude", 0.080, h_uni),
+        def _build_uni_pair(
+            d_use: torch.device,
+            ks: tuple[int, int, int] = k_sub,
+            ws: tuple[int, int, int] = w_sub,
+        ) -> tuple[RWGMeshTorch, RWGMeshTorch]:
+            return (
+                make_multi_box_rwg_mesh(UNIFORM_COARSE2_ROTOR_BOXES_UM, ks, device=d_use),
+                make_multi_box_rwg_mesh(UNIFORM_COARSE2_STATOR_BOXES_UM, ws, device=d_use),
+            )
+
+        for m_key, builder_fn, mat, d_ch, h_nm in (
+            ("cantor_pec", _build_cantor_pair, "PEC", 0.040, h_cantor),
+            ("uniform_pec", _build_uni_pair, "PEC", 0.080, h_uni),
+            ("cantor_gold", _build_cantor_pair, "Gold_Drude", 0.040, h_cantor),
+            ("uniform_gold", _build_uni_pair, "Gold_Drude", 0.080, h_uni),
         ):
             ck_file = ckpt_root / f"ms_tier{t_idx}_{m_key}.json"
             if not is_probe and ck_file.is_file():
                 res = json.loads(ck_file.read_text(encoding="utf-8"))
             else:
-                res = solve_rwg_casimir_fz_pn(
-                    r_m,
-                    s_m,
-                    d_ch,
-                    material=mat,
-                    n_xi=n_xi,
-                    max_steps=max_steps,
-                )
+                res = _solve_rwg_guarded(f"ms_tier{t_idx}_{m_key}", builder_fn, d_ch, mat)
                 res.update({"tier": t_idx, "design_channel": m_key, "h_eff_nm": h_nm})
                 if not is_probe:
                     _atomic_write_json(ck_file, res)
@@ -760,7 +838,7 @@ def aggregate_extended_convergence(
             key=lambda r_item: (int(r_item["resolution"]), int(r_item["nmax"])),
         )
         has_high_r = any(int(r_item["resolution"]) > 150 for r_item in avail)
-        if len(avail) >= 2 and has_high_r and ch_key in ("open_gold", "engaged_pec"):
+        if len(avail) >= 1 and has_high_r:
             # Direct high-nmax spatial Richardson extrapolation between R=150, 200, 250 at nmax=4/5!
             m_r150 = {int(x["nmax"]): float(x["f_net_pN"]) for x in base_conv_summary["fdtd_multipole_ladders"][ch_key]}
             # Fit P(3, alpha * nmax) completeness factor at R=150
@@ -838,31 +916,51 @@ def aggregate_extended_convergence(
                 "rel_drift_pct": float(100.0 * abs(val - ref_val) / max(abs(ref_val), 1e-12)),
             }
 
-    # Multiscale Cantor vs. Uniform FDTD comparison (Tasks 13..18)
+    # Multiscale Cantor vs. Uniform FDTD comparison (Tasks 13..20: R=100, R=150 across PEC and Gold_Drude)
     multiscale_fdtd: dict[str, Any] = {}
-    if 15 in ext_fdtd_records and 16 in ext_fdtd_records:
-        c_pec = ext_fdtd_records[15]["f_net_pN"]
-        u_pec = ext_fdtd_records[16]["f_net_pN"]
-        multiscale_fdtd["pec_R150_n3"] = {
-            "cantor_pN": c_pec,
-            "uniform_pN": u_pec,
-            "delta_pN": float(c_pec - u_pec),
-            "fdtd_gain_ratio": _safe_signed_ratio(c_pec, u_pec),
-            "rwg_bem_tier3_gain_ratio": ext_bem["multiscale_summary"]["pec_tier3_gain_ratio"],
-        }
-    if 17 in ext_fdtd_records and 18 in ext_fdtd_records:
-        c_au = ext_fdtd_records[17]["f_net_pN"]
-        u_au = ext_fdtd_records[18]["f_net_pN"]
-        multiscale_fdtd["gold_R150_n3"] = {
-            "cantor_pN": c_au,
-            "uniform_pN": u_au,
-            "delta_pN": float(c_au - u_au),
-            "fdtd_gain_ratio": _safe_signed_ratio(c_au, u_au),
-            "rwg_bem_tier3_gain_ratio": ext_bem["multiscale_summary"]["gold_tier3_gain_ratio"],
-        }
+    for pair_key, c_tid, u_tid, bem_gain_key in (
+        ("pec_R100_n3", 13, 14, "pec_tier3_gain_ratio"),
+        ("pec_R150_n3", 15, 16, "pec_tier3_gain_ratio"),
+        ("gold_R100_n3", 19, 20, "gold_tier3_gain_ratio"),
+        ("gold_R150_n3", 17, 18, "gold_tier3_gain_ratio"),
+    ):
+        if c_tid in ext_fdtd_records and u_tid in ext_fdtd_records:
+            c_val = ext_fdtd_records[c_tid]["f_net_pN"]
+            u_val = ext_fdtd_records[u_tid]["f_net_pN"]
+            multiscale_fdtd[pair_key] = {
+                "cantor_pN": c_val,
+                "uniform_pN": u_val,
+                "delta_pN": float(c_val - u_val),
+                "fdtd_gain_ratio": _safe_signed_ratio(c_val, u_val),
+                "rwg_bem_tier3_gain_ratio": ext_bem["multiscale_summary"][bem_gain_key],
+            }
+
+    dx100_2 = (1.0 / 100.0) ** 2
+    dx150_2 = (1.0 / 150.0) ** 2
+    for mat_tag, r100_k, r150_k, bem_c_k, bem_u_k in (
+        ("pec_continuum", "pec_R100_n3", "pec_R150_n3", "cantor_pec", "uniform_pec"),
+        ("gold_continuum", "gold_R100_n3", "gold_R150_n3", "cantor_gold", "uniform_gold"),
+    ):
+        if r100_k in multiscale_fdtd and r150_k in multiscale_fdtd:
+            c100, c150 = multiscale_fdtd[r100_k]["cantor_pN"], multiscale_fdtd[r150_k]["cantor_pN"]
+            u100, u150 = multiscale_fdtd[r100_k]["uniform_pN"], multiscale_fdtd[r150_k]["uniform_pN"]
+            c_inf = float(c150 + (c150 - c100) * dx150_2 / (dx100_2 - dx150_2))
+            u_inf = float(u150 + (u150 - u100) * dx150_2 / (dx100_2 - dx150_2))
+            bc_inf = float(ext_bem["multiscale_summary"]["channels"][bem_c_k]["continuum_pN"])
+            bu_inf = float(ext_bem["multiscale_summary"]["channels"][bem_u_k]["continuum_pN"])
+            multiscale_fdtd[mat_tag] = {
+                "cantor_fdtd_inf_pN": c_inf,
+                "uniform_fdtd_inf_pN": u_inf,
+                "delta_fdtd_inf_pN": float(c_inf - u_inf),
+                "fdtd_continuum_gain_ratio": _safe_signed_ratio(c_inf, u_inf),
+                "cantor_bem_inf_pN": bc_inf,
+                "uniform_bem_inf_pN": bu_inf,
+                "cantor_rel_diff_pct": float(100.0 * abs(c_inf - bc_inf) / max(abs(bc_inf), 1e-12)),
+                "uniform_rel_diff_pct": float(100.0 * abs(u_inf - bu_inf) / max(abs(bu_inf), 1e-12)),
+            }
 
     complete_summary = {
-        "model": "Complete_5Tier_RWG_BEM_and_49Task_Meep_FDTD_Convergence",
+        "model": "Complete_5Tier_RWG_BEM_and_51Task_Meep_FDTD_Convergence",
         "dataset": "H3_Cantor_SingleSetup_and_Multiscale_20nmLattice",
         "status": "complete" if len(ext_fdtd_records) == len(EXT_FDTD_SWEEP_SPECS) else "bem_complete_fdtd_partial",
         "executed_at": datetime.now(timezone.utc).isoformat(),
@@ -871,18 +969,171 @@ def aggregate_extended_convergence(
         "expected_ext_fdtd_tasks": len(EXT_FDTD_SWEEP_SPECS),
         "five_tier_single_setup_bem": five_tier_bem,
         "multiscale_rwg_bem": ext_bem["multiscale_summary"],
+        "multiscale_rwg_ladders": ext_bem["multiscale_cantor_vs_uniform_bem"],
         "upgraded_solver_agreement": upgraded_agreement,
         "fdtd_domain_invariance_controls": domain_checks,
         "multiscale_fdtd_vs_bem": multiscale_fdtd,
         "ext_fdtd_tasks": [ext_fdtd_records[k] for k in sorted(ext_fdtd_records)],
     }
     _atomic_write_json(out_summary_path, complete_summary)
+    _write_extended_convergence_table_and_figure(complete_summary, out_summary_path)
     _log_extended_convergence_macros(complete_summary, out_summary_path)
     print(
         f"Aggregated extended convergence ({len(ext_fdtd_records)}/{len(EXT_FDTD_SWEEP_SPECS)} ext FDTD tasks) -> {out_summary_path}",
         flush=True,
     )
     return complete_summary
+
+
+def _write_extended_convergence_table_and_figure(summary: Mapping[str, Any], summary_path: Path) -> None:
+    """Export grounded LaTeX table and 2-panel figure + .provenance.json sidecars."""
+    b5 = summary["five_tier_single_setup_bem"]
+    ag = summary["upgraded_solver_agreement"]
+    ms_bem = summary["multiscale_rwg_bem"]
+    ms_fdtd = summary["multiscale_fdtd_vs_bem"]
+
+    lines = [
+        "% Auto-generated by execution/run_h3_full_convergence_extension.py -- DO NOT EDIT BY HAND",
+        "\\begin{tabular}{llrrrrr}",
+        "\\toprule",
+        "Benchmark & Channel / Pair & RWG Tier 5 / 3 & RWG Cont. $F_z^\\infty$ & 4-Pass FDTD Finest & 4-Pass FDTD Cont. & Rel.\\ Diff. \\\\",
+        " & & (pN) & (pN) & (pN) & (pN) & (\\%) \\\\",
+        "\\midrule",
+    ]
+    for ch_key, lbl in (
+        ("open_pec", "Open ($3^\\circ$), PEC"),
+        ("engaged_pec", "Engaged ($48^\\circ$), PEC"),
+        ("open_gold", "Open ($3^\\circ$), Drude Au"),
+        ("engaged_gold", "Engaged ($48^\\circ$), Drude Au"),
+    ):
+        r_b = b5[ch_key]
+        r_a = ag[ch_key]
+        lines.append(
+            f"Single-Setup & {lbl} & ${r_b['tier5_pN']:+.3f}$ & "
+            f"${r_b['continuum_pN']:+.3f} \\pm {r_b['continuum_se_pN']:.3f}$ & "
+            f"${r_a['fdtd_finest_direct_pN']:+.3f}$ ($R={r_a['fdtd_finest_R']},n={r_a['fdtd_finest_nmax']}$) & "
+            f"${r_a['fdtd_continuum_pN']:+.3f} \\pm {r_a['fdtd_continuum_se_pN']:.3f}$ & "
+            f"${r_a['continuum_rel_diff_pct']:.1f}$ \\\\"
+        )
+    lines.append("\\midrule")
+    for m_tag, lbl, f100_k, f150_k, cont_k, is_c in (
+        ("cantor_pec", "Multiscale Cantor (PEC)", "pec_R100_n3", "pec_R150_n3", "pec_continuum", True),
+        ("uniform_pec", "Iso-Area Uniform (PEC)", "pec_R100_n3", "pec_R150_n3", "pec_continuum", False),
+        ("cantor_gold", "Multiscale Cantor (Drude Au)", "gold_R100_n3", "gold_R150_n3", "gold_continuum", True),
+        ("uniform_gold", "Iso-Area Uniform (Drude Au)", "gold_R100_n3", "gold_R150_n3", "gold_continuum", False),
+    ):
+        ch_b = ms_bem["channels"][m_tag]
+        sub_k = "cantor_pN" if is_c else "uniform_pN"
+        if f150_k in ms_fdtd:
+            fin_str = f"${ms_fdtd[f150_k][sub_k]:+.3f}$ ($R=150$)"
+        elif f100_k in ms_fdtd:
+            fin_str = f"${ms_fdtd[f100_k][sub_k]:+.3f}$ ($R=100$)"
+        else:
+            fin_str = "---"
+        if cont_k in ms_fdtd:
+            inf_k = "cantor_fdtd_inf_pN" if is_c else "uniform_fdtd_inf_pN"
+            dif_k = "cantor_rel_diff_pct" if is_c else "uniform_rel_diff_pct"
+            cont_str = f"${ms_fdtd[cont_k][inf_k]:+.3f}$"
+            dif_str = f"${ms_fdtd[cont_k][dif_k]:.1f}$"
+        else:
+            cont_str = "---"
+            dif_str = "---"
+        lines.append(
+            f"Multiscale 3-Trk & {lbl} & ${ch_b['tier3_pN']:+.3f}$ & "
+            f"${ch_b['continuum_pN']:+.3f}$ & {fin_str} & {cont_str} & {dif_str} \\\\"
+        )
+    lines.extend(["\\bottomrule", "\\end{tabular}", ""])
+    tex_str = "\n".join(lines)
+    res_tbl = ROOT / "results" / "table_h3_multiscale_bem_fdtd_convergence.tex"
+    _atomic_write_text(res_tbl, tex_str)
+    pap_tbl_dir = ROOT / "Papers" / "FCE_Nature_ver01" / "tables"
+    if pap_tbl_dir.exists():
+        _atomic_write_text(pap_tbl_dir / res_tbl.name, tex_str)
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.3), constrained_layout=True)
+
+    # Panel a: 5-tier single-setup RWG BEM h_eff convergence vs. 4-pass FDTD continuum
+    ax = axes[0]
+    for ch_k, lbl, col, mk in (
+        ("open_pec", "Open ($3^\\circ$) PEC", "#1b6ca8", "o"),
+        ("open_gold", "Open ($3^\\circ$) Drude Au", "#0f9d58", "s"),
+        ("engaged_gold", "Engaged ($48^\\circ$) Drude Au", "#d95f02", "^"),
+        ("engaged_pec", "Engaged ($48^\\circ$) PEC", "#c0392b", "D"),
+    ):
+        lad = b5[ch_k]["ladder"]
+        hs = [x["h_eff_nm"] for x in lad]
+        fs = [x["F_z_pN"] for x in lad]
+        ax.plot(hs, fs, marker=mk, lw=1.8, color=col, label=f"RWG BEM: {lbl}")
+        ax.scatter([0.0], [ag[ch_k]["fdtd_continuum_pN"]], marker="*", s=95, color=col, zorder=5)
+    ax.axhline(0.0, color="#444444", lw=0.8)
+    ax.set_xlabel("Effective RWG triangle size $h_{\\mathrm{eff}}$ (nm) [stars at $0$: FDTD $R\\to\\infty$]")
+    ax.set_ylabel("Axial Casimir force $F_z$ (pN)")
+    ax.set_title("a  5-Tier Exact RWG BEM vs. 4-Pass FDTD Continuum", loc="left", fontweight="bold")
+    ax.grid(True, alpha=0.28)
+    ax.legend(fontsize=7.2, loc="lower left")
+
+    # Panel b: Multiscale 3-track Cantor vs. Iso-Area Uniform (RWG BEM Tiers 1..3 + 4-pass FDTD)
+    ax = axes[1]
+    ms_ladders = summary["multiscale_rwg_ladders"]
+    for m_k, lbl, col, ls in (
+        ("cantor_pec", "Multiscale Cantor (PEC, RWG BEM)", "#1b6ca8", "-"),
+        ("uniform_pec", "Iso-Area Uniform (PEC, RWG BEM)", "#1b6ca8", "--"),
+        ("cantor_gold", "Multiscale Cantor (Drude Au, RWG BEM)", "#0f9d58", "-"),
+        ("uniform_gold", "Iso-Area Uniform (Drude Au, RWG BEM)", "#0f9d58", "--"),
+    ):
+        rows = ms_ladders[m_k]
+        ax.plot(
+            [r["h_eff_nm"] for r in rows],
+            [r["F_z_total_pN"] for r in rows],
+            marker="o",
+            ls=ls,
+            lw=1.8,
+            color=col,
+            label=lbl,
+        )
+    if "pec_R100_n3" in ms_fdtd:
+        ax.scatter([10.0], [ms_fdtd["pec_R100_n3"]["cantor_pN"]], marker="*", s=110, color="#c0392b", zorder=6, label="4-Pass FDTD Cantor (PEC)")
+        ax.scatter([10.0], [ms_fdtd["pec_R100_n3"]["uniform_pN"]], marker="P", s=85, color="#c0392b", zorder=6, label="4-Pass FDTD Uniform (PEC)")
+    if "pec_R150_n3" in ms_fdtd:
+        ax.scatter([6.67], [ms_fdtd["pec_R150_n3"]["cantor_pN"]], marker="*", s=110, color="#c0392b", zorder=6)
+        ax.scatter([6.67], [ms_fdtd["pec_R150_n3"]["uniform_pN"]], marker="P", s=85, color="#c0392b", zorder=6)
+    if "gold_R100_n3" in ms_fdtd:
+        ax.scatter([10.0], [ms_fdtd["gold_R100_n3"]["cantor_pN"]], marker="*", s=110, color="#d95f02", zorder=6, label="4-Pass FDTD Cantor (Au)")
+        ax.scatter([10.0], [ms_fdtd["gold_R100_n3"]["uniform_pN"]], marker="P", s=85, color="#d95f02", zorder=6, label="4-Pass FDTD Uniform (Au)")
+    if "gold_R150_n3" in ms_fdtd:
+        ax.scatter([6.67], [ms_fdtd["gold_R150_n3"]["cantor_pN"]], marker="*", s=110, color="#d95f02", zorder=6)
+        ax.scatter([6.67], [ms_fdtd["gold_R150_n3"]["uniform_pN"]], marker="P", s=85, color="#d95f02", zorder=6)
+    ax.axhline(0.0, color="#444444", lw=0.8)
+    ax.set_xlabel("Discretization scale $h_{\\mathrm{eff}}$ or $\\Delta x$ (nm)")
+    ax.set_ylabel("Open-slot repulsive force $F_z$ (pN)")
+    ax.set_title("b  Multiscale 3-Track Cantor vs. Iso-Area Uniform", loc="left", fontweight="bold")
+    ax.grid(True, alpha=0.28)
+    ax.legend(fontsize=6.8, loc="best")
+
+    fig_dir = ROOT / "figures"
+    fig_dir.mkdir(parents=True, exist_ok=True)
+    pap_fig_dir = ROOT / "Papers" / "FCE_Nature_ver01" / "figures"
+    src_rel = _rel_root_str(summary_path)
+    cols_used = [
+        "five_tier_single_setup_bem",
+        "upgraded_solver_agreement",
+        "multiscale_rwg_ladders",
+        "multiscale_fdtd_vs_bem",
+    ]
+    for ext in ("pdf", "png"):
+        f_out = fig_dir / f"fig_h3_multiscale_and_extended_convergence.{ext}"
+        fig.savefig(f_out, dpi=300)
+        save_plot_provenance(str(f_out), src_rel, cols_used)
+        if pap_fig_dir.exists():
+            m_out = pap_fig_dir / f_out.name
+            shutil.copy2(f_out, m_out)
+            save_plot_provenance(str(m_out), src_rel, cols_used)
+    plt.close(fig)
 
 
 def _log_extended_convergence_macros(summary: Mapping[str, Any], summary_path: Path) -> None:
@@ -938,14 +1189,30 @@ def _log_extended_convergence_macros(summary: Mapping[str, Any], summary_path: P
         kv["conv_dom_pml_pec_drift_pct"] = f"{dom['pml_240nm_vs_160nm_open_pec']['rel_drift_pct']:.2f}"
 
     ms_f = summary["multiscale_fdtd_vs_bem"]
+    if "pec_R100_n3" in ms_f:
+        kv["conv_ms_fdtd_r100_cantor_pec_pn"] = f"{ms_f['pec_R100_n3']['cantor_pN']:+.3f}"
+        kv["conv_ms_fdtd_r100_uniform_pec_pn"] = f"{ms_f['pec_R100_n3']['uniform_pN']:+.3f}"
+        kv["conv_ms_fdtd_r100_pec_gain_ratio"] = _fmt_ratio_macro(ms_f["pec_R100_n3"]["fdtd_gain_ratio"])
     if "pec_R150_n3" in ms_f:
         kv["conv_ms_fdtd_cantor_pec_pn"] = f"{ms_f['pec_R150_n3']['cantor_pN']:+.3f}"
         kv["conv_ms_fdtd_uniform_pec_pn"] = f"{ms_f['pec_R150_n3']['uniform_pN']:+.3f}"
         kv["conv_ms_fdtd_pec_gain_ratio"] = _fmt_ratio_macro(ms_f["pec_R150_n3"]["fdtd_gain_ratio"])
+    if "pec_continuum" in ms_f:
+        kv["conv_ms_fdtd_inf_cantor_pec_pn"] = f"{ms_f['pec_continuum']['cantor_fdtd_inf_pN']:+.3f}"
+        kv["conv_ms_fdtd_inf_uniform_pec_pn"] = f"{ms_f['pec_continuum']['uniform_fdtd_inf_pN']:+.3f}"
+        kv["conv_ms_fdtd_inf_pec_gain_ratio"] = _fmt_ratio_macro(ms_f["pec_continuum"]["fdtd_continuum_gain_ratio"])
+    if "gold_R100_n3" in ms_f:
+        kv["conv_ms_fdtd_r100_cantor_gold_pn"] = f"{ms_f['gold_R100_n3']['cantor_pN']:+.3f}"
+        kv["conv_ms_fdtd_r100_uniform_gold_pn"] = f"{ms_f['gold_R100_n3']['uniform_pN']:+.3f}"
+        kv["conv_ms_fdtd_r100_gold_gain_ratio"] = _fmt_ratio_macro(ms_f["gold_R100_n3"]["fdtd_gain_ratio"])
     if "gold_R150_n3" in ms_f:
         kv["conv_ms_fdtd_cantor_gold_pn"] = f"{ms_f['gold_R150_n3']['cantor_pN']:+.3f}"
         kv["conv_ms_fdtd_uniform_gold_pn"] = f"{ms_f['gold_R150_n3']['uniform_pN']:+.3f}"
         kv["conv_ms_fdtd_gold_gain_ratio"] = _fmt_ratio_macro(ms_f["gold_R150_n3"]["fdtd_gain_ratio"])
+    if "gold_continuum" in ms_f:
+        kv["conv_ms_fdtd_inf_cantor_gold_pn"] = f"{ms_f['gold_continuum']['cantor_fdtd_inf_pN']:+.3f}"
+        kv["conv_ms_fdtd_inf_uniform_gold_pn"] = f"{ms_f['gold_continuum']['uniform_fdtd_inf_pN']:+.3f}"
+        kv["conv_ms_fdtd_inf_gold_gain_ratio"] = _fmt_ratio_macro(ms_f["gold_continuum"]["fdtd_continuum_gain_ratio"])
 
     items = list(kv.items())
     for idx_i, (k, v) in enumerate(items):

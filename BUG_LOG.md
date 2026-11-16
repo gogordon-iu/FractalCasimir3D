@@ -414,3 +414,7 @@
 ### [BUG-261114-02] 2026-11-14 | execution/run_h3_single_setup_convergence.py | scope=model model=Maxwell_RWG_BEM_EFIE_PMCHWT dataset=H3_Cantor_SingleSetup_20nmLattice
 - **Bug**: `evaluate_fast_vector_dyadic_on_boxes` passed 6 positional arguments and `Gold_Drude` to `_vector_dyadic_blocks` / `MaterialModel`, raising `TypeError` in Section [D] after all 4 RWG BEM tiers completed.
 - **Solution**: Updated `evaluate_fast_vector_dyadic_on_boxes` to call `_vector_dyadic_blocks(target, source, 0, kap_f, same_body=...)` with single-pole Drude `MaterialModel` (`lorentz_oscillators=[]`) and `DenseBackend.factor_and_solve`.
+
+### [BUG-261116-01] 2026-11-16 | execution/run_h3_full_fractal_stability_suite.py | scope=infra
+- **Bug**: Cross-design CUDA LU factors accumulated to 37.5 GiB across 145 tasks, triggering OutOfMemoryError on 40 GB A100 at Tier-3 mesh Task 146.
+- **Solution**: Evict CUDA BEM LU caches whenever geometry/mesh cache keys change and add automatic CPU RAM fallback on CUDA OutOfMemoryError.
