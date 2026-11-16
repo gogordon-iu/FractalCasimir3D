@@ -167,6 +167,7 @@ def test_uf5_and_uf6_micro_probes_and_walltime_exit(
         p6 = json.loads((probe_dir / "probe_uf6_langevin_and_tolerances_report.json").read_text(encoding="utf-8"))
         assert p6["status"] == "micro_probe_completed"
         assert "sample_misalignment" in p6
+        assert "sample_roughness" in p6 and len(p6["sample_roughness"]) == 2
 
     # Verify walltime timeout returns exit code 75 for Slurm auto-resubmit chaining
     monkeypatch.setattr(uf5, "run_full_campaign", lambda _args: (_ for _ in ()).throw(TimeoutError("walltime")))

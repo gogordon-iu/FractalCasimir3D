@@ -42,12 +42,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from execution.casimir_bem_solver import ClutchSurfaceMesh, SurfacePanel
 from fractal_casimir_engine import ENGINE_DESIGN_NAMES
 from fractal_casimir_engine.bem_cycle_solver import (
+    EngineBodyPanels,
     Full4Sector6DofBemEvaluator,
     PreparedEngineBemModel,
-    build_engine_body_panels,
     detect_compute_device,
 )
 from fractal_casimir_engine.geometries import (
@@ -581,34 +580,21 @@ def evaluate_patch_and_dc_bias_budget(
     }
 
 
-def _perturb_mesh_roughness(
-    mesh: ClutchSurfaceMesh,
+def _perturb_body_panels_roughness(
+    panels: EngineBodyPanels,
     sigma_nm: float,
     rng: np.random.Generator,
-) -> ClutchSurfaceMesh:
-    """Apply zero-mean Gaussian normal displacement delta_h ~ N(0, sigma_nm^2) to every panel."""
+) -> EngineBodyPanels:
+    """Apply zero-mean clipped Gaussian normal displacement delta_h ~ N(0, sigma_nm^2) to EngineBodyPanels."""
     if sigma_nm <= 0.0:
-        return mesh
-    sig_um = sigma_nm * 1.0e-3
-
-    def shift_panels(panels: tuple[SurfacePanel, ...]) -> tuple[SurfacePanel, ...]:
-        out: list[SurfacePanel] = []
-        dh_arr = rng.normal(0.0, sig_um, size=len(panels))
-        for p, dh in zip(panels, dh_arr):
-            shift = float(dh) * p.normal
-            out.append(
-                dataclasses.replace(
-                    p,
-                    vertices=p.vertices + shift[None, :],
-                    centroid=p.centroid + shift,
-                )
-            )
-        return tuple(out)
-
+        return panels
+    sig_um = float(sigma_nm) * 1.0e-3
+    dh_um = np.clip(rng.normal(0.0, sig_um, size=panels.count), -2.2 * sig_um, 2.2 * sig_um)
+    shift_vec = dh_um[:, None] * panels.normals
     return dataclasses.replace(
-        mesh,
-        rotor=shift_panels(mesh.rotor),
-        stator=shift_panels(mesh.stator),
+        panels,
+        centroids=panels.centroids + shift_vec,
+        quad_points=panels.quad_points + shift_vec[:, None, :],
     )
 
 
@@ -625,7 +611,22 @@ def evaluate_roughness_bem_sweep(
     rng = np.random.default_rng(seed)
     rows: list[dict[str, Any]] = []
     sigmas = (0.0, 2.0) if max_steps > 0 else ROUGHNESS_SIGMA_NM
-    n_real = 2 if max_steps > 0 else n_realizations
+    n_real = 1 if max_steps > 0 else n_realizations
+
+    model = PreparedEngineBemModel(
+        design_name,
+        n_r=1 if max_steps > 0 else 2,
+        n_phi_tooth=2 if max_steps > 0 else 4,
+        n_phi_bridge=2 if max_steps > 0 else 4,
+        n_phi_arc_override=6 if max_steps > 0 else 12,
+        n_z=1 if max_steps > 0 else 2,
+        n_xi=min(max(1, int(max_steps)), 3) if max_steps > 0 else 16,
+        quad_order=2 if max_steps > 0 else 3,
+        device=device,
+        lazy_self_cache=True,
+    )
+    base_rotor = model.rotor_ref
+    base_stator = model.stator_ref
 
     for sig_nm in sigmas:
         s1_tau: list[float] = []
@@ -634,24 +635,17 @@ def evaluate_roughness_bem_sweep(
         s3_fz: list[float] = []
         reps = 1 if sig_nm == 0.0 else n_real
         for _ in range(reps):
-            model = PreparedEngineBemModel(
-                design_name,
-                n_r=1 if max_steps > 0 else 2,
-                n_phi_tooth=2 if max_steps > 0 else 4,
-                n_phi_bridge=2 if max_steps > 0 else 4,
-                n_phi_arc_override=6 if max_steps > 0 else 12,
-                n_z=1 if max_steps > 0 else 2,
-                n_xi=4 if max_steps > 0 else 16,
-                quad_order=2 if max_steps > 0 else 3,
-                device=device,
-                lazy_self_cache=True,
-            )
             if sig_nm > 0.0:
-                rmesh = _perturb_mesh_roughness(model.ref_mesh, sig_nm, rng)
-                model.rotor_ref = build_engine_body_panels(rmesh.rotor, quad_order=model.quad_order)
-                model.stator_ref = build_engine_body_panels(rmesh.stator, quad_order=model.quad_order)
+                model.rotor_ref = _perturb_body_panels_roughness(base_rotor, sig_nm, rng)
+                model.stator_ref = _perturb_body_panels_roughness(base_stator, sig_nm, rng)
+            else:
+                model.rotor_ref = base_rotor
+                model.stator_ref = base_stator
+            model.cache = ()  # Explicitly invalidate any frequency self-factor cache for modified panel geometry
             evals = model.evaluate_states_batch(
-                [(-0.092, 22.0), (-0.084, 64.0)], max_steps=max_steps
+                [(-0.092, 22.0), (-0.084, 64.0)],
+                max_steps=max_steps,
+                min_clearance_um=0.004,
             )
             s1_fz.append(float(evals[0]["f_z_pN"]))
             s1_tau.append(float(evals[0]["tau_theta_pN_um"]))
@@ -930,7 +924,10 @@ def run_micro_probe(args: argparse.Namespace) -> int:
     )
     ev6 = Full4Sector6DofBemEvaluator(base)
     mis_sample = evaluate_misaligned_pose_fz_tau(
-        ev6, dx_um=0.006, rx_rad=0.001, z_tip_um=-0.092, theta_deg=22.0, max_steps=args.max_steps
+        ev6, dx_um=0.006, rx_rad=0.001, z_tip_um=-0.092, theta_deg=22.0, max_steps=probe_steps
+    )
+    rough_sample = evaluate_roughness_bem_sweep(
+        "Config_D_DualStator_PushPull", device=device, n_realizations=1, max_steps=probe_steps
     )
 
     out_path = UF_RESULTS_DIR / "probe_uf6_langevin_and_tolerances_report.json"
@@ -943,6 +940,7 @@ def run_micro_probe(args: argparse.Namespace) -> int:
         "elapsed_seconds": time.perf_counter() - started,
         "sample_equilibrium_300K": eq_res,
         "sample_patch_vrms_20mV": patch_res["patch_vrms_sweep"][4],
+        "sample_roughness": rough_sample,
         "sample_misalignment": mis_sample,
     }
     atomic_write_json(out_path, payload)
