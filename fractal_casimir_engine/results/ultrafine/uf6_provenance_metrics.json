@@ -1,0 +1,460 @@
+{
+  "run_metadata": {
+    "created_at": "2026-11-17T04:10:38.489892+00:00",
+    "updated_at": "2026-11-17T04:10:38.855067+00:00",
+    "environment": "Windows",
+    "entry_point": "fractal_casimir_engine/run_ultrafine_langevin_and_tolerances.py",
+    "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+    "solver_parameters": {
+      "dataset": "fractal_casimir_engine_cycle",
+      "n_trajectories": 256,
+      "horizon_us": 500.0,
+      "temperatures_K": [
+        0.0,
+        4.0,
+        77.0,
+        300.0
+      ],
+      "patch_vrms_mV": [
+        0.0,
+        5.0,
+        10.0,
+        15.0,
+        20.0,
+        30.0
+      ],
+      "roughness_sigma_nm": [
+        0.0,
+        1.0,
+        2.0,
+        3.0
+      ],
+      "eccentricity_dx_nm": [
+        0.0,
+        4.0,
+        8.0,
+        12.0
+      ]
+    },
+    "solver_runs": [
+      {
+        "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+        "solver_parameters": {
+          "dataset": "fractal_casimir_engine_cycle",
+          "n_trajectories": 256,
+          "horizon_us": 500.0,
+          "temperatures_K": [
+            0.0,
+            4.0,
+            77.0,
+            300.0
+          ],
+          "patch_vrms_mV": [
+            0.0,
+            5.0,
+            10.0,
+            15.0,
+            20.0,
+            30.0
+          ],
+          "roughness_sigma_nm": [
+            0.0,
+            1.0,
+            2.0,
+            3.0
+          ],
+          "eccentricity_dx_nm": [
+            0.0,
+            4.0,
+            8.0,
+            12.0
+          ]
+        },
+        "timestamp": "2026-11-17T04:10:38.748268+00:00"
+      }
+    ]
+  },
+  "intermediate_steps": {
+    "uf6_langevin_and_tolerances": {
+      "timestamp": "2026-11-17T04:10:38.759720+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 389,
+      "data_summary": {
+        "eq_300K_drift_deg": 0.004,
+        "eq_300K_se_deg": 0.01,
+        "eq_300K_equipartition_th": 1.0294,
+        "config_d_gated_300K_mean_deg": 5868.9,
+        "config_d_gated_300K_peclet": 3.97,
+        "config_b_vo2_300K_mean_deg": 784.8,
+        "config_b_vo2_300K_peclet": 0.46,
+        "config_d_si_300K_mean_deg": 588.6,
+        "config_d_si_77K_mean_deg": 605.7,
+        "sym_300K_gated_mean_deg": 13.04,
+        "config_d_ref_stroke1_tau_pN_um": 1.0848,
+        "config_d_patch_30mV_pinning_tau_pN_um": 0.26411,
+        "config_d_casimir_to_patch30mV_snr": 4.1,
+        "config_d_ecc12nm_tau_retain_pct": 103.5,
+        "config_d_rough3nm_tau_retain_pct": 106.6
+      },
+      "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_trajectories": 256,
+        "horizon_us": 500.0,
+        "temperatures_K": [
+          0.0,
+          4.0,
+          77.0,
+          300.0
+        ],
+        "patch_vrms_mV": [
+          0.0,
+          5.0,
+          10.0,
+          15.0,
+          20.0,
+          30.0
+        ],
+        "roughness_sigma_nm": [
+          0.0,
+          1.0,
+          2.0,
+          3.0
+        ],
+        "eccentricity_dx_nm": [
+          0.0,
+          4.0,
+          8.0,
+          12.0
+        ]
+      }
+    }
+  },
+  "metrics": {
+    "engine_uf6_eq_drift_deg": {
+      "value": 0.004,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf6_langevin_and_tolerances",
+      "recorded_at": "2026-11-17T04:10:38.771964+00:00",
+      "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_trajectories": 256,
+        "horizon_us": 500.0,
+        "temperatures_K": [
+          0.0,
+          4.0,
+          77.0,
+          300.0
+        ],
+        "patch_vrms_mV": [
+          0.0,
+          5.0,
+          10.0,
+          15.0,
+          20.0,
+          30.0
+        ],
+        "roughness_sigma_nm": [
+          0.0,
+          1.0,
+          2.0,
+          3.0
+        ],
+        "eccentricity_dx_nm": [
+          0.0,
+          4.0,
+          8.0,
+          12.0
+        ]
+      }
+    },
+    "engine_uf6_cfg_d_300k_deg": {
+      "value": 5868.9,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf6_langevin_and_tolerances",
+      "recorded_at": "2026-11-17T04:10:38.783277+00:00",
+      "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_trajectories": 256,
+        "horizon_us": 500.0,
+        "temperatures_K": [
+          0.0,
+          4.0,
+          77.0,
+          300.0
+        ],
+        "patch_vrms_mV": [
+          0.0,
+          5.0,
+          10.0,
+          15.0,
+          20.0,
+          30.0
+        ],
+        "roughness_sigma_nm": [
+          0.0,
+          1.0,
+          2.0,
+          3.0
+        ],
+        "eccentricity_dx_nm": [
+          0.0,
+          4.0,
+          8.0,
+          12.0
+        ]
+      }
+    },
+    "engine_uf6_cfg_d_300k_peclet": {
+      "value": 3.97,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf6_langevin_and_tolerances",
+      "recorded_at": "2026-11-17T04:10:38.795752+00:00",
+      "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_trajectories": 256,
+        "horizon_us": 500.0,
+        "temperatures_K": [
+          0.0,
+          4.0,
+          77.0,
+          300.0
+        ],
+        "patch_vrms_mV": [
+          0.0,
+          5.0,
+          10.0,
+          15.0,
+          20.0,
+          30.0
+        ],
+        "roughness_sigma_nm": [
+          0.0,
+          1.0,
+          2.0,
+          3.0
+        ],
+        "eccentricity_dx_nm": [
+          0.0,
+          4.0,
+          8.0,
+          12.0
+        ]
+      }
+    },
+    "engine_uf6_cfg_b_vo2_300k_deg": {
+      "value": 784.8,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf6_langevin_and_tolerances",
+      "recorded_at": "2026-11-17T04:10:38.807412+00:00",
+      "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_trajectories": 256,
+        "horizon_us": 500.0,
+        "temperatures_K": [
+          0.0,
+          4.0,
+          77.0,
+          300.0
+        ],
+        "patch_vrms_mV": [
+          0.0,
+          5.0,
+          10.0,
+          15.0,
+          20.0,
+          30.0
+        ],
+        "roughness_sigma_nm": [
+          0.0,
+          1.0,
+          2.0,
+          3.0
+        ],
+        "eccentricity_dx_nm": [
+          0.0,
+          4.0,
+          8.0,
+          12.0
+        ]
+      }
+    },
+    "engine_uf6_cfg_d_si_300k_deg": {
+      "value": 588.6,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf6_langevin_and_tolerances",
+      "recorded_at": "2026-11-17T04:10:38.820871+00:00",
+      "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_trajectories": 256,
+        "horizon_us": 500.0,
+        "temperatures_K": [
+          0.0,
+          4.0,
+          77.0,
+          300.0
+        ],
+        "patch_vrms_mV": [
+          0.0,
+          5.0,
+          10.0,
+          15.0,
+          20.0,
+          30.0
+        ],
+        "roughness_sigma_nm": [
+          0.0,
+          1.0,
+          2.0,
+          3.0
+        ],
+        "eccentricity_dx_nm": [
+          0.0,
+          4.0,
+          8.0,
+          12.0
+        ]
+      }
+    },
+    "engine_uf6_patch30_snr": {
+      "value": 4.1,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf6_langevin_and_tolerances",
+      "recorded_at": "2026-11-17T04:10:38.830783+00:00",
+      "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_trajectories": 256,
+        "horizon_us": 500.0,
+        "temperatures_K": [
+          0.0,
+          4.0,
+          77.0,
+          300.0
+        ],
+        "patch_vrms_mV": [
+          0.0,
+          5.0,
+          10.0,
+          15.0,
+          20.0,
+          30.0
+        ],
+        "roughness_sigma_nm": [
+          0.0,
+          1.0,
+          2.0,
+          3.0
+        ],
+        "eccentricity_dx_nm": [
+          0.0,
+          4.0,
+          8.0,
+          12.0
+        ]
+      }
+    },
+    "engine_uf6_ecc12_retain_pct": {
+      "value": 103.5,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf6_langevin_and_tolerances",
+      "recorded_at": "2026-11-17T04:10:38.842755+00:00",
+      "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_trajectories": 256,
+        "horizon_us": 500.0,
+        "temperatures_K": [
+          0.0,
+          4.0,
+          77.0,
+          300.0
+        ],
+        "patch_vrms_mV": [
+          0.0,
+          5.0,
+          10.0,
+          15.0,
+          20.0,
+          30.0
+        ],
+        "roughness_sigma_nm": [
+          0.0,
+          1.0,
+          2.0,
+          3.0
+        ],
+        "eccentricity_dx_nm": [
+          0.0,
+          4.0,
+          8.0,
+          12.0
+        ]
+      }
+    },
+    "engine_uf6_rough3_retain_pct": {
+      "value": 106.6,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf6_langevin_and_tolerances",
+      "recorded_at": "2026-11-17T04:10:38.855052+00:00",
+      "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_trajectories": 256,
+        "horizon_us": 500.0,
+        "temperatures_K": [
+          0.0,
+          4.0,
+          77.0,
+          300.0
+        ],
+        "patch_vrms_mV": [
+          0.0,
+          5.0,
+          10.0,
+          15.0,
+          20.0,
+          30.0
+        ],
+        "roughness_sigma_nm": [
+          0.0,
+          1.0,
+          2.0,
+          3.0
+        ],
+        "eccentricity_dx_nm": [
+          0.0,
+          4.0,
+          8.0,
+          12.0
+        ]
+      }
+    }
+  },
+  "model": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+  "dataset": "fractal_casimir_engine_cycle",
+  "status": "completed",
+  "executed_at": "2026-11-17T04:10:38.855112+00:00"
+}

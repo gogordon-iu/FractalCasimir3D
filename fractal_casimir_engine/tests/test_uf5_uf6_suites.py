@@ -191,3 +191,53 @@ def test_extended_suites_aggregation_check(tmp_path: Path) -> None:
     missing_text = "\n".join(res["missing"])
     assert "eng_uf5" in missing_text and "eng_uf6" in missing_text
 
+
+def test_uf5_export_provenance_and_figure_from_stub_report(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """export_uf5_provenance_and_figure must emit metrics, macros, and figure sidecars cleanly."""
+    from fractal_casimir_engine import run_ultrafine_cantor_ablation as uf5
+
+    uf_dir = tmp_path / "uf"
+    fig_dir = tmp_path / "figs"
+    uf_dir.mkdir(parents=True, exist_ok=True)
+    fig_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(uf5, "UF_RESULTS_DIR", uf_dir)
+    monkeypatch.setattr(uf5, "ENGINE_FIGURES_DIR", fig_dir)
+
+    cell = {
+        "benchmark_states": {
+            "Stroke_I_Repulsive": {"tau_theta_pN_um": 0.8},
+            "Stroke_III_Attractive": {"tau_theta_pN_um": 0.6},
+            "mean_dual_stroke_tau_pN_um": 0.7,
+        },
+        "cycle_energetics": {"w_power_strokes_aJ": 0.32},
+        "gated_dynamics": {"net_rotation_deg": 420.0},
+        "stability_6dof": {"torque_to_pullin_fom_nm_um": 1.25},
+    }
+    matrix = {d: {h: cell for h in uf5.HIERARCHY_NAMES} for d in uf5.ABLATION_DESIGNS}
+    rep = {
+        "suite": "eng_uf5",
+        "status": "completed",
+        "time_truncated": False,
+        "hierarchies": list(uf5.HIERARCHY_NAMES),
+        "summary": {
+            "config_d_n0_mean_tau_pN_um": 0.2,
+            "config_d_n2_mean_tau_pN_um": 0.8,
+            "config_d_uni_mean_tau_pN_um": 0.5,
+            "config_d_n3_mean_tau_pN_um": 0.9,
+            "config_d_n2_vs_n0_tau_gain": 4.0,
+            "config_d_n2_vs_uniform_tau_gain": 1.6,
+            "config_d_n3_spin_up_deg": 450.0,
+        },
+        "matrix": matrix,
+    }
+    rep_path = uf_dir / "uf5_cantor_ablation_report.json"
+    rep_path.write_text(json.dumps(rep), encoding="utf-8")
+    rc = uf5.main(["--from-report", str(rep_path)])
+    assert rc == 0
+    assert (uf_dir / "uf5_provenance_metrics.json").is_file()
+    assert (uf_dir / "uf5_macros_results.tex").is_file()
+    assert (fig_dir / "fig_uf5_cantor_scaling.png.provenance.json").is_file()
+
+

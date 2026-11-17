@@ -450,3 +450,7 @@
 ### [BUG-261116-02] 2026-11-16 | `fractal_casimir_engine/slurm/submit_eng_uf5_cantor_gpu.slurm`, `submit_eng_uf6_langevin_gpu.slurm` | scope=infra
 - **Bug**: Telemetry injection omitted --results-dir/--figures-dir, defaulting staging to root results/ instead of fractal_casimir_engine/results/ultrafine.
 - **Solution**: Re-injected submit_eng_uf5 and submit_eng_uf6 with explicit fractal_casimir_engine/results/ultrafine and fractal_casimir_engine/figures paths.
+
+### [BUG-261116-03] 2026-11-16 | `fractal_casimir_engine/run_ultrafine_cantor_ablation.py`, `run_ultrafine_langevin_and_tolerances.py` | scope=infra
+- **Bug**: set_solver_provenance received unsupported dataset_name kwarg after saving completed UF6 report JSON.
+- **Solution**: Passed dataset via solver_parameters per metrics_logger API, added --from-report export helper, and tested UF5/UF6 provenance export.

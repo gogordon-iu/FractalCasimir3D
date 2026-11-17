@@ -500,20 +500,30 @@ def run_full_campaign(args: argparse.Namespace) -> int:
         "matrix": matrix,
     }
     atomic_write_json(rep_path, report)
+    export_uf5_provenance_and_figure(report, rep_path)
+    return 0
 
+
+def export_uf5_provenance_and_figure(report: dict[str, Any], rep_path: Path) -> None:
+    """Export grounded provenance ledger, LaTeX macros, and 4-panel figure from a completed UF5 report."""
+    if report.get("status") != "completed" or report.get("time_truncated", False):
+        raise ValueError("Refusing to export provenance/macros from an incomplete or time-truncated UF5 report.")
+    summary = report["summary"]
+    # utils.metrics_logger.set_solver_provenance(solver_name, solver_parameters, metrics_path=...)
+    # accepts no dataset_name kwarg; it populates manifest["dataset"] from solver_parameters["dataset"].
     solver_params = {
+        "dataset": "fractal_casimir_engine_cycle",
         "n_xi": 20,
         "quad_order": 3,
-        "z_nodes": len(z_grid),
-        "theta_nodes": len(th_grid),
-        "hierarchies": list(HIERARCHY_NAMES),
+        "z_nodes": 6,
+        "theta_nodes": 30,
+        "hierarchies": list(report.get("hierarchies", HIERARCHY_NAMES)),
     }
     uf5_metrics = UF_RESULTS_DIR / "uf5_provenance_metrics.json"
     uf5_macros = UF_RESULTS_DIR / "uf5_macros_results.tex"
     set_solver_provenance(
         "BEM_UltraFine_3D_CantorHierarchyAblation",
         solver_params,
-        dataset_name="fractal_casimir_engine_cycle",
         metrics_path=str(uf5_metrics),
     )
     log_step("uf5_cantor_hierarchy_ablation", summary, metrics_path=str(uf5_metrics))
@@ -530,7 +540,6 @@ def run_full_campaign(args: argparse.Namespace) -> int:
     fig_pdf = ENGINE_FIGURES_DIR / "fig_uf5_cantor_scaling.pdf"
     generate_uf5_figure(report, fig_png, fig_pdf, rep_path, solver_params)
     print(f"[UF5 COMPLETE] Saved report -> {rep_path} and figure -> {fig_png}", flush=True)
-    return 0
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -546,12 +555,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--max-walltime-hours", type=float, default=0.0, help="Graceful checkpoint exit threshold.")
     p.add_argument("--max-memory-gib", type=float, default=34.0)
     p.add_argument("--no-cache", action="store_true")
+    p.add_argument("--from-report", type=Path, default=None, help="Re-export provenance, macros, and figure from an existing report JSON.")
     return p.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     try:
+        if args.from_report is not None:
+            rep = json.loads(args.from_report.read_text(encoding="utf-8"))
+            export_uf5_provenance_and_figure(rep, args.from_report)
+            return 0
         if args.max_steps > 0:
             return run_micro_probe(args)
         return run_full_campaign(args)
