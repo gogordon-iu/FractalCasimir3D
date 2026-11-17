@@ -1,0 +1,53 @@
+{
+  "figure_file": "C:/Users/gorengor/Goren/IUB/Research/FractalCasimirEffect/Code/3Dsimulations/.worktrees/fractal-casimir-engine/fractal_casimir_engine/figures/fig_uf6_langevin_and_tolerances.pdf",
+  "timestamp": "2026-11-17T04:10:42.144198+00:00",
+  "input_source": {
+    "path": "fractal_casimir_engine/results/ultrafine/uf6_langevin_and_tolerances_report.json",
+    "sha256": "57ec6ded01dd1c945f300636026003f70aea237982e96d856bc8db3ea79a28f0"
+  },
+  "data_slices_columns": [
+    "equilibrium_no_go_audit",
+    "langevin_gated",
+    "temperature_scaling",
+    "patch_potentials",
+    "misalignment_bem",
+    "roughness_bem_config_d"
+  ],
+  "generating_code": {
+    "source_file": "utils/metrics_logger.py",
+    "source_function": "save_plot_provenance",
+    "line_number": 595
+  },
+  "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+  "solver_parameters": {
+    "dataset": "fractal_casimir_engine_cycle",
+    "n_trajectories": 256,
+    "horizon_us": 500.0,
+    "temperatures_K": [
+      0.0,
+      4.0,
+      77.0,
+      300.0
+    ],
+    "patch_vrms_mV": [
+      0.0,
+      5.0,
+      10.0,
+      15.0,
+      20.0,
+      30.0
+    ],
+    "roughness_sigma_nm": [
+      0.0,
+      1.0,
+      2.0,
+      3.0
+    ],
+    "eccentricity_dx_nm": [
+      0.0,
+      4.0,
+      8.0,
+      12.0
+    ]
+  }
+}
