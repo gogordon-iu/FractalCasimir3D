@@ -1672,8 +1672,6 @@ def run_stability_suite(
     )
 
     # Central finite-difference derivative of log-det Casimir energy vs analytical trace force
-    # Note: z_shift_um = -z_rotor_center => increasing z_shift_um moves rotor DOWNWARD (-z), so
-    # F_z = -dE/dz_rotor = + (E(z_shift - dz) - E(z_shift + dz)) / (2 * dz)
     dz_m_step = 2.0 * 0.0005 * 1.0e-6
     e_open_m = float(results_map["S4_fdtrace_open_minus"]["energy_J"])
     e_open_p = float(results_map["S4_fdtrace_open_plus"]["energy_J"])
@@ -1742,7 +1740,7 @@ def run_stability_suite(
 def _fmt_sf_tex(val: float) -> str:
     if val <= 0.0 or not math.isfinite(val):
         return "0"
-    if val < 1000.0:
+    if 0.1 <= val < 1000.0:
         return f"{val:.1f}"
     exp = int(math.floor(math.log10(val)))
     mant = val / (10.0**exp)
@@ -1818,7 +1816,8 @@ def _log_stability_macros_and_table(summary: Mapping[str, Any], summary_path: Pa
         "stab_reg1_fz_khz_disp": f"{r1['f_z_resonance_kHz']:.1f}",
         "stab_reg1_snr1s_q4_disp": f"{r1['thermomechanical_snr']['Q_10000']['SNR_open_1s']:.0f}",
         "stab_reg1_snr1s_q5_disp": f"{r1['thermomechanical_snr']['Q_100000']['SNR_open_1s']:.0f}",
-        "stab_reg1_tau5_q4_ms_disp": f"{r1['thermomechanical_snr']['Q_10000']['tau_for_SNR5_open_ms']:.2f}",
+        "stab_reg1_tau5_q4_ms_disp": f"{r1['thermomechanical_snr']['Q_10000']['tau_for_SNR5_open_ms']:.6f}",
+        "stab_reg1_tau5_q4_us_disp": f"{r1['thermomechanical_snr']['Q_10000']['tau_for_SNR5_open_ms'] * 1000.0:.3f}",
         "stab_reg2_kz_disp": f"{r2['k_z_mech_N_per_m']:.4f}",
         "stab_reg2_kr_disp": f"{r2['k_r_mech_N_per_m']:.2f}",
         "stab_reg2_sfr_disp": _fmt_sf_tex(r2["SF_radial_earnshaw"]),
@@ -1828,7 +1827,7 @@ def _log_stability_macros_and_table(summary: Mapping[str, Any], summary_path: Pa
         "stab_reg2_fz_khz_disp": f"{r2['f_z_resonance_kHz']:.1f}",
         "stab_reg2_snr1s_q4_disp": f"{r2['thermomechanical_snr']['Q_10000']['SNR_open_1s']:.0f}",
         "stab_reg2_snr1s_q5_disp": f"{r2['thermomechanical_snr']['Q_100000']['SNR_open_1s']:.0f}",
-        "stab_reg3_kz_disp": f"{r3['k_z_mech_N_per_m']:.4f}",
+        "stab_reg3_kz_disp": _fmt_sf_tex(r3["k_z_mech_N_per_m"]),
         "stab_reg3_kr_disp": f"{r3['k_r_mech_N_per_m']:.2f}",
         "stab_reg3_sfr_disp": _fmt_sf_tex(r3["SF_radial_earnshaw"]),
         "stab_reg3_sftilt_disp": _fmt_sf_tex(r3["SF_tilt_rocking"]),
@@ -1872,8 +1871,8 @@ def _log_stability_macros_and_table(summary: Mapping[str, Any], summary_path: Pa
         "stab_r5_eng_t3_disp": f"{bval['r5nm_engaged_H3_Cantor']['Tier3_pN']:+.2f}",
         "stab_r5_eng_rich_disp": f"{bval['r5nm_engaged_H3_Cantor']['Richardson_pN']:+.2f}",
         "stab_quad_drift_20_36_pct": f"{bval['quadrature_drift_20_to_36_pct']:.4f}",
-        "stab_fd_vs_trace_open_pct": f"{bval['trace_vs_energy_fd']['open_rel_diff_pct']:.3f}",
-        "stab_fd_vs_trace_eng_pct": f"{bval['trace_vs_energy_fd']['engaged_rel_diff_pct']:.3f}",
+        "stab_fd_vs_trace_open_pct": f"{bval['trace_vs_energy_fd']['open_rel_diff_pct']:.2f}",
+        "stab_fd_vs_trace_eng_pct": f"{bval['trace_vs_energy_fd']['engaged_rel_diff_pct']:.2f}",
     }
 
     for row in p4["scale_ratio_b_scan"]:
@@ -1906,7 +1905,7 @@ def _log_stability_macros_and_table(summary: Mapping[str, Any], summary_path: Pa
         "\\midrule",
         f"6-DOF Suspension & Isometric (Regime I) & {_mref('stab_reg1_kz_disp')} & {_mref('stab_reg1_kr_disp')} & ${{{_mref('stab_reg1_sfr_disp')}}}$ & ${{{_mref('stab_reg1_sftilt_disp')}}}$ & ${_mref('stab_reg1_lift_pm_disp')}\\,\\mathrm{{pm}}$ & ${_mref('stab_reg1_fz_khz_disp')}\\,\\mathrm{{kHz}}$ & {_mref('stab_reg1_snr1s_q4_disp')} / {_mref('stab_reg1_snr1s_q5_disp')} \\\\",
         f"6-DOF Suspension & nm-Stroke (Regime II) & {_mref('stab_reg2_kz_disp')} & {_mref('stab_reg2_kr_disp')} & ${{{_mref('stab_reg2_sfr_disp')}}}$ & ${{{_mref('stab_reg2_sftilt_disp')}}}$ & ${_mref('stab_reg2_lift_nm_disp')}\\,\\mathrm{{nm}}$ & ${_mref('stab_reg2_fz_khz_disp')}\\,\\mathrm{{kHz}}$ & {_mref('stab_reg2_snr1s_q4_disp')} / {_mref('stab_reg2_snr1s_q5_disp')} \\\\",
-        f"6-DOF Suspension & Long-Stroke (Regime III) & {_mref('stab_reg3_kz_disp')} & {_mref('stab_reg3_kr_disp')} & ${{{_mref('stab_reg3_sfr_disp')}}}$ & ${{{_mref('stab_reg3_sftilt_disp')}}}$ & ${_mref('stab_reg3_lift_nm_disp')}\\,\\mathrm{{nm}}$ & ${_mref('stab_reg3_fz_khz_disp')}\\,\\mathrm{{kHz}}$ & {_mref('stab_reg3_snr1s_q4_disp')} / {_mref('stab_reg3_snr1s_q5_disp')} \\\\",
+        f"6-DOF Suspension & Long-Stroke (Regime III) & ${{{_mref('stab_reg3_kz_disp')}}}$ & {_mref('stab_reg3_kr_disp')} & ${{{_mref('stab_reg3_sfr_disp')}}}$ & ${{{_mref('stab_reg3_sftilt_disp')}}}$ & ${_mref('stab_reg3_lift_nm_disp')}\\,\\mathrm{{nm}}$ & ${_mref('stab_reg3_fz_khz_disp')}\\,\\mathrm{{kHz}}$ & {_mref('stab_reg3_snr1s_q4_disp')} / {_mref('stab_reg3_snr1s_q5_disp')} \\\\",
         "\\midrule",
     ]
     for row in p4["scale_ratio_b_scan"]:

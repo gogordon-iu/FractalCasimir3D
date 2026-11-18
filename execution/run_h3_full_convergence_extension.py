@@ -837,35 +837,51 @@ def aggregate_extended_convergence(
             (ext_fdtd_records[i] for i in t_ids if i in ext_fdtd_records),
             key=lambda r_item: (int(r_item["resolution"]), int(r_item["nmax"])),
         )
-        has_high_r = any(int(r_item["resolution"]) > 150 for r_item in avail)
-        if len(avail) >= 1 and has_high_r:
-            # Direct high-nmax spatial Richardson extrapolation between R=150, 200, 250 at nmax=4/5!
+        has_r250_n4 = any(int(r_item["resolution"]) == 250 and int(r_item["nmax"]) == 4 for r_item in avail)
+        has_r200_n4 = any(int(r_item["resolution"]) == 200 and int(r_item["nmax"]) == 4 for r_item in avail)
+        if has_r200_n4 and (has_r250_n4 or int(base_ag["fdtd_spatial_finest_R"]) <= 200):
+            # Matched-nmax=4 spatial Richardson extrapolation + high-R multipole tail completeness
             m_r150 = {int(x["nmax"]): float(x["f_net_pN"]) for x in base_conv_summary["fdtd_multipole_ladders"][ch_key]}
-            # Fit P(3, alpha * nmax) completeness factor at R=150
-            ns = np.array([2.0, 3.0, 4.0, 5.0])
-            ys = np.array([m_r150[int(n)] for n in ns])
-            popt, _ = curve_fit(
-                lambda n, finf, a: finf * gammainc(3.0, a * n),
-                ns,
-                np.abs(ys),
-                p0=[abs(ys[-1]) * 1.04, 1.15],
-                bounds=([abs(ys[-1]) * 0.9, 0.2], [abs(ys[-1]) * 2.5, 5.0]),
-                maxfev=10000,
-            )
-            alpha_fit = float(popt[1])
-            # Correct each high-R point by its analytical 1 / P(3, alpha * nmax) tail factor
-            by_r: dict[int, float] = {150: m_r150[5] / float(gammainc(3.0, 5.0 * alpha_fit))}
-            for rec_a in avail:
-                c_fac = max(float(gammainc(3.0, float(rec_a["nmax"]) * alpha_fit)), 1.0e-9)
-                by_r[int(rec_a["resolution"])] = float(rec_a["f_net_pN"]) / c_fac
-            r_sorted = sorted(by_r.keys())
-            if len(r_sorted) < 2:
-                raise RuntimeError(f"Expected >=2 distinct spatial resolutions for {ch_key}, got {r_sorted}")
-            r1, r2 = r_sorted[-2], r_sorted[-1]
-            f1, f2 = by_r[r1], by_r[r2]
+            by_rn = {(int(r_item["resolution"]), int(r_item["nmax"])): float(r_item["f_net_pN"]) for r_item in avail}
+            if has_r250_n4:
+                r1, r2 = 200, 250
+                f1, f2 = by_rn[(200, 4)], by_rn[(250, 4)]
+            else:
+                r1, r2 = 150, 200
+                f1, f2 = m_r150[4], by_rn[(200, 4)]
             dx1_2, dx2_2 = (1.0 / r1) ** 2, (1.0 / r2) ** 2
-            fdtd_inf = float(f2 + (f2 - f1) * dx2_2 / (dx1_2 - dx2_2))
-            fdtd_se = float(0.5 * abs(fdtd_inf - f2) + 0.02 * abs(fdtd_inf))
+            f_spatial_inf_n4 = float(f2 + (f2 - f1) * dx2_2 / (dx1_2 - dx2_2))
+
+            alpha_fit: float | None = None
+            if (
+                (200, 5) in by_rn
+                and math.isfinite(by_rn[(200, 5)])
+                and math.isfinite(by_rn[(200, 4)])
+                and (by_rn[(200, 5)] * by_rn[(200, 4)] > 0.0)
+                and abs(by_rn[(200, 4)]) > 1.0e-12
+            ):
+                target_ratio = abs(by_rn[(200, 5)]) / abs(by_rn[(200, 4)])
+                alpha_grid = np.linspace(0.2, 5.0, 20000)
+                ratio_grid = gammainc(3.0, 5.0 * alpha_grid) / np.maximum(gammainc(3.0, 4.0 * alpha_grid), 1.0e-12)
+                if float(np.min(ratio_grid)) < target_ratio < float(np.max(ratio_grid)):
+                    alpha_fit = float(alpha_grid[int(np.argmin(np.abs(ratio_grid - target_ratio)))])
+
+            if alpha_fit is None:
+                ns = np.array([2.0, 3.0, 4.0, 5.0])
+                ys = np.array([m_r150[int(n)] for n in ns])
+                popt, _ = curve_fit(
+                    lambda n, finf, a: finf * gammainc(3.0, a * n),
+                    ns,
+                    np.abs(ys),
+                    p0=[abs(ys[-1]) * 1.04, 1.15],
+                    bounds=([abs(ys[-1]) * 0.9, 0.2], [abs(ys[-1]) * 2.5, 5.0]),
+                    maxfev=10000,
+                )
+                alpha_fit = float(popt[1])
+
+            c4_fac = max(float(gammainc(3.0, 4.0 * alpha_fit)), 1.0e-9)
+            fdtd_inf = float(f_spatial_inf_n4 / c4_fac)
+            fdtd_se = float(0.5 * abs(fdtd_inf - (f2 / c4_fac)) + 0.02 * abs(fdtd_inf))
             finest_rec = max(avail, key=lambda x: (x["resolution"], x["nmax"]))
             fdtd_finest = float(finest_rec["f_net_pN"])
             rel_diff = abs(fdtd_inf - b5["continuum_pN"]) / max(abs(b5["continuum_pN"]), 1e-12) * 100.0
@@ -959,25 +975,48 @@ def aggregate_extended_convergence(
                 "uniform_rel_diff_pct": float(100.0 * abs(u_inf - bu_inf) / max(abs(bu_inf), 1e-12)),
             }
 
+    # Also record completed single-design multiscale FDTD tasks (e.g. R=150 uniform controls 16, 18)
+    single_ms_fdtd: dict[str, dict[str, Any]] = {}
+    for ms_key, tid in (
+        ("cantor_pec_R100", 13),
+        ("uniform_pec_R100", 14),
+        ("cantor_pec_R150", 15),
+        ("uniform_pec_R150", 16),
+        ("cantor_gold_R150", 17),
+        ("uniform_gold_R150", 18),
+        ("cantor_gold_R100", 19),
+        ("uniform_gold_R100", 20),
+    ):
+        if tid in ext_fdtd_records:
+            single_ms_fdtd[ms_key] = {
+                "task_id": tid,
+                "f_net_pN": ext_fdtd_records[tid]["f_net_pN"],
+                "resolution": ext_fdtd_records[tid]["resolution"],
+                "nmax": ext_fdtd_records[tid]["nmax"],
+            }
+
     complete_summary = {
         "model": "Complete_5Tier_RWG_BEM_and_51Task_Meep_FDTD_Convergence",
         "dataset": "H3_Cantor_SingleSetup_and_Multiscale_20nmLattice",
         "status": "complete" if len(ext_fdtd_records) == len(EXT_FDTD_SWEEP_SPECS) else "bem_complete_fdtd_partial",
+        "fdtd_ext_coverage": f"{len(ext_fdtd_records)}/{len(EXT_FDTD_SWEEP_SPECS)}",
         "executed_at": datetime.now(timezone.utc).isoformat(),
         "completed_base_fdtd_tasks": 31,
         "completed_ext_fdtd_tasks": len(ext_fdtd_records),
         "expected_ext_fdtd_tasks": len(EXT_FDTD_SWEEP_SPECS),
+        "completed_ext_task_ids": sorted(ext_fdtd_records.keys()),
         "five_tier_single_setup_bem": five_tier_bem,
         "multiscale_rwg_bem": ext_bem["multiscale_summary"],
         "multiscale_rwg_ladders": ext_bem["multiscale_cantor_vs_uniform_bem"],
         "upgraded_solver_agreement": upgraded_agreement,
         "fdtd_domain_invariance_controls": domain_checks,
         "multiscale_fdtd_vs_bem": multiscale_fdtd,
+        "multiscale_fdtd_completed_points": single_ms_fdtd,
         "ext_fdtd_tasks": [ext_fdtd_records[k] for k in sorted(ext_fdtd_records)],
     }
     _atomic_write_json(out_summary_path, complete_summary)
-    _write_extended_convergence_table_and_figure(complete_summary, out_summary_path)
     _log_extended_convergence_macros(complete_summary, out_summary_path)
+    _write_extended_convergence_table_and_figure(complete_summary, out_summary_path)
     print(
         f"Aggregated extended convergence ({len(ext_fdtd_records)}/{len(EXT_FDTD_SWEEP_SPECS)} ext FDTD tasks) -> {out_summary_path}",
         flush=True,
@@ -985,64 +1024,69 @@ def aggregate_extended_convergence(
     return complete_summary
 
 
+def _mref_ext(key: str) -> str:
+    return f"\\{_sanitize_macro_name(key)}{{}}"
+
+
 def _write_extended_convergence_table_and_figure(summary: Mapping[str, Any], summary_path: Path) -> None:
-    """Export grounded LaTeX table and 2-panel figure + .provenance.json sidecars."""
+    """Export 100% macro-driven LaTeX table and 2-panel figure + .provenance.json sidecars."""
     b5 = summary["five_tier_single_setup_bem"]
     ag = summary["upgraded_solver_agreement"]
-    ms_bem = summary["multiscale_rwg_bem"]
     ms_fdtd = summary["multiscale_fdtd_vs_bem"]
+    ms_pts = summary.get("multiscale_fdtd_completed_points", {})
 
     lines = [
         "% Auto-generated by execution/run_h3_full_convergence_extension.py -- DO NOT EDIT BY HAND",
-        "\\begin{tabular}{llrrrrr}",
+        "\\begin{table*}[t]",
+        "\\centering",
+        "\\caption{Extended five-tier exact 3D Maxwell RWG BEM and coupled high-$(R, n_{\\max})$ four-pass 3D Meep FDTD convergence on the shared $20\\,\\mathrm{nm}$-lattice \\texttt{H3-Cantor} single-setup unit cell and three-track multiscale Cantor vs.\\ iso-area uniform grating ($4\\times$ $C_4$ multiplicity, $\\varepsilon_{\\mathrm{bg}}=1.0$).}",
+        "\\label{tab:multiscale-convergence}",
+        "\\small",
+        "\\begin{tabular}{llccccc}",
         "\\toprule",
-        "Benchmark & Channel / Pair & RWG Tier 5 / 3 & RWG Cont. $F_z^\\infty$ & 4-Pass FDTD Finest & 4-Pass FDTD Cont. & Rel.\\ Diff. \\\\",
-        " & & (pN) & (pN) & (pN) & (pN) & (\\%) \\\\",
+        "Benchmark & Channel / Design & RWG Tier 5 / 3 & RWG Cont. $F_z^\\infty$ & 4-Pass FDTD Finest & 4-Pass FDTD Cont. & $|\\Delta F_\\infty|$ / Gain \\\\",
+        " & & (pN) & (pN) & (pN) & (pN) & (\\% or $\\times$) \\\\",
         "\\midrule",
     ]
-    for ch_key, lbl in (
-        ("open_pec", "Open ($3^\\circ$), PEC"),
-        ("engaged_pec", "Engaged ($48^\\circ$), PEC"),
-        ("open_gold", "Open ($3^\\circ$), Drude Au"),
-        ("engaged_gold", "Engaged ($48^\\circ$), Drude Au"),
+    for ch_key, pfx, lbl in (
+        ("open_pec", "conv_ext_open_pec", "Open ($3^\\circ$), PEC"),
+        ("engaged_pec", "conv_ext_eng_pec", "Engaged ($48^\\circ$), PEC"),
+        ("open_gold", "conv_ext_open_gold", "Open ($3^\\circ$), Drude Au"),
+        ("engaged_gold", "conv_ext_eng_gold", "Engaged ($48^\\circ$), Drude Au"),
     ):
-        r_b = b5[ch_key]
-        r_a = ag[ch_key]
         lines.append(
-            f"Single-Setup & {lbl} & ${r_b['tier5_pN']:+.3f}$ & "
-            f"${r_b['continuum_pN']:+.3f} \\pm {r_b['continuum_se_pN']:.3f}$ & "
-            f"${r_a['fdtd_finest_direct_pN']:+.3f}$ ($R={r_a['fdtd_finest_R']},n={r_a['fdtd_finest_nmax']}$) & "
-            f"${r_a['fdtd_continuum_pN']:+.3f} \\pm {r_a['fdtd_continuum_se_pN']:.3f}$ & "
-            f"${r_a['continuum_rel_diff_pct']:.1f}$ \\\\"
+            f"Single-Setup & {lbl} & ${_mref_ext(f'{pfx}_bem_t5_pn')}$ & "
+            f"${_mref_ext(f'{pfx}_bem_inf5_pn')} \\pm {_mref_ext(f'{pfx}_bem_se5_pn')}$ & "
+            f"${_mref_ext(f'{pfx}_fdtd_finest_pn')}$ ($R={_mref_ext(f'{pfx}_fdtd_finest_r')},n={_mref_ext(f'{pfx}_fdtd_finest_nmax')}$) & "
+            f"${_mref_ext(f'{pfx}_fdtd_inf_pn')} \\pm {_mref_ext(f'{pfx}_fdtd_se_pn')}$ & "
+            f"${_mref_ext(f'{pfx}_rel_diff_pct')}\\%$ \\\\"
         )
     lines.append("\\midrule")
-    for m_tag, lbl, f100_k, f150_k, cont_k, is_c in (
-        ("cantor_pec", "Multiscale Cantor (PEC)", "pec_R100_n3", "pec_R150_n3", "pec_continuum", True),
-        ("uniform_pec", "Iso-Area Uniform (PEC)", "pec_R100_n3", "pec_R150_n3", "pec_continuum", False),
-        ("cantor_gold", "Multiscale Cantor (Drude Au)", "gold_R100_n3", "gold_R150_n3", "gold_continuum", True),
-        ("uniform_gold", "Iso-Area Uniform (Drude Au)", "gold_R100_n3", "gold_R150_n3", "gold_continuum", False),
+    for m_tag, lbl, pt_r150_k, pt_r100_k, cont_k, is_c, gain_macro_k in (
+        ("cantor_pec", "Multiscale Cantor (PEC)", "cantor_pec_R150", "cantor_pec_R100", "pec_continuum", True, "conv_ms_pec_gain_ratio"),
+        ("uniform_pec", "Iso-Area Uniform (PEC)", "uniform_pec_R150", "uniform_pec_R100", "pec_continuum", False, None),
+        ("cantor_gold", "Multiscale Cantor (Drude Au)", "cantor_gold_R150", "cantor_gold_R100", "gold_continuum", True, "conv_ms_gold_gain_ratio"),
+        ("uniform_gold", "Iso-Area Uniform (Drude Au)", "uniform_gold_R150", "uniform_gold_R100", "gold_continuum", False, None),
     ):
-        ch_b = ms_bem["channels"][m_tag]
-        sub_k = "cantor_pN" if is_c else "uniform_pN"
-        if f150_k in ms_fdtd:
-            fin_str = f"${ms_fdtd[f150_k][sub_k]:+.3f}$ ($R=150$)"
-        elif f100_k in ms_fdtd:
-            fin_str = f"${ms_fdtd[f100_k][sub_k]:+.3f}$ ($R=100$)"
+        if pt_r150_k in ms_pts:
+            fin_str = f"${_mref_ext(f'conv_ms_fdtd_{pt_r150_k.lower()}_pn')}$ ($R=150$)"
+        elif pt_r100_k in ms_pts:
+            fin_str = f"${_mref_ext(f'conv_ms_fdtd_{pt_r100_k.lower()}_pn')}$ ($R=100$)"
         else:
             fin_str = "---"
         if cont_k in ms_fdtd:
-            inf_k = "cantor_fdtd_inf_pN" if is_c else "uniform_fdtd_inf_pN"
-            dif_k = "cantor_rel_diff_pct" if is_c else "uniform_rel_diff_pct"
-            cont_str = f"${ms_fdtd[cont_k][inf_k]:+.3f}$"
-            dif_str = f"${ms_fdtd[cont_k][dif_k]:.1f}$"
+            inf_m = f"conv_ms_fdtd_inf_{m_tag}_pn"
+            dif_m = f"conv_ms_fdtd_inf_{m_tag}_diff_pct"
+            cont_str = f"${_mref_ext(inf_m)}$"
+            tail_str = f"${_mref_ext(dif_m)}\\%$"
         else:
             cont_str = "---"
-            dif_str = "---"
+            tail_str = f"${_mref_ext(gain_macro_k)}\\times$ (BEM)" if gain_macro_k else "Ref."
         lines.append(
-            f"Multiscale 3-Trk & {lbl} & ${ch_b['tier3_pN']:+.3f}$ & "
-            f"${ch_b['continuum_pN']:+.3f}$ & {fin_str} & {cont_str} & {dif_str} \\\\"
+            f"Multiscale 3-Trk & {lbl} & ${_mref_ext(f'conv_ms_{m_tag}_t3_pn')}$ & "
+            f"${_mref_ext(f'conv_ms_{m_tag}_inf_pn')}$ & {fin_str} & {cont_str} & {tail_str} \\\\"
         )
-    lines.extend(["\\bottomrule", "\\end{tabular}", ""])
+    lines.extend(["\\bottomrule", "\\end{tabular}", "\\end{table*}", ""])
     tex_str = "\n".join(lines)
     res_tbl = ROOT / "results" / "table_h3_multiscale_bem_fdtd_convergence.tex"
     _atomic_write_text(res_tbl, tex_str)
@@ -1077,7 +1121,7 @@ def _write_extended_convergence_table_and_figure(summary: Mapping[str, Any], sum
     ax.grid(True, alpha=0.28)
     ax.legend(fontsize=7.2, loc="lower left")
 
-    # Panel b: Multiscale 3-track Cantor vs. Iso-Area Uniform (RWG BEM Tiers 1..3 + 4-pass FDTD)
+    # Panel b: Multiscale 3-track Cantor vs. Iso-Area Uniform (RWG BEM Tiers 1..3 + completed 4-pass FDTD)
     ax = axes[1]
     ms_ladders = summary["multiscale_rwg_ladders"]
     for m_k, lbl, col, ls in (
@@ -1096,18 +1140,28 @@ def _write_extended_convergence_table_and_figure(summary: Mapping[str, Any], sum
             color=col,
             label=lbl,
         )
-    if "pec_R100_n3" in ms_fdtd:
-        ax.scatter([10.0], [ms_fdtd["pec_R100_n3"]["cantor_pN"]], marker="*", s=110, color="#c0392b", zorder=6, label="4-Pass FDTD Cantor (PEC)")
-        ax.scatter([10.0], [ms_fdtd["pec_R100_n3"]["uniform_pN"]], marker="P", s=85, color="#c0392b", zorder=6, label="4-Pass FDTD Uniform (PEC)")
-    if "pec_R150_n3" in ms_fdtd:
-        ax.scatter([6.67], [ms_fdtd["pec_R150_n3"]["cantor_pN"]], marker="*", s=110, color="#c0392b", zorder=6)
-        ax.scatter([6.67], [ms_fdtd["pec_R150_n3"]["uniform_pN"]], marker="P", s=85, color="#c0392b", zorder=6)
-    if "gold_R100_n3" in ms_fdtd:
-        ax.scatter([10.0], [ms_fdtd["gold_R100_n3"]["cantor_pN"]], marker="*", s=110, color="#d95f02", zorder=6, label="4-Pass FDTD Cantor (Au)")
-        ax.scatter([10.0], [ms_fdtd["gold_R100_n3"]["uniform_pN"]], marker="P", s=85, color="#d95f02", zorder=6, label="4-Pass FDTD Uniform (Au)")
-    if "gold_R150_n3" in ms_fdtd:
-        ax.scatter([6.67], [ms_fdtd["gold_R150_n3"]["cantor_pN"]], marker="*", s=110, color="#d95f02", zorder=6)
-        ax.scatter([6.67], [ms_fdtd["gold_R150_n3"]["uniform_pN"]], marker="P", s=85, color="#d95f02", zorder=6)
+    if "cantor_pec_R100" in ms_pts:
+        ax.scatter([10.0], [ms_pts["cantor_pec_R100"]["f_net_pN"]], marker="*", s=110, color="#c0392b", zorder=6, label="4-Pass FDTD Cantor (PEC)")
+    if "cantor_pec_R150" in ms_pts:
+        ax.scatter([6.67], [ms_pts["cantor_pec_R150"]["f_net_pN"]], marker="*", s=110, color="#c0392b", zorder=6)
+    if "uniform_pec_R100" in ms_pts or "uniform_pec_R150" in ms_pts:
+        xs_up = ([10.0] if "uniform_pec_R100" in ms_pts else []) + ([6.67] if "uniform_pec_R150" in ms_pts else [])
+        ys_up = ([ms_pts["uniform_pec_R100"]["f_net_pN"]] if "uniform_pec_R100" in ms_pts else []) + (
+            [ms_pts["uniform_pec_R150"]["f_net_pN"]] if "uniform_pec_R150" in ms_pts else []
+        )
+        ax.scatter(xs_up, ys_up, marker="P", s=85, color="#c0392b", zorder=6, label="4-Pass FDTD Uniform (PEC)")
+    if "cantor_gold_R100" in ms_pts or "cantor_gold_R150" in ms_pts:
+        xs_cg = ([10.0] if "cantor_gold_R100" in ms_pts else []) + ([6.67] if "cantor_gold_R150" in ms_pts else [])
+        ys_cg = ([ms_pts["cantor_gold_R100"]["f_net_pN"]] if "cantor_gold_R100" in ms_pts else []) + (
+            [ms_pts["cantor_gold_R150"]["f_net_pN"]] if "cantor_gold_R150" in ms_pts else []
+        )
+        ax.scatter(xs_cg, ys_cg, marker="*", s=110, color="#d95f02", zorder=6, label="4-Pass FDTD Cantor (Au)")
+    if "uniform_gold_R100" in ms_pts or "uniform_gold_R150" in ms_pts:
+        xs_ug = ([10.0] if "uniform_gold_R100" in ms_pts else []) + ([6.67] if "uniform_gold_R150" in ms_pts else [])
+        ys_ug = ([ms_pts["uniform_gold_R100"]["f_net_pN"]] if "uniform_gold_R100" in ms_pts else []) + (
+            [ms_pts["uniform_gold_R150"]["f_net_pN"]] if "uniform_gold_R150" in ms_pts else []
+        )
+        ax.scatter(xs_ug, ys_ug, marker="P", s=85, color="#d95f02", zorder=6, label="4-Pass FDTD Uniform (Au)")
     ax.axhline(0.0, color="#444444", lw=0.8)
     ax.set_xlabel("Discretization scale $h_{\\mathrm{eff}}$ or $\\Delta x$ (nm)")
     ax.set_ylabel("Open-slot repulsive force $F_z$ (pN)")
@@ -1154,7 +1208,10 @@ def _log_extended_convergence_macros(summary: Mapping[str, Any], summary_path: P
         },
     )
 
-    kv: dict[str, str | int | float] = {}
+    kv: dict[str, str | int | float] = {
+        "conv_ext_completed_fdtd_tasks": int(summary["completed_ext_fdtd_tasks"]),
+        "conv_ext_total_fdtd_tasks": int(31 + int(summary["completed_ext_fdtd_tasks"])),
+    }
     b5 = summary["five_tier_single_setup_bem"]
     for ch_key, pfx in (
         ("open_pec", "conv_ext_open_pec"),
@@ -1164,29 +1221,44 @@ def _log_extended_convergence_macros(summary: Mapping[str, Any], summary_path: P
     ):
         kv[f"{pfx}_bem_t5_pn"] = f"{b5[ch_key]['tier5_pN']:+.3f}"
         kv[f"{pfx}_bem_t5_dof"] = int(b5[ch_key]["tier5_dof"])
+        kv[f"{pfx}_bem_t5_h_nm"] = f"{b5[ch_key]['tier5_h_nm']:.1f}"
         kv[f"{pfx}_bem_inf5_pn"] = f"{b5[ch_key]['continuum_pN']:+.3f}"
         kv[f"{pfx}_bem_se5_pn"] = f"{b5[ch_key]['continuum_se_pN']:.3f}"
         ag = summary["upgraded_solver_agreement"][ch_key]
+        kv[f"{pfx}_fdtd_finest_pn"] = f"{ag['fdtd_finest_direct_pN']:+.3f}"
+        kv[f"{pfx}_fdtd_finest_r"] = int(ag["fdtd_finest_R"])
+        kv[f"{pfx}_fdtd_finest_nmax"] = int(ag["fdtd_finest_nmax"])
         kv[f"{pfx}_fdtd_inf_pn"] = f"{ag['fdtd_continuum_pN']:+.3f}"
+        kv[f"{pfx}_fdtd_se_pn"] = f"{ag['fdtd_continuum_se_pN']:.3f}"
         kv[f"{pfx}_rel_diff_pct"] = f"{ag['continuum_rel_diff_pct']:.1f}"
 
     ms = summary["multiscale_rwg_bem"]
     kv["conv_ms_cantor_pec_t3_pn"] = f"{ms['channels']['cantor_pec']['tier3_pN']:+.3f}"
+    kv["conv_ms_cantor_pec_inf_pn"] = f"{ms['channels']['cantor_pec']['continuum_pN']:+.3f}"
     kv["conv_ms_uniform_pec_t3_pn"] = f"{ms['channels']['uniform_pec']['tier3_pN']:+.3f}"
+    kv["conv_ms_uniform_pec_inf_pn"] = f"{ms['channels']['uniform_pec']['continuum_pN']:+.3f}"
+    kv["conv_ms_pec_t3_gain_ratio"] = _fmt_ratio_macro(ms["pec_tier3_gain_ratio"])
     kv["conv_ms_pec_gain_ratio"] = _fmt_ratio_macro(ms["pec_continuum_gain_ratio"])
     kv["conv_ms_cantor_gold_t3_pn"] = f"{ms['channels']['cantor_gold']['tier3_pN']:+.3f}"
+    kv["conv_ms_cantor_gold_inf_pn"] = f"{ms['channels']['cantor_gold']['continuum_pN']:+.3f}"
     kv["conv_ms_uniform_gold_t3_pn"] = f"{ms['channels']['uniform_gold']['tier3_pN']:+.3f}"
+    kv["conv_ms_uniform_gold_inf_pn"] = f"{ms['channels']['uniform_gold']['continuum_pN']:+.3f}"
+    kv["conv_ms_gold_t3_gain_ratio"] = _fmt_ratio_macro(ms["gold_tier3_gain_ratio"])
     kv["conv_ms_gold_gain_ratio"] = _fmt_ratio_macro(ms["gold_continuum_gain_ratio"])
 
     dom = summary["fdtd_domain_invariance_controls"]
     if "Trun_8_vs_4_open_pec" in dom:
-        kv["conv_dom_trun_pec_drift_pct"] = f"{dom['Trun_8_vs_4_open_pec']['rel_drift_pct']:.2f}"
+        kv["conv_dom_trun_pec_drift_pct"] = f"{dom['Trun_8_vs_4_open_pec']['rel_drift_pct']:.4f}"
     if "Trun_8_vs_4_open_gold" in dom:
         kv["conv_dom_trun_gold_drift_pct"] = f"{dom['Trun_8_vs_4_open_gold']['rel_drift_pct']:.2f}"
     if "buffer_140nm_vs_80nm_open_pec" in dom:
-        kv["conv_dom_buf_pec_drift_pct"] = f"{dom['buffer_140nm_vs_80nm_open_pec']['rel_drift_pct']:.2f}"
+        kv["conv_dom_buf_pec_drift_pct"] = f"{dom['buffer_140nm_vs_80nm_open_pec']['rel_drift_pct']:.4f}"
     if "pml_240nm_vs_160nm_open_pec" in dom:
-        kv["conv_dom_pml_pec_drift_pct"] = f"{dom['pml_240nm_vs_160nm_open_pec']['rel_drift_pct']:.2f}"
+        kv["conv_dom_pml_pec_drift_pct"] = f"{dom['pml_240nm_vs_160nm_open_pec']['rel_drift_pct']:.4f}"
+
+    ms_pts = summary.get("multiscale_fdtd_completed_points", {})
+    for pt_k, pt_v in ms_pts.items():
+        kv[f"conv_ms_fdtd_{pt_k.lower()}_pn"] = f"{pt_v['f_net_pN']:+.3f}"
 
     ms_f = summary["multiscale_fdtd_vs_bem"]
     if "pec_R100_n3" in ms_f:
@@ -1200,6 +1272,8 @@ def _log_extended_convergence_macros(summary: Mapping[str, Any], summary_path: P
     if "pec_continuum" in ms_f:
         kv["conv_ms_fdtd_inf_cantor_pec_pn"] = f"{ms_f['pec_continuum']['cantor_fdtd_inf_pN']:+.3f}"
         kv["conv_ms_fdtd_inf_uniform_pec_pn"] = f"{ms_f['pec_continuum']['uniform_fdtd_inf_pN']:+.3f}"
+        kv["conv_ms_fdtd_inf_cantor_pec_diff_pct"] = f"{ms_f['pec_continuum']['cantor_rel_diff_pct']:.1f}"
+        kv["conv_ms_fdtd_inf_uniform_pec_diff_pct"] = f"{ms_f['pec_continuum']['uniform_rel_diff_pct']:.1f}"
         kv["conv_ms_fdtd_inf_pec_gain_ratio"] = _fmt_ratio_macro(ms_f["pec_continuum"]["fdtd_continuum_gain_ratio"])
     if "gold_R100_n3" in ms_f:
         kv["conv_ms_fdtd_r100_cantor_gold_pn"] = f"{ms_f['gold_R100_n3']['cantor_pN']:+.3f}"
@@ -1212,6 +1286,8 @@ def _log_extended_convergence_macros(summary: Mapping[str, Any], summary_path: P
     if "gold_continuum" in ms_f:
         kv["conv_ms_fdtd_inf_cantor_gold_pn"] = f"{ms_f['gold_continuum']['cantor_fdtd_inf_pN']:+.3f}"
         kv["conv_ms_fdtd_inf_uniform_gold_pn"] = f"{ms_f['gold_continuum']['uniform_fdtd_inf_pN']:+.3f}"
+        kv["conv_ms_fdtd_inf_cantor_gold_diff_pct"] = f"{ms_f['gold_continuum']['cantor_rel_diff_pct']:.1f}"
+        kv["conv_ms_fdtd_inf_uniform_gold_diff_pct"] = f"{ms_f['gold_continuum']['uniform_rel_diff_pct']:.1f}"
         kv["conv_ms_fdtd_inf_gold_gain_ratio"] = _fmt_ratio_macro(ms_f["gold_continuum"]["fdtd_continuum_gain_ratio"])
 
     items = list(kv.items())
