@@ -1,7 +1,7 @@
 {
   "run_metadata": {
     "created_at": "2026-11-12T13:08:27.443722+00:00",
-    "updated_at": "2026-11-17T04:10:42.969170+00:00",
+    "updated_at": "2026-11-18T02:01:28.877995+00:00",
     "environment": "Windows",
     "entry_point": "fractal_casimir_engine/run_engine_cycle_mapping.py",
     "solver": "BEM_EngineCycle_3D",
@@ -134,6 +134,24 @@
           ]
         },
         "timestamp": "2026-11-17T04:10:38.748268+00:00"
+      },
+      {
+        "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+        "solver_parameters": {
+          "dataset": "fractal_casimir_engine_cycle",
+          "n_xi": 20,
+          "quad_order": 3,
+          "z_nodes": 6,
+          "theta_nodes": 30,
+          "hierarchies": [
+            "N0_Macro_Ring",
+            "Cantor_N1",
+            "Cantor_N2",
+            "Uniform_3Track",
+            "Cantor_N3"
+          ]
+        },
+        "timestamp": "2026-11-18T02:00:57.752292+00:00"
       }
     ]
   },
@@ -325,6 +343,41 @@
           4.0,
           8.0,
           12.0
+        ]
+      }
+    },
+    "uf5_cantor_hierarchy_ablation": {
+      "timestamp": "2026-11-18T02:00:58.125414+00:00",
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_step",
+      "line_number": 389,
+      "data_summary": {
+        "config_d_n0_mean_tau_pN_um": 0.2158,
+        "config_d_n1_mean_tau_pN_um": 0.2578,
+        "config_d_n2_mean_tau_pN_um": 0.6889,
+        "config_d_uni_mean_tau_pN_um": 0.68,
+        "config_d_n3_mean_tau_pN_um": 0.5378,
+        "config_d_n2_vs_n0_tau_gain": 3.19,
+        "config_d_n2_vs_uniform_tau_gain": 1.01,
+        "config_b_n2_work_aJ": 0.484,
+        "config_b_uni_work_aJ": 0.5584,
+        "config_d_n2_spin_up_deg": 580.6,
+        "config_d_n3_spin_up_deg": 539.6,
+        "config_d_n0_spin_up_deg": 184.3
+      },
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_xi": 20,
+        "quad_order": 3,
+        "z_nodes": 6,
+        "theta_nodes": 30,
+        "hierarchies": [
+          "N0_Macro_Ring",
+          "Cantor_N1",
+          "Cantor_N2",
+          "Uniform_3Track",
+          "Cantor_N3"
         ]
       }
     }
@@ -2585,7 +2638,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2595,7 +2648,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2605,7 +2658,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2615,7 +2668,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2625,7 +2678,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2635,7 +2688,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2645,7 +2698,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2655,7 +2708,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2665,7 +2718,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2675,7 +2728,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2685,7 +2738,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2695,7 +2748,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2705,7 +2758,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2715,7 +2768,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2725,7 +2778,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2735,7 +2788,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2745,7 +2798,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2755,7 +2808,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2765,7 +2818,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2775,7 +2828,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2785,7 +2838,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2795,7 +2848,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -2805,7 +2858,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2815,7 +2868,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2825,7 +2878,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2835,7 +2888,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2845,7 +2898,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2855,7 +2908,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2865,7 +2918,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2875,7 +2928,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2885,7 +2938,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2895,7 +2948,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2905,7 +2958,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2915,7 +2968,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2925,7 +2978,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2935,7 +2988,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2945,7 +2998,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2955,7 +3008,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2965,7 +3018,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2975,7 +3028,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2985,7 +3038,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf2_meep_verification",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "Meep_3D_FDTD_Casimir_MST_vs_UltraFine_BEM",
       "solver_parameters": {}
     },
@@ -2995,7 +3048,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf3_active_permittivity_switching",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
       "solver_parameters": {}
     },
@@ -3005,7 +3058,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf3_active_permittivity_switching",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
       "solver_parameters": {}
     },
@@ -3015,7 +3068,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf3_active_permittivity_switching",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
       "solver_parameters": {}
     },
@@ -3025,7 +3078,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf3_active_permittivity_switching",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
       "solver_parameters": {}
     },
@@ -3035,7 +3088,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf3_active_permittivity_switching",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
       "solver_parameters": {}
     },
@@ -3045,7 +3098,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf3_active_permittivity_switching",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
       "solver_parameters": {}
     },
@@ -3055,7 +3108,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf3_active_permittivity_switching",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
       "solver_parameters": {}
     },
@@ -3065,7 +3118,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf3_active_permittivity_switching",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
       "solver_parameters": {}
     },
@@ -3075,7 +3128,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf3_active_permittivity_switching",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
       "solver_parameters": {}
     },
@@ -3085,7 +3138,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf3_active_permittivity_switching",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
       "solver_parameters": {}
     },
@@ -3095,7 +3148,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf3_active_permittivity_switching",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
       "solver_parameters": {}
     },
@@ -3105,7 +3158,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf3_active_permittivity_switching",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_KramersKronig_TwoState_VO2_Si",
       "solver_parameters": {}
     },
@@ -3115,7 +3168,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3125,7 +3178,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3135,7 +3188,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3145,7 +3198,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3155,7 +3208,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3165,7 +3218,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3175,7 +3228,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3185,7 +3238,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3195,7 +3248,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3205,7 +3258,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3215,7 +3268,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3225,7 +3278,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3235,7 +3288,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3245,7 +3298,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3255,7 +3308,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3265,7 +3318,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3275,7 +3328,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3285,7 +3338,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf4_6dof_and_ebl_rounding",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Full4Sector6DOF_and_EBLPlanformRounding",
       "solver_parameters": {}
     },
@@ -3295,7 +3348,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -3305,7 +3358,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf1_ultrafine_mesh_convergence",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_UltraFine_3D_Suite1",
       "solver_parameters": {}
     },
@@ -3635,7 +3688,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf6_langevin_and_tolerances",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
       "solver_parameters": {}
     },
@@ -3645,7 +3698,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf6_langevin_and_tolerances",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
       "solver_parameters": {}
     },
@@ -3655,7 +3708,7 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf6_langevin_and_tolerances",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
       "solver_parameters": {}
     },
@@ -3665,8 +3718,759 @@
       "source_function": "_extract_derived_suite_metrics",
       "line_number": 99,
       "step_id": "uf6_langevin_and_tolerances",
-      "recorded_at": "2026-11-17T04:10:42.969170+00:00",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
       "solver": "BEM_Langevin_Patch_Roughness_Tolerance_Suite6",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n0_tau": {
+      "value": 0.2158,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:00:58.148695+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_xi": 20,
+        "quad_order": 3,
+        "z_nodes": 6,
+        "theta_nodes": 30,
+        "hierarchies": [
+          "N0_Macro_Ring",
+          "Cantor_N1",
+          "Cantor_N2",
+          "Uniform_3Track",
+          "Cantor_N3"
+        ]
+      }
+    },
+    "engine_uf5_cfg_d_n2_tau": {
+      "value": 0.6889,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:00:58.190686+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_xi": 20,
+        "quad_order": 3,
+        "z_nodes": 6,
+        "theta_nodes": 30,
+        "hierarchies": [
+          "N0_Macro_Ring",
+          "Cantor_N1",
+          "Cantor_N2",
+          "Uniform_3Track",
+          "Cantor_N3"
+        ]
+      }
+    },
+    "engine_uf5_cfg_d_uni_tau": {
+      "value": 0.68,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:00:58.228292+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_xi": 20,
+        "quad_order": 3,
+        "z_nodes": 6,
+        "theta_nodes": 30,
+        "hierarchies": [
+          "N0_Macro_Ring",
+          "Cantor_N1",
+          "Cantor_N2",
+          "Uniform_3Track",
+          "Cantor_N3"
+        ]
+      }
+    },
+    "engine_uf5_cfg_d_n3_tau": {
+      "value": 0.5378,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:00:58.260346+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_xi": 20,
+        "quad_order": 3,
+        "z_nodes": 6,
+        "theta_nodes": 30,
+        "hierarchies": [
+          "N0_Macro_Ring",
+          "Cantor_N1",
+          "Cantor_N2",
+          "Uniform_3Track",
+          "Cantor_N3"
+        ]
+      }
+    },
+    "engine_uf5_n2_vs_n0_gain": {
+      "value": 3.19,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:00:58.309407+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_xi": 20,
+        "quad_order": 3,
+        "z_nodes": 6,
+        "theta_nodes": 30,
+        "hierarchies": [
+          "N0_Macro_Ring",
+          "Cantor_N1",
+          "Cantor_N2",
+          "Uniform_3Track",
+          "Cantor_N3"
+        ]
+      }
+    },
+    "engine_uf5_n2_vs_uni_gain": {
+      "value": 1.01,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:00:58.347564+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_xi": 20,
+        "quad_order": 3,
+        "z_nodes": 6,
+        "theta_nodes": 30,
+        "hierarchies": [
+          "N0_Macro_Ring",
+          "Cantor_N1",
+          "Cantor_N2",
+          "Uniform_3Track",
+          "Cantor_N3"
+        ]
+      }
+    },
+    "engine_uf5_cfg_d_n3_spin_deg": {
+      "value": 539.6,
+      "source_file": "utils/metrics_logger.py",
+      "source_function": "log_metric",
+      "line_number": 423,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:00:58.393600+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {
+        "dataset": "fractal_casimir_engine_cycle",
+        "n_xi": 20,
+        "quad_order": 3,
+        "z_nodes": 6,
+        "theta_nodes": 30,
+        "hierarchies": [
+          "N0_Macro_Ring",
+          "Cantor_N1",
+          "Cantor_N2",
+          "Uniform_3Track",
+          "Cantor_N3"
+        ]
+      }
+    },
+    "engine_uf5_cfg_b_n0_fom": {
+      "value": 4.052,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_n0_mean_tau": {
+      "value": 0.182,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_n0_spin_deg": {
+      "value": -3.5,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_n0_work_aj": {
+      "value": 0.181,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_n1_fom": {
+      "value": 2.946,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_n1_mean_tau": {
+      "value": 0.229,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_n1_spin_deg": {
+      "value": 158.8,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_n1_work_aj": {
+      "value": 0.213,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_n2_fom": {
+      "value": 1.815,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_n2_mean_tau": {
+      "value": 0.645,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_n2_spin_deg": {
+      "value": 497.7,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_n2_work_aj": {
+      "value": 0.484,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_n3_fom": {
+      "value": 0.355,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_n3_mean_tau": {
+      "value": 0.598,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_n3_spin_deg": {
+      "value": 592.6,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_n3_work_aj": {
+      "value": 0.714,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_uni_fom": {
+      "value": 1.899,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_uni_mean_tau": {
+      "value": 0.632,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_uni_spin_deg": {
+      "value": 568.1,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_b_uni_work_aj": {
+      "value": 0.558,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n0_fom": {
+      "value": 215.764,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n0_mean_tau": {
+      "value": 0.216,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n0_spin_deg": {
+      "value": 184.3,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n0_work_aj": {
+      "value": 0.149,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n1_fom": {
+      "value": 42.063,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n1_mean_tau": {
+      "value": 0.258,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n1_spin_deg": {
+      "value": 262.3,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n1_work_aj": {
+      "value": 0.186,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n2_fom": {
+      "value": 5.834,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n2_mean_tau": {
+      "value": 0.689,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n2_spin_deg": {
+      "value": 580.6,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n2_work_aj": {
+      "value": 0.457,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n3_fom": {
+      "value": 0.355,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n3_mean_tau": {
+      "value": 0.538,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_n3_work_aj": {
+      "value": 0.705,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_uni_fom": {
+      "value": 5.919,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_uni_mean_tau": {
+      "value": 0.68,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_uni_spin_deg": {
+      "value": 716.6,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_cfg_d_uni_work_aj": {
+      "value": 0.513,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n0_fom": {
+      "value": -1.107,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n0_mean_tau": {
+      "value": -0.014,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n0_spin_deg": {
+      "value": -53.2,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n0_work_aj": {
+      "value": 0.045,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n1_fom": {
+      "value": -3.885,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n1_mean_tau": {
+      "value": -0.022,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n1_spin_deg": {
+      "value": -49.4,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n1_work_aj": {
+      "value": 0.059,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n2_fom": {
+      "value": -1.147,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n2_mean_tau": {
+      "value": -0.207,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n2_spin_deg": {
+      "value": 16.9,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n2_work_aj": {
+      "value": 0.079,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n3_fom": {
+      "value": -0.424,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n3_mean_tau": {
+      "value": -0.59,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n3_spin_deg": {
+      "value": 23.3,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_n3_work_aj": {
+      "value": -0.343,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_uni_fom": {
+      "value": -1.141,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_uni_mean_tau": {
+      "value": -0.116,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_uni_spin_deg": {
+      "value": 8.6,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
+      "solver_parameters": {}
+    },
+    "engine_uf5_sym_uni_work_aj": {
+      "value": 0.151,
+      "source_file": "fractal_casimir_engine/aggregate_ultrafine_campaigns.py",
+      "source_function": "_extract_derived_suite_metrics",
+      "line_number": 99,
+      "step_id": "uf5_cantor_hierarchy_ablation",
+      "recorded_at": "2026-11-18T02:01:28.877995+00:00",
+      "solver": "BEM_UltraFine_3D_CantorHierarchyAblation",
       "solver_parameters": {}
     }
   },
