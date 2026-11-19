@@ -86,6 +86,13 @@ EXTENDED_SUITES: tuple[tuple[str, str, str, str, str], ...] = (
         "uf6_macros_results.tex",
         "fig_uf6_langevin_and_tolerances",
     ),
+    (
+        "eng_uf7",
+        "uf7_thermodynamics_and_applications_report.json",
+        "uf7_provenance_metrics.json",
+        "uf7_macros_results.tex",
+        "fig_uf7_thermodynamics_and_applications",
+    ),
 )
 
 
