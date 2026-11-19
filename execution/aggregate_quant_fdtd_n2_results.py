@@ -158,7 +158,7 @@ def aggregate_quant_fdtd_n2(
         elapsed_s: float | None = None
         executed_at: str | None = None
         completed_moments = 0
-        default_moments_per_pass = 6 * 8 * ((n_max + 1) ** 2) if n_max >= 0 else 0
+        default_moments_per_pass = 108 * (n_max ** 2) if n_max > 0 else 0
         moments_per_config = _safe_int(
             cfg.get("moments_per_pass"), default_moments_per_pass
         )

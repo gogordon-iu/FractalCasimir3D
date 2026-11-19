@@ -418,3 +418,7 @@
 ### [BUG-261116-01] 2026-11-16 | execution/run_h3_full_fractal_stability_suite.py | scope=infra
 - **Bug**: Cross-design CUDA LU factors accumulated to 37.5 GiB across 145 tasks, triggering OutOfMemoryError on 40 GB A100 at Tier-3 mesh Task 146.
 - **Solution**: Evict CUDA BEM LU caches whenever geometry/mesh cache keys change and add automatic CPU RAM fallback on CUDA OutOfMemoryError.
+
+### [BUG-261117-01] 2026-11-17T15:48:07Z | execution/run_h3_full_fractal_stability_suite.py,run_h3_full_convergence_extension.py | scope=docs
+- **Bug**: LaTeX macro exporter rounded <0.1 scientific notation (3.10e-15, 2.69e-5) to 0.0 and wrote raw floats instead of macro refs.
+- **Solution**: Extended _fmt_sf_tex to format <0.1 in scientific notation and made table_h3_multiscale_bem_fdtd_convergence.tex 100% macro-driven.
